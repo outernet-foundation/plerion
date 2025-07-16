@@ -2,6 +2,7 @@
     "recommendations": [
         "tamasfe.even-better-toml",
         "ms-python.python",
-        "charliermarsh.ruff"
+        "charliermarsh.ruff",
+        "ms-azuretools.vscode-docker"
     ]
 }
