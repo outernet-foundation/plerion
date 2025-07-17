@@ -4,8 +4,8 @@ from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from piccolo_admin.endpoints import create_admin
 
-from db.app import APP_CONFIG
-from db.conf import DB
+from db.piccolo_app import APP_CONFIG
+from piccolo_conf import DB
 from routers.captures import router as captures_router
 
 
