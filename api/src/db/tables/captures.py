@@ -3,7 +3,7 @@ import uuid
 from piccolo.columns import UUID, Timestamp, Varchar
 from piccolo.columns.defaults.timestamp import TimestampNow
 
-from ..util.shims import Table
+from ..piccolo_shims import Table
 
 
 class Capture(Table):

@@ -7,7 +7,7 @@ from piccolo.columns.defaults.uuid import UUID4
 from piccolo.columns.indexes import IndexMethod
 
 
-ID = "2025-07-17T11:20:42:744925"
+ID = "2025-07-17T12:54:48:588099"
 VERSION = "1.27.1"
 DESCRIPTION = ""
 

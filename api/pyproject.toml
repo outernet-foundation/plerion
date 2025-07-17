@@ -20,7 +20,7 @@ dev = ["boto3-stubs[s3]>=1.39.7", "botocore-stubs>=1.38.46"]
 extend = "../pyproject.toml"
 
 [project.scripts]
-db = "db.tool:main"
+db = "src.db.tool:main"
 
 [tool.uv]
 package = true
@@ -30,4 +30,4 @@ requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["plerion_api"]
+packages = ["src"]
