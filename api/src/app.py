@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
+from mangum import Mangum
 from piccolo_admin.endpoints import create_admin
 
 from .db.app import APP_CONFIG
@@ -29,6 +30,7 @@ app = FastAPI(
     generate_unique_id_function=use_handler_name,
     lifespan=lifespan,
 )
+handler = Mangum(app)
 
 app.mount("/admin", create_admin(tables=APP_CONFIG.table_classes), name="admin")
 
