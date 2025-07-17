@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import typing
 
-from api.src.db.util.shims import PostgresEngine
+from db.util.shims import PostgresEngine
 
 
 class StubEngine(PostgresEngine):

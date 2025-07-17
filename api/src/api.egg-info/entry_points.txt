@@ -1,0 +1,2 @@
+[console_scripts]
+db = db.tool:main

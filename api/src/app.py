@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
 
+from api.src.db.app import APP_CONFIG
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from piccolo_admin.endpoints import create_admin
 
-from db.piccolo_app import APP_CONFIG
-from piccolo_conf import DB
+from db.conf.local import DB
 from routers.captures import router as captures_router
 
 
