@@ -4,7 +4,7 @@ import pkgutil
 
 from piccolo.conf.apps import AppConfig, table_finder
 
-tables = importlib.import_module("src.db.tables")
+tables = importlib.import_module("plerion_api.db.tables")
 
 APP_CONFIG = AppConfig(
     app_name="plerion",

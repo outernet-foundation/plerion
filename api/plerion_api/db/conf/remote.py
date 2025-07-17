@@ -1,7 +1,7 @@
 # from db.util.stub_engine import StubEngine
 from piccolo.conf.apps import AppRegistry
 
-from plerion_api.db.util.stub_engine import StubEngine
+from ..util.stub_engine import StubEngine
 
 # DB = PostgresEngine(
 #     config={
