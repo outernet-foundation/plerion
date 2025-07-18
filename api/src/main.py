@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -6,6 +7,11 @@ from mangum import Mangum
 
 from .db.conf import DB
 from .routers.captures import router as captures_router
+
+try:
+    asyncio.get_running_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
 
 
 # Make codegened client functions use the same name as their corresponding server functions
@@ -29,5 +35,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 handler = Mangum(app)
+
 
 app.include_router(captures_router)

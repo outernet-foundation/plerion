@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Sequence
 
 import pulumi
 import pulumi_aws as aws
@@ -29,6 +30,8 @@ def create_api_lambda(
     config: pulumi.Config,
     environment_vars: dict[str, pulumi.Input[str]],
     s3_bucket_arn: pulumi.Input[str],
+    vpc_subnet_ids: Sequence[str],
+    vpc_security_group_ids: Sequence[pulumi.Input[str]],
     image_tag: str = "latest",
     memory_size: int = 512,
     timeout_seconds: int = 30,
@@ -53,6 +56,12 @@ def create_api_lambda(
                 ],
             }
         ),
+    )
+
+    aws.iam.RolePolicyAttachment(
+        "lambdaVpcAccessPolicy",
+        role=role.name,
+        policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
     )
 
     aws.iam.RolePolicy(
@@ -124,6 +133,10 @@ def create_api_lambda(
                 **environment_vars,
                 "S3_BUCKET_ARN": s3_bucket_arn,  # Pass S3 bucket ARN to Lambda
             }
+        },
+        vpc_config={
+            "subnet_ids": vpc_subnet_ids,
+            "security_group_ids": vpc_security_group_ids,
         },
     )
 

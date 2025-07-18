@@ -3,18 +3,13 @@ import pulumi_aws as aws
 
 from utils import get_default_subnet_ids
 
-from .network import create_postgres_security_group
-
 
 def create_database(
-    config: pulumi.Config,
+    config: pulumi.Config, security_group: aws.ec2.SecurityGroup
 ) -> tuple[aws.rds.Instance, pulumi.Output[str]]:
     instance_class: str = config.require("rdsInstanceClass")
     db_user: str = config.require("dbUsername")
     db_password_output = config.require_secret("dbPassword")
-
-    # Security group permitting 5432 from inside VPC.
-    postgres_sg = create_postgres_security_group()
 
     # Subnet group over default VPC subnets (sync lookups OK in small stacks).
     subnet_group = aws.rds.SubnetGroup(
@@ -29,7 +24,7 @@ def create_database(
         instance_class=instance_class,
         allocated_storage=20,
         db_subnet_group_name=subnet_group.id,
-        vpc_security_group_ids=[postgres_sg.id],
+        vpc_security_group_ids=[security_group.id],
         username=db_user,
         password=db_password_output,  # accepts Input[str]; we pass secret Output[str]
         skip_final_snapshot=True,
