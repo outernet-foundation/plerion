@@ -27,6 +27,8 @@ import pulumi_docker as docker  # top-level module (we'll pass dicts for inputs)
 
 def create_api_lambda(
     config: pulumi.Config,
+    environment_vars: dict[str, pulumi.Input[str]],
+    s3_bucket_arn: pulumi.Input[str],
     image_tag: str = "latest",
     memory_size: int = 512,
     timeout_seconds: int = 30,
@@ -50,6 +52,25 @@ def create_api_lambda(
                     }
                 ],
             }
+        ),
+    )
+
+    aws.iam.RolePolicy(
+        "lambdaS3Access",
+        role=role.id,
+        policy=pulumi.Output.all(s3_bucket_arn).apply(
+            lambda arn: json.dumps(
+                {
+                    "Version": "2012-10-17",
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": ["s3:GetObject", "s3:PutObject"],
+                            "Resource": f"{arn}/*",
+                        }
+                    ],
+                }
+            )
         ),
     )
 
@@ -77,7 +98,11 @@ def create_api_lambda(
     # 4) Build & push the image (dict style inputs: see Pulumi docs Python examples)
     image = docker.Image(
         "apiImage",
-        build={"dockerfile": str(dockerfile), "platform": "linux/amd64"},
+        build={
+            "dockerfile": str(dockerfile),
+            "context": str(dockerfile.parent),
+            "platform": "linux/amd64",
+        },
         image_name=image_name,
         registry={
             "server": creds.proxy_endpoint,
@@ -94,6 +119,12 @@ def create_api_lambda(
         role=role.arn,
         timeout=timeout_seconds,
         memory_size=memory_size,
+        environment={
+            "variables": {
+                **environment_vars,
+                "S3_BUCKET_ARN": s3_bucket_arn,  # Pass S3 bucket ARN to Lambda
+            }
+        },
     )
 
     # Convenience export (optional)

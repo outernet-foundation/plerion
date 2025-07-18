@@ -1,3 +1,5 @@
+import json
+
 import pulumi
 import pulumi_aws as aws
 
@@ -20,7 +22,12 @@ def create_http_api(lambda_function: aws.lambda_.Function) -> pulumi.Output[str]
         resource_name="catchAllRoute",
         api_id=api.id,
         route_key="$default",
-        target=integration.id,
+        target=integration.id.apply(lambda iid: f"integrations/{iid}"),
+    )
+
+    log_group = aws.cloudwatch.LogGroup(
+        "httpApiLogs",
+        retention_in_days=7,
     )
 
     aws.apigatewayv2.Stage(
@@ -28,6 +35,19 @@ def create_http_api(lambda_function: aws.lambda_.Function) -> pulumi.Output[str]
         api_id=api.id,
         name="$default",
         auto_deploy=True,
+        access_log_settings=aws.apigatewayv2.StageAccessLogSettingsArgs(
+            destination_arn=log_group.arn,
+            format=json.dumps(
+                {
+                    "requestId": "$context.requestId",
+                    "routeKey": "$context.routeKey",
+                    "status": "$context.status",
+                    "errorMessage": "$context.error.message",
+                    "integrationError": "$context.integration.error",
+                    "latency": "$context.integrationLatency",
+                }
+            ),
+        ),
     )
 
     # ← NEW: allow API Gateway to invoke the Lambda

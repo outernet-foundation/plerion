@@ -6,7 +6,9 @@ from utils import get_default_subnet_ids
 from .network import create_postgres_security_group
 
 
-def create_database(config: pulumi.Config) -> aws.rds.Instance:
+def create_database(
+    config: pulumi.Config,
+) -> tuple[aws.rds.Instance, pulumi.Output[str]]:
     instance_class: str = config.require("rdsInstanceClass")
     db_user: str = config.require("dbUsername")
     db_password_output = config.require_secret("dbPassword")
@@ -35,17 +37,16 @@ def create_database(config: pulumi.Config) -> aws.rds.Instance:
 
     # Export a connection string as an Output[str]. Note we DO NOT stringify the secret
     # at plan time; Pulumi will handle secret propagation.
-    pulumi.export(
-        "postgresConnectionString",
-        pulumi.Output.concat(
-            "postgresql://",
-            db_user,
-            ":",
-            db_password_output,
-            "@",
-            db_instance.address,
-            ":5432/postgres",
-        ),
-    )
+    connection_string = pulumi.Output.concat(
+        "postgresql://",
+        db_user,
+        ":",
+        db_password_output,
+        "@",
+        db_instance.address,
+        ":5432/postgres",
+    ).apply(lambda s: s)  # ensures Output[str], not Output[Any]
 
-    return db_instance
+    pulumi.export("postgresConnectionString", connection_string)
+
+    return db_instance, connection_string
