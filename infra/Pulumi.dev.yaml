@@ -6,3 +6,4 @@ config:
   plerion_infra:dbUsername: temp
   plerion_infra:dbPassword:
     secure: AAABAMw0K6H7+8WZgc9sG+UzeBS04mPSo1M549oAet6/kvFS
+  plerion_infra:lambdaDockerfile: ../../api/Dockerfile.lambda

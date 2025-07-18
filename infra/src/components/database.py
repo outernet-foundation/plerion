@@ -6,7 +6,7 @@ from utils import get_default_subnet_ids
 from .network import create_postgres_security_group
 
 
-def create_database(*, config: pulumi.Config) -> aws.rds.Instance:
+def create_database(config: pulumi.Config) -> aws.rds.Instance:
     instance_class: str = config.require("rdsInstanceClass")
     db_user: str = config.require("dbUsername")
     db_password_output = config.require_secret("dbPassword")
@@ -16,14 +16,14 @@ def create_database(*, config: pulumi.Config) -> aws.rds.Instance:
 
     # Subnet group over default VPC subnets (sync lookups OK in small stacks).
     subnet_group = aws.rds.SubnetGroup(
-        resource_name="dbSubnetGroup",
+        resource_name="db-subnet-group",
         subnet_ids=get_default_subnet_ids(),
     )
 
     db_instance = aws.rds.Instance(
-        resource_name="postgresInstance",
+        resource_name="postgres-instance",
         engine="postgres",
-        engine_version="15.5",
+        engine_version="15.7",
         instance_class=instance_class,
         allocated_storage=20,
         db_subnet_group_name=subnet_group.id,
