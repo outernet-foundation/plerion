@@ -1,31 +1,31 @@
 import pulumi
 from pulumi import Config
 
-from components.api_gateway import create_http_api
+from components import vpc
 from components.database import create_database
-from components.lambdas import create_api_lambda
-from components.network import create_security_groups
-from components.storage import create_captures_bucket
-from utils import get_default_subnet_ids
+from components.gateway import create_gateway
+from components.lambdas import create_lambda
+from components.minio import create_minio
+from components.storage import create_storage
 
 # Stack config (region comes from pulumi config aws:region)
 config = Config()
 
+# 0. VPC with security groups
+private_subnet_ids, lambda_sg, db_sg = vpc.create_vpc()
+
 # 1. S3 bucket (captures)
-captures_bucket = create_captures_bucket(config)
+captures_bucket = create_storage(config)
 
-# 2. Security groups
-
-
-db_sg, lambda_sg = create_security_groups()
+create_minio(config, s3_bucket=captures_bucket)
 
 # 2. Postgres database
-postgres_instance, connection_string = create_database(config, db_sg)
-
-subnet_ids = get_default_subnet_ids()
+postgres_instance, connection_string = create_database(
+    config, db_sg, private_subnet_ids
+)
 
 # 3. Lambda (container image)
-api_lambda = create_api_lambda(
+api_lambda = create_lambda(
     config,
     environment_vars={
         # Pulumi Inputs are OK here; secrets stay secret
@@ -33,12 +33,12 @@ api_lambda = create_api_lambda(
         "CAPTURES_BUCKET": captures_bucket.bucket,
     },
     s3_bucket_arn=captures_bucket.arn,
-    vpc_subnet_ids=subnet_ids,
+    vpc_subnet_ids=private_subnet_ids,
     vpc_security_group_ids=[lambda_sg.id],
 )
 
 # 4. API Gateway → Lambda proxy
-api_endpoint_output = create_http_api(api_lambda)
+api_endpoint_output = create_gateway(api_lambda)
 
 # 5. Stack outputs
 pulumi.export("apiUrl", api_endpoint_output)

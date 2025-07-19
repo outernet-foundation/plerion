@@ -1,12 +1,15 @@
+from typing import Sequence
+
 import pulumi
 import pulumi_aws as aws
-
-from utils import get_default_subnet_ids
+from pulumi import Config, Input, Output
 
 
 def create_database(
-    config: pulumi.Config, security_group: aws.ec2.SecurityGroup
-) -> tuple[aws.rds.Instance, pulumi.Output[str]]:
+    config: Config,
+    security_group: aws.ec2.SecurityGroup,
+    subnet_ids: Input[Sequence[Input[str]]],
+) -> tuple[aws.rds.Instance, Output[str]]:
     instance_class: str = config.require("rdsInstanceClass")
     db_user: str = config.require("dbUsername")
     db_password_output = config.require_secret("dbPassword")
@@ -14,7 +17,7 @@ def create_database(
     # Subnet group over default VPC subnets (sync lookups OK in small stacks).
     subnet_group = aws.rds.SubnetGroup(
         resource_name="db-subnet-group",
-        subnet_ids=get_default_subnet_ids(),
+        subnet_ids=subnet_ids,
     )
 
     db_instance = aws.rds.Instance(
@@ -32,7 +35,7 @@ def create_database(
 
     # Export a connection string as an Output[str]. Note we DO NOT stringify the secret
     # at plan time; Pulumi will handle secret propagation.
-    connection_string = pulumi.Output.concat(
+    connection_string = Output.concat(
         "postgresql://",
         db_user,
         ":",

@@ -34,7 +34,7 @@ app = FastAPI(
     generate_unique_id_function=use_handler_name,
     lifespan=lifespan,
 )
-handler = Mangum(app)
 
+handler = Mangum(app)
 
 app.include_router(captures_router)

@@ -20,18 +20,19 @@ from typing import Sequence
 import pulumi
 import pulumi_aws as aws
 import pulumi_docker as docker  # top-level module (we'll pass dicts for inputs)
+from pulumi import Config, Input, Output
 
 # ---------------------------------------------------------------------------
 # Container-image FastAPI Lambda
 # ---------------------------------------------------------------------------
 
 
-def create_api_lambda(
-    config: pulumi.Config,
-    environment_vars: dict[str, pulumi.Input[str]],
-    s3_bucket_arn: pulumi.Input[str],
-    vpc_subnet_ids: Sequence[str],
-    vpc_security_group_ids: Sequence[pulumi.Input[str]],
+def create_lambda(
+    config: Config,
+    environment_vars: dict[str, Input[str]],
+    s3_bucket_arn: Input[str],
+    vpc_subnet_ids: Input[Sequence[Input[str]]],
+    vpc_security_group_ids: Input[Sequence[Input[str]]],
     image_tag: str = "latest",
     memory_size: int = 512,
     timeout_seconds: int = 30,
@@ -67,7 +68,7 @@ def create_api_lambda(
     aws.iam.RolePolicy(
         "lambdaS3Access",
         role=role.id,
-        policy=pulumi.Output.all(s3_bucket_arn).apply(
+        policy=Output.all(s3_bucket_arn).apply(
             lambda arn: json.dumps(
                 {
                     "Version": "2012-10-17",
@@ -95,14 +96,16 @@ def create_api_lambda(
         raise FileNotFoundError(f"Dockerfile not found: {dockerfile}")
 
     # 1) ECR repository for the image
-    repo = aws.ecr.Repository("api-ecr-repo")
+    repo = aws.ecr.Repository(
+        "api-ecr-repo", force_delete=config.require_bool("devMode")
+    )
 
     # 2) Credentials for pushing to ECR (no registry_id arg; avoids Output→str type mismatch)
     creds = aws.ecr.get_authorization_token()
 
     # 3) Build fully-qualified image name as an Output[str]
     #    repo.repository_url is Output[str]; concat returns Output[str]
-    image_name = pulumi.Output.concat(repo.repository_url, ":", image_tag)
+    image_name = Output.concat(repo.repository_url, ":", image_tag)
 
     # 4) Build & push the image (dict style inputs: see Pulumi docs Python examples)
     image = docker.Image(

@@ -1,10 +1,10 @@
 import json
 
-import pulumi
 import pulumi_aws as aws
+from pulumi import Output
 
 
-def create_http_api(lambda_function: aws.lambda_.Function) -> pulumi.Output[str]:
+def create_gateway(lambda_function: aws.lambda_.Function) -> Output[str]:
     api = aws.apigatewayv2.Api(
         resource_name="httpApi",
         protocol_type="HTTP",

@@ -88,6 +88,7 @@ source = { editable = "." }
 dependencies = [
     { name = "pulumi" },
     { name = "pulumi-aws" },
+    { name = "pulumi-awsx" },
     { name = "pulumi-docker" },
 ]
 
@@ -100,6 +101,7 @@ dev = [
 requires-dist = [
     { name = "pulumi", specifier = ">=3.183.0" },
     { name = "pulumi-aws", specifier = ">=6.83.0" },
+    { name = "pulumi-awsx", specifier = ">=2.22.0" },
     { name = "pulumi-docker", specifier = ">=4.8.0" },
 ]
 
@@ -152,6 +154,23 @@ wheels = [
 ]
 
 [[package]]
+name = "pulumi-awsx"
+version = "2.22.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "parver" },
+    { name = "pulumi" },
+    { name = "pulumi-aws" },
+    { name = "pulumi-docker" },
+    { name = "pulumi-docker-build" },
+    { name = "semver" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2b/99/02c171e4f54fe7b89bf06435dc98b5f6656684ece73535915abb83e804a2/pulumi_awsx-2.22.0.tar.gz", hash = "sha256:1852b2e0f57a80b2e325b9223b2538665d0ac512637f737494815c6aa67ff28b", size = 104537, upload-time = "2025-06-25T17:46:13.272Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/e6/41/04295b10120bb95ded11476804bf2eb70827116d8ecddc880888dad4b3cb/pulumi_awsx-2.22.0-py3-none-any.whl", hash = "sha256:6607557dfc88431457f9a737e488a23e4fa9ce8c006a70efe433729973ce7253", size = 121001, upload-time = "2025-06-25T17:46:11.601Z" },
+]
+
+[[package]]
 name = "pulumi-docker"
 version = "4.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -163,6 +182,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/88/47/4ef6f5c2f2a53b6883c152d945bab0ee5e66ed3d295eca8b1e16aa462ca1/pulumi_docker-4.8.0.tar.gz", hash = "sha256:c2460c1d3f011a3602f46d8ef0a4fabd7cc08556a84e7c43ee31acb09d064ad7", size = 106590, upload-time = "2025-06-18T21:39:52.577Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/7e/a7/c345d79c6f5592b41b76e31e27d08ff43fce4ba92a1040fe885065e1f4cb/pulumi_docker-4.8.0-py3-none-any.whl", hash = "sha256:75f2be3d9a646292b6d1985edcc03239cc0ab077e96a188e8423b737cf6c958f", size = 128007, upload-time = "2025-06-18T21:39:50.8Z" },
+]
+
+[[package]]
+name = "pulumi-docker-build"
+version = "0.0.12"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "parver" },
+    { name = "pulumi" },
+    { name = "semver" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/2f/d4/4f645603ce8197d2b84b11418d6c8f67a4d40e0d3e5cfdb32f5c79bb8342/pulumi_docker_build-0.0.12.tar.gz", hash = "sha256:e42119d5453df68de30eb554e0d3e6ab317e2fd25bd201296b07611b0e81e45b", size = 39357, upload-time = "2025-05-16T19:30:57.54Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/17/6f/8b4d6410f8a0ce968374a499555197b08b16dbb2e7d2752e46836fb7f6cd/pulumi_docker_build-0.0.12-py3-none-any.whl", hash = "sha256:fc9b2720650411bccd3de2c2e8dc1b26be1f3b1d4fcbde343343f6829a365e2b", size = 44056, upload-time = "2025-05-16T19:30:55.832Z" },
 ]
 
 [[package]]
