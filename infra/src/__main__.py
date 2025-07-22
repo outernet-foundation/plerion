@@ -1,3 +1,5 @@
+import json
+
 import pulumi
 import pulumi_aws as aws
 import pulumi_aws.ec2 as ec2
@@ -14,6 +16,39 @@ from util import ALLOW_ALL_EGRESS
 
 # Stack config (region comes from pulumi config aws:region)
 config = Config()
+
+dockerhub_secret = aws.secretsmanager.Secret(
+    "dockerhub-secret",
+    name="ecr-pullthroughcache/dockerhub",
+    description="Credentials for pulling private or rate‐limited Docker Hub images",
+)
+
+# 1b. Store your username + token
+dockerhub_secret_version = aws.secretsmanager.SecretVersion(
+    "dockerhub-secret-version",
+    secret_id=dockerhub_secret.id,
+    secret_string=pulumi.Output.all(
+        config.require("dockerhub-username"),
+        config.require_secret("dockerhub-password"),
+    ).apply(
+        lambda args: json.dumps(
+            {
+                "username": args[0],
+                "password": args[1],
+            }
+        )
+    ),
+)
+
+# 1) ECR repository for the image
+repo = aws.ecr.Repository("ecr-repo", force_delete=config.require_bool("devMode"))
+
+aws.ecr.PullThroughCacheRule(
+    "ecr-pull-through-cache-rule",
+    ecr_repository_prefix=repo.name,
+    upstream_registry_url="registry-1.docker.io",
+    credential_arn=dockerhub_secret.arn,
+)
 
 # 0. VPC with security groups
 # Create a VPC with default subnet layout (public + private in each AZ)
@@ -75,6 +110,7 @@ create_cloudbeaver(
     cluster=cluster,
     security_group=cloudbeaver_security_group,
     db=postgres_instance,
+    repo=repo,
 )
 
 # 3. Lambda (container image)
@@ -88,6 +124,7 @@ api_lambda = create_lambda(
     s3_bucket_arn=captures_bucket.arn,
     vpc_subnet_ids=vpc.private_subnet_ids,
     vpc_security_group_ids=[lambda_security_group.id],
+    repo=repo,
 )
 
 # 4. API Gateway → Lambda proxy

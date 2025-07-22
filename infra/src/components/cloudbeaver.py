@@ -15,6 +15,7 @@ def create_cloudbeaver(
     cluster: aws.ecs.Cluster,
     security_group: aws.ec2.SecurityGroup,
     db: aws.rds.Instance,
+    repo: aws.ecr.Repository,
 ) -> None:
     # Create Secrets Manager secret for Postgres password
     postgres_secret = aws.secretsmanager.Secret("postgres-secret")
@@ -101,7 +102,7 @@ def create_cloudbeaver(
     )
     # Create the CloudBeaver ECS service
     FargateService(
-        "cloudbeaver-service-2",
+        "cloudbeaver-service",
         cluster=cluster.arn,
         network_configuration={
             "subnets": vpc.private_subnet_ids,

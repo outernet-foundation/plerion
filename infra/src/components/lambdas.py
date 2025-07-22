@@ -33,6 +33,7 @@ def create_lambda(
     s3_bucket_arn: Input[str],
     vpc_subnet_ids: Input[Sequence[Input[str]]],
     vpc_security_group_ids: Input[Sequence[Input[str]]],
+    repo: aws.ecr.Repository,
     image_tag: str = "latest",
     memory_size: int = 512,
     timeout_seconds: int = 30,
@@ -94,11 +95,6 @@ def create_lambda(
     dockerfile = Path(config.require("lambdaDockerfile")).resolve()
     if not dockerfile.is_file():
         raise FileNotFoundError(f"Dockerfile not found: {dockerfile}")
-
-    # 1) ECR repository for the image
-    repo = aws.ecr.Repository(
-        "api-ecr-repo", force_delete=config.require_bool("devMode")
-    )
 
     # 2) Credentials for pushing to ECR (no registry_id arg; avoids Output→str type mismatch)
     creds = aws.ecr.get_authorization_token()
