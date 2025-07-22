@@ -12,7 +12,7 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.12.3"]
+dev = ["ruff>=0.12.3", "aws-shell>=0.2.2"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
