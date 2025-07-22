@@ -61,7 +61,7 @@ def create_cloudbeaver(
     )
 
     # Create a load balancer for CloudBeaver
-    load_balancer = awsx.lb.ApplicationLoadBalancer("cloudbeaver-lb")
+    load_balancer = awsx.lb.ApplicationLoadBalancer("cloudbeaver-lb", default_target_group_port=8978)
 
     config_json = json.dumps(
         {
@@ -89,6 +89,27 @@ def create_cloudbeaver(
         },
         desired_count=1,
         task_definition_args={
+            "execution_role": {
+                "args": {
+                    "inline_policies": [
+                        {
+                            "policy": pulumi.Output.all(
+                                postgres_secret.arn,
+                                cloudbeaver_secret.arn
+                            ).apply(lambda arns: json.dumps({
+                                "Version": "2012-10-17",
+                                "Statement": [
+                                    {
+                                        "Effect":   "Allow",
+                                        "Action":   "secretsmanager:GetSecretValue",
+                                        "Resource": arns,
+                                    }
+                                ]
+                            }))
+                        }
+                    ]
+                }
+            },
             "volumes": [
                 {"name": "efs", "efs_volume_configuration": {"file_system_id": efs.id}},
             ],
@@ -128,6 +149,7 @@ def create_cloudbeaver(
                     "port_mappings": [
                         {
                             "container_port": 8978,
+                            "host_port": 8978,
                             "target_group": load_balancer.default_target_group,
                         }
                     ],
