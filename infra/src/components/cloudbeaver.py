@@ -1,9 +1,11 @@
 import json
+from pathlib import Path
 
 import pulumi
 import pulumi_aws as aws
 import pulumi_awsx as awsx
-from pulumi import Config
+import pulumi_docker as docker  # top-level module (we'll pass dicts for inputs)
+from pulumi import Config, Output
 from pulumi_awsx.ecs import FargateService
 
 from util import ALLOW_ALL_EGRESS
@@ -16,24 +18,16 @@ def create_cloudbeaver(
     security_group: aws.ec2.SecurityGroup,
     db: aws.rds.Instance,
 ) -> None:
-    aws.cloudwatch.LogGroup(
-        "cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7
-    )
+    aws.cloudwatch.LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
 
-    aws.cloudwatch.LogGroup(
-        "cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7
+    aws.cloudwatch.LogGroup("cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7)
+
+    aws.ecr.Repository(
+        "alpine-cache-repo", name="dockerhub/library/alpine", force_delete=config.require_bool("devMode")
     )
 
     aws.ecr.Repository(
-        "alpine-cache-repo",
-        name="dockerhub/library/alpine",
-        force_delete=config.require_bool("devMode"),
-    )
-
-    aws.ecr.Repository(
-        "cloudbeaver-cache-repo",
-        name="dockerhub/dbeaver/cloudbeaver",
-        force_delete=config.require_bool("devMode"),
+        "cloudbeaver-cache-repo", name="dockerhub/dbeaver/cloudbeaver", force_delete=config.require_bool("devMode")
     )
 
     # Get current AWS account ID and region for constructing ECR URLs
@@ -63,14 +57,7 @@ def create_cloudbeaver(
     efs_security_group = aws.ec2.SecurityGroup(
         "cloudbeaver-efs-sg",
         vpc_id=vpc.vpc_id,
-        ingress=[
-            {
-                "protocol": "tcp",
-                "from_port": 2049,
-                "to_port": 2049,
-                "security_groups": [security_group.id],
-            }
-        ],
+        ingress=[{"protocol": "tcp", "from_port": 2049, "to_port": 2049, "security_groups": [security_group.id]}],
         egress=ALLOW_ALL_EGRESS,
     )
 
@@ -78,10 +65,7 @@ def create_cloudbeaver(
     mount_targets = vpc.private_subnet_ids.apply(
         lambda subnet_ids: [
             aws.efs.MountTarget(
-                f"efs-mount-{i}",
-                file_system_id=efs.id,
-                subnet_id=sid,
-                security_groups=[efs_security_group.id],
+                f"efs-mount-{i}", file_system_id=efs.id, subnet_id=sid, security_groups=[efs_security_group.id]
             )
             for i, sid in enumerate(subnet_ids)
         ]
@@ -90,14 +74,7 @@ def create_cloudbeaver(
     alb_sg = aws.ec2.SecurityGroup(
         "alb-sg",
         vpc_id=vpc.vpc_id,
-        ingress=[
-            {
-                "protocol": "tcp",
-                "from_port": 80,
-                "to_port": 80,
-                "cidr_blocks": ["0.0.0.0/0"],
-            }
-        ],
+        ingress=[{"protocol": "tcp", "from_port": 80, "to_port": 80, "cidr_blocks": ["0.0.0.0/0"]}],
         egress=ALLOW_ALL_EGRESS,
     )
 
@@ -137,6 +114,36 @@ def create_cloudbeaver(
         egress=ALLOW_ALL_EGRESS,
     )
 
+    repo = aws.ecr.Repository("cloudbeaver-init-repo", force_delete=config.require_bool("devMode"))
+
+    # Validate build context early; helps surface mis-path errors during preview.
+    dockerfile = Path(config.require("cloudbeaver-init-dockerfile")).resolve()
+    if not dockerfile.is_file():
+        raise FileNotFoundError(f"Dockerfile not found: {dockerfile}")
+
+    # 2) Credentials for pushing to ECR (no registry_id arg; avoids Output→str type mismatch)
+    creds = aws.ecr.get_authorization_token()
+
+    # 3) Build fully-qualified image name as an Output[str]
+    #    repo.repository_url is Output[str]; concat returns Output[str]
+    image_name = Output.concat(repo.repository_url, ":", "latest")
+
+    # 4) Build & push the image (dict style inputs: see Pulumi docs Python examples)
+    image = docker.Image(
+        "cloudbeaver-init-image",
+        build={"dockerfile": str(dockerfile), "context": str(dockerfile.parent), "platform": "linux/amd64"},
+        image_name=image_name,
+        registry={"server": creds.proxy_endpoint, "username": creds.user_name, "password": creds.password},
+    )
+
+    pulumi.export("cloudbeaverUrl", load_balancer.load_balancer.dns_name.apply(lambda dns_name: f"http://{dns_name}"))
+
+    # 5) Lambda from image
+    # fn = aws.lambda_.Function(
+    #     resource_name=resource_name,
+    #     package_type="Image",
+    #     image_uri=image.repo_digest,  # Output[str]
+
     # Create the CloudBeaver ECS service
     FargateService(
         "cloudbeaver-service",
@@ -145,57 +152,38 @@ def create_cloudbeaver(
         opts=pulumi.ResourceOptions(depends_on=mount_targets),
         network_configuration={
             "subnets": vpc.private_subnet_ids,
-            "security_groups": [
-                security_group.id,
-                service_sg.id,
-            ],
+            "security_groups": [security_group.id, service_sg.id],
         },
         task_definition_args={
             "execution_role": {
                 "args": {
                     "inline_policies": [
                         {
-                            "policy": pulumi.Output.all(
-                                postgres_secret.arn, cloudbeaver_secret.arn
-                            ).apply(
-                                lambda arns: json.dumps(
-                                    {
-                                        "Version": "2012-10-17",
-                                        "Statement": [
-                                            {
-                                                "Effect": "Allow",
-                                                "Action": "secretsmanager:GetSecretValue",
-                                                "Resource": arns,
-                                            },
-                                            # Add permission required for ECR pull-through cache
-                                            {
-                                                "Effect": "Allow",
-                                                "Action": "ecr:BatchImportUpstreamImage",
-                                                "Resource": "*",
-                                            },
-                                        ],
-                                    }
-                                )
+                            "policy": pulumi.Output.all(postgres_secret.arn, cloudbeaver_secret.arn).apply(
+                                lambda arns: json.dumps({
+                                    "Version": "2012-10-17",
+                                    "Statement": [
+                                        {
+                                            "Effect": "Allow",
+                                            "Action": "secretsmanager:GetSecretValue",
+                                            "Resource": arns,
+                                        },
+                                        # Add permission required for ECR pull-through cache
+                                        {"Effect": "Allow", "Action": "ecr:BatchImportUpstreamImage", "Resource": "*"},
+                                    ],
+                                })
                             )
                         }
                     ]
                 }
             },
             "volumes": [
-                {
-                    "name": "efs",
-                    "efs_volume_configuration": {
-                        "file_system_id": efs.id,
-                        "transit_encryption": "ENABLED",
-                    },
-                },
+                {"name": "efs", "efs_volume_configuration": {"file_system_id": efs.id, "transit_encryption": "ENABLED"}}
             ],
             "containers": {
                 "cloudbeaver-init": {
                     "name": "cloudbeaver-init",
-                    "image": pulumi.Output.all(current.account_id, region.name).apply(
-                        lambda args: f"{args[0]}.dkr.ecr.{args[1]}.amazonaws.com/dockerhub/library/alpine:latest"
-                    ),
+                    "image": image.repo_digest,
                     "essential": False,
                     "log_configuration": {
                         "log_driver": "awslogs",
@@ -205,81 +193,14 @@ def create_cloudbeaver(
                             "awslogs-stream-prefix": "ecs",
                         },
                     },
-                    "command": [
-                        "sh",
-                        "-c",
-                        "\n".join(
-                            [
-                                # Create directory structure
-                                "mkdir -p /opt/cloudbeaver/workspace/GlobalConfiguration/.dbeaver",
-                                "mkdir -p /opt/cloudbeaver/workspace/.data/.dbeaver",
-                                # 1. Server config: Tell CloudBeaver to use PostgreSQL for its metadata
-                                "cat <<EOF > /opt/cloudbeaver/workspace/.data/.cloudbeaver.runtime.conf",
-                                json.dumps(
-                                    {
-                                        "server": {
-                                            "database": {
-                                                "driver": "postgres-jdbc",
-                                                "url": "jdbc:postgresql://${POSTGRES_HOST}:5432/postgres",
-                                                "user": "${POSTGRES_USER}",
-                                                "password": "${POSTGRES_PASSWORD}",
-                                                "createDatabase": True,
-                                            }
-                                        }
-                                    }
-                                ),
-                                "EOF",
-                                # 2. Data sources config: Pre-configure connection to your app database
-                                "cat <<EOF > /opt/cloudbeaver/workspace/GlobalConfiguration/.dbeaver/data-sources.json",
-                                json.dumps(
-                                    {
-                                        "connections": {
-                                            "postgres": {
-                                                "provider": "postgresql",
-                                                "configuration": {
-                                                    "host": "${POSTGRES_HOST}",
-                                                    "database": "postgres",
-                                                    "user": "${POSTGRES_USER}",
-                                                    "password": "${POSTGRES_PASSWORD}",
-                                                },
-                                            }
-                                        }
-                                    }
-                                ),
-                                "EOF",
-                            ]
-                        ),
-                    ],
-                    "mount_points": [
-                        {
-                            "source_volume": "efs",
-                            "container_path": "/opt/cloudbeaver/workspace",
-                        }
-                    ],
+                    "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
                     "environment": [
-                        {
-                            "name": "POSTGRES_HOST",
-                            "value": db.address,
-                        },
-                        {
-                            "name": "POSTGRES_USER",
-                            "value": config.require("postgres-user"),
-                        },
-                        {
-                            "name": "CB_ADMIN_NAME",
-                            "value": config.require("cloudbeaver-user"),
-                        },
+                        {"name": "POSTGRES_HOST", "value": db.address},
+                        {"name": "POSTGRES_PORT", "value": "5432"},
+                        {"name": "POSTGRES_DB", "value": "postgres"},
+                        {"name": "POSTGRES_USER", "value": config.require("postgres-user")},
                     ],
-                    "secrets": [
-                        {
-                            "name": "POSTGRES_PASSWORD",
-                            "value_from": postgres_secret.arn,
-                        },
-                        {
-                            "name": "CB_ADMIN_PASSWORD",
-                            "value_from": cloudbeaver_secret.arn,
-                        },
-                    ],
+                    "secrets": [{"name": "POSTGRES_PASSWORD", "value_from": postgres_secret.arn}],
                 },
                 "cloudbeaver": {
                     "name": "cloudbeaver",
@@ -295,44 +216,34 @@ def create_cloudbeaver(
                         },
                     },
                     "port_mappings": [
-                        {
-                            "container_port": 8978,
-                            "host_port": 8978,
-                            "target_group": load_balancer.default_target_group,
-                        }
+                        {"container_port": 8978, "host_port": 8978, "target_group": load_balancer.default_target_group}
                     ],
-                    "mount_points": [
-                        {
-                            "source_volume": "efs",
-                            "container_path": "/opt/cloudbeaver/workspace",
-                        }
-                    ],
+                    "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
                     "environment": [
+                        {"name": "CB_SERVER_NAME", "value": "CloudBeaver"},
                         {
-                            "name": "CB_ADMIN_NAME",
-                            "value": config.require("cloudbeaver-user"),
-                        }
+                            "name": "CB_SERVER_URL",
+                            "value": pulumi.Output.all(load_balancer.load_balancer.dns_name).apply(
+                                lambda dns_name: f"http://{dns_name}"
+                            ),
+                        },
+                        {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
+                        {"name": "CLOUDBEAVER_DB_DRIVER", "value": "postgres-jdbc"},
+                        {
+                            "name": "CLOUDBEAVER_DB_URL",
+                            "value": pulumi.Output.all(db.address, db.port, db.name).apply(
+                                lambda args: f"jdbc:postgresql://{args[0]}:{args[1]}/{args[2]}"
+                            ),
+                        },
+                        {"name": "CLOUDBEAVER_DB_USER", "value": config.require("postgres-user")},
+                        {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
                     ],
                     "secrets": [
-                        {
-                            "name": "CB_ADMIN_PASSWORD",
-                            "value_from": cloudbeaver_secret.arn,
-                        }
+                        {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_secret.arn},
+                        {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_secret.arn},
                     ],
-                    "depends_on": [
-                        {
-                            "container_name": "cloudbeaver-init",
-                            "condition": "SUCCESS",
-                        }
-                    ],
+                    "depends_on": [{"container_name": "cloudbeaver-init", "condition": "SUCCESS"}],
                 },
             },
         },
-    )
-
-    pulumi.export(
-        "cloudbeaverUrl",
-        load_balancer.load_balancer.dns_name.apply(
-            lambda dns_name: f"http://{dns_name}"
-        ),
     )

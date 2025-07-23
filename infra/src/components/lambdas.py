@@ -33,7 +33,6 @@ def create_lambda(
     s3_bucket_arn: Input[str],
     vpc_subnet_ids: Input[Sequence[Input[str]]],
     vpc_security_group_ids: Input[Sequence[Input[str]]],
-    image_tag: str = "latest",
     memory_size: int = 512,
     timeout_seconds: int = 30,
     resource_name: str = "apiLambdaFunction",
@@ -41,8 +40,9 @@ def create_lambda(
     """
     Build & deploy the FastAPI+Mangum Lambda from a Docker image.
     """
-    repo = aws.ecr.Repository("ecr-repo", force_delete=config.require_bool("devMode"))
-
+    repo = aws.ecr.Repository(
+        "lambda-repo", force_delete=config.require_bool("devMode")
+    )
 
     # Create a basic Lambda execution role (logs only).
     role = aws.iam.Role(
@@ -102,7 +102,7 @@ def create_lambda(
 
     # 3) Build fully-qualified image name as an Output[str]
     #    repo.repository_url is Output[str]; concat returns Output[str]
-    image_name = Output.concat(repo.repository_url, ":", image_tag)
+    image_name = Output.concat(repo.repository_url, ":", "latest")
 
     # 4) Build & push the image (dict style inputs: see Pulumi docs Python examples)
     image = docker.Image(
