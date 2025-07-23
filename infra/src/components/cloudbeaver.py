@@ -14,18 +14,14 @@ def create_cloudbeaver(
     vpc: awsx.ec2.Vpc,
     cluster: aws.ecs.Cluster,
     security_group: aws.ec2.SecurityGroup,
-    db: aws.rds.Instance
+    db: aws.rds.Instance,
 ) -> None:
     aws.cloudwatch.LogGroup(
-        "cloudbeaver-log-group",
-        name="/ecs/cloudbeaver",
-        retention_in_days=7
+        "cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7
     )
-    
+
     aws.cloudwatch.LogGroup(
-        "cloudbeaver-init-log-group", 
-        name="/ecs/cloudbeaver-init",
-        retention_in_days=7
+        "cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7
     )
 
     aws.ecr.Repository(
@@ -35,7 +31,7 @@ def create_cloudbeaver(
     )
 
     aws.ecr.Repository(
-        "cloudbeaver-cache-repo", 
+        "cloudbeaver-cache-repo",
         name="dockerhub/dbeaver/cloudbeaver",
         force_delete=config.require_bool("devMode"),
     )
@@ -140,7 +136,7 @@ def create_cloudbeaver(
         ],
         egress=ALLOW_ALL_EGRESS,
     )
-    
+
     # Create the CloudBeaver ECS service
     FargateService(
         "cloudbeaver-service",
@@ -175,8 +171,8 @@ def create_cloudbeaver(
                                             {
                                                 "Effect": "Allow",
                                                 "Action": "ecr:BatchImportUpstreamImage",
-                                                "Resource": "*"
-                                            }
+                                                "Resource": "*",
+                                            },
                                         ],
                                     }
                                 )
@@ -206,48 +202,53 @@ def create_cloudbeaver(
                         "options": {
                             "awslogs-group": "/ecs/cloudbeaver-init",
                             "awslogs-region": region.name,
-                            "awslogs-stream-prefix": "ecs"
-                        }
+                            "awslogs-stream-prefix": "ecs",
+                        },
                     },
                     "command": [
                         "sh",
                         "-c",
-                        "\n".join([
-                            # Create directory structure
-                            "mkdir -p /opt/cloudbeaver/workspace/GlobalConfiguration/.dbeaver",
-                            
-                            # 1. Server config: Tell CloudBeaver to use PostgreSQL for its metadata
-                            "cat <<EOF > /opt/cloudbeaver/workspace/.data/.cloudbeaver.runtime.conf",
-                            json.dumps({
-                                "server": {
-                                    "database": {
-                                        "driver": "postgres-jdbc",
-                                        "url": "jdbc:postgresql://${POSTGRES_HOST}:5432/postgres",
-                                        "user": "${POSTGRES_USER}",
-                                        "password": "${POSTGRES_PASSWORD}",
-                                        "createDatabase": True,
+                        "\n".join(
+                            [
+                                # Create directory structure
+                                "mkdir -p /opt/cloudbeaver/workspace/GlobalConfiguration/.dbeaver",
+                                "mkdir -p /opt/cloudbeaver/workspace/.data/.dbeaver",
+                                # 1. Server config: Tell CloudBeaver to use PostgreSQL for its metadata
+                                "cat <<EOF > /opt/cloudbeaver/workspace/.data/.cloudbeaver.runtime.conf",
+                                json.dumps(
+                                    {
+                                        "server": {
+                                            "database": {
+                                                "driver": "postgres-jdbc",
+                                                "url": "jdbc:postgresql://${POSTGRES_HOST}:5432/postgres",
+                                                "user": "${POSTGRES_USER}",
+                                                "password": "${POSTGRES_PASSWORD}",
+                                                "createDatabase": True,
+                                            }
+                                        }
                                     }
-                                }
-                            }),
-                            "EOF",
-                            
-                            # 2. Data sources config: Pre-configure connection to your app database
-                            "cat <<EOF > /opt/cloudbeaver/workspace/GlobalConfiguration/.dbeaver/data-sources.json",
-                            json.dumps({
-                                "connections": {
-                                    "postgres": {
-                                        "provider": "postgresql",
-                                        "configuration": {
-                                            "host": "${POSTGRES_HOST}",
-                                            "database": "postgres",
-                                            "user": "${POSTGRES_USER}",
-                                            "password": "${POSTGRES_PASSWORD}",
-                                        },
+                                ),
+                                "EOF",
+                                # 2. Data sources config: Pre-configure connection to your app database
+                                "cat <<EOF > /opt/cloudbeaver/workspace/GlobalConfiguration/.dbeaver/data-sources.json",
+                                json.dumps(
+                                    {
+                                        "connections": {
+                                            "postgres": {
+                                                "provider": "postgresql",
+                                                "configuration": {
+                                                    "host": "${POSTGRES_HOST}",
+                                                    "database": "postgres",
+                                                    "user": "${POSTGRES_USER}",
+                                                    "password": "${POSTGRES_PASSWORD}",
+                                                },
+                                            }
+                                        }
                                     }
-                                }
-                            }),
-                            "EOF",
-                        ])
+                                ),
+                                "EOF",
+                            ]
+                        ),
                     ],
                     "mount_points": [
                         {
@@ -267,7 +268,7 @@ def create_cloudbeaver(
                         {
                             "name": "CB_ADMIN_NAME",
                             "value": config.require("cloudbeaver-user"),
-                        }
+                        },
                     ],
                     "secrets": [
                         {
@@ -277,7 +278,7 @@ def create_cloudbeaver(
                         {
                             "name": "CB_ADMIN_PASSWORD",
                             "value_from": cloudbeaver_secret.arn,
-                        }
+                        },
                     ],
                 },
                 "cloudbeaver": {
@@ -290,8 +291,8 @@ def create_cloudbeaver(
                         "options": {
                             "awslogs-group": "/ecs/cloudbeaver",
                             "awslogs-region": region.name,
-                            "awslogs-stream-prefix": "ecs"
-                        }
+                            "awslogs-stream-prefix": "ecs",
+                        },
                     },
                     "port_mappings": [
                         {
