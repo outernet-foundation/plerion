@@ -264,11 +264,19 @@ def create_cloudbeaver(
                             "name": "POSTGRES_USER",
                             "value": config.require("postgres-user"),
                         },
+                        {
+                            "name": "CB_ADMIN_NAME",
+                            "value": config.require("cloudbeaver-user"),
+                        }
                     ],
                     "secrets": [
                         {
                             "name": "POSTGRES_PASSWORD",
                             "value_from": postgres_secret.arn,
+                        },
+                        {
+                            "name": "CB_ADMIN_PASSWORD",
+                            "value_from": cloudbeaver_secret.arn,
                         }
                     ],
                 },
