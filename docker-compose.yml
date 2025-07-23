@@ -1,10 +1,17 @@
+volumes:
+  postgres_data:
+  minio_data:
+  venv_data:
+  uv_cache:
+  cloudbeaver_data:
+
 services:
   postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: postgres
+      POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
       test:
         [
@@ -18,6 +25,51 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+  cloudbeaver_init:
+    build:
+      context: ./cloudbeaver-init
+      dockerfile: Dockerfile
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  cloudbeaver:
+    image: dbeaver/cloudbeaver:latest
+    container_name: cloudbeaver
+    ports:
+      - "8978:8978"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cloudbeaver_init:
+        condition: service_completed_successfully
+    environment:
+      CB_SERVER_NAME: CloudBeaver
+      CB_SERVER_URL: http://localhost:8978
+      CB_ADMIN_NAME: ${CB_ADMIN_NAME}
+      CB_ADMIN_PASSWORD: ${CB_ADMIN_PASSWORD}
+      CLOUDBEAVER_DB_DRIVER: postgres-jdbc
+      CLOUDBEAVER_DB_URL: jdbc:postgresql://postgres:5432/postgres
+      CLOUDBEAVER_DB_USER: ${POSTGRES_USER}
+      CLOUDBEAVER_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      CLOUDBEAVER_DB_SCHEMA: cloudbeaver
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8978"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
 
   minio:
     image: minio/minio:latest
@@ -78,35 +130,3 @@ services:
       - ./api:/app
       - venv_data:/app/.venv
       - uv_cache:/root/.cache/uv
-
-  cloudbeaver:
-    image: dbeaver/cloudbeaver:latest
-    container_name: cloudbeaver
-    ports:
-      - "8978:8978"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      CB_SERVER_NAME: CloudBeaver
-      CB_SERVER_URL: http://localhost:8978
-      CB_ADMIN_NAME: ${CB_ADMIN_NAME}
-      CB_ADMIN_PASSWORD: ${CB_ADMIN_PASSWORD}
-      CLOUDBEAVER_DB_DRIVER: postgres-jdbc
-      CLOUDBEAVER_DB_URL: jdbc:postgresql://postgres:5432/postgres
-      CLOUDBEAVER_DB_USER: ${POSTGRES_USER}
-      CLOUDBEAVER_DB_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - cloudbeaver_data:/opt/cloudbeaver/workspace
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8978"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-volumes:
-  postgres_data:
-  minio_data:
-  venv_data:
-  uv_cache:
-  cloudbeaver_data:
