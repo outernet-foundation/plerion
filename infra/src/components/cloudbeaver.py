@@ -16,6 +16,18 @@ def create_cloudbeaver(
     security_group: aws.ec2.SecurityGroup,
     db: aws.rds.Instance
 ) -> None:
+    aws.cloudwatch.LogGroup(
+        "cloudbeaver-log-group",
+        name="/ecs/cloudbeaver",
+        retention_in_days=7
+    )
+    
+    aws.cloudwatch.LogGroup(
+        "cloudbeaver-init-log-group", 
+        name="/ecs/cloudbeaver-init",
+        retention_in_days=7
+    )
+
     aws.ecr.Repository(
         "alpine-cache-repo",
         name="dockerhub/library/alpine",
@@ -176,6 +188,14 @@ def create_cloudbeaver(
                         lambda args: f"{args[0]}.dkr.ecr.{args[1]}.amazonaws.com/dockerhub/library/alpine:latest"
                     ),
                     "essential": False,
+                    "log_configuration": {
+                        "log_driver": "awslogs",
+                        "options": {
+                            "awslogs-group": "/ecs/cloudbeaver-init",
+                            "awslogs-region": region.name,
+                            "awslogs-stream-prefix": "ecs"
+                        }
+                    },
                     "command": [
                         "sh",
                         "-c",
@@ -227,9 +247,17 @@ def create_cloudbeaver(
                 },
                 "cloudbeaver": {
                     "name": "cloudbeaver",
-                   "image": pulumi.Output.all(current.account_id, region.name).apply(
+                    "image": pulumi.Output.all(current.account_id, region.name).apply(
                         lambda args: f"{args[0]}.dkr.ecr.{args[1]}.amazonaws.com/dockerhub/dbeaver/cloudbeaver:latest"
                     ),
+                    "log_configuration": {
+                        "log_driver": "awslogs",
+                        "options": {
+                            "awslogs-group": "/ecs/cloudbeaver",
+                            "awslogs-region": region.name,
+                            "awslogs-stream-prefix": "ecs"
+                        }
+                    },
                     "port_mappings": [
                         {
                             "container_port": 8978,
