@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "boto3>=1.39.10",
     "pulumi>=3.183.0",
     "pulumi-aws>=6.83.0",
     "pulumi-awsx>=2.22.0",
@@ -13,7 +14,12 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["ruff>=0.12.3", "aws-shell>=0.2.2"]
+dev = [
+    "boto3-stubs[ce]>=1.39.7",
+    "botocore-stubs>=1.38.46",
+    "ruff>=0.12.3",
+    "aws-shell>=0.2.2",
+]
 
 [tool.pyright]
 typeCheckingMode = "strict"

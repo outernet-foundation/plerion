@@ -25,7 +25,7 @@ def create_cloudbeaver(
         ingress=[{"protocol": "tcp", "from_port": 80, "to_port": 80, "cidr_blocks": ["0.0.0.0/0"]}],
         egress=ALLOW_ALL_EGRESS,
     )
-    
+
     # Allow load balancer ingress to CloudBeaver
     aws.ec2.SecurityGroupRule(
         "cloudbeaver-ingress-rule",
@@ -74,24 +74,20 @@ def create_cloudbeaver(
         lambda arns: json.dumps({
             "Version": "2012-10-17",
             "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Action": "secretsmanager:GetSecretValue",
-                    "Resource": arns,
-                },
+                {"Effect": "Allow", "Action": "secretsmanager:GetSecretValue", "Resource": arns},
                 {"Effect": "Allow", "Action": "ecr:BatchImportUpstreamImage", "Resource": "*"},
             ],
         })
     )
 
     # Create a Docker image for CloudBeaver initialization
-    repo = aws.ecr.Repository("cloudbeaver-init-repo", force_delete=config.require_bool("devMode"))
+    init_image_repo = aws.ecr.Repository("cloudbeaver-init-repo", force_delete=config.require_bool("devMode"))
     dockerfile = Path(config.require("cloudbeaver-init-dockerfile")).resolve()
     creds = aws.ecr.get_authorization_token()
-    image = docker.Image(
+    docker.Image(
         "cloudbeaver-init-image",
         build={"dockerfile": str(dockerfile), "context": str(dockerfile.parent), "platform": "linux/amd64"},
-        image_name=Output.concat(repo.repository_url, ":", "latest"),
+        image_name=Output.concat(init_image_repo.repository_url, ":", "latest"),
         registry={"server": creds.proxy_endpoint, "username": creds.user_name, "password": creds.password},
     )
 
@@ -115,16 +111,11 @@ def create_cloudbeaver(
         subnet_ids=vpc.public_subnet_ids,
         default_target_group=awsx.lb.TargetGroupArgs(
             port=8978,
-            # Wait up to 60 s for in‑flight requests to drain before deregistering a target
-            deregistration_delay=60,
+            deregistration_delay=60,  # Wait 60s before deregistering unhealthy instances (down from default of 300, for faster rotation since we only have one instance)
             health_check=aws.lb.TargetGroupHealthCheckArgs(
-                path="/health",
-                protocol="HTTP",
-                matcher="200-299", # Paranoia
-                interval=30,
-                timeout=5,
-                healthy_threshold=3, # Down from default 5
-                unhealthy_threshold=2,
+                interval=15,  # Check every 15 seconds (down from default of 30)
+                healthy_threshold=2,  # We are healthy after 30 seconds (down from default of 5*30, for faster deployments)
+                unhealthy_threshold=10,  # We are unhealthy after 150 seconds (up from default of 3*30, because CloudBeaver can take a while to start up)
             ),
         ),
     )
@@ -132,13 +123,12 @@ def create_cloudbeaver(
     # Create log groups
     aws.cloudwatch.LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
     aws.cloudwatch.LogGroup("cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7)
-    
+
     # Precompute some Input strings
-    db_url = pulumi.Output.all(db.address, db.port, db.name).apply(lambda args: f"jdbc:postgresql://{args[0]}:{args[1]}/{args[2]}")
-    cloudbeaver_url = pulumi.Output.all(load_balancer.load_balancer.dns_name).apply(lambda dns_name: f"http://{dns_name}")
-    cloudbeaver_image = pulumi.Output.all(aws.get_caller_identity().account_id, aws.get_region().name).apply(
-        lambda args: f"{args[0]}.dkr.ecr.{args[1]}.amazonaws.com/dockerhub/dbeaver/cloudbeaver:latest"
+    db_url = pulumi.Output.all(db.address, db.port).apply(
+        lambda args: f"jdbc:postgresql://{args[0]}:{args[1]}/postgres"
     )
+    cloudbeaver_url = load_balancer.load_balancer.dns_name.apply(lambda dns_name: f"http://{dns_name}")
 
     # Create Fargate service
     FargateService(
@@ -146,27 +136,16 @@ def create_cloudbeaver(
         cluster=cluster.arn,
         desired_count=1,
         opts=pulumi.ResourceOptions(depends_on=mount_targets),
-        network_configuration={
-            "subnets": vpc.private_subnet_ids,
-            "security_groups": [security_group.id],
-        },
+        network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [security_group.id]},
         task_definition_args={
-            "execution_role": {
-                "args": {
-                    "inline_policies": [
-                        {
-                            "policy": policy
-                        }
-                    ]
-                }
-            },
+            "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
             "volumes": [
                 {"name": "efs", "efs_volume_configuration": {"file_system_id": efs.id, "transit_encryption": "ENABLED"}}
             ],
             "containers": {
                 "cloudbeaver-init": {
                     "name": "cloudbeaver-init",
-                    "image": image.repo_digest,
+                    "image": init_image_repo.repository_url.apply(lambda u: f"{u}:latest"),
                     "essential": False,
                     "log_configuration": {
                         "log_driver": "awslogs",
@@ -187,7 +166,7 @@ def create_cloudbeaver(
                 },
                 "cloudbeaver": {
                     "name": "cloudbeaver",
-                    "image": cloudbeaver_image,
+                    "image": f"{aws.get_caller_identity().account_id}.dkr.ecr.{aws.get_region().name}.amazonaws.com/dockerhub/dbeaver/cloudbeaver:latest",
                     "log_configuration": {
                         "log_driver": "awslogs",
                         "options": {
@@ -220,5 +199,4 @@ def create_cloudbeaver(
     )
 
     # Export load balancer URL
-    pulumi.export("cloudbeaverUrl", load_balancer.load_balancer.dns_name.apply(lambda dns_name: f"http://{dns_name}"))
-
+    pulumi.export("cloudbeaverUrl", cloudbeaver_url)
