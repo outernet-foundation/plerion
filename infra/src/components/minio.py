@@ -9,16 +9,8 @@ from pulumi_awsx.ecs import FargateService
 from util import ALLOW_ALL_EGRESS, add_security_group_cross_reference
 
 
-def create_minio(
-    config: Config,
-    vpc: awsx.ec2.Vpc,
-    s3_bucket: aws.s3.Bucket,
-) -> Output[str]:
-    aws.cloudwatch.LogGroup(
-        "minio-log-group",
-        name="/ecs/minio",
-        retention_in_days=7,
-    )
+def create_minio(config: Config, vpc: awsx.ec2.Vpc, s3_bucket: aws.s3.Bucket) -> Output[str]:
+    aws.cloudwatch.LogGroup("minio-log-group", name="/ecs/minio", retention_in_days=7)
 
     # Create task role with S3 access for MinIO
     task_role = aws.iam.Role(
@@ -40,23 +32,16 @@ def create_minio(
         "minio-s3-access",
         role=task_role.id,
         policy=s3_bucket.arn.apply(
-            lambda arn: json.dumps(
-                {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "s3:GetObject",
-                                "s3:PutObject",
-                                "s3:DeleteObject",
-                                "s3:ListBucket",
-                            ],
-                            "Resource": [arn, f"{arn}/*"],
-                        }
-                    ],
-                }
-            )
+            lambda arn: json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": ["s3:GetObject", "s3:PutObject", "s3:DeleteObject", "s3:ListBucket"],
+                        "Resource": [arn, f"{arn}/*"],
+                    }
+                ],
+            })
         ),
     )
 
@@ -82,30 +67,16 @@ def create_minio(
 
     # Create load balancer security group
     lb_security_group = aws.ec2.SecurityGroup(
-        "minio-lb-sg",
+        "minio-lb-security-group",
         vpc_id=vpc.vpc_id,
         ingress=[
-            {
-                "protocol": "tcp",
-                "from_port": 80,
-                "to_port": 80,
-                "cidr_blocks": ["0.0.0.0/0"],
-            },
-            {
-                "protocol": "tcp",
-                "from_port": 9001,
-                "to_port": 9001,
-                "cidr_blocks": ["0.0.0.0/0"],
-            },
+            {"protocol": "tcp", "from_port": 80, "to_port": 80, "cidr_blocks": ["0.0.0.0/0"]},
+            {"protocol": "tcp", "from_port": 9001, "to_port": 9001, "cidr_blocks": ["0.0.0.0/0"]},
         ],
     )
 
     # Create ECS security group
-    ecs_security_group = aws.ec2.SecurityGroup(
-        "minio-ecs-sg",
-        vpc_id=vpc.vpc_id,
-        egress=ALLOW_ALL_EGRESS,
-    )
+    ecs_security_group = aws.ec2.SecurityGroup("minio-ecs-security-group", vpc_id=vpc.vpc_id, egress=ALLOW_ALL_EGRESS)
 
     # Add cross-reference rules between load balancer and ECS
     add_security_group_cross_reference(
@@ -150,12 +121,7 @@ def create_minio(
         load_balancer_arn=load_balancer.arn,
         port=80,
         protocol="HTTP",
-        default_actions=[
-            {
-                "type": "forward",
-                "target_group_arn": api_target_group.arn,
-            }
-        ],
+        default_actions=[{"type": "forward", "target_group_arn": api_target_group.arn}],
     )
 
     # Create listener for MinIO Console
@@ -164,12 +130,7 @@ def create_minio(
         load_balancer_arn=load_balancer.arn,
         port=9001,
         protocol="HTTP",
-        default_actions=[
-            {
-                "type": "forward",
-                "target_group_arn": console_target_group.arn,
-            }
-        ],
+        default_actions=[{"type": "forward", "target_group_arn": console_target_group.arn}],
     )
 
     # Create an ECS cluster for MinIO
@@ -187,23 +148,10 @@ def create_minio(
                 "image": "minio/minio:latest",
                 "cpu": 256,
                 "memory": 512,
-                "command": [
-                    "server",
-                    "/data",
-                    "--address",
-                    ":9000",
-                    "--console-address",
-                    ":9001",
-                ],
+                "command": ["server", "/data", "--address", ":9000", "--console-address", ":9001"],
                 "environment": [
-                    {
-                        "name": "MINIO_ROOT_USER",
-                        "value": config.require("minioAccessKey"),
-                    },
-                    {
-                        "name": "MINIO_ROOT_PASSWORD",
-                        "value": config.require_secret("minioSecretKey"),
-                    },
+                    {"name": "MINIO_ROOT_USER", "value": config.require("minioAccessKey")},
+                    {"name": "MINIO_ROOT_PASSWORD", "value": config.require_secret("minioSecretKey")},
                 ],
                 "port_mappings": [
                     {"container_port": 9000, "target_group": api_target_group},
@@ -219,10 +167,7 @@ def create_minio(
                 },
             },
         },
-        network_configuration={
-            "subnets": vpc.private_subnet_ids,
-            "security_groups": [ecs_security_group.id],
-        },
+        network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [ecs_security_group.id]},
         desired_count=1,
         health_check_grace_period_seconds=60,
         # Add explicit dependencies to ensure proper creation order
@@ -234,9 +179,7 @@ def create_minio(
 
     # Export URLs and service info
     pulumi.export("minioServiceName", minio.service.name)
-    pulumi.export(
-        "minioApiUrl", minio_url.apply(lambda url: f"{url}")
-    )  # Port 80 maps to 9000
+    pulumi.export("minioApiUrl", minio_url.apply(lambda url: f"{url}"))  # Port 80 maps to 9000
     pulumi.export("minioConsoleUrl", minio_url.apply(lambda url: f"{url}:9001"))
 
     return minio_url

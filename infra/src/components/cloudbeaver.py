@@ -16,33 +16,75 @@ def create_cloudbeaver(
     config: Config,
     vpc: awsx.ec2.Vpc,
     cluster: aws.ecs.Cluster,
-    security_group: aws.ec2.SecurityGroup,
+    cloudbeaver_security_group: aws.ec2.SecurityGroup,
+    ecr_api_security_group: aws.ec2.SecurityGroup,
+    ecr_dkr_security_group: aws.ec2.SecurityGroup,
+    secrets_manager_security_group: aws.ec2.SecurityGroup,
+    logs_security_group: aws.ec2.SecurityGroup,
+    postgres_security_group: aws.ec2.SecurityGroup,
     db: aws.rds.Instance,
 ) -> None:
-    # Allow internet http ingress to load balancer
+    # Allow load balancer ingress from the internet
     load_balancer_security_group = aws.ec2.SecurityGroup(
-        "alb-sg",
+        "load-balancer-security-group",
         vpc_id=vpc.vpc_id,
         ingress=[{"protocol": "tcp", "from_port": 80, "to_port": 80, "cidr_blocks": ["0.0.0.0/0"]}],
         egress=ALLOW_ALL_EGRESS,
     )
 
-    # Allow load balancer ingress to CloudBeaver
-    aws.ec2.SecurityGroupRule(
-        "cloudbeaver-ingress-rule",
-        type="ingress",
+    # Allow CloudBeaver ingress from the load balancer
+    aws.vpc.SecurityGroupIngressRule(
+        "cloudbeaver-ingress-from-load-balancer",
+        security_group_id=cloudbeaver_security_group.id,
+        ip_protocol="tcp",
         from_port=8978,
         to_port=8978,
-        protocol="tcp",
-        security_group_id=security_group.id,
-        source_security_group_id=load_balancer_security_group.id,
+        referenced_security_group_id=load_balancer_security_group.id,
     )
 
-    # Allow CloudBeaver ingress to EFS
+    # For each vpc endpoint, allow endpoint ingress from Cloudbeaver and allow CloudBeaver egress to endpoint
+    for vpc_endpoint_security_group in [
+        ecr_api_security_group,
+        ecr_dkr_security_group,
+        secrets_manager_security_group,
+        logs_security_group,
+    ]:
+        vpc_endpoint_name = vpc_endpoint_security_group.name.apply(lambda id: id.replace("-security-group", ""))
+
+        aws.vpc.SecurityGroupIngressRule(
+            f"{vpc_endpoint_name}-ingress-from-cloudbeaver",
+            security_group_id=vpc_endpoint_security_group.id,
+            ip_protocol="tcp",
+            from_port=443,
+            to_port=443,
+            referenced_security_group_id=cloudbeaver_security_group.id,
+        )
+        aws.vpc.SecurityGroupEgressRule(
+            f"cloudbeaver-egress-to-{vpc_endpoint_name}",
+            security_group_id=cloudbeaver_security_group.id,
+            ip_protocol="tcp",
+            from_port=443,
+            to_port=443,
+            referenced_security_group_id=vpc_endpoint_security_group.id,
+        )
+
+    # Allow Postgres ingress from CloudBeaver
+    aws.vpc.SecurityGroupIngressRule(
+        "cloudbeaver-ingress-from-postgres",
+        security_group_id=postgres_security_group.id,
+        ip_protocol="tcp",
+        from_port=5432,
+        to_port=5432,
+        referenced_security_group_id=cloudbeaver_security_group.id,
+    )
+
+    # Allow EFS ingress from CloudBeaver
     efs_security_group = aws.ec2.SecurityGroup(
-        "cloudbeaver-efs-sg",
+        "cloudbeaver-efs-security-group",
         vpc_id=vpc.vpc_id,
-        ingress=[{"protocol": "tcp", "from_port": 2049, "to_port": 2049, "security_groups": [security_group.id]}],
+        ingress=[
+            {"protocol": "tcp", "from_port": 2049, "to_port": 2049, "security_groups": [cloudbeaver_security_group.id]}
+        ],
         egress=ALLOW_ALL_EGRESS,
     )
 
@@ -136,8 +178,8 @@ def create_cloudbeaver(
         "cloudbeaver-service",
         cluster=cluster.arn,
         desired_count=1,
-        opts=pulumi.ResourceOptions(depends_on=mount_targets,custom_timeouts=CustomTimeouts(create="5m")),
-        network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [security_group.id]},
+        opts=pulumi.ResourceOptions(depends_on=mount_targets, custom_timeouts=CustomTimeouts(create="5m")),
+        network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [cloudbeaver_security_group.id]},
         task_definition_args={
             "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
             "volumes": [

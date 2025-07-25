@@ -82,7 +82,9 @@ aws.ecr.PullThroughCacheRule(
 
 def create_vpc_interface_endpoint(vpc: awsx.ec2.Vpc, name: str) -> aws.ec2.SecurityGroup:
     sanitized_name = name.replace(".", "-")
-    security_group = aws.ec2.SecurityGroup(f"{sanitized_name}-endpoint-sg", vpc_id=vpc.vpc_id, ingress=[], egress=[])
+    security_group = aws.ec2.SecurityGroup(
+        f"{sanitized_name}-endpoint-security-group", vpc_id=vpc.vpc_id, ingress=[], egress=[]
+    )
     aws.ec2.VpcEndpoint(
         f"{sanitized_name}-endpoint",
         vpc_id=vpc.vpc_id,
@@ -116,22 +118,11 @@ aws.ec2.VpcEndpoint(
 lambda_security_group = ec2.SecurityGroup("lambda-security-group", vpc_id=vpc.vpc_id, egress=ALLOW_ALL_EGRESS)
 
 cloudbeaver_security_group = aws.ec2.SecurityGroup(
-    "cloudbeaver-security-group", vpc_id=vpc.vpc_id, egress=ALLOW_ALL_EGRESS
+    "cloudbeaver-security-group", vpc_id=vpc.vpc_id, ingress=[], egress=[]
 )
 
 # Security group for RDS: allow Lambda SG on port 5432, all outbound
-postgres_security_group = ec2.SecurityGroup(
-    "postgres-security-group",
-    vpc_id=vpc.vpc_id,
-    ingress=[
-        {
-            "protocol": "tcp",
-            "from_port": 5432,
-            "to_port": 5432,
-            "security_groups": [lambda_security_group.id, cloudbeaver_security_group.id],
-        }
-    ],
-)
+postgres_security_group = ec2.SecurityGroup("postgres-security-group", vpc_id=vpc.vpc_id, ingress=[], egress=[])
 
 # 1. S3 bucket (captures)
 captures_bucket = create_storage(config)
@@ -144,7 +135,18 @@ postgres_instance, connection_string = create_database(config, postgres_security
 
 cluster = aws.ecs.Cluster("cluster")
 
-create_cloudbeaver(config, vpc=vpc, cluster=cluster, security_group=cloudbeaver_security_group, db=postgres_instance)
+create_cloudbeaver(
+    config,
+    vpc=vpc,
+    cluster=cluster,
+    cloudbeaver_security_group=cloudbeaver_security_group,
+    ecr_api_security_group=ecr_api_security_group,
+    ecr_dkr_security_group=ecr_dkr_security_group,
+    secrets_manager_security_group=secrets_manager_security_group,
+    logs_security_group=logs_security_group,
+    postgres_security_group=postgres_security_group,
+    db=postgres_instance,
+)
 
 # 3. Lambda (container image)
 api_lambda = create_lambda(
@@ -156,7 +158,8 @@ api_lambda = create_lambda(
     },
     s3_bucket_arn=captures_bucket.arn,
     vpc_subnet_ids=vpc.private_subnet_ids,
-    vpc_security_group_ids=[lambda_security_group.id],
+    lambda_security_group=lambda_security_group,
+    postgres_security_group=postgres_security_group,
 )
 
 # 4. API Gateway → Lambda proxy

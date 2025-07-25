@@ -32,33 +32,33 @@ def create_lambda(
     environment_vars: dict[str, Input[str]],
     s3_bucket_arn: Input[str],
     vpc_subnet_ids: Input[Sequence[Input[str]]],
-    vpc_security_group_ids: Input[Sequence[Input[str]]],
+    lambda_security_group: aws.ec2.SecurityGroup,
+    postgres_security_group: aws.ec2.SecurityGroup,
     memory_size: int = 512,
     timeout_seconds: int = 30,
     resource_name: str = "apiLambdaFunction",
 ) -> aws.lambda_.Function:
-    """
-    Build & deploy the FastAPI+Mangum Lambda from a Docker image.
-    """
-    repo = aws.ecr.Repository(
-        "lambda-repo", force_delete=config.require_bool("devMode")
+    # Allow Postgress ingress from Lambda
+    aws.vpc.SecurityGroupIngressRule(
+        "lambda-ingress-from-postgres",
+        security_group_id=postgres_security_group.id,
+        ip_protocol="tcp",
+        from_port=5432,
+        to_port=5432,
+        referenced_security_group_id=lambda_security_group.id,
     )
+
+    repo = aws.ecr.Repository("lambda-repo", force_delete=config.require_bool("devMode"))
 
     # Create a basic Lambda execution role (logs only).
     role = aws.iam.Role(
         resource_name=resource_name,
-        assume_role_policy=json.dumps(
-            {
-                "Version": "2012-10-17",
-                "Statement": [
-                    {
-                        "Effect": "Allow",
-                        "Principal": {"Service": "lambda.amazonaws.com"},
-                        "Action": "sts:AssumeRole",
-                    }
-                ],
-            }
-        ),
+        assume_role_policy=json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [
+                {"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}
+            ],
+        }),
     )
 
     aws.iam.RolePolicyAttachment(
@@ -71,18 +71,10 @@ def create_lambda(
         "lambdaS3Access",
         role=role.id,
         policy=Output.all(s3_bucket_arn).apply(
-            lambda arn: json.dumps(
-                {
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Action": ["s3:GetObject", "s3:PutObject"],
-                            "Resource": f"{arn}/*",
-                        }
-                    ],
-                }
-            )
+            lambda arn: json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [{"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": f"{arn}/*"}],
+            })
         ),
     )
 
@@ -107,17 +99,9 @@ def create_lambda(
     # 4) Build & push the image (dict style inputs: see Pulumi docs Python examples)
     image = docker.Image(
         "apiImage",
-        build={
-            "dockerfile": str(dockerfile),
-            "context": str(dockerfile.parent),
-            "platform": "linux/amd64",
-        },
+        build={"dockerfile": str(dockerfile), "context": str(dockerfile.parent), "platform": "linux/amd64"},
         image_name=image_name,
-        registry={
-            "server": creds.proxy_endpoint,
-            "username": creds.user_name,
-            "password": creds.password,
-        },
+        registry={"server": creds.proxy_endpoint, "username": creds.user_name, "password": creds.password},
     )
 
     # 5) Lambda from image
@@ -134,10 +118,7 @@ def create_lambda(
                 "S3_BUCKET_ARN": s3_bucket_arn,  # Pass S3 bucket ARN to Lambda
             }
         },
-        vpc_config={
-            "subnet_ids": vpc_subnet_ids,
-            "security_group_ids": vpc_security_group_ids,
-        },
+        vpc_config={"subnet_ids": vpc_subnet_ids, "security_group_ids": [lambda_security_group.id]},
     )
 
     # Convenience export (optional)
