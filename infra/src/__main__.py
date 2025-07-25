@@ -59,7 +59,7 @@ config = Config()
 
 dockerhub_secret = aws.secretsmanager.Secret(
     "dockerhub-secret",
-    name="ecr-pullthroughcache/dockerhub-1",
+    name="ecr-pullthroughcache/dockerhub-2",
     description="Credentials for pulling private or rate‐limited Docker Hub images",
 )
 
@@ -95,7 +95,7 @@ def create_vpc_interface_endpoint(vpc: awsx.ec2.Vpc, name: str) -> aws.ec2.Secur
     return security_group
 
 
-vpc = awsx.ec2.Vpc("main-vpc", nat_gateways={"strategy": awsx.ec2.NatGatewayStrategy.SINGLE}, enable_dns_hostnames=True)
+vpc = awsx.ec2.Vpc("main-vpc", nat_gateways={"strategy": awsx.ec2.NatGatewayStrategy.NONE}, enable_dns_hostnames=True)
 ecr_api_security_group = create_vpc_interface_endpoint(vpc, "ecr.api")
 ecr_dkr_security_group = create_vpc_interface_endpoint(vpc, "ecr.dkr")
 secrets_manager_security_group = create_vpc_interface_endpoint(vpc, "secretsmanager")

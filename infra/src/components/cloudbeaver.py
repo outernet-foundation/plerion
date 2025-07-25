@@ -6,6 +6,7 @@ import pulumi_aws as aws
 import pulumi_awsx as awsx
 import pulumi_docker as docker  # top-level module (we'll pass dicts for inputs)
 from pulumi import Config, Output
+from pulumi.resource import CustomTimeouts
 from pulumi_awsx.ecs import FargateService
 
 from util import ALLOW_ALL_EGRESS
@@ -135,7 +136,7 @@ def create_cloudbeaver(
         "cloudbeaver-service",
         cluster=cluster.arn,
         desired_count=1,
-        opts=pulumi.ResourceOptions(depends_on=mount_targets),
+        opts=pulumi.ResourceOptions(depends_on=mount_targets,custom_timeouts=CustomTimeouts(create="5m")),
         network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [security_group.id]},
         task_definition_args={
             "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
