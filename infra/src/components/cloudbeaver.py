@@ -11,12 +11,12 @@ from pulumi_aws.ecs import Cluster
 from pulumi_aws.efs import FileSystem, MountTarget
 from pulumi_aws.lb import TargetGroupHealthCheckArgs
 from pulumi_aws.rds import Instance
-from pulumi_aws.secretsmanager import Secret, SecretVersion
 from pulumi_aws.vpc import SecurityGroupEgressRule, SecurityGroupIngressRule
 from pulumi_awsx.ec2 import Vpc
 from pulumi_awsx.ecs import FargateService
 from pulumi_awsx.lb import ApplicationLoadBalancer, TargetGroupArgs
 
+from components.secret import Secret
 from util import add_egress_to_dns_rule, add_reciprocal_security_group_rules
 
 
@@ -104,21 +104,8 @@ def create_cloudbeaver(
         protocol="tcp",
     )
 
-    # Create secret for postgres password
-    postgres_secret = Secret("postgres-secret")
-    SecretVersion(
-        "postgres-secret-version",
-        secret_id=postgres_secret.id,
-        secret_string=config.require_secret("postgres-password"),
-    )
-
-    # Create secret for CloudBeaver admin password
-    cloudbeaver_secret = Secret("cloudbeaver-secret")
-    SecretVersion(
-        "cloudbeaver-secret-version",
-        secret_id=cloudbeaver_secret.id,
-        secret_string=config.require_secret("cloudbeaver-password"),
-    )
+    postgres_secret = Secret("postgres-secret", secret_string=config.require_secret("postgres-password"))
+    cloudbeaver_secret = Secret("cloudbeaver-secret", secret_string=config.require_secret("cloudbeaver-password"))
 
     # Create repos for image pull-through cache
     Repository("alpine-cache-repo", name="dockerhub/library/alpine", force_delete=config.require_bool("devMode"))
@@ -141,7 +128,7 @@ def create_cloudbeaver(
     init_image_repo = Repository("cloudbeaver-init-repo", force_delete=config.require_bool("devMode"))
     dockerfile = Path(config.require("cloudbeaver-init-dockerfile")).resolve()
     creds = get_authorization_token()
-    docker.Image(
+    init_image = docker.Image(
         "cloudbeaver-init-image",
         build={"dockerfile": str(dockerfile), "context": str(dockerfile.parent), "platform": "linux/amd64"},
         image_name=Output.concat(init_image_repo.repository_url, ":", "latest"),
@@ -168,6 +155,8 @@ def create_cloudbeaver(
             port=8978,
             deregistration_delay=60,  # Wait 60s before deregistering unhealthy instances (down from default of 300, for faster rotation since we only have one instance)
             health_check=TargetGroupHealthCheckArgs(
+                path="/",
+                protocol="HTTP",
                 interval=15,  # Check every 15 seconds (down from default of 30)
                 healthy_threshold=2,  # We are healthy after 30 seconds (down from default of 5*30, for faster deployments)
                 unhealthy_threshold=10,  # We are unhealthy after 150 seconds (up from default of 3*30, because CloudBeaver can take a while to start up)
@@ -198,7 +187,7 @@ def create_cloudbeaver(
             "containers": {
                 "cloudbeaver-init": {
                     "name": "cloudbeaver-init",
-                    "image": init_image_repo.repository_url.apply(lambda u: f"{u}:latest"),
+                    "image": init_image.repo_digest,
                     "essential": False,
                     "log_configuration": {
                         "log_driver": "awslogs",

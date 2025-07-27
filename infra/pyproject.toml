@@ -18,7 +18,6 @@ dev = [
     "boto3-stubs[ce]>=1.39.7",
     "botocore-stubs>=1.38.46",
     "ruff>=0.12.3",
-    "aws-shell>=0.2.2",
     "networkx>=3.5",
     "matplotlib>=3.10.3",
 ]

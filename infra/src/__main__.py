@@ -5,13 +5,13 @@ from pulumi_aws import get_region
 from pulumi_aws.ec2 import SecurityGroup, VpcEndpoint, get_route_table_output
 from pulumi_aws.ecr import PullThroughCacheRule
 from pulumi_aws.ecs import Cluster
-from pulumi_aws.secretsmanager import Secret, SecretVersion
 from pulumi_awsx.ec2 import NatGatewayStrategy, Vpc
 
 from components.cloudbeaver import create_cloudbeaver
 from components.database import create_database
 from components.gateway import create_gateway
 from components.lambdas import create_lambda
+from components.secret import Secret
 from components.storage import create_storage
 
 # Stack config (region comes from pulumi config aws:region)
@@ -60,13 +60,6 @@ config = Config()
 dockerhub_secret = Secret(
     "dockerhub-secret",
     name="ecr-pullthroughcache/dockerhub-2",
-    description="Credentials for pulling private or rate‐limited Docker Hub images",
-)
-
-# 1b. Store your username + token
-dockerhub_secret_version = SecretVersion(
-    "dockerhub-secret-version",
-    secret_id=dockerhub_secret.id,
     secret_string=Output.all(config.require("dockerhub-username"), config.require_secret("dockerhub-password")).apply(
         lambda args: json.dumps({"username": args[0], "accessToken": args[1]})
     ),
