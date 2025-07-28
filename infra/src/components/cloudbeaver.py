@@ -38,8 +38,8 @@ def create_cloudbeaver(
     load_balancer_security_group = SecurityGroup("load-balancer-security-group", vpc_id=vpc.vpc_id)
     efs_security_group = SecurityGroup("cloudbeaver-efs-security-group", vpc_id=vpc.vpc_id)
 
-    # Allow http ingress to the load balancer
-    load_balancer_security_group.allow_ingress_cidr(cidr="0.0.0.0/0", cidr_name="vpc-cidr", ports=[80], protocol="tcp")
+    # Allow http ingress to the load balancer from anywhere
+    load_balancer_security_group.allow_ingress_cidr(cidr_name="vpc-cidr", cidr="0.0.0.0/0", ports=[80], protocol="tcp")
 
     # Allow egress to the VPC CIDR for DNS resolution
     cloudbeaver_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.vpc.cidr_block, ports=[53])
@@ -47,7 +47,7 @@ def create_cloudbeaver(
         cidr_name="vpc-cidr", cidr=vpc.vpc.cidr_block, ports=[53], protocol="udp"
     )
 
-    # Allow load balancer to access CloudBeaver
+    # Allow the load balancer to access CloudBeaver
     cloudbeaver_security_group.allow_ingress(from_security_group=load_balancer_security_group, ports=[8978])
 
     # For each VPC endpoint, allow Cloudbeaver to access it

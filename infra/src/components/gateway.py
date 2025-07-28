@@ -5,10 +5,7 @@ from pulumi import Output
 
 
 def create_gateway(lambda_function: aws.lambda_.Function) -> Output[str]:
-    api = aws.apigatewayv2.Api(
-        resource_name="httpApi",
-        protocol_type="HTTP",
-    )
+    api = aws.apigatewayv2.Api(resource_name="httpApi", protocol_type="HTTP")
 
     integration = aws.apigatewayv2.Integration(
         resource_name="lambdaProxyIntegration",
@@ -25,10 +22,7 @@ def create_gateway(lambda_function: aws.lambda_.Function) -> Output[str]:
         target=integration.id.apply(lambda iid: f"integrations/{iid}"),
     )
 
-    log_group = aws.cloudwatch.LogGroup(
-        "httpApiLogs",
-        retention_in_days=7,
-    )
+    log_group = aws.cloudwatch.LogGroup("httpApiLogs", retention_in_days=7)
 
     aws.apigatewayv2.Stage(
         resource_name="defaultStage",
@@ -37,16 +31,14 @@ def create_gateway(lambda_function: aws.lambda_.Function) -> Output[str]:
         auto_deploy=True,
         access_log_settings=aws.apigatewayv2.StageAccessLogSettingsArgs(
             destination_arn=log_group.arn,
-            format=json.dumps(
-                {
-                    "requestId": "$context.requestId",
-                    "routeKey": "$context.routeKey",
-                    "status": "$context.status",
-                    "errorMessage": "$context.error.message",
-                    "integrationError": "$context.integration.error",
-                    "latency": "$context.integrationLatency",
-                }
-            ),
+            format=json.dumps({
+                "requestId": "$context.requestId",
+                "routeKey": "$context.routeKey",
+                "status": "$context.status",
+                "errorMessage": "$context.error.message",
+                "integrationError": "$context.integration.error",
+                "latency": "$context.integrationLatency",
+            }),
         ),
     )
 

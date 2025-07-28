@@ -23,11 +23,12 @@ def dump_openapi(spec_path: Path):
 
 def generate_client(config_path: Path, spec_uri: Path, out_dir: Path):
     out_dir.mkdir(parents=True, exist_ok=True)
+    cli_path = subprocess.check_output(
+        ["uv", "run", "which", "openapi-generator-cli"], text=True
+    ).strip()
     subprocess.run(
         [
-            "uv",
-            "run",
-            "openapi-generator-cli",
+            cli_path,
             "generate",
             "-i",
             spec_uri.resolve().as_posix(),
@@ -57,7 +58,7 @@ def main():
     script_dir = Path(__file__).resolve().parent
     config_path = script_dir / "config.json"
     spec_path = script_dir / "openapi.json"
-    output_dir = script_dir.parent.parent.parent / "clients" / "unity"
+    output_dir = script_dir / "clients" / "unity"
     dump_openapi(spec_path)
     generate_client(config_path, spec_path, output_dir)
     patch_commas(output_dir)

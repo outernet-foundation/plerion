@@ -5,6 +5,9 @@
     "charliermarsh.ruff",
     "ms-azuretools.vscode-docker",
     "esbenp.prettier-vscode",
-    "amazonwebservices.aws-toolkit-vscode"
+    "amazonwebservices.aws-toolkit-vscode",
+    "matthewpi.caddyfile-support",
+    "emeraldwalk.runonsave",
+    "visualstudiotoolsforunity.vstuc"
   ]
 }

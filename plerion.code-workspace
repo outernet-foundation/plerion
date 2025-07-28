@@ -1,17 +1,19 @@
 {
   "folders": [
     {
-      "path": "."
+      "path": ".",
+      "name": "root"
     },
     {
-      "path": "api"
+      "path": "services/api",
+      "name": "api"
     },
     {
       "path": "infra"
     },
     {
       "path": "clients/unity",
-      "name": "client-unity"
+      "name": "unity-client"
     }
   ],
   "settings": {
@@ -32,6 +34,19 @@
     },
     "python.languageServer": "Pylance",
     "python.analysis.languageServerMode": "default",
-    "python.analysis.diagnosticMode": "workspace"
+    "python.analysis.diagnosticMode": "workspace",
+    "emeraldwalk.runonsave": {
+      "autoClearConsole": true,
+      "showElapsed": true,
+      "commands": [
+        {
+          // match either src/routers/*.py OR src/db/tables/*.py
+          "match": "src/(routers|db/tables)/.*\\.py$",
+          "cmd": "uv run -m src.openapi.generate",
+          "message": "🔄 Generating C# client…",
+          "messageAfter": "✅ Done generating C# client"
+        }
+      ]
+    }
   }
 }
