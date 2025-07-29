@@ -3,6 +3,7 @@
     "com.cysharp.r3": "https://github.com/Cysharp/R3.git?path=src/R3.Unity/Assets/R3.Unity",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.github-glitchenzo.nugetforunity": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
+    "com.outernet.plerionclient": "file:../../../services/api/src/clients/unity/src/PlerionClient",
     "com.unity.collab-proxy": "2.8.2",
     "com.unity.device-simulator.devices": "1.0.0",
     "com.unity.ide.rider": "3.0.34",

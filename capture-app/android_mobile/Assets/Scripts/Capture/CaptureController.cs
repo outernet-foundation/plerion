@@ -10,7 +10,6 @@ using System.Linq;
 using Unity.VisualScripting;
 using PlerionClient.Client;
 using PlerionClient.Api;
-using PlerionClient.Model;
 
 public class Capture
 {
@@ -52,7 +51,7 @@ public class CaptureController : MonoBehaviour
 
     [SerializeField][Range(0, 5)] float captureIntervalSeconds = 0.5f;
 
-    static private readonly string plerionAPIBaseUrl = "https://skilled-finally-primate.ngrok-free.app";
+    static private readonly string plerionAPIBaseUrl = "http://localhost:8000";
 
     static private QueueSynchronizationContext context = new QueueSynchronizationContext();
     private ObservableProperty<CaptureState> captureStatus = new ObservableProperty<CaptureState>(context, CaptureState.Idle);
@@ -230,9 +229,7 @@ public class CaptureController : MonoBehaviour
         // var databaseCaptures = await RestClient.Get<List<string>>(
         //     $"{plerionAPIBaseUrl}/captures?filenames={string.Join(",", captures.Select(c => c.Name))}");
 
-        // 1) create our generated client
-        var config = new Configuration { BasePath = plerionAPIBaseUrl };
-        var capturesApi = new CapturesApi(config);
+        var capturesApi = new CapturesApi(new Configuration { BasePath = plerionAPIBaseUrl });
 
         // 2) call the typed endpoint
         //    it returns List<PiccoloApiClient.Model.Capture>
@@ -251,7 +248,7 @@ public class CaptureController : MonoBehaviour
             capture.Row.captureName.text = capture.Name;
             capture.Row.captureType.text = capture.Type.ToString();
 
-            if (databaseCaptures.Contains(capture.Name))
+            if (databaseCaptures.Select(capture => capture.Filename).Contains(capture.Name))
             {
                 capture.Row.uploadButton.interactable = false;
                 capture.Row.uploadButtonText.text = "Uploaded";

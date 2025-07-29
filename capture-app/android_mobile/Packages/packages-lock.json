@@ -23,6 +23,12 @@
       "dependencies": {},
       "hash": "f789083c31250c83082da9b29be0c976152d699b"
     },
+    "com.outernet.plerionclient": {
+      "version": "file:../../../services/api/src/clients/unity/src/PlerionClient",
+      "depth": 0,
+      "source": "local",
+      "dependencies": {}
+    },
     "com.unity.burst": {
       "version": "1.8.19",
       "depth": 2,
