@@ -1,0 +1,1 @@
+sudo systemctl enable --now nv-l4t-usb-device-mode

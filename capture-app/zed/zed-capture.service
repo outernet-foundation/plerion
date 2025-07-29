@@ -1,0 +1,15 @@
+[Unit]
+Description=ZED companion REST server
+After=network.target
+
+[Service]
+Type=simple
+User=tyler          
+ExecStart=/home/tyler/Repos/Plerion/capture/zed/start.sh
+WorkingDirectory=/home/tyler/Repos/Plerion/capture/zed/
+Restart=on-failure
+RestartSec=2
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

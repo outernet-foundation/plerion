@@ -12,8 +12,8 @@
       "path": "infra"
     },
     {
-      "path": "clients/unity",
-      "name": "unity-client"
+      "path": "capture-app",
+      "name": "capture-app"
     }
   ],
   "settings": {

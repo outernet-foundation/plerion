@@ -1,0 +1,288 @@
+using System;
+using UnityEngine;
+using UnityEngine.UI;
+using R3;
+using Cysharp.Threading.Tasks;
+using System.Threading;
+using TMPro;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.VisualScripting;
+using PlerionClient.Client;
+using PlerionClient.Api;
+using PlerionClient.Model;
+
+public class Capture
+{
+    public enum Mode
+    {
+        Local,
+        Zed
+    }
+
+    public string Name { get; set; }
+    public Mode Type { get; set; }
+    public CaptureRow Row { get; set; }
+    public IDisposable disposables { get; set; }
+}
+
+public class CaptureController : MonoBehaviour
+{
+    enum CaptureState
+    {
+        Idle,
+        Starting,
+        Capturing,
+        Stopping
+    }
+
+    enum UploadState
+    {
+        NotUploaded,
+        Uploading,
+        Uploaded,
+        Errored
+    }
+
+    public Button startStopButton;
+    public TMP_Text startStopButtonText;
+    public TMP_Dropdown captureMode;
+    public RectTransform capturesTable;
+    public RectTransform captureRowPrefab;
+
+    [SerializeField][Range(0, 5)] float captureIntervalSeconds = 0.5f;
+
+    static private readonly string plerionAPIBaseUrl = "https://skilled-finally-primate.ngrok-free.app";
+
+    static private QueueSynchronizationContext context = new QueueSynchronizationContext();
+    private ObservableProperty<CaptureState> captureStatus = new ObservableProperty<CaptureState>(context, CaptureState.Idle);
+    private List<Capture> captures;
+    private IDisposable disposables;
+
+    void Awake()
+    {
+        ZedCaptureController.Initialize();
+        UpdateCaptureList();
+
+        captureMode.options.Clear();
+        foreach (var mode in Enum.GetValues(typeof(Capture.Mode)))
+        {
+            captureMode.options.Add(new TMP_Dropdown.OptionData(mode.ToString()));
+        }
+
+        var captureModeEventStream = captureMode
+            .OnValueChangedAsObservable()
+            .Select(index => (Capture.Mode)index)
+            .DistinctUntilChanged();
+
+        var captureControlEventStream = startStopButton
+            .OnClickAsObservable()
+            .WithLatestFrom(captureModeEventStream, (_, captureMode) => captureMode)
+            .WithLatestFrom(captureStatus, (captureMode, captureState) => (captureMode, captureState));
+
+        disposables = Disposable.Combine(
+
+            captureStatus
+                .Subscribe(state => startStopButtonText.text = state switch
+                {
+                    CaptureState.Idle => "Start Capture",
+                    CaptureState.Starting => "Starting...",
+                    CaptureState.Capturing => "Stop Capture",
+                    CaptureState.Stopping => "Stopping...",
+                    _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
+                }),
+
+            captureStatus
+                .Select(state =>
+                    state == CaptureState.Idle || state == CaptureState.Capturing)
+                .Subscribe(isIdleOrCapturing => startStopButton.interactable = isIdleOrCapturing),
+
+            captureStatus
+                .Select(state =>
+                    state == CaptureState.Idle)
+                .Subscribe(isIdle => captureMode.interactable = isIdle),
+
+            captureStatus
+                .Where(state =>
+                    state is CaptureState.Idle)
+                .Skip(1) // Skip the initial state
+                .Subscribe(UpdateCaptureList),
+
+            captureControlEventStream
+                .Where(@event =>
+                    @event is (_, CaptureState.Starting or CaptureState.Stopping))
+                .Subscribe(_ => Debug.LogError("Impossible!")),
+
+            captureModeEventStream
+                .WithLatestFrom(captureStatus, (mode, state) => (mode, state))
+                .Where(@event =>
+                    @event is (_, CaptureState.Starting or CaptureState.Stopping))
+                .Subscribe(_ => Debug.LogError("Impossible!")),
+
+            captureControlEventStream
+                .Where(@event =>
+                    @event is (Capture.Mode.Local, CaptureState.Idle))
+                .SubscribeAwait(StartLocalCapture),
+
+            captureControlEventStream
+                .Where(@event =>
+                    @event is (Capture.Mode.Local, CaptureState.Capturing))
+                .Subscribe(StopLocalCapture),
+
+            captureControlEventStream
+                .Where(@event =>
+                    @event is (Capture.Mode.Zed, CaptureState.Idle))
+                .SubscribeAwait(StartZedCapture),
+
+            captureControlEventStream
+                .Where(@event =>
+                    @event is (Capture.Mode.Zed, CaptureState.Capturing))
+                .SubscribeAwait(StopZedCapture)
+        );
+    }
+
+    void OnDestroy()
+    {
+        disposables?.Dispose();
+        disposables = null;
+    }
+
+    private async UniTask StartLocalCapture(CancellationToken cancellationToken)
+    {
+        captureStatus.EnqueueSet(CaptureState.Starting);
+        await LocalCaptureController.StartCapture(cancellationToken, captureIntervalSeconds);
+        captureStatus.EnqueueSet(CaptureState.Capturing);
+    }
+
+    private void StopLocalCapture()
+    {
+        captureStatus.EnqueueSet(CaptureState.Stopping);
+        LocalCaptureController.StopCapture();
+        captureStatus.EnqueueSet(CaptureState.Idle);
+    }
+
+    private async UniTask StartZedCapture(CancellationToken cancellationToken)
+    {
+        captureStatus.EnqueueSet(CaptureState.Starting);
+        await ZedCaptureController.StartCapture(cancellationToken, captureIntervalSeconds);
+        captureStatus.EnqueueSet(CaptureState.Capturing);
+    }
+
+    private async UniTask StopZedCapture(CancellationToken cancellationToken)
+    {
+        captureStatus.EnqueueSet(CaptureState.Stopping);
+        await ZedCaptureController.StopCapture(cancellationToken);
+        captureStatus.EnqueueSet(CaptureState.Idle);
+    }
+
+    [Serializable]
+    class CaptureUploadRequest
+    {
+        public string filename { get; set; }
+    }
+
+    async void UpdateCaptureList()
+    {
+
+        //var zedCaptureNames = await ZedCaptureController.GetCaptures();
+
+        // Clear captures table
+        if (captures != null)
+        {
+            foreach (var capture in captures)
+            {
+                capture.disposables.Dispose();
+                Destroy(capture.Row.gameObject);
+            }
+        }
+
+        // var zedCaptures = zedCaptureNames
+        //     .Select(name => new Capture
+        //     {
+        //         Name = name,
+        //         Type = Capture.Mode.Zed
+        //     });
+
+        var localCaptures = LocalCaptureController
+            .GetCaptures()
+            .Select(name => new Capture
+            {
+                Name = name,
+                Type = Capture.Mode.Local
+            });
+
+        // @get(
+        //     "/captures",
+        //     return_dto=PiccoloDTO[Capture],       
+        //     media_type=MediaType.JSON,
+        // )
+        // async def get_captures(
+        //     filenames: List[str],                  
+        // ) -> List[Capture]:                        
+        //     return await Capture.objects().where(
+        //         Capture.filename.is_in(filenames)
+        //     )
+
+        // Populate captures table with new captures
+        // captures = zedCaptures.Concat(localCaptures).ToList();
+        captures = localCaptures.ToList();
+
+        // var databaseCaptures = await RestClient.Get<List<string>>(
+        //     $"{plerionAPIBaseUrl}/captures?filenames={string.Join(",", captures.Select(c => c.Name))}");
+
+        // 1) create our generated client
+        var config = new Configuration { BasePath = plerionAPIBaseUrl };
+        var capturesApi = new CapturesApi(config);
+
+        // 2) call the typed endpoint
+        //    it returns List<PiccoloApiClient.Model.Capture>
+        var capturesFromServer = await capturesApi.GetCapturesAsync(
+            captures.Select(c => c.Name).ToList());
+        //captures.Select(c => c.Name).ToList());
+
+        // 3) if you still just want the filenames:
+        var databaseCaptures = capturesFromServer
+            .ToList();
+
+        foreach (var capture in captures)
+        {
+            var gameObject = Instantiate(captureRowPrefab, capturesTable);
+            capture.Row = gameObject.GetComponent<CaptureRow>();
+            capture.Row.captureName.text = capture.Name;
+            capture.Row.captureType.text = capture.Type.ToString();
+
+            if (databaseCaptures.Contains(capture.Name))
+            {
+                capture.Row.uploadButton.interactable = false;
+                capture.Row.uploadButtonText.text = "Uploaded";
+                capture.disposables = Disposable.Empty;
+            }
+            else
+            {
+                capture.Row.uploadButton.interactable = true;
+                capture.Row.uploadButtonText.text = "Upload";
+
+                async UniTask UploadCapture(CancellationToken cancellationToken)
+                {
+                    var presignedURL = await RestClient.Post<CaptureUploadRequest, string>(
+                        $"{plerionAPIBaseUrl}/captures", new CaptureUploadRequest { filename = capture.Name });
+
+                    if (capture.Type == Capture.Mode.Zed)
+                    {
+                        var captureData = await ZedCaptureController.GetCapture(capture.Name);
+                        await RestClient.Put(presignedURL, captureData);
+                    }
+                    else if (capture.Type == Capture.Mode.Local)
+                    {
+                        var captureData = await LocalCaptureController.GetCapture(capture.Name);
+                        await RestClient.Put(presignedURL, captureData);
+                    }
+                }
+
+                capture.disposables = capture.Row.uploadButton.onClick
+                    .AsObservable()
+                    .SubscribeAwait(UploadCapture);
+            }
+        }
+    }
+}
