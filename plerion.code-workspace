@@ -42,7 +42,7 @@
         {
           // match either src/routers/*.py OR src/db/tables/*.py
           "match": "src/(routers|db/tables)/.*\\.py$",
-          "cmd": "uv run -m src.openapi.generate",
+          "cmd": "uv run -m src.clients.generate",
           "message": "🔄 Generating C# client…",
           "messageAfter": "✅ Done generating C# client"
         }

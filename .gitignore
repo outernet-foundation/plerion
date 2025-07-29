@@ -1,1 +1,3 @@
 __pycache__/
+# Ignore Piccolo auto-generated dev migrations
+**/migrations/*_auto-dev.py

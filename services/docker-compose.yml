@@ -26,6 +26,31 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  automigrate:
+    build:
+      context: .
+      dockerfile: automigrate/Dockerfile
+    volumes:
+      - ./api:/workspace
+    command: >
+      sh -c "
+        echo 'Running Piccolo migrations...';
+        piccolo migrations new all --auto --name auto-dev || true;
+        piccolo migrations forwards all    || true;
+        echo 'Watching for changes...';
+        watchmedo shell-command \
+          --recursive \
+          --patterns='src/**/tables/*.py;src/**/piccolo_app.py' \
+          --ignore-patterns='**/migrations/*.py;**/__pycache__/**' \
+          --command='piccolo migrations new all --auto --name auto-dev && uv run piccolo migrations forwards all'
+      "
+    environment:
+      POSTGRES_DSN: ${POSTGRES_DSN}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
   cloudbeaver_init:
     build:
       context: ./cloudbeaver-init
@@ -108,13 +133,11 @@ services:
     working_dir: /app
     command: >
       bash -c "
-        uv run db migrations forwards all --trace &&
         uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app --reload-include '**/*.py'
       "
     expose:
       - "8000"
     environment:
-      PICCOLO_CONF: "src.db.conf"
       POSTGRES_DSN: ${POSTGRES_DSN}
       S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
