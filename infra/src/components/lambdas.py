@@ -5,27 +5,21 @@ from pathlib import Path
 
 import pulumi_docker as docker
 from pulumi import Config, Input, Output, export
-from pulumi_aws.ec2 import VpcEndpoint
 from pulumi_aws.ecr import Repository, get_authorization_token
 from pulumi_aws.iam import Role, RolePolicy, RolePolicyAttachment
 from pulumi_aws.lambda_ import Function
-from pulumi_awsx.ec2 import Vpc
 
 from components.security_group import SecurityGroup
+from components.vpc import Vpc
 
 
 def create_lambda(
     config: Config,
     environment_vars: dict[str, Input[str]],
-    s3_bucket_arn: Input[str],
+    s3_bucket_arn: Output[str],
     vpc: Vpc,
     lambda_security_group: SecurityGroup,
-    ecr_api_security_group: SecurityGroup,
-    ecr_dkr_security_group: SecurityGroup,
     postgres_security_group: SecurityGroup,
-    logs_security_group: SecurityGroup,
-    sts_security_group: SecurityGroup,
-    s3_endpoint: VpcEndpoint,
     memory_size: int = 512,
     timeout_seconds: int = 30,
     resource_name: str = "apiLambdaFunction",
@@ -34,34 +28,31 @@ def create_lambda(
     postgres_security_group.allow_ingress(from_security_group=lambda_security_group, ports=[5432])
 
     # For each VPC endpoint, allow Lambda to access it
-    for vpc_endpoint_security_group in [
-        ecr_api_security_group,
-        ecr_dkr_security_group,
-        logs_security_group,
-        sts_security_group,
-    ]:
-        vpc_endpoint_security_group.allow_ingress(from_security_group=lambda_security_group, ports=[443])
+    for service_name in ["ecr.api", "ecr.dkr", "logs", "sts"]:
+        vpc.interface_security_groups[service_name].allow_ingress(
+            from_security_group=lambda_security_group, ports=[443]
+        )
 
     # Allow Lambda egress to S3 bucket
     lambda_security_group.allow_egress_prefix_list(
-        prefix_list_name="s3", prefix_list_id=s3_endpoint.prefix_list_id, ports=[443]
+        prefix_list_name="s3", prefix_list_id=vpc.s3_endpoint_prefix_list_id, ports=[443]
     )
 
     # Allow egress to VPC CIDR for DNS resolution
-    lambda_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.vpc.cidr_block, ports=[53])
-    lambda_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.vpc.cidr_block, ports=[53], protocol="udp")
+    lambda_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.cidr_block, ports=[53])
+    lambda_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.cidr_block, ports=[53], protocol="udp")
 
     repo = Repository("lambda-repo", force_delete=config.require_bool("devMode"))
 
     # Create a basic Lambda execution role (logs only).
     role = Role(
         resource_name=resource_name,
-        assume_role_policy=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {"Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}
-            ],
-        }),
+        assume_role_policy=s3_bucket_arn.apply(
+            lambda arn: json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [{"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": f"{arn}/*"}],
+            })
+        ),
     )
 
     RolePolicyAttachment(
@@ -73,12 +64,12 @@ def create_lambda(
     RolePolicy(
         "lambdaS3Access",
         role=role.id,
-        policy=Output.all(s3_bucket_arn).apply(
-            lambda arn: json.dumps({
-                "Version": "2012-10-17",
-                "Statement": [{"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": f"{arn}/*"}],
-            })
-        ),
+        policy=json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [
+                {"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": f"{s3_bucket_arn}/*"}
+            ],
+        }),
     )
 
     RolePolicyAttachment(

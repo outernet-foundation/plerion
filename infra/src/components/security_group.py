@@ -1,18 +1,37 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, overload
 
 import pulumi_aws as aws
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 
 
 class SecurityGroup(ComponentResource):
-    def __init__(self, name: str, vpc_id: Input[str]):
-        super().__init__("custom:SecurityGroup", name)
+    @overload
+    def __init__(self, name: str, *, vpc_id: Input[str], opts: ResourceOptions | None = None) -> None: ...
+    @overload
+    def __init__(self, name: str, *, security_group_id: Input[str], opts: ResourceOptions | None = None) -> None: ...
 
+    def __init__(
+        self,
+        name: str,
+        *,
+        vpc_id: Input[str] | None = None,
+        security_group_id: Input[str] | None = None,
+        opts: ResourceOptions | None = None,
+    ):
+        super().__init__("custom:SecurityGroup", name, opts=opts)
+
+        self._child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         self._name = name
-        self._security_group = aws.ec2.SecurityGroup(name, vpc_id=vpc_id, opts=ResourceOptions(parent=self))
         self._rule_ids: List[Output[str]] = []
+
+        if vpc_id is not None:
+            self._security_group = aws.ec2.SecurityGroup(name, vpc_id=vpc_id, opts=self._child_opts)
+        elif security_group_id is not None:
+            self._security_group = aws.ec2.get_security_group_output(id=security_group_id)
+        else:
+            raise ValueError("Either vpc_id or security_group_id must be provided")
 
         self.register_outputs({"id": self.id, "arn": self.arn})
 
@@ -33,7 +52,7 @@ class SecurityGroup(ComponentResource):
                 from_port=port,
                 to_port=port,
                 referenced_security_group_id=from_security_group._security_group.id,
-                opts=ResourceOptions(parent=self),
+                opts=self._child_opts,
             )
             egress_rule = aws.vpc.SecurityGroupEgressRule(
                 f"{from_security_group._name}-egress-to-{self._name}-{port}-{protocol}",
@@ -42,7 +61,7 @@ class SecurityGroup(ComponentResource):
                 from_port=port,
                 to_port=port,
                 referenced_security_group_id=self._security_group.id,
-                opts=ResourceOptions(parent=self),
+                opts=self._child_opts,
             )
             self._rule_ids.append(ingress_rule.id)
             self._rule_ids.append(egress_rule.id)
@@ -57,7 +76,7 @@ class SecurityGroup(ComponentResource):
                     from_port=port,
                     to_port=port,
                     cidr_ipv4=cidr,
-                    opts=ResourceOptions(parent=self),
+                    opts=self._child_opts,
                 ).id
             )
 
@@ -71,7 +90,7 @@ class SecurityGroup(ComponentResource):
                     from_port=port,
                     to_port=port,
                     cidr_ipv4=cidr,
-                    opts=ResourceOptions(parent=self),
+                    opts=self._child_opts,
                 ).id
             )
 
@@ -87,6 +106,6 @@ class SecurityGroup(ComponentResource):
                     from_port=port,
                     to_port=port,
                     prefix_list_id=prefix_list_id,
-                    opts=ResourceOptions(parent=self),
+                    opts=self._child_opts,
                 ).id
             )
