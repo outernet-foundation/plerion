@@ -147,7 +147,7 @@ def create_cloudbeaver(
         "cloudbeaver-service",
         cluster=cluster.arn,
         desired_count=1,
-        opts=ResourceOptions(depends_on=mount_targets),
+        opts=ResourceOptions(depends_on=mount_targets.apply(lambda mts: Output.all(*[mt.id for mt in mts]))),
         network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [cloudbeaver_security_group.id]},
         task_definition_args={
             "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
