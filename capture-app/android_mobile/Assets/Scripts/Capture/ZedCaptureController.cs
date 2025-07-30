@@ -24,6 +24,7 @@ public static class ZedCaptureController
 
     public static void Initialize()
     {
+        return;
 #if UNITY_ANDROID && !UNITY_EDITOR
         // — Get Activity ------------------------------------------------------
         var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
