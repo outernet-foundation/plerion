@@ -16,7 +16,11 @@ def main():
     parser = argparse.ArgumentParser(description="AWS Cost Explorer to Graph")
     parser.add_argument("--days", "-d", type=int, default=30, help="Number of days back to fetch (default: 30)")
     parser.add_argument(
-        "--granularity", "-g", choices=["DAILY", "MONTHLY"], default="DAILY", help="Data granularity (default: DAILY)"
+        "--granularity",
+        "-g",
+        choices=["HOURLY", "DAILY", "MONTHLY"],
+        default="DAILY",
+        help="Data granularity (default: DAILY, HOURLY only available for last 14 days)",
     )
     parser.add_argument(
         "--group-by",
@@ -42,9 +46,21 @@ def main():
 
     args = parser.parse_args()
 
-    # Calculate date range
-    end_date = datetime.now().strftime("%Y-%m-%d")
-    start_date = (datetime.now() - timedelta(days=args.days)).strftime("%Y-%m-%d")
+    # Calculate date range and validate for hourly
+    if args.granularity == "HOURLY":
+        # Hourly requires timestamp format and max 14 days
+        if args.days > 14:
+            print("⚠️  WARNING: Hourly data only available for last 14 days. Limiting to 14 days.")
+            args.days = 14
+
+        end_datetime = datetime.now()
+        start_datetime = end_datetime - timedelta(days=args.days)
+        end_date = end_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+        start_date = start_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
+    else:
+        # Daily and Monthly use date format
+        end_date = datetime.now().strftime("%Y-%m-%d")
+        start_date = (datetime.now() - timedelta(days=args.days)).strftime("%Y-%m-%d")
 
     print(f"Fetching AWS costs from {start_date} to {end_date}...")
     print(f"Grouping by: {args.group_by}")
@@ -90,8 +106,12 @@ def main():
 
     # Transform data for vega-lite
     output: List[Dict[str, Any]] = []
+    daily_totals: Dict[str, float] = {}
+
     for result in response["ResultsByTime"]:
         date = result.get("TimePeriod", {}).get("Start", "")
+        daily_total = 0.0
+
         for group in result.get("Groups", []):
             category = group.get("Keys", ["Unknown"])[0] if group.get("Keys") else "Unknown"
             # Clean category name to avoid JSON issues
@@ -103,6 +123,35 @@ def main():
                 cost = 0.0
             if cost > 0:
                 output.append({"date": date, "category": category, "cost": cost})
+                daily_total += cost
+
+        # Store daily total
+        if daily_total > 0:
+            daily_totals[date] = daily_total
+
+    # Add total line to output
+    for date, total_cost in daily_totals.items():
+        output.append({"date": date, "category": "📊 TOTAL", "cost": total_cost})
+
+    # Calculate estimated monthly cost from most recent period
+    estimated_monthly = 0.0
+    if daily_totals:
+        most_recent_date = max(daily_totals.keys())
+        most_recent_cost = daily_totals[most_recent_date]
+
+        if args.granularity == "HOURLY":
+            # For hourly: multiply by 24 hours, then by 30.44 days
+            estimated_monthly = most_recent_cost * 24 * 30.44
+            print(f"💰 Most recent hourly cost: ${most_recent_cost:.4f}")
+        elif args.granularity == "DAILY":
+            # For daily: multiply by 30.44 days
+            estimated_monthly = most_recent_cost * 30.44
+            print(f"💰 Most recent daily cost: ${most_recent_cost:.2f}")
+        else:  # MONTHLY
+            estimated_monthly = most_recent_cost
+            print(f"💰 Most recent monthly cost: ${most_recent_cost:.2f}")
+
+        print(f"📈 Estimated monthly cost: ${estimated_monthly:.2f}")
 
     # Save raw data as JSON
     json_filename = f"{args.output}_data.json"
@@ -115,16 +164,18 @@ def main():
         print("JSON-only mode: skipping graph generation")
         return
 
-    # Determine chart title and labels based on grouping
+    # Determine chart title and labels based on granularity and grouping
+    granularity_labels = {"HOURLY": "Hourly", "DAILY": "Daily", "MONTHLY": "Monthly"}
+
     title_map = {
-        "SERVICE": "AWS Daily Costs by Service",
-        "USAGE_TYPE": "AWS Daily Costs by Usage Type",
-        "OPERATION": "AWS Daily Costs by Operation",
+        "SERVICE": f"AWS {granularity_labels[args.granularity]} Costs by Service",
+        "USAGE_TYPE": f"AWS {granularity_labels[args.granularity]} Costs by Usage Type",
+        "OPERATION": f"AWS {granularity_labels[args.granularity]} Costs by Operation",
     }
 
     label_map = {"SERVICE": "AWS Service", "USAGE_TYPE": "Usage Type", "OPERATION": "API Operation"}
 
-    chart_title = title_map.get(args.group_by, "AWS Daily Costs")
+    chart_title = title_map.get(args.group_by, f"AWS {granularity_labels[args.granularity]} Costs")
     if args.service_filter:
         chart_title += f" ({args.service_filter})"
 
@@ -133,15 +184,37 @@ def main():
     # Vega-Lite specification
     vega_spec = {
         "data": {"values": output},
-        "mark": {"type": "line", "point": True},
+        "mark": {"type": "line", "point": True, "strokeWidth": {"expr": "datum.category === '📊 TOTAL' ? 3 : 1.5"}},
         "encoding": {
             "x": {"field": "date", "type": "temporal", "title": "Date"},
             "y": {"field": "cost", "type": "quantitative", "title": "Cost ($)"},
             "color": {"field": "category", "type": "nominal", "title": color_label},
+            "strokeDash": {"condition": {"test": "datum.category === '📊 TOTAL'", "value": [0]}, "value": [5, 5]},
         },
         "width": args.width,
         "height": args.height,
-        "title": chart_title,
+        "title": {
+            "text": chart_title,
+            "subtitle": f"Estimated Monthly: ${estimated_monthly:.2f}" if estimated_monthly > 0 else None,
+        },
+        "config": {
+            "legend": {
+                "titleFontSize": 12,
+                "labelFontSize": 10,
+                "symbolStrokeWidth": 2,
+                "padding": 15,
+                "offset": 30,
+                "labelLimit": 0,  # Remove label length limit entirely
+                "symbolLimit": 0,  # Remove symbol limit
+                "titleLimit": 0,  # Remove title limit
+                "columnPadding": 20,  # Add space between legend columns
+                "rowPadding": 3,  # Add space between legend rows
+            },
+            "view": {
+                "continuousWidth": args.width + 250,
+                "continuousHeight": args.height,
+            },  # Even more width for legend
+        },
     }
 
     # Generate graph
@@ -149,7 +222,9 @@ def main():
         json.dump(vega_spec, f, ensure_ascii=True)
         f.flush()
         try:
-            subprocess.run(["vl2svg", f.name, f"{args.output}.svg"], check=True)
+            subprocess.run(
+                ["C:/Users/Tyler/scoop/apps/nodejs/current/bin/vl2svg.cmd", f.name, f"{args.output}.svg"], check=True
+            )
             print(f"✅ Graph saved as {args.output}.svg")
         except subprocess.CalledProcessError:
             print("❌ Error generating graph. Make sure vl2svg is installed.")

@@ -80,10 +80,10 @@ class Vpc(ComponentResource):
                     vpc_id=self._vpc.vpc_id,
                     service_name=pulumi.Output.concat("com.amazonaws.", get_region_output().name, ".", service_name),
                     vpc_endpoint_type="Interface",
-                    # subnet_ids=self._vpc.private_subnet_ids.apply(
-                    #     lambda ids: [ids[0]]
-                    # ),  # Only create endpoint in one subnet to reduce costs
-                    subnet_ids=self._vpc.private_subnet_ids,
+                    subnet_ids=self._vpc.private_subnet_ids.apply(
+                        lambda ids: [ids[0]]
+                    ),  # Only create endpoint in one subnet to reduce costs
+                    # subnet_ids=self._vpc.private_subnet_ids,
                     security_group_ids=[security_group.id],
                     private_dns_enabled=True,
                     opts=self._child_opts,
