@@ -15,6 +15,8 @@ ENV UV_NO_INSTALLER_METADATA=1
 # Enable copy mode to support bind mount caching.
 ENV UV_LINK_MODE=copy
 
+ENV PICCOLO_CONF="src.db.conf"
+
 WORKDIR /app
 
 # Copy dependency files first for better caching

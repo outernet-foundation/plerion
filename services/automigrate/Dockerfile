@@ -8,6 +8,8 @@ RUN python -m venv $VENV_DIR \
 
 ENV PATH="$VENV_DIR/bin:$PATH"
 
+ENV PICCOLO_CONF="src.db.conf"
+
 WORKDIR /workspace
 
 # Copy the watch script

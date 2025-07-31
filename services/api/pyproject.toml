@@ -28,9 +28,6 @@ typeCheckingMode = "strict"
 [tool.ruff.lint]
 extend-select = ["I"]
 
-[project.scripts]
-db = "src.db.tool:main"
-
 [tool.uv]
 package = true
 

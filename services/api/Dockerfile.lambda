@@ -18,6 +18,8 @@ ENV UV_NO_INSTALLER_METADATA=1
 # Enable copy mode to support bind mount caching.
 ENV UV_LINK_MODE=copy
 
+ENV PICCOLO_CONF="src.db.conf"
+
 # Bundle the dependencies into the Lambda task root via `uv pip install --target`.
 #
 # Omit any local packages (`--no-emit-workspace`) and development dependencies (`--no-dev`).

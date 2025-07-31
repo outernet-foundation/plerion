@@ -7,9 +7,7 @@ import sys
 from pathlib import Path
 from re import Pattern
 
-from ..db.tool import LOCAL_CONF
-
-os.environ["PICCOLO_CONF"] = LOCAL_CONF
+os.environ["DONT_IMPORT_DB"] = "1"  # Prevents Piccolo from importing the DB config
 from ..main import app
 
 script_dir = Path(__file__).resolve().parent
