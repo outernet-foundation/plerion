@@ -1,12 +1,7 @@
-import warnings
-
 from pulumi import Config, get_stack
 
 from stacks.core import create_core_stack
 from stacks.dev import create_dev_stack
-
-# Turn pulumi warnings into errors
-warnings.simplefilter("error", category=UserWarning)
 
 config = Config()
 

@@ -3,10 +3,9 @@ from typing import cast
 from pulumi import Config, Output, StackReference, export
 from pulumi_aws.ecs import Cluster
 
+from components.api import create_api
 from components.cloudbeaver import create_cloudbeaver
 from components.database import create_database
-from components.gateway import create_gateway
-from components.lambdas import create_lambda
 from components.security_group import SecurityGroup
 from components.storage import create_storage
 from components.vpc import Vpc, VpcInfo
@@ -40,7 +39,7 @@ def create_dev_stack(config: Config):
     )
 
     # 3. Lambda (container image)
-    api_lambda = create_lambda(
+    api_url = create_api(
         config,
         environment_vars={
             # Pulumi Inputs are OK here; secrets stay secret
@@ -53,10 +52,7 @@ def create_dev_stack(config: Config):
         postgres_security_group=postgres_security_group,
     )
 
-    # 4. API Gateway → Lambda proxy
-    api_endpoint_output = create_gateway(api_lambda)
-
     # 5. Stack outputs
-    export("apiUrl", api_endpoint_output)
+    export("apiUrl", api_url)
     export("capturesBucketId", captures_bucket.id)
     export("dbEndpointAddress", postgres_instance.address)

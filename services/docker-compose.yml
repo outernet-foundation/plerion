@@ -33,7 +33,6 @@ services:
     volumes:
       - ./api:/workspace
     environment:
-      PICCOLO_CONF: "src.db.piccolo_conf"
       POSTGRES_DSN: ${POSTGRES_DSN}
       PYTHONPATH: /workspace
     depends_on:
@@ -127,7 +126,6 @@ services:
     ports:
       - "8000:8000"
     environment:
-      PICCOLO_CONF: "src.db.piccolo_conf"
       POSTGRES_DSN: ${POSTGRES_DSN}
       S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}

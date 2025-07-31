@@ -151,11 +151,16 @@ def create_cloudbeaver(
         task_definition_args={
             "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
             "volumes": [
-                {"name": "efs", "efs_volume_configuration": {"file_system_id": efs.id, "transit_encryption": "ENABLED", "root_directory": 
-                # Ensure all mount targets are created before using the EFS
-                mount_targets.apply(
-        lambda mts: Output.all("/", *[mt.id for mt in mts])
-    ).apply(lambda _: "/")}}
+                {
+                    "name": "efs",
+                    "efs_volume_configuration": {
+                        "file_system_id": efs.id,
+                        "transit_encryption": "ENABLED",
+                        "root_directory":
+                        # Ensure all mount targets are created before using the EFS
+                        mount_targets.apply(lambda mts: Output.all("/", *[mt.id for mt in mts])).apply(lambda _: "/"),
+                    },
+                }
             ],
             "containers": {
                 "cloudbeaver-init": {

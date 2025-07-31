@@ -3,17 +3,19 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pulumi_docker as docker
-from pulumi import Config, Input, Output, export
+from pulumi import Config, Input, Output
+from pulumi_aws.apigatewayv2 import Api, Integration, Route, Stage
+from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecr import Repository, get_authorization_token
 from pulumi_aws.iam import Role, RolePolicy, RolePolicyAttachment
-from pulumi_aws.lambda_ import Function
+from pulumi_aws.lambda_ import Function, Permission
+from pulumi_docker import Image
 
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
 
-def create_lambda(
+def create_api(
     config: Config,
     environment_vars: dict[str, Input[str]],
     s3_bucket_arn: Output[str],
@@ -22,8 +24,7 @@ def create_lambda(
     postgres_security_group: SecurityGroup,
     memory_size: int = 512,
     timeout_seconds: int = 30,
-    resource_name: str = "apiLambdaFunction",
-) -> Function:
+):
     # Allow connections to required services
     lambda_security_group.allow_egress_reciprocal(to_security_group=postgres_security_group, ports=[5432])
 
@@ -42,11 +43,13 @@ def create_lambda(
     lambda_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.cidr_block, ports=[53])
     lambda_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.cidr_block, ports=[53], protocol="udp")
 
+    LogGroup("/aws/lambda/api-lambda", retention_in_days=7)
+
     repo = Repository("lambda-repo", force_delete=config.require_bool("devMode"))
 
     # Create a basic Lambda execution role (logs only).
     role = Role(
-        f"{resource_name}-lambda-role",
+        "api-lambda-role",
         assume_role_policy=json.dumps({
             "Version": "2012-10-17",
             "Statement": [
@@ -56,13 +59,13 @@ def create_lambda(
     )
 
     RolePolicyAttachment(
-        "lambda-basic-exec",
+        "lambda-vpc-access",
         role=role.name,
         policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
     )
 
     RolePolicyAttachment(
-        "lambda-vpc-access",
+        "lambda-basic-exec",
         role=role.name,
         policy_arn="arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
     )
@@ -91,7 +94,7 @@ def create_lambda(
     image_name = Output.concat(repo.repository_url, ":", "latest")
 
     # 4) Build & push the image (dict style inputs: see Pulumi docs Python examples)
-    image = docker.Image(
+    image = Image(
         "apiImage",
         build={"dockerfile": str(dockerfile), "context": str(dockerfile.parent), "platform": "linux/amd64"},
         image_name=image_name,
@@ -100,7 +103,8 @@ def create_lambda(
 
     # 5) Lambda from image
     fn = Function(
-        resource_name=resource_name,
+        name="api-lambda",
+        resource_name="api-lambda",
         package_type="Image",
         image_uri=image.repo_digest,  # Output[str]
         role=role.arn,
@@ -115,7 +119,52 @@ def create_lambda(
         vpc_config={"subnet_ids": vpc.private_subnet_ids, "security_group_ids": [lambda_security_group.id]},
     )
 
-    # Convenience export (optional)
-    export("apiImageUri", image.image_name)
+    api = Api(resource_name="httpApi", protocol_type="HTTP")
 
-    return fn
+    integration = Integration(
+        resource_name="lambdaProxyIntegration",
+        api_id=api.id,
+        integration_type="AWS_PROXY",
+        integration_uri=fn.invoke_arn,
+        payload_format_version="2.0",
+    )
+
+    Route(
+        resource_name="catchAllRoute",
+        api_id=api.id,
+        route_key="$default",
+        target=integration.id.apply(lambda iid: f"integrations/{iid}"),
+    )
+
+    log_group = LogGroup("httpApiLogs", retention_in_days=7)
+
+    Stage(
+        resource_name="defaultStage",
+        api_id=api.id,
+        name="$default",
+        auto_deploy=True,
+        access_log_settings={
+            "destination_arn": log_group.arn,
+            "format": json.dumps({
+                "requestId": "$context.requestId",
+                "routeKey": "$context.routeKey",
+                "status": "$context.status",
+                "errorMessage": "$context.error.message",
+                "integrationError": "$context.integrationErrorMessage",
+                "integrationStatus": "$context.integrationStatus",
+                "path": "$context.path",
+                "latency": "$context.integrationLatency",
+            }),
+        },
+    )
+
+    # ← NEW: allow API Gateway to invoke the Lambda
+    Permission(
+        resource_name="apiGatewayPermission",
+        action="lambda:InvokeFunction",
+        function=fn.name,
+        principal="apigateway.amazonaws.com",
+        source_arn=api.execution_arn.apply(lambda arn: f"{arn}/*/*"),
+    )
+
+    return api.api_endpoint
