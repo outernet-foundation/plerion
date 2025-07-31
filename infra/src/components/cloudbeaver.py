@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 
 import pulumi_docker as docker
-from pulumi import Config, Output, ResourceOptions, export
+from pulumi import Config, Output, export
 from pulumi_aws import get_caller_identity, get_region_output
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecr import Repository, get_authorization_token
@@ -147,14 +147,15 @@ def create_cloudbeaver(
         "cloudbeaver-service",
         cluster=cluster.arn,
         desired_count=1,
-        opts=ResourceOptions(depends_on= Output.all(
-            *[mt.id for mt in mount_targets]
-        )),
         network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [cloudbeaver_security_group.id]},
         task_definition_args={
             "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
             "volumes": [
-                {"name": "efs", "efs_volume_configuration": {"file_system_id": efs.id, "transit_encryption": "ENABLED"}}
+                {"name": "efs", "efs_volume_configuration": {"file_system_id": efs.id, "transit_encryption": "ENABLED", "root_directory": 
+                # Ensure all mount targets are created before using the EFS
+                mount_targets.apply(
+        lambda mts: Output.all("/", *[mt.id for mt in mts])
+    ).apply(lambda _: "/")}}
             ],
             "containers": {
                 "cloudbeaver-init": {
