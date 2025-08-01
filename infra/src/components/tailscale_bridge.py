@@ -98,7 +98,7 @@ def create_tailscale_bridge(
             protocol="HTTP",
             target_type="ip",
             vpc_id=load_balancer.vpc_id,
-            health_check={"path": "/"},  # simple quick check
+            health_check={"path": "/health"},  # simple quick check
         )
 
         ListenerRule(
@@ -130,6 +130,13 @@ def create_tailscale_bridge(
             })
         )
 
+        # Build Caddyfile
+        caddyfile = "{\n    auto_https off\n}\n" + ":80 {\n    respond /health 200\n}\n\n"
+        for svc, port in local_services.items():
+            caddyfile += f"{name}-{svc}.{domain} {{\n    tls off\n reverse_proxy {ip}:{port}\n}}\n\n"
+
+        print(caddyfile)
+
         FargateService(
             f"tailscale-bridge-{name}-service",
             cluster=cluster.arn,
@@ -149,7 +156,9 @@ def create_tailscale_bridge(
                         "command": [
                             "/bin/sh",
                             "-c",
-                            "tailscaled --tun=userspace-networking & "
+                            "tailscaled --tun=userspace-networking "
+                            "--socks5-server=localhost:1055 "
+                            # "--outbound-http-proxy-listen=localhost:1055 & "
                             f"tailscale up --hostname=bridge-{name} --authkey=$TS_AUTH_KEY --reset && "
                             "sleep infinity",
                         ],
@@ -172,13 +181,8 @@ def create_tailscale_bridge(
                         "command": [
                             "/bin/sh",
                             "-c",
-                            "cat >/etc/caddy/Caddyfile <<'EOF'\n"
-                            + "\n".join(
-                                f"{name}-{local_service}.{domain} {{ reverse_proxy {ip}:{port} }}"
-                                for local_service, port in local_services.items()
-                            )
-                            + "\nEOF\n"
-                            + "caddy run --adapter caddyfile --config /etc/caddy/Caddyfile",
+                            f"cat > /etc/caddy/Caddyfile << 'EOF'\n{caddyfile}\nEOF\n"
+                            "caddy run --config /etc/caddy/Caddyfile --adapter caddyfile",
                         ],
                         "log_configuration": {
                             "log_driver": "awslogs",
@@ -188,6 +192,11 @@ def create_tailscale_bridge(
                                 "awslogs-stream-prefix": "ecs",
                             },
                         },
+                        "environment": [
+                            {"name": "HTTP_PROXY", "value": "socks5h://127.0.0.1:1055"},
+                            {"name": "HTTPS_PROXY", "value": "socks5h://127.0.0.1:1055"},
+                            {"name": "NO_PROXY", "value": "169.254.170.2,169.254.169.254,localhost,127.0.0.1"},
+                        ],
                     },
                 },
             },

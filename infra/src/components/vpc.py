@@ -129,6 +129,8 @@ class Vpc(ComponentResource):
         # 53 only to the VPC resolver (the VPC base address + 2 for each subnet). If your SG helper doesn’t have
         # a “to resolver” convenience, calculate those IPs per subnet and allow to that set only."
 
+        # resolver_ips = [str(ip_network(cidr).network_address + 2) for cidr in vpc.private_subnet_cidrs]
+
         security_group.allow_egress_cidr(cidr_name="vpc", cidr=self.cidr_block, ports=[53])
         security_group.allow_egress_cidr(cidr_name="vpc", cidr=self.cidr_block, ports=[53], protocol="udp")
 
