@@ -1,5 +1,5 @@
 environment:
-  - default/dev
+  - plerion/dev
 
 config:
   aws:region: us-east-1

@@ -1,7 +1,6 @@
 from typing import cast
 
 from pulumi import Config, Output, StackReference
-from pulumi_aws.ecs import Cluster
 
 from components.api import create_api
 from components.cloudbeaver import create_cloudbeaver
@@ -25,13 +24,10 @@ def create_dev_stack(config: Config):
     # 2. Postgres database
     postgres_instance, connection_string = create_database(config, postgres_security_group, vpc.private_subnet_ids)
 
-    cluster = Cluster("cluster")
-
     create_cloudbeaver(
         config,
         core_stack,
         vpc=vpc,
-        cluster=cluster,
         cloudbeaver_security_group=cloudbeaver_security_group,
         postgres_security_group=postgres_security_group,
         db=postgres_instance,

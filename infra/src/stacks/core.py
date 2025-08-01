@@ -6,6 +6,7 @@ from pulumi_aws.ecr import PullThroughCacheRule
 from pulumi_aws.route53 import Record, Zone
 
 from components.secret import Secret
+from components.tailscale_bridge import create_tailscale_bridge
 from components.vpc import Vpc, VpcInfo
 
 
@@ -49,6 +50,8 @@ def create_core_stack(config: Config):
     )
 
     vpc = Vpc(name="main-vpc")
+
+    create_tailscale_bridge()
 
     export("zone-id", zone.id)
     export("zone-name", zone.name)

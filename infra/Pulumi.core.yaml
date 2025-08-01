@@ -1,6 +1,6 @@
 environment:
-  - default/dev
+  - plerion/core
+  - plerion/people
 
 config:
   aws:region: us-east-1
-  plerion_infra:domain: outernetfoundation.org

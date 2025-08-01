@@ -22,7 +22,6 @@ def create_cloudbeaver(
     config: Config,
     core_stack: StackReference,
     vpc: Vpc,
-    cluster: Cluster,
     cloudbeaver_security_group: SecurityGroup,
     postgres_security_group: SecurityGroup,
     db: Instance,
@@ -32,19 +31,21 @@ def create_cloudbeaver(
     zone_name = core_stack.require_output("zone-name")
     certificate_arn = core_stack.require_output("certificate-arn")
 
+    cluster = Cluster("cloudbeaver-cluster")
+
     load_balancer_security_group = SecurityGroup("load-balancer-security-group", vpc_id=vpc.id)
     efs_security_group = SecurityGroup("cloudbeaver-efs-security-group", vpc_id=vpc.id)
 
     # Allow http ingress to the load balancer from anywhere
-    load_balancer_security_group.allow_ingress_cidr(cidr_name="vpc-cidr", cidr="0.0.0.0/0", ports=[80], protocol="tcp")
-    load_balancer_security_group.allow_ingress_cidr(cidr_name="vpc-cidr", cidr="0.0.0.0/0", ports=[443], protocol="tcp")
+    load_balancer_security_group.allow_ingress_cidr(cidr_name="anywhere", cidr="0.0.0.0/0", ports=[80], protocol="tcp")
+    load_balancer_security_group.allow_ingress_cidr(cidr_name="anywhere", cidr="0.0.0.0/0", ports=[443], protocol="tcp")
 
     # Allow the load balancer to access CloudBeaver
     cloudbeaver_security_group.allow_ingress_reciprocal(from_security_group=load_balancer_security_group, ports=[8978])
 
     # Allow egress to the VPC CIDR for DNS resolution
-    cloudbeaver_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.cidr_block, ports=[53])
-    cloudbeaver_security_group.allow_egress_cidr(cidr_name="vpc-cidr", cidr=vpc.cidr_block, ports=[53], protocol="udp")
+    cloudbeaver_security_group.allow_egress_cidr(cidr_name="vpc", cidr=vpc.cidr_block, ports=[53])
+    cloudbeaver_security_group.allow_egress_cidr(cidr_name="vpc", cidr=vpc.cidr_block, ports=[53], protocol="udp")
 
     # For each VPC endpoint, allow Cloudbeaver to access it
     for service_name in ["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts"]:
