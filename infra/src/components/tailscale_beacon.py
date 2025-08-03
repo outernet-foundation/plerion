@@ -189,23 +189,24 @@ def create_tailscale_beacon(
                     "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
                     "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
                     "log_configuration": {
-                    "log_driver": "awslogs",
-                    "options": {
-                        "awslogs-group": "/ecs/tailscale-beacon",
-                        "awslogs-region": get_region_output().name,
-                        "awslogs-stream-prefix": "ecs",
+                        "log_driver": "awslogs",
+                        "options": {
+                            "awslogs-group": "/ecs/tailscale-beacon",
+                            "awslogs-region": get_region_output().name,
+                            "awslogs-stream-prefix": "ecs",
+                        },
                     },
-                },
                 },
             },
         },
     )
 
     people: list[str] = config.require_object("people")
+    print(f"People: {people}")
     for person_name in people:
         for service_name in service_map.keys():
             Record(
-                f"eng-{person_name}-{service_name}",
+                f"{person_name}-{service_name}",
                 zone_id=zone_id,
                 name=Output.concat(person_name, "-", service_name, ".", domain),
                 type="A",
