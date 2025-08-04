@@ -7,6 +7,11 @@ cat > /etc/caddy/Caddyfile <<EOF
         header_up Host ${DEVICE_NAME}-minio.${DOMAIN}
     }
 }
+:9001 {
+    reverse_proxy minio:9001 {
+        header_up -Origin
+    }
+}
 EOF
 
 echo "Starting MinIO proxy with Caddy..."

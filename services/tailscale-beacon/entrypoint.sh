@@ -11,7 +11,7 @@ tailscaled \
   --state=/var/lib/tailscale/tailscaled.state \
   --socket=/run/tailscale/tailscaled.sock \
   --tun=userspace-networking \
-  --outbound-http-proxy-listen=127.0.0.1:1055 \
+  --socks5-server=127.0.0.1:1055 \
   >/var/log/tailscaled.log 2>&1 &
 
 # Wait for daemon to be ready

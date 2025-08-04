@@ -24,19 +24,8 @@ def render_caddyfile(domain: str, tailnet: str, svc_to_port: dict[str, int]) -> 
     port_mappings = "\n        ".join(f"{svc} {port}" for svc, port in sorted(svc_to_port.items()))
     escaped_domain = re.escape(domain)  # safe for regex
 
-    tpl = Template(r"""{
-    admin off
-    auto_https off
-    debug
-}
-
+    tpl = Template(r"""
 :80 {
-    log {
-        output stdout
-        format console
-        level DEBUG
-    }
-    
     respond /health 200
     
     @pair header_regexp pair Host ^([^.]+?)-(${SERVICE_NAMES})\.${ESCAPED_DOMAIN}$$
@@ -49,17 +38,10 @@ def render_caddyfile(domain: str, tailnet: str, svc_to_port: dict[str, int]) -> 
         
         reverse_proxy {http.regexp.pair.1}.${TAILNET}.ts.net:{up_port} {
             header_up Host {upstream_hostport}
-            header_up X-Forwarded-Host {host}
                    
             transport http {
-                versions 1.1
-                forward_proxy_url http://127.0.0.1:1055
-                    dial_timeout 3s
-                    read_timeout 10s
-                    write_timeout 10s
-                    keepalive 0s
+                forward_proxy_url socks5://127.0.0.1:1055
             }
-            header_down X-Dial "{http.reverse_proxy.upstream.address}"
         }
     }
     
