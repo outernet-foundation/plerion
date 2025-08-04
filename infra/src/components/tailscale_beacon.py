@@ -1,7 +1,5 @@
 import json
-import re
 from pathlib import Path
-from string import Template
 
 from pulumi import Config, Input, Output
 from pulumi_aws import get_region_output
@@ -17,41 +15,40 @@ from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
+# def render_caddyfile(domain: str, tailnet: str, svc_to_port: dict[str, int]) -> str:
+#     service_names = "|".join(sorted(svc_to_port))
+#     # Need 8 spaces for proper indentation in the map block
+#     port_mappings = "\n        ".join(f"{svc} {port}" for svc, port in sorted(svc_to_port.items()))
+#     escaped_domain = re.escape(domain)  # safe for regex
 
-def render_caddyfile(domain: str, tailnet: str, svc_to_port: dict[str, int]) -> str:
-    service_names = "|".join(sorted(svc_to_port))
-    # Need 8 spaces for proper indentation in the map block
-    port_mappings = "\n        ".join(f"{svc} {port}" for svc, port in sorted(svc_to_port.items()))
-    escaped_domain = re.escape(domain)  # safe for regex
+#     tpl = Template(r"""
+# :80 {
+#     respond /health 200
 
-    tpl = Template(r"""
-:80 {
-    respond /health 200
-    
-    @pair header_regexp pair Host ^([^.]+?)-(${SERVICE_NAMES})\.${ESCAPED_DOMAIN}$$
-    
-    handle @pair {
-        map {http.regexp.pair.2} {up_port} {
-            ${PORT_MAPPINGS}
-            default 0
-        }
-        
-        reverse_proxy {http.regexp.pair.1}.${TAILNET}.ts.net:{up_port} {
-            header_up Host {upstream_hostport}
-                   
-            transport http {
-                forward_proxy_url socks5://127.0.0.1:1055
-            }
-        }
-    }
-    
-    respond 404
-}
-""")
+#     @pair header_regexp pair Host ^([^.]+?)-(${SERVICE_NAMES})\.${ESCAPED_DOMAIN}$$
 
-    return tpl.substitute(
-        SERVICE_NAMES=service_names, ESCAPED_DOMAIN=escaped_domain, PORT_MAPPINGS=port_mappings, TAILNET=tailnet
-    )
+#     handle @pair {
+#         map {http.regexp.pair.2} {up_port} {
+#             ${PORT_MAPPINGS}
+#             default 0
+#         }
+
+#         reverse_proxy {http.regexp.pair.1}.${TAILNET}.ts.net:{up_port} {
+#             header_up Host {upstream_hostport}
+
+#             transport http {
+#                 forward_proxy_url socks5://127.0.0.1:1055
+#             }
+#         }
+#     }
+
+#     respond 404
+# }
+# """)
+
+#     return tpl.substitute(
+#         SERVICE_NAMES=service_names, ESCAPED_DOMAIN=escaped_domain, PORT_MAPPINGS=port_mappings, TAILNET=tailnet
+#     )
 
 
 def create_tailscale_beacon(
@@ -165,13 +162,6 @@ def create_tailscale_beacon(
         "minioconsole": 9001,
     }
 
-    # Render Caddyfile once from (domain, tailnet, service map)
-    caddyfile_text = Output.all(domain, tailnet_name).apply(
-        lambda args: render_caddyfile(args[0], args[1], service_map)
-    )
-
-    caddyfile_text.apply(lambda x: print(f"Caddyfile:\n{x}"))
-
     # Execution role inline policy to allow ECS to pull the secret value for TS_AUTHKEY
     policy = tailscale_auth_key_secret.arn.apply(
         lambda arn: json.dumps({
@@ -215,7 +205,11 @@ def create_tailscale_beacon(
                 "tailscale-beacon": {
                     "name": "tailscale-beacon",
                     "image": tailscale_beacon_image.repo_digest,
-                    "environment": [{"name": "CADDYFILE", "value": caddyfile_text}],
+                    "environment": [
+                        {"name": "TAILNET", "value": tailnet_name},
+                        {"name": "DOMAIN", "value": domain},
+                        {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
+                    ],
                     "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
                     "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
                     "log_configuration": {
