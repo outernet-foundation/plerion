@@ -22,8 +22,13 @@ class Storage:
     def presign_put(self, bucket: str, key: str, expires: int = UPLOAD_EXPIRES) -> str:
         return self._s3.generate_presigned_url(
             "put_object",
-            Params={"Bucket": bucket, "Key": key},
+            Params={
+                "Bucket": bucket,
+                "Key": key,
+                "ContentType": "application/octet-stream",
+            },
             ExpiresIn=expires,
+            HttpMethod="PUT",
         )
 
     def presign_get(
@@ -49,7 +54,11 @@ def _build_storage() -> Storage:
             endpoint_url=str(settings.s3_endpoint_url),
             aws_access_key_id=settings.s3_access_key,
             aws_secret_access_key=settings.s3_secret_key,
-            config=Config(signature_version="s3v4"),
+            config=Config(
+                signature_version="s3v4",
+                region_name="us-east-1",  # required by SigV4
+                s3={"addressing_style": "path"},  # ← force path-style (/{bucket}/{key})
+            ),
         )
 
     # See https://github.com/microsoft/pylance-release/issues/2809

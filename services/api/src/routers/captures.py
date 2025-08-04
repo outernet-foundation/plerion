@@ -80,6 +80,7 @@ async def upload_capture_file(
 
     try:
         url = storage.presign_put(BUCKET, id)
+        print(url)
     except Exception as exc:
         raise HTTPException(502, f"Presign failed: {exc}") from exc
 

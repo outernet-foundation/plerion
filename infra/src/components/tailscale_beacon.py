@@ -52,6 +52,7 @@ def render_caddyfile(domain: str, tailnet: str, svc_to_port: dict[str, int]) -> 
             header_up X-Forwarded-Host {host}
                    
             transport http {
+                versions 1.1
                 forward_proxy_url http://127.0.0.1:1055
                     dial_timeout 3s
                     read_timeout 10s

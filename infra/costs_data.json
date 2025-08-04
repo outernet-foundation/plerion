@@ -1,163 +1,283 @@
 [
   {
-    "date": "2025-07-03",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 0.48
-  },
-  {
-    "date": "2025-07-04",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 0.48
-  },
-  {
     "date": "2025-07-05",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-06",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-07",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-08",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-09",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-10",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-11",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-12",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-13",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-14",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-15",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-16",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-17",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.48
   },
   {
     "date": "2025-07-18",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 0.48255556
+    "category": "USE1-PublicIPv4:IdleAddress",
+    "cost": 0.001059725
+  },
+  {
+    "date": "2025-07-18",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.481495835
   },
   {
     "date": "2025-07-19",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.731282015
   },
   {
     "date": "2025-07-20",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 0.874602785
+    "category": "USE1-PublicIPv4:IdleAddress",
+    "cost": 0.000131945
+  },
+  {
+    "date": "2025-07-20",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.87447084
   },
   {
     "date": "2025-07-21",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 0.85061667
+    "category": "USE1-PublicIPv4:IdleAddress",
+    "cost": 0.000258335
+  },
+  {
+    "date": "2025-07-21",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.850358335
   },
   {
     "date": "2025-07-22",
-    "category": "Amazon Virtual Private Cloud",
+    "category": "USE1-PublicIPv4:InUseAddress",
     "cost": 0.792020835
   },
   {
     "date": "2025-07-23",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 0.94731528
+    "category": "USE1-PublicIPv4:IdleAddress",
+    "cost": 0.00021528
+  },
+  {
+    "date": "2025-07-23",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.9471
   },
   {
     "date": "2025-07-24",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 1.01476806
+    "category": "USE1-PublicIPv4:IdleAddress",
+    "cost": 0.00022778
+  },
+  {
+    "date": "2025-07-24",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.92454028
+  },
+  {
+    "date": "2025-07-24",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 0.09
   },
   {
     "date": "2025-07-25",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 3.7516259005
+    "category": "USE1-PublicIPv4:IdleAddress",
+    "cost": 8.3335e-05
+  },
+  {
+    "date": "2025-07-25",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.69141111
+  },
+  {
+    "date": "2025-07-25",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 0.0001314555
+  },
+  {
+    "date": "2025-07-25",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 3.06
   },
   {
     "date": "2025-07-26",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 4.3346161322
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.73458055
+  },
+  {
+    "date": "2025-07-26",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 3.55822e-05
+  },
+  {
+    "date": "2025-07-26",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 3.6
   },
   {
     "date": "2025-07-27",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 3.3117216837
+    "category": "USE1-PublicIPv4:IdleAddress",
+    "cost": 0.00042084
+  },
+  {
+    "date": "2025-07-27",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.60126667
+  },
+  {
+    "date": "2025-07-27",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 3.41737e-05
+  },
+  {
+    "date": "2025-07-27",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 2.71
   },
   {
     "date": "2025-07-28",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 1.92
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.72
+  },
+  {
+    "date": "2025-07-28",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 1.2
   },
   {
     "date": "2025-07-29",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 1.9200003189
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.72
+  },
+  {
+    "date": "2025-07-29",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 3.189e-07
+  },
+  {
+    "date": "2025-07-29",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 1.2
   },
   {
     "date": "2025-07-30",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 0.6743714619
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.50436666
+  },
+  {
+    "date": "2025-07-30",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 4.8019e-06
+  },
+  {
+    "date": "2025-07-30",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 0.17
   },
   {
     "date": "2025-07-31",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 2.110190519
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.71017361
+  },
+  {
+    "date": "2025-07-31",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 1.6909e-05
+  },
+  {
+    "date": "2025-07-31",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 1.4
   },
   {
     "date": "2025-08-01",
-    "category": "Amazon Virtual Private Cloud",
-    "cost": 1.9203922565
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.79998333
   },
   {
-    "date": "2025-07-03",
-    "category": "\ud83d\udcca TOTAL",
-    "cost": 0.48
+    "date": "2025-08-01",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 0.0004089265
   },
   {
-    "date": "2025-07-04",
-    "category": "\ud83d\udcca TOTAL",
-    "cost": 0.48
+    "date": "2025-08-01",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 1.2
+  },
+  {
+    "date": "2025-08-02",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 0.96
+  },
+  {
+    "date": "2025-08-02",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 1.2
+  },
+  {
+    "date": "2025-08-03",
+    "category": "USE1-PublicIPv4:InUseAddress",
+    "cost": 1.07079596
+  },
+  {
+    "date": "2025-08-03",
+    "category": "USE1-VpcEndpoint-Bytes",
+    "cost": 0.0003847577
+  },
+  {
+    "date": "2025-08-03",
+    "category": "USE1-VpcEndpoint-Hours",
+    "cost": 1.2
   },
   {
     "date": "2025-07-05",
@@ -242,7 +362,7 @@
   {
     "date": "2025-07-21",
     "category": "\ud83d\udcca TOTAL",
-    "cost": 0.85061667
+    "cost": 0.8506166700000001
   },
   {
     "date": "2025-07-22",
@@ -252,7 +372,7 @@
   {
     "date": "2025-07-23",
     "category": "\ud83d\udcca TOTAL",
-    "cost": 0.94731528
+    "cost": 0.9473152800000001
   },
   {
     "date": "2025-07-24",
@@ -292,11 +412,21 @@
   {
     "date": "2025-07-31",
     "category": "\ud83d\udcca TOTAL",
-    "cost": 2.110190519
+    "cost": 2.1101905189999997
   },
   {
     "date": "2025-08-01",
     "category": "\ud83d\udcca TOTAL",
-    "cost": 1.9203922565
+    "cost": 2.0003922565
+  },
+  {
+    "date": "2025-08-02",
+    "category": "\ud83d\udcca TOTAL",
+    "cost": 2.16
+  },
+  {
+    "date": "2025-08-03",
+    "category": "\ud83d\udcca TOTAL",
+    "cost": 2.2711807177
   }
 ]

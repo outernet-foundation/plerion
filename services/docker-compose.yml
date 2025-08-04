@@ -89,15 +89,26 @@ services:
     volumes:
       - minio_data:/data
     ports:
-      - "9000:9000"
       - "9001:9001"
     environment:
       MINIO_ROOT_USER: "${S3_ACCESS_KEY}"
       MINIO_ROOT_PASSWORD: "${S3_SECRET_KEY}"
+      MINIO_BROWSER_REDIRECT_URL: "https://${DEVICE_NAME}-minioconsole.${DOMAIN}"
+      MINIO_SERVER_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
       interval: 5s
       retries: 12
+
+  minio-proxy:
+    build: ./minio-proxy
+    ports:
+      - "9000:9000"
+    environment:
+      DEVICE_NAME: "${DEVICE_NAME}"
+      DOMAIN: "${DOMAIN}"
+    depends_on:
+      - minio
 
   minio_init:
     image: minio/mc:latest
@@ -127,7 +138,7 @@ services:
       - "8000:8000"
     environment:
       POSTGRES_DSN: ${POSTGRES_DSN}
-      S3_ENDPOINT_URL: ${S3_ENDPOINT_URL}
+      S3_ENDPOINT_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
     depends_on:
