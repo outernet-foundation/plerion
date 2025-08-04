@@ -42,49 +42,29 @@ def render_caddyfile(domain: str, tailnet: str, svc_to_port: dict[str, int]) -> 
     @pair header_regexp pair Host ^([^.]+?)-(${SERVICE_NAMES})\.${ESCAPED_DOMAIN}$$
     
     handle @pair {
-        header {
-            X-Map-Source "{http.regexp.pair.2}"
-            X-Up-Port-BEFORE "{http.vars.up_port}"
-        }
-                   
-
-
         map {http.regexp.pair.2} {up_port} {
-            api "8000"
-            cloudbeaver "8978"
-            minio "9000"
-            minioconsole "9001"
-            default "0
+            ${PORT_MAPPINGS}
+            default 0
         }
-                    
-        header {
-            X-Up-Port-COPY "{http.vars.up_port_copy}"
-        } 
-
-        # Show the result of the map
-        header {
-            X-Up-Port-AFTER "{up_port}"
-        }
+        
+        reverse_proxy {http.regexp.pair.1}.${TAILNET}.ts.net:{up_port} {
+            header_up Host {upstream_hostport}
+            header_up X-Forwarded-Host {host}
                    
-        vars {
-            up_port_literal 8000
+            transport http {
+                forward_proxy_url http://127.0.0.1:1055
+                    dial_timeout 3s
+                    read_timeout 10s
+                    write_timeout 10s
+                    keepalive 0s
+            }
+            header_down X-Dial "{http.reverse_proxy.upstream.address}"
         }
-                   
-        header {
-            X-Up-Port-LITERAL "{http.vars.up_port_literal}"
-        }
-
-        # Short-circuit so you can read the values without proxying
-        respond 200
     }
     
     respond 404
 }
 """)
-
-    return tpl.substitute(
-        SERVICE_NAMES=service_names, ESCAPED_DOMAIN=escaped_domain, PORT_MAPPINGS=port_mappings, TAILNET=tailnet
-    )
 
     return tpl.substitute(
         SERVICE_NAMES=service_names, ESCAPED_DOMAIN=escaped_domain, PORT_MAPPINGS=port_mappings, TAILNET=tailnet
