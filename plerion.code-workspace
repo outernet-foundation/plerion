@@ -12,22 +12,32 @@
       "path": "infra"
     },
     {
-      "path": "capture-app",
-      "name": "capture-app"
+      "path": "capture-app/android_mobile",
+      "name": "capture-app-android-mobile"
     }
   ],
   "settings": {
     "files.exclude": {
-      "**/__pycache__": true
+      "**/__pycache__": true,
+      "**/*.meta": true
     },
     "search.exclude": {
-      "**/__pycache__": true
+      "**/__pycache__": true,
+      "**/*.meta": true
     },
     "[python]": {
       "editor.codeActionsOnSave": {
         "source.fixAll.ruff": "explicit"
       }
     },
+    "[csharp]": {
+      "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit",
+        "source.sortMembers": "explicit"
+      }
+    },
+    "dotnet.defaultSolution": "capture-app/android_mobile/android_mobile.sln",
     "[json]": {
       "editor.formatOnSave": true,
       "editor.defaultFormatter": "esbenp.prettier-vscode"
@@ -36,8 +46,6 @@
     "python.analysis.languageServerMode": "default",
     "python.analysis.diagnosticMode": "workspace",
     "emeraldwalk.runonsave": {
-      // "autoClearConsole": true,
-      // "showElapsed": true,
       "commands": [
         {
           // match either src/routers/*.py OR src/db/tables/*.py

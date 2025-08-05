@@ -13,7 +13,6 @@ using PlerionClient.Api;
 using System.IO;
 using System.Net.Http;
 
-using System.Net.Http;
 using System.Net.Http.Headers;
 
 namespace PlerionClient.Client
@@ -119,8 +118,8 @@ public class CaptureController : MonoBehaviour
 
         var plerionAPIBaseUrl = environment switch
         {
-            Environment.Local => Resources.Load<TextAsset>("ngrok").text,
-            Environment.Remote => "",
+            Environment.Local => "https://desktop-otd3rch-api.outernetfoundation.org",
+            Environment.Remote => "https://api.outernetfoundation.org",
             _ => throw new ArgumentOutOfRangeException(nameof(environment), environment, null)
         };
 
