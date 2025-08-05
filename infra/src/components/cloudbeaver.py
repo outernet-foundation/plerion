@@ -25,13 +25,12 @@ def create_cloudbeaver(
     cloudbeaver_security_group: SecurityGroup,
     postgres_security_group: SecurityGroup,
     db: Instance,
+    cluster: Cluster,
 ) -> None:
     # Get zone and certificate info from core stack
     zone_id = core_stack.require_output("zone-id")
     zone_name = core_stack.require_output("zone-name")
     certificate_arn = core_stack.require_output("certificate-arn")
-
-    cluster = Cluster("cloudbeaver-cluster")
 
     load_balancer_security_group = SecurityGroup("load-balancer-security-group", vpc_id=vpc.id)
     efs_security_group = SecurityGroup("cloudbeaver-efs-security-group", vpc_id=vpc.id)

@@ -7,7 +7,6 @@ from pulumi_aws.ecs import Cluster
 from pulumi_aws.iam import OpenIdConnectProvider, Role, RolePolicyAttachment
 from pulumi_aws.route53 import Record, Zone
 
-from components.github_runner import create_github_runner
 from components.secret import Secret
 from components.tailscale_beacon import create_tailscale_beacon
 from components.vpc import Vpc, VpcInfo
@@ -86,11 +85,12 @@ def create_core_stack(config: Config):
         credential_arn=dockerhub_secret.arn,
     )
 
+    PullThroughCacheRule("ghcr-pull-through-cache-rule", ecr_repository_prefix="ghcr", upstream_registry_url="ghcr.io")
+
     vpc = Vpc(name="main-vpc")
 
     cluster = Cluster("tooling-cluster")
 
-    create_github_runner(vpc=vpc, config=config, cluster=cluster)
     create_tailscale_beacon(
         vpc=vpc, config=config, zone_id=zone.id, domain=domain, certificate_arn=certificate.arn, cluster=cluster
     )

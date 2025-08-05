@@ -1,10 +1,12 @@
 from typing import cast
 
 from pulumi import Config, Output, StackReference
+from pulumi_aws.ecs import Cluster
 
 from components.api import create_api
 from components.cloudbeaver import create_cloudbeaver
 from components.database import create_database
+from components.github_runner import create_github_runner
 from components.security_group import SecurityGroup
 from components.storage import create_storage
 from components.vpc import Vpc, VpcInfo
@@ -24,6 +26,10 @@ def create_dev_stack(config: Config):
     # 2. Postgres database
     postgres_instance, connection_string = create_database(config, postgres_security_group, vpc.private_subnet_ids)
 
+    cluster = Cluster("tooling-cluster")
+
+    create_github_runner(vpc=vpc, config=config, cluster=cluster, postgres_security_group=postgres_security_group)
+
     create_cloudbeaver(
         config,
         core_stack,
@@ -31,6 +37,7 @@ def create_dev_stack(config: Config):
         cloudbeaver_security_group=cloudbeaver_security_group,
         postgres_security_group=postgres_security_group,
         db=postgres_instance,
+        cluster=cluster,
     )
 
     # 3. Lambda (container image)
