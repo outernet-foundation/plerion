@@ -44,7 +44,8 @@ def create_cloudbeaver(
 
     # Allow cloudbeaver access to various vpc endpoints
     vpc.allow_endpoint_access(
-        security_group=cloudbeaver_security_group, interfaces=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts"]
+        security_group=cloudbeaver_security_group,
+        interfaces=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
     )
 
     # Allow CloudBeaver to access Postgres
