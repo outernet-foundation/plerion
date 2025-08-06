@@ -16,6 +16,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "boto3-stubs[s3]>=1.39.7",
+    "boto3-stubs[secretsmanager]>=1.39.8",
     "botocore-stubs>=1.38.46",
     "openapi-generator-cli>=7.14.0",
     "ruff>=0.12.3",

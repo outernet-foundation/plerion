@@ -123,7 +123,7 @@ def create_tailscale_beacon(
     }
 
     # Execution role inline policy to allow ECS to pull the secret value for TS_AUTHKEY
-    policy = tailscale_auth_key_secret.arn.apply(
+    policy = tailscale_auth_key_secret.base_arn.apply(
         lambda arn: json.dumps({
             "Version": "2012-10-17",
             "Statement": [{"Effect": "Allow", "Action": "secretsmanager:GetSecretValue", "Resource": [arn]}],
@@ -171,7 +171,7 @@ def create_tailscale_beacon(
                         {"name": "DOMAIN", "value": domain},
                         {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
                     ],
-                    "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
+                    "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.versioned_arn}],
                     "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
                     "log_configuration": {
                         "log_driver": "awslogs",

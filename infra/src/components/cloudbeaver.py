@@ -65,7 +65,7 @@ def create_cloudbeaver(
     )
 
     # Create a policy allowing CloudBeaver to access secrets and use the pull-through cache
-    policy = Output.all(postgres_secret.arn, cloudbeaver_secret.arn).apply(
+    policy = Output.all(postgres_secret.base_arn, cloudbeaver_secret.base_arn).apply(
         lambda arns: json.dumps({
             "Version": "2012-10-17",
             "Statement": [
@@ -159,7 +159,9 @@ def create_cloudbeaver(
     LogGroup("cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7)
 
     # Precompute some Input strings
-    db_url = Output.all(db.address, db.port).apply(lambda args: f"jdbc:postgresql://{args[0]}:{args[1]}/postgres")
+    db_url = Output.all(address=db.address, port=db.port).apply(
+        lambda args: f"jdbc:postgresql://{args['address']}:{args['port']}/postgres"
+    )
     cloudbeaver_url = domain.apply(lambda d: f"https://{d}")
 
     # Create Fargate service
@@ -202,7 +204,7 @@ def create_cloudbeaver(
                         {"name": "POSTGRES_DB", "value": "postgres"},
                         {"name": "POSTGRES_USER", "value": config.require("postgres-user")},
                     ],
-                    "secrets": [{"name": "POSTGRES_PASSWORD", "value_from": postgres_secret.arn}],
+                    "secrets": [{"name": "POSTGRES_PASSWORD", "value_from": postgres_secret.versioned_arn}],
                 },
                 "cloudbeaver": {
                     "name": "cloudbeaver",
@@ -231,8 +233,8 @@ def create_cloudbeaver(
                         {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
                     ],
                     "secrets": [
-                        {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_secret.arn},
-                        {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_secret.arn},
+                        {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_secret.versioned_arn},
+                        {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_secret.versioned_arn},
                     ],
                     "depends_on": [{"container_name": "cloudbeaver-init", "condition": "SUCCESS"}],
                 },

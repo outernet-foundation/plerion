@@ -35,7 +35,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
     # Allow egress to the GitHub API
     github_runner_security_group.allow_egress_cidr(cidr_name="github-api", cidr="0.0.0.0/0", ports=[443])
 
-    policy = github_app_private_key_secret.arn.apply(
+    policy = github_app_private_key_secret.base_arn.apply(
         lambda arn: json.dumps({
             "Version": "2012-10-17",
             "Statement": [
@@ -84,7 +84,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
                         {"name": "RUNNER_SCOPE", "value": "org"},
                         {"name": "ORG_NAME", "value": config.require("github-org")},
                     ],
-                    "secrets": [{"name": "APP_PRIVATE_KEY", "value_from": github_app_private_key_secret.arn}],
+                    "secrets": [{"name": "APP_PRIVATE_KEY", "value_from": github_app_private_key_secret.versioned_arn}],
                 }
             },
         },

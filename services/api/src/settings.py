@@ -1,17 +1,23 @@
 from functools import lru_cache
-from typing import Optional, cast
+from typing import TYPE_CHECKING, Any, cast
+
+import boto3
+
+if TYPE_CHECKING:
+    from mypy_boto3_secretsmanager import SecretsManagerClient
+else:
+    SecretsManagerClient = Any
 
 from pydantic import AnyHttpUrl, PostgresDsn, ValidationError, model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    postgres_dsn: PostgresDsn = cast(
-        PostgresDsn, "postgresql://postgres:postgres@localhost:5432/postgres"
-    )
-    s3_endpoint_url: Optional[AnyHttpUrl] = None
-    s3_access_key: Optional[str] = None
-    s3_secret_key: Optional[str] = None
+    postgres_dsn: PostgresDsn | None = None
+    postgres_dsn_arn: str | None = None
+    s3_endpoint_url: AnyHttpUrl | None = None
+    s3_access_key: str | None = None
+    s3_secret_key: str | None = None
 
     class Config:
         env_file = ".env"
@@ -25,6 +31,14 @@ class Settings(BaseSettings):
             raise ValueError(
                 "S3_ACCESS_KEY and S3_SECRET_KEY are required when S3_ENDPOINT_URL is set."
             )
+
+        if self.postgres_dsn and self.postgres_dsn_arn:
+            raise ValueError(
+                "Only one of POSTGRES_DSN or POSTGRES_DSN_ARN should be set."
+            )
+        if not self.postgres_dsn and not self.postgres_dsn_arn:
+            raise ValueError("One of POSTGRES_DSN or POSTGRES_DSN_ARN must be set.")
+
         # test
         return self
 
@@ -32,7 +46,14 @@ class Settings(BaseSettings):
 @lru_cache()
 def get_settings() -> Settings:
     try:
-        return Settings()  # type: ignore[return-value]]
+        settings = Settings()
+
+        if settings.postgres_dsn_arn:
+            client: SecretsManagerClient = boto3.client("secretsmanager")  # type: ignore
+            response = client.get_secret_value(SecretId=settings.postgres_dsn_arn)
+            settings.postgres_dsn = cast(PostgresDsn, response.get("SecretString"))
+
+        return settings
     except ValidationError as e:
         print("Invalid configuration:", e)
         raise

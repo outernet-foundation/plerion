@@ -1,15 +1,15 @@
 from typing import Sequence
 
-import pulumi
 import pulumi_aws as aws
 from pulumi import Config, Input, Output
 
+from components.secret import Secret
 from components.security_group import SecurityGroup
 
 
 def create_database(
     config: Config, security_group: SecurityGroup, subnet_ids: Input[Sequence[Input[str]]]
-) -> tuple[aws.rds.Instance, Output[str]]:
+) -> tuple[aws.rds.Instance, Secret]:
     instance_class: str = config.require("rdsInstanceClass")
     db_user: str = config.require("postgres-user")
     db_password_output = config.require_secret("postgres-password")
@@ -30,12 +30,12 @@ def create_database(
         skip_final_snapshot=True,
     )
 
-    # Export a connection string as an Output[str]. Note we DO NOT stringify the secret
-    # at plan time; Pulumi will handle secret propagation.
-    connection_string = Output.concat(
-        "postgresql://", db_user, ":", db_password_output, "@", db_instance.address, ":5432/postgres"
-    ).apply(lambda s: s)  # ensures Output[str], not Output[Any]
+    connection_secret = Secret(
+        "db-connection-secret",
+        name="prod/db/connection",
+        secret_string=Output.concat(
+            "postgresql://", db_user, ":", db_password_output, "@", db_instance.address, ":5432/postgres"
+        ),
+    )
 
-    pulumi.export("postgresConnectionString", connection_string)
-
-    return db_instance, connection_string
+    return db_instance, connection_secret

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from pulumi import Config, Input, Output, StackReference, export
+from pulumi import Config, Output, StackReference, export
 from pulumi_aws.apigatewayv2 import Api, ApiMapping, DomainName, Integration, Route, Stage
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecr import Repository, get_authorization_token
@@ -12,6 +12,7 @@ from pulumi_aws.lambda_ import Function, Permission
 from pulumi_aws.route53 import Record
 from pulumi_docker import Image
 
+from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
@@ -19,11 +20,12 @@ from components.vpc import Vpc
 def create_api(
     config: Config,
     core_stack: StackReference,
-    environment_vars: dict[str, Input[str]],
+    captures_bucket_name: Output[str],
     s3_bucket_arn: Output[str],
     vpc: Vpc,
     lambda_security_group: SecurityGroup,
     postgres_security_group: SecurityGroup,
+    postgres_connection_secret: Secret,
     memory_size: int = 512,
     timeout_seconds: int = 30,
 ):
@@ -80,10 +82,23 @@ def create_api(
     RolePolicy(
         "lambdaS3Access",
         role=role.id,
-        policy=s3_bucket_arn.apply(
-            lambda arn: json.dumps({
+        policy=Output.all(
+            s3_bucket_arn=s3_bucket_arn, postgres_connection_secret_arn=postgres_connection_secret.base_arn
+        ).apply(
+            lambda args: json.dumps({
                 "Version": "2012-10-17",
-                "Statement": [{"Effect": "Allow", "Action": ["s3:GetObject", "s3:PutObject"], "Resource": f"{arn}/*"}],
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": ["s3:GetObject", "s3:PutObject"],
+                        "Resource": f"{args['s3_bucket_arn']}/*",
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": ["secretsmanager:GetSecretValue"],
+                        "Resource": f"{args['postgres_connection_secret_arn']}",
+                    },
+                ],
             })
         ),
     )
@@ -113,15 +128,12 @@ def create_api(
         name="api-lambda",
         resource_name="api-lambda",
         package_type="Image",
-        image_uri=image.repo_digest,  # Output[str]
+        image_uri=image.repo_digest,
         role=role.arn,
         timeout=timeout_seconds,
         memory_size=memory_size,
         environment={
-            "variables": {
-                **environment_vars,
-                "S3_BUCKET_ARN": s3_bucket_arn,  # Pass S3 bucket ARN to Lambda
-            }
+            "variables": {"S3_BUCKET_ARN": s3_bucket_arn, "POSTGRES_DSN_ARN": postgres_connection_secret.versioned_arn}
         },
         vpc_config={"subnet_ids": vpc.private_subnet_ids, "security_group_ids": [lambda_security_group.id]},
     )

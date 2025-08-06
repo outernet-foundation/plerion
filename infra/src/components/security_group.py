@@ -6,6 +6,7 @@ import pulumi_aws as aws
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 
 
+# TODO I completely misunderstood parts of pulumi's dependency model and need to rewrite this
 class SecurityGroup(ComponentResource):
     @overload
     def __init__(self, name: str, *, vpc_id: Input[str], opts: ResourceOptions | None = None) -> None: ...
@@ -43,7 +44,13 @@ class SecurityGroup(ComponentResource):
     def arn(self) -> Output[str]:
         return Output.all(self._security_group.arn, *self._rule_ids).apply(lambda args: args[0])
 
-    def allow_traffic(self, from_security_group: SecurityGroup, to_security_group: SecurityGroup, ports: List[int], protocol: str = "tcp") -> None:
+    def allow_traffic(
+        self,
+        from_security_group: SecurityGroup,
+        to_security_group: SecurityGroup,
+        ports: List[int],
+        protocol: str = "tcp",
+    ) -> None:
         for port in ports:
             ingress_rule = aws.vpc.SecurityGroupIngressRule(
                 f"{to_security_group._name}-ingress-from-{from_security_group._name}-{port}-{protocol}",
@@ -66,11 +73,19 @@ class SecurityGroup(ComponentResource):
             self._rule_ids.append(ingress_rule.id)
             self._rule_ids.append(egress_rule.id)
 
-    def allow_ingress_reciprocal(self, from_security_group: SecurityGroup, ports: List[int], protocol: str = "tcp") -> None:
-        self.allow_traffic(from_security_group=from_security_group, to_security_group=self, ports=ports, protocol=protocol)
+    def allow_ingress_reciprocal(
+        self, from_security_group: SecurityGroup, ports: List[int], protocol: str = "tcp"
+    ) -> None:
+        self.allow_traffic(
+            from_security_group=from_security_group, to_security_group=self, ports=ports, protocol=protocol
+        )
 
-    def allow_egress_reciprocal(self, to_security_group: SecurityGroup, ports: List[int], protocol: str = "tcp") -> None:
-        self.allow_traffic(from_security_group=self, to_security_group=to_security_group, ports=ports, protocol=protocol)
+    def allow_egress_reciprocal(
+        self, to_security_group: SecurityGroup, ports: List[int], protocol: str = "tcp"
+    ) -> None:
+        self.allow_traffic(
+            from_security_group=self, to_security_group=to_security_group, ports=ports, protocol=protocol
+        )
 
     def allow_ingress_cidr(self, cidr: Input[str], cidr_name: str, ports: List[int], protocol: str = "tcp") -> None:
         for port in ports:

@@ -14,6 +14,7 @@ from components.vpc import Vpc, VpcInfo
 
 def create_dev_stack(config: Config):
     core_stack = StackReference("tyler-s-hatch/plerion_infra/core")
+
     vpc = Vpc(name="main-vpc", vpc_info=cast(Output[VpcInfo], core_stack.require_output("vpc-info")))
 
     lambda_security_group = SecurityGroup("lambda-security-group", vpc_id=vpc.id)
@@ -24,7 +25,9 @@ def create_dev_stack(config: Config):
     captures_bucket = create_storage(config)
 
     # 2. Postgres database
-    postgres_instance, connection_string = create_database(config, postgres_security_group, vpc.private_subnet_ids)
+    postgres_instance, postgres_connection_secret = create_database(
+        config, postgres_security_group, vpc.private_subnet_ids
+    )
 
     cluster = Cluster("dev-tooling-cluster")
 
@@ -44,13 +47,10 @@ def create_dev_stack(config: Config):
     create_api(
         config,
         core_stack,
-        environment_vars={
-            # Pulumi Inputs are OK here; secrets stay secret
-            "POSTGRES_DSN": connection_string,
-            "CAPTURES_BUCKET": captures_bucket.bucket,
-        },
+        captures_bucket_name=captures_bucket.bucket,
         s3_bucket_arn=captures_bucket.arn,
         vpc=vpc,
         lambda_security_group=lambda_security_group,
         postgres_security_group=postgres_security_group,
+        postgres_connection_secret=postgres_connection_secret,
     )
