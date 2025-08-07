@@ -7,6 +7,7 @@ from components.api import create_api
 from components.cloudbeaver import create_cloudbeaver
 from components.database import create_database
 from components.github_runner import create_github_runner
+from components.oidc import create_oidc
 from components.security_group import SecurityGroup
 from components.storage import create_storage
 from components.vpc import Vpc, VpcInfo
@@ -24,6 +25,8 @@ def create_dev_stack(config: Config):
 
     # 2. Postgres database
     postgres_instance, postgres_connection_secret = create_database(config, postgres_security_group, vpc)
+
+    create_oidc(config, postgres_connection_secret)
 
     cluster = Cluster("dev-tooling-cluster")
 

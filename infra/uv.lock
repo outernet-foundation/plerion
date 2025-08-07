@@ -426,6 +426,7 @@ dependencies = [
     { name = "pulumi-awsx" },
     { name = "pulumi-command" },
     { name = "pulumi-docker" },
+    { name = "pulumi-github" },
     { name = "pulumi-postgresql" },
     { name = "pydantic" },
 ]
@@ -447,6 +448,7 @@ requires-dist = [
     { name = "pulumi-awsx", specifier = ">=2.22.0" },
     { name = "pulumi-command", specifier = ">=1.1.0" },
     { name = "pulumi-docker", specifier = ">=4.8.0" },
+    { name = "pulumi-github", specifier = ">=6.7.3" },
     { name = "pulumi-postgresql", specifier = ">=3.15.2" },
     { name = "pydantic", specifier = ">=2.11.7" },
 ]
@@ -562,6 +564,20 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/2f/d4/4f645603ce8197d2b84b11418d6c8f67a4d40e0d3e5cfdb32f5c79bb8342/pulumi_docker_build-0.0.12.tar.gz", hash = "sha256:e42119d5453df68de30eb554e0d3e6ab317e2fd25bd201296b07611b0e81e45b", size = 39357, upload-time = "2025-05-16T19:30:57.54Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/17/6f/8b4d6410f8a0ce968374a499555197b08b16dbb2e7d2752e46836fb7f6cd/pulumi_docker_build-0.0.12-py3-none-any.whl", hash = "sha256:fc9b2720650411bccd3de2c2e8dc1b26be1f3b1d4fcbde343343f6829a365e2b", size = 44056, upload-time = "2025-05-16T19:30:55.832Z" },
+]
+
+[[package]]
+name = "pulumi-github"
+version = "6.7.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "parver" },
+    { name = "pulumi" },
+    { name = "semver" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e6/aa/97611dbf7c0c4ea622b6eef1890b3379d4c7fc0f9be22de092b00a743124/pulumi_github-6.7.3.tar.gz", hash = "sha256:7cce624ab8800ad94ecc906f0b09081957b2a1345f46392d43e49d145ca42434", size = 203054, upload-time = "2025-07-24T23:11:40.506Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/10/da/ca6b46064fd67a3357a4105f4d6a0ad14bb8b73932fbd56564561a1d6b2c/pulumi_github-6.7.3-py3-none-any.whl", hash = "sha256:aa154bb245bb614ed2dfd879ef9363ff10d8073337c1639280e0744097dba2b6", size = 369378, upload-time = "2025-07-24T23:11:38.803Z" },
 ]
 
 [[package]]

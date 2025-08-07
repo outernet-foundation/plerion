@@ -130,22 +130,6 @@ def create_tailscale_beacon(
         })
     )
 
-    # ssm_inline = json.dumps({
-    #     "Version": "2012-10-17",
-    #     "Statement": [
-    #         {
-    #             "Effect": "Allow",
-    #             "Action": [
-    #                 "ssmmessages:CreateControlChannel",
-    #                 "ssmmessages:CreateDataChannel",
-    #                 "ssmmessages:OpenControlChannel",
-    #                 "ssmmessages:OpenDataChannel",
-    #             ],
-    #             "Resource": "*",
-    #         }
-    #     ],
-    # })
-
     LogGroup("tailscale-beacon-log-group", name="/ecs/tailscale-beacon", retention_in_days=7)
 
     FargateService(
@@ -153,7 +137,6 @@ def create_tailscale_beacon(
         name="tailscale-beacon-service",
         cluster=cluster.arn,
         desired_count=1,
-        enable_execute_command=True,
         network_configuration={
             "subnets": vpc.public_subnet_ids,
             "security_groups": [tailscale_bridge_security_group.id],
