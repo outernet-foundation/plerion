@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         working-directory: services/api
         run: |
-          uv sync --only-group migrations
+          uv sync --frozen
 
       - name: Run Piccolo migrations
         working-directory: services/api
