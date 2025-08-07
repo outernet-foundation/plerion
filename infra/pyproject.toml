@@ -7,7 +7,7 @@ requires-python = ">=3.13"
 dependencies = [
     "boto3>=1.39.10",
     "pulumi>=3.183.0",
-    "pulumi-aws>=6.83.0",
+    "pulumi-aws>=7.3.1",
     "pulumi-awsx>=2.22.0",
     "pulumi-command>=1.1.0",
     "pulumi-docker>=4.8.0",

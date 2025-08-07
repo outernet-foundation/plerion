@@ -1,59 +1,104 @@
-name: DB Migrations
+name: DB Migrations & Image Build
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 permissions:
-  id-token: write
+  id-token: write    # ← OIDC token
   contents: read
 
 jobs:
-  build-images:
+  # ───────────────────────────────────────────────────────────────────────────
+  # ⓵ Bootstrap Pulumi: install CLI + ESC + fetch stack outputs
+  # ───────────────────────────────────────────────────────────────────────────
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      DB_ROLE_ARN:   ${{ steps.db-role.outputs.val }}
+      BEACON_REPO:   ${{ steps.beacon-repo.outputs.val }}
+      BEACON_ROLE:   ${{ steps.beacon-role.outputs.val }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Pulumi
+        uses: pulumi/actions@v4
+        with:
+          pulumi-version: latest
+
+      - name: Inject ESC environment (Pulumi token & AWS creds)
+        uses: pulumi/esc-action@v1
+        with:
+          environment: core
+
+      - name: Export DB migrations role ARN
+        id: db-role
+        run: echo "DB_ROLE_ARN=$(pulumi stack output github_actions_db_migrations_role_arn)" >> $GITHUB_ENV
+
+      - name: Export Beacon repo URL
+        id: beacon-repo
+        run: echo "BEACON_REPO=$(pulumi stack output tailscale-beacon-image-repo)" >> $GITHUB_ENV
+
+      - name: Export Beacon push-role ARN
+        id: beacon-role
+        run: echo "BEACON_ROLE=$(pulumi stack output tailscale-beacon-image-repo-role-arn)" >> $GITHUB_ENV
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # ⓶ Build & push the Tailscale-beacon image
+  # ───────────────────────────────────────────────────────────────────────────
+  build-beacon:
+    needs: prepare
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
+      - name: Configure AWS creds for ECR push
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.DOCKER_ROLE_ARN }}
+          role-to-assume: ${{ needs.prepare.outputs.BEACON_ROLE }}
           aws-region: us-east-1
 
+      - name: Log in to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push beacon image
+        env:
+          BEACON_REPO: ${{ needs.prepare.outputs.BEACON_REPO }}
+        run: |
+          docker build -t $BEACON_REPO:latest services/tailscale-beacon
+          docker push $BEACON_REPO:latest
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # ⓷ Run DB migrations
+  # ───────────────────────────────────────────────────────────────────────────
   migrate-db:
+    needs: prepare
     runs-on: self-hosted
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configure AWS credentials via OIDC
+      - name: Configure AWS creds for SecretsManager
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.DB_MIGRATIONS_ROLE_ARN }}
+          role-to-assume: ${{ needs.prepare.outputs.DB_ROLE_ARN }}
           aws-region: us-east-1
 
-      - name: Retrieve DB URL from Secrets Manager
+      - name: Fetch DB URL from Secrets Manager
         id: get-db-url
         uses: aws-actions/aws-secretsmanager-get-secrets@v1
         with:
           secret-ids: prod/db/connection
 
-      - name: Setup Python
+      - name: Setup Python & UV
         uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+        with: 
+          python-version: '3.10'
 
-      - name: Install UV
+      - name: Install uv & sync migrations deps
         run: |
           pip install uv --root-user-action=ignore
-        
-      - name: Install dependencies
-        working-directory: services/api
-        run: |
-          uv sync --frozen
+          cd services/api
+          uv sync --only-group migrations --prune --frozen
 
       - name: Run Piccolo migrations
         working-directory: services/api

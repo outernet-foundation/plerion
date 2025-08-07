@@ -3,7 +3,7 @@ import json
 from pulumi import Config, Input, Output, export
 from pulumi_aws import get_region_output
 from pulumi_aws.cloudwatch import LogGroup
-from pulumi_aws.ecr import Repository, get_image
+from pulumi_aws.ecr import Repository, get_image_output, get_images_output
 from pulumi_aws.ecs import Cluster
 from pulumi_aws.iam import Role
 from pulumi_aws.lb import Listener, LoadBalancer, TargetGroup
@@ -101,11 +101,6 @@ def create_tailscale_beacon(
     # ─────────────────────────────────────────────────────────────────────────
     # Container image (single container runs tailscaled + Caddy via entrypoint)
     # ─────────────────────────────────────────────────────────────────────────
-    tailscale_beacon_image_repo = Repository("tailscale-beacon-image-repo", force_delete=config.require_bool("devMode"))
-    tailscale_beacon_image = get_image(repository_name="tailscale-beacon-image-repo", image_tag="latest")
-    tailscale_beacon_image_repo_digest = Output.concat(
-        tailscale_beacon_image_repo.repository_url, "@", tailscale_beacon_image.image_digest
-    )
 
     # Tailscale auth key (ECS task secret)
     tailscale_auth_key_secret = Secret(
@@ -133,46 +128,7 @@ def create_tailscale_beacon(
 
     LogGroup("tailscale-beacon-log-group", name="/ecs/tailscale-beacon", retention_in_days=7)
 
-    FargateService(
-        "tailscale-beacon-service",
-        name="tailscale-beacon-service",
-        cluster=cluster.arn,
-        desired_count=1,
-        network_configuration={
-            "subnets": vpc.public_subnet_ids,
-            "security_groups": [tailscale_bridge_security_group.id],
-            # to do: create DNS resolver for the service instead of using public IPs
-            "assign_public_ip": True,
-        },
-        task_definition_args={
-            "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
-            "containers": {
-                "tailscale-beacon": {
-                    "name": "tailscale-beacon",
-                    "image": tailscale_beacon_image_repo_digest,
-                    "environment": [
-                        {"name": "TAILNET", "value": tailnet_name},
-                        {"name": "DOMAIN", "value": domain},
-                        {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
-                        {
-                            "name": "TS_AUTHKEY_VERSION",
-                            "value": tailscale_auth_key_secret.version_id,
-                        },  # Force update on secret change
-                    ],
-                    "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
-                    "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
-                    "log_configuration": {
-                        "log_driver": "awslogs",
-                        "options": {
-                            "awslogs-group": "/ecs/tailscale-beacon",
-                            "awslogs-region": get_region_output().name,
-                            "awslogs-stream-prefix": "ecs",
-                        },
-                    },
-                }
-            },
-        },
-    )
+    tailscale_beacon_image_repo = Repository("tailscale-beacon-image-repo", force_delete=config.require_bool("devMode"))
 
     tailnet_devices: list[str] = config.require_object("tailnet-devices")
     print(f"Devices: {tailnet_devices}")
@@ -202,7 +158,7 @@ def create_tailscale_beacon(
                     "Condition": {
                         "StringLike": {
                             "token.actions.githubusercontent.com:sub": (
-                                f"repo:{github_org}/{github_repo}:ref:refs/heads/{config.require('github-branch')}"
+                                f"repo:{github_org}/{github_repo}:ref:refs/heads/main"
                             )
                         },
                         "StringEquals": {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
@@ -218,28 +174,82 @@ def create_tailscale_beacon(
         inline_policies=[
             {
                 "name": "ecr-policy",
-                "policy": json.dumps({
-                    "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "ecr:GetAuthorizationToken",
-                                "ecr:BatchCheckLayerAvailability",
-                                "ecr:GetDownloadUrlForLayer",
-                                "ecr:BatchGetImage",
-                                "ecr:InitiateLayerUpload",
-                                "ecr:UploadLayerPart",
-                                "ecr:CompleteLayerUpload",
-                                "ecr:PutImage",
-                            ],
-                            "Resource": tailscale_beacon_image_repo.arn,
-                        }
-                    ],
-                }),
+                "policy": tailscale_beacon_image_repo.arn.apply(
+                    lambda arn: json.dumps({
+                        "Version": "2012-10-17",
+                        "Statement": [
+                            {
+                                "Effect": "Allow",
+                                "Action": [
+                                    "ecr:GetAuthorizationToken",
+                                    "ecr:BatchCheckLayerAvailability",
+                                    "ecr:GetDownloadUrlForLayer",
+                                    "ecr:BatchGetImage",
+                                    "ecr:InitiateLayerUpload",
+                                    "ecr:UploadLayerPart",
+                                    "ecr:CompleteLayerUpload",
+                                    "ecr:PutImage",
+                                ],
+                                "Resource": arn,
+                            }
+                        ],
+                    })
+                ),
             }
         ],
     )
 
     export("tailscale-beacon-image-repo", tailscale_beacon_image_repo.repository_url)
     export("tailscale-beacon-image-repo-role-arn", github_actions_docker_role.arn)
+
+    images = get_images_output(repository_name=tailscale_beacon_image_repo.name)
+
+    images.apply(
+        lambda images_data: None
+        if not images_data.image_ids
+        else FargateService(
+            "tailscale-beacon-service",
+            name="tailscale-beacon-service",
+            cluster=cluster.arn,
+            desired_count=1,
+            network_configuration={
+                "subnets": vpc.public_subnet_ids,
+                "security_groups": [tailscale_bridge_security_group.id],
+                "assign_public_ip": True,
+            },
+            task_definition_args={
+                "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
+                "containers": {
+                    "tailscale-beacon": {
+                        "name": "tailscale-beacon",
+                        "image": Output.concat(
+                            tailscale_beacon_image_repo.repository_url,
+                            "@",
+                            get_image_output(
+                                repository_name=tailscale_beacon_image_repo.name, image_tag="latest"
+                            ).image_digest,
+                        ),
+                        "environment": [
+                            {"name": "TAILNET", "value": tailnet_name},
+                            {"name": "DOMAIN", "value": domain},
+                            {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
+                            {
+                                "name": "TS_AUTHKEY_VERSION",
+                                "value": tailscale_auth_key_secret.version_id,
+                            },  # Force update on secret change
+                        ],
+                        "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
+                        "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
+                        "log_configuration": {
+                            "log_driver": "awslogs",
+                            "options": {
+                                "awslogs-group": "/ecs/tailscale-beacon",
+                                "awslogs-region": get_region_output().name,
+                                "awslogs-stream-prefix": "ecs",
+                            },
+                        },
+                    }
+                },
+            },
+        )
+    )
