@@ -1,18 +1,18 @@
-import json
-
 from pulumi import Config, Input, Output, export
 from pulumi_aws import get_region_output
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecr import Repository, get_image_output, get_images_output
 from pulumi_aws.ecs import Cluster
-from pulumi_aws.iam import Role
 from pulumi_aws.lb import Listener, LoadBalancer, TargetGroup
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
+from components.role_policies import create_ecr_policy, create_github_actions_role, create_secrets_manager_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
+
+service_map: dict[str, int] = {"api": 8000, "cloudbeaver": 8978, "minio": 9000, "minioconsole": 9001}
 
 
 def create_tailscale_beacon(
@@ -24,6 +24,26 @@ def create_tailscale_beacon(
     cluster: Cluster,
     github_oidc_provider_arn: Output[str],
 ):
+    # Log groups
+    LogGroup("tailscale-beacon-log-group", name="/ecs/tailscale-beacon", retention_in_days=7)
+
+    # Secrets
+    tailscale_auth_key_secret = Secret(
+        "tailscale-auth-key-secret", secret_string=config.require_secret("tailscale-auth-key")
+    )
+
+    # Image repos
+    tailscale_beacon_image_repo = Repository("tailscale-beacon-image-repo", force_delete=config.require_bool("devMode"))
+
+    # Github actions role
+    github_actions_role = create_github_actions_role(
+        "tailscale-beacon-image-repo-role",
+        config=config,
+        github_oidc_provider_arn=github_oidc_provider_arn,
+        policies={"ecr-policy": create_ecr_policy(tailscale_beacon_image_repo.arn)},
+    )
+
+    # Security groups
     tailscale_beacon_security_group = SecurityGroup(
         "tailscale-beacon-security-group",
         vpc=vpc,
@@ -39,12 +59,7 @@ def create_tailscale_beacon(
                 "cidr_name": "anywhere",
                 "to_cidr": "0.0.0.0/0",
                 "ports": [443],
-            },  # Allow egress to the tailscale control plane (HTTPS)
-            {
-                "cidr_name": "anywhere",
-                "to_cidr": "0.0.0.0/0",
-                "ports": [80],
-            },  # Allow egress to the tailscale control plane (HTTP) can this be removed?
+            },  # Allow https egress to the tailscale control plane
             {
                 "cidr_name": "anywhere",
                 "to_cidr": "0.0.0.0/0",
@@ -60,6 +75,7 @@ def create_tailscale_beacon(
         ],
     )
 
+    # Load balancer
     load_balancer_security_group = SecurityGroup(
         "tailscale-beacon-load-balancer-security-group",
         vpc=vpc,
@@ -69,14 +85,10 @@ def create_tailscale_beacon(
         ],
     )
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Public ALB (TLS at ALB; HTTP to task)
-    # ─────────────────────────────────────────────────────────────────────────
     load_balancer = LoadBalancer(
         "tailscale-beacon-lb", security_groups=[load_balancer_security_group.id], subnets=vpc.public_subnet_ids
     )
 
-    # Fargate requires target_type="ip"
     target_group = TargetGroup(
         "tailscale-beacon-tg",
         vpc_id=vpc.id,
@@ -87,7 +99,6 @@ def create_tailscale_beacon(
         health_check={"path": "/health", "matcher": "200-399"},
     )
 
-    # HTTPS listener → forward to TG
     Listener(
         "tailscale-beacon-https-listener",
         load_balancer_arn=load_balancer.arn,
@@ -102,44 +113,13 @@ def create_tailscale_beacon(
         load_balancer_arn=load_balancer.arn,
         port=80,
         protocol="HTTP",
-        default_actions=[{"type": "forward", "target_group_arn": target_group.arn}],
+        default_actions=[
+            {"type": "redirect", "redirect": {"protocol": "HTTPS", "port": "443", "status_code": "HTTP_301"}}
+        ],
     )
 
-    # ─────────────────────────────────────────────────────────────────────────
-    # Container image (single container runs tailscaled + Caddy via entrypoint)
-    # ─────────────────────────────────────────────────────────────────────────
-
-    # Tailscale auth key (ECS task secret)
-    tailscale_auth_key_secret = Secret(
-        "tailscale-auth-key-secret", secret_string=config.require_secret("tailscale-auth-key")
-    )
-
-    tailnet_name = config.require("tailnet-name")
-
-    # Service→port mapping for memorable names (can be overridden via config)
-    # e.g., pulumi config set caddy-services '{"api":8000,"cloudbeaver":8978,"minio":9000,"minioconsole":9001}'
-    service_map: dict[str, int] = config.get_object("caddy-services") or {
-        "api": 8000,
-        "cloudbeaver": 8978,
-        "minio": 9000,
-        "minioconsole": 9001,
-    }
-
-    # Execution role inline policy to allow ECS to pull the secret value for TS_AUTHKEY
-    policy = tailscale_auth_key_secret.arn.apply(
-        lambda arn: json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [{"Effect": "Allow", "Action": "secretsmanager:GetSecretValue", "Resource": [arn]}],
-        })
-    )
-
-    LogGroup("tailscale-beacon-log-group", name="/ecs/tailscale-beacon", retention_in_days=7)
-
-    tailscale_beacon_image_repo = Repository("tailscale-beacon-image-repo", force_delete=config.require_bool("devMode"))
-
-    tailnet_devices: list[str] = config.require_object("tailnet-devices")
-    print(f"Devices: {tailnet_devices}")
-    for device_name in tailnet_devices:
+    # DNS records
+    for device_name in config.require_object("tailnet-devices"):
         for service_name in service_map.keys():
             Record(
                 f"{device_name}-{service_name}",
@@ -151,69 +131,10 @@ def create_tailscale_beacon(
                 ],
             )
 
-    github_org = config.require("github-org")
-    github_repo = config.require("github-repo")
-
-    github_assume_role_policy = github_oidc_provider_arn.apply(
-        lambda arn: json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {
-                    "Effect": "Allow",
-                    "Principal": {"Federated": arn},
-                    "Action": "sts:AssumeRoleWithWebIdentity",
-                    "Condition": {
-                        "StringLike": {
-                            "token.actions.githubusercontent.com:sub": (
-                                f"repo:{github_org}/{github_repo}:ref:refs/heads/main"
-                            )
-                        },
-                        "StringEquals": {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
-                    },
-                }
-            ],
-        })
-    )
-
-    github_actions_docker_role = Role(
-        "github-actions-docker-role",
-        assume_role_policy=github_assume_role_policy,
-        inline_policies=[
-            {
-                "name": "ecr-policy",
-                "policy": tailscale_beacon_image_repo.arn.apply(
-                    lambda arn: json.dumps({
-                        "Version": "2012-10-17",
-                        "Statement": [
-                            {"Effect": "Allow", "Action": ["ecr:GetAuthorizationToken"], "Resource": "*"},
-                            {
-                                "Effect": "Allow",
-                                "Action": [
-                                    "ecr:BatchCheckLayerAvailability",
-                                    "ecr:GetDownloadUrlForLayer",
-                                    "ecr:BatchGetImage",
-                                    "ecr:InitiateLayerUpload",
-                                    "ecr:UploadLayerPart",
-                                    "ecr:CompleteLayerUpload",
-                                    "ecr:PutImage",
-                                ],
-                                "Resource": arn,
-                            },
-                        ],
-                    })
-                ),
-            }
-        ],
-    )
-
-    export("tailscale-beacon-image-repo", tailscale_beacon_image_repo.repository_url)
-    export("tailscale-beacon-image-repo-role-arn", github_actions_docker_role.arn)
-
-    images = get_images_output(repository_name=tailscale_beacon_image_repo.name)
-
-    images.apply(
+    # Service
+    get_images_output(repository_name=tailscale_beacon_image_repo.name).apply(
         lambda images_data: None
-        if not images_data.image_ids
+        if not images_data.image_ids  # If there are no images, don't create the service
         else FargateService(
             "tailscale-beacon-service",
             name="tailscale-beacon-service",
@@ -225,7 +146,11 @@ def create_tailscale_beacon(
                 "assign_public_ip": True,
             },
             task_definition_args={
-                "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
+                "execution_role": {
+                    "args": {
+                        "inline_policies": [{"policy": create_secrets_manager_policy(tailscale_auth_key_secret.arn)}]
+                    }
+                },
                 "containers": {
                     "tailscale-beacon": {
                         "name": "tailscale-beacon",
@@ -237,7 +162,7 @@ def create_tailscale_beacon(
                             ).image_digest,
                         ),
                         "environment": [
-                            {"name": "TAILNET", "value": tailnet_name},
+                            {"name": "TAILNET", "value": config.require("tailnet-name")},
                             {"name": "DOMAIN", "value": domain},
                             {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
                             {
@@ -260,3 +185,6 @@ def create_tailscale_beacon(
             },
         )
     )
+
+    export("tailscale-beacon-image-repo", tailscale_beacon_image_repo.repository_url)
+    export("tailscale-beacon-image-repo-role-arn", github_actions_role.arn)

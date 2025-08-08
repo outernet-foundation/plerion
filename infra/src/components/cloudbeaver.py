@@ -1,7 +1,6 @@
-import json
 from pathlib import Path
 
-from pulumi import Config, Output, StackReference, export
+from pulumi import Config, Output, StackReference
 from pulumi_aws import get_caller_identity, get_region_output
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecr import Repository, get_authorization_token
@@ -13,6 +12,7 @@ from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 from pulumi_docker import Image
 
+from components.role_policies import create_ecr_policy, create_secrets_manager_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -26,11 +26,21 @@ def create_cloudbeaver(
     db: Instance,
     cluster: Cluster,
 ) -> None:
-    # Get zone and certificate info from core stack
-    zone_id = core_stack.require_output("zone-id")
-    zone_name = core_stack.require_output("zone-name")
-    certificate_arn = core_stack.require_output("certificate-arn")
+    # Log groups
+    LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
+    LogGroup("cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7)
 
+    # Secrets
+    postgres_secret = Secret("postgres-secret", secret_string=config.require_secret("postgres-password"))
+    cloudbeaver_secret = Secret("cloudbeaver-secret", secret_string=config.require_secret("cloudbeaver-password"))
+
+    # Image repos
+    Repository("alpine-cache-repo", name="dockerhub/library/alpine", force_delete=config.require_bool("devMode"))
+    cloudbeaver_image_repo = Repository(
+        "cloudbeaver-cache-repo", name="dockerhub/dbeaver/cloudbeaver", force_delete=config.require_bool("devMode")
+    )
+
+    # Security Groups
     efs_security_group = SecurityGroup("cloudbeaver-efs-security-group", vpc=vpc)
 
     cloudbeaver_security_group = SecurityGroup(
@@ -51,27 +61,6 @@ def create_cloudbeaver(
             {"cidr_name": "anywhere", "from_cidr": "0.0.0.0/0", "ports": [80, 443]},
             {"to_security_group": cloudbeaver_security_group, "ports": [8978]},
         ],
-    )
-
-    # Create secrets for Postgres and CloudBeaver passwords
-    postgres_secret = Secret("postgres-secret", secret_string=config.require_secret("postgres-password"))
-    cloudbeaver_secret = Secret("cloudbeaver-secret", secret_string=config.require_secret("cloudbeaver-password"))
-
-    # Create repos for image pull-through cache
-    Repository("alpine-cache-repo", name="dockerhub/library/alpine", force_delete=config.require_bool("devMode"))
-    Repository(
-        "cloudbeaver-cache-repo", name="dockerhub/dbeaver/cloudbeaver", force_delete=config.require_bool("devMode")
-    )
-
-    # Create a policy allowing CloudBeaver to access secrets and use the pull-through cache
-    policy = Output.all(postgres_secret.arn, cloudbeaver_secret.arn).apply(
-        lambda arns: json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {"Effect": "Allow", "Action": "secretsmanager:GetSecretValue", "Resource": arns},
-                {"Effect": "Allow", "Action": "ecr:BatchImportUpstreamImage", "Resource": "*"},
-            ],
-        })
     )
 
     # Create a Docker image for CloudBeaver initialization
@@ -101,12 +90,11 @@ def create_cloudbeaver(
         ]
     )
 
-    # 1) Create the ALB itself
+    # Load balancer
     load_balancer = LoadBalancer(
         "cloudbeaver-lb", security_groups=[load_balancer_security_group.id], subnets=vpc.public_subnet_ids
     )
 
-    # 2) Create the Target Group
     load_balancer_target_group = TargetGroup(
         "cloudbeaver-lb-tg",
         port=8978,
@@ -123,28 +111,30 @@ def create_cloudbeaver(
         },
     )
 
-    # Forward HTTP traffic to the target group
     Listener(
-        "http-listener",
-        load_balancer_arn=load_balancer.arn,
-        port=80,
-        protocol="HTTP",
-        default_actions=[{"type": "forward", "target_group_arn": load_balancer_target_group.arn}],
-    )
-
-    # Terminate TLS with certificate and forward to the target group
-    Listener(
-        "https-listener",
+        "cloudbeaver-https-listener",
         load_balancer_arn=load_balancer.arn,
         port=443,
         protocol="HTTPS",
-        certificate_arn=certificate_arn,
+        certificate_arn=core_stack.require_output("certificate-arn"),
         default_actions=[{"type": "forward", "target_group_arn": load_balancer_target_group.arn}],
     )
 
+    Listener(
+        "cloudbeaver-http-listener",
+        load_balancer_arn=load_balancer.arn,
+        port=80,
+        protocol="HTTP",
+        default_actions=[
+            {"type": "redirect", "redirect": {"protocol": "HTTPS", "port": "443", "status_code": "HTTP_301"}}
+        ],
+    )
+
+    # DNS records
+    zone_id = core_stack.require_output("zone-id")
+    zone_name = core_stack.require_output("zone-name")
     domain = zone_name.apply(lambda zone_name: f"cloudbeaver.{zone_name}")
 
-    # Create a Route 53 record for the CloudBeaver domain
     Record(
         "cloudbeaver-domain-record",
         zone_id=zone_id,
@@ -153,17 +143,7 @@ def create_cloudbeaver(
         aliases=[{"name": load_balancer.dns_name, "zone_id": load_balancer.zone_id, "evaluate_target_health": True}],
     )
 
-    # Create log groups
-    LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
-    LogGroup("cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7)
-
-    # Precompute some Input strings
-    db_url = Output.all(address=db.address, port=db.port).apply(
-        lambda args: f"jdbc:postgresql://{args['address']}:{args['port']}/postgres"
-    )
-    cloudbeaver_url = domain.apply(lambda d: f"https://{d}")
-
-    # Create Fargate service
+    # Service
     FargateService(
         "cloudbeaver-service",
         name="cloudbeaver-service",
@@ -171,7 +151,15 @@ def create_cloudbeaver(
         desired_count=1,
         network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [cloudbeaver_security_group.id]},
         task_definition_args={
-            "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
+            "execution_role": {
+                "args": {
+                    "inline_policies": [
+                        {"policy": create_secrets_manager_policy(cloudbeaver_secret.arn)},
+                        {"policy": create_secrets_manager_policy(postgres_secret.arn)},
+                        {"policy": create_ecr_policy(cloudbeaver_image_repo.arn)},
+                    ]
+                }
+            },
             "volumes": [
                 {
                     "name": "efs",
@@ -237,10 +225,15 @@ def create_cloudbeaver(
                     "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
                     "environment": [
                         {"name": "CB_SERVER_NAME", "value": "CloudBeaver"},
-                        {"name": "CB_SERVER_URL", "value": cloudbeaver_url},
+                        {"name": "CB_SERVER_URL", "value": domain.apply(lambda d: f"https://{d}")},
                         {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
                         {"name": "CLOUDBEAVER_DB_DRIVER", "value": "postgres-jdbc"},
-                        {"name": "CLOUDBEAVER_DB_URL", "value": db_url},
+                        {
+                            "name": "CLOUDBEAVER_DB_URL",
+                            "value": Output.all(address=db.address, port=db.port).apply(
+                                lambda args: f"jdbc:postgresql://{args['address']}:{args['port']}/postgres"
+                            ),
+                        },
                         {"name": "CLOUDBEAVER_DB_USER", "value": config.require("postgres-user")},
                         {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
                         {
@@ -261,6 +254,3 @@ def create_cloudbeaver(
             },
         },
     )
-
-    # Export load balancer URL
-    export("cloudbeaver-url", cloudbeaver_url)

@@ -1,5 +1,3 @@
-import json
-
 from pulumi import Config
 from pulumi_aws import get_caller_identity, get_region_output
 from pulumi_aws.cloudwatch import LogGroup
@@ -7,16 +5,27 @@ from pulumi_aws.ecr import Repository
 from pulumi_aws.ecs import Cluster
 from pulumi_awsx.ecs import FargateService
 
+from components.role_policies import create_pullthrough_cache_policy, create_secrets_manager_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
 
 def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_security_group: SecurityGroup) -> None:
+    # Log groups
+    LogGroup("github-runner-log-group", name="/ecs/github-runner", retention_in_days=7)
+
+    # Secrets
     github_app_private_key_secret = Secret(
         "github-app-secret", secret_string=config.require_secret("github-app-private-key")
     )
 
+    # Image repos
+    image_repo = Repository(
+        "github-runner-cache-repo", name="dockerhub/myoung34/github-runner", force_delete=config.require_bool("devMode")
+    )
+
+    # Security groups
     github_runner_security_group = SecurityGroup(
         "github-runner-security-group",
         vpc=vpc,
@@ -27,23 +36,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
         ],
     )
 
-    policy = github_app_private_key_secret.arn.apply(
-        lambda arn: json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {"Effect": "Allow", "Action": "secretsmanager:GetSecretValue", "Resource": [arn]},
-                {"Effect": "Allow", "Action": ["ecr:BatchImportUpstreamImage"], "Resource": "*"},
-            ],
-        })
-    )
-
-    Repository(
-        "github-runner-cache-repo", name="dockerhub/myoung34/github-runner", force_delete=config.require_bool("devMode")
-    )
-
-    # Create log groups
-    LogGroup("github-runner-log-group", name="/ecs/github-runner", retention_in_days=7)
-
+    # Service
     FargateService(
         "github-runner-service",
         name="github-runner-service",
@@ -56,7 +49,14 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
             "assign_public_ip": True,
         },
         task_definition_args={
-            "execution_role": {"args": {"inline_policies": [{"policy": policy}]}},
+            "execution_role": {
+                "args": {
+                    "inline_policies": [
+                        {"policy": create_secrets_manager_policy(github_app_private_key_secret.arn)},
+                        {"policy": create_pullthrough_cache_policy(image_repo.arn)},
+                    ]
+                }
+            },
             "containers": {
                 "runner": {
                     "name": "runner",
