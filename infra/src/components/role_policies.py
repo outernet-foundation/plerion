@@ -1,8 +1,11 @@
 import json
-from typing import Dict
+from typing import Dict, List
 
 from pulumi import Config, Output
+from pulumi_aws.ecr import Repository
 from pulumi_aws.iam import Role
+
+from components.secret import Secret
 
 
 def create_github_actions_role(
@@ -34,9 +37,9 @@ def create_github_actions_role(
     )
 
 
-def create_ecr_policy(repository_arn: Output[str]):
-    return repository_arn.apply(
-        lambda arn: json.dumps({
+def allow_repo_push(repos: List[Repository]):
+    return Output.all(*[repo.arn for repo in repos]).apply(
+        lambda arns: json.dumps({
             "Version": "2012-10-17",
             "Statement": [
                 {"Effect": "Allow", "Action": ["ecr:GetAuthorizationToken"], "Resource": "*"},
@@ -51,26 +54,26 @@ def create_ecr_policy(repository_arn: Output[str]):
                         "ecr:CompleteLayerUpload",
                         "ecr:PutImage",
                     ],
-                    "Resource": arn,
+                    "Resource": arns,
                 },
             ],
         })
     )
 
 
-def create_secrets_manager_policy(secret_arn: Output[str]):
-    return secret_arn.apply(
-        lambda arn: json.dumps({
+def allow_repo_pullthrough(repos: List[Repository]):
+    return Output.all(*[repo.arn for repo in repos]).apply(
+        lambda arns: json.dumps({
             "Version": "2012-10-17",
-            "Statement": [{"Effect": "Allow", "Action": ["secretsmanager:GetSecretValue"], "Resource": [arn]}],
+            "Statement": [{"Effect": "Allow", "Action": ["ecr:BatchImportUpstreamImage"], "Resource": arns}],
         })
     )
 
 
-def create_pullthrough_cache_policy(repository_arn: Output[str]):
-    return repository_arn.apply(
-        lambda arn: json.dumps({
+def allow_secret_get(secrets: List[Secret]):
+    return Output.all(*[secret.arn for secret in secrets]).apply(
+        lambda arns: json.dumps({
             "Version": "2012-10-17",
-            "Statement": [{"Effect": "Allow", "Action": ["ecr:BatchImportUpstreamImage"], "Resource": [arn]}],
+            "Statement": [{"Effect": "Allow", "Action": ["secretsmanager:GetSecretValue"], "Resource": arns}],
         })
     )

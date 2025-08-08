@@ -5,7 +5,7 @@ from pulumi_aws.ecr import Repository
 from pulumi_aws.ecs import Cluster
 from pulumi_awsx.ecs import FargateService
 
-from components.role_policies import create_pullthrough_cache_policy, create_secrets_manager_policy
+from components.role_policies import allow_repo_pullthrough, allow_secret_get
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -21,7 +21,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
     )
 
     # Image repos
-    image_repo = Repository(
+    github_runner_image_repo = Repository(
         "github-runner-cache-repo", name="dockerhub/myoung34/github-runner", force_delete=config.require_bool("devMode")
     )
 
@@ -52,8 +52,8 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
             "execution_role": {
                 "args": {
                     "inline_policies": [
-                        {"policy": create_secrets_manager_policy(github_app_private_key_secret.arn)},
-                        {"policy": create_pullthrough_cache_policy(image_repo.arn)},
+                        {"policy": allow_secret_get([github_app_private_key_secret])},
+                        {"policy": allow_repo_pullthrough([github_runner_image_repo])},
                     ]
                 }
             },

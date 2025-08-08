@@ -10,7 +10,7 @@ from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import repo_digest
-from components.role_policies import create_ecr_policy, create_github_actions_role, create_secrets_manager_policy
+from components.role_policies import allow_repo_push, allow_secret_get, create_github_actions_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -26,8 +26,10 @@ def create_cloudbeaver(
     github_oidc_provider_arn: Output[str],
 ) -> None:
     # Log groups
-    LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
-    LogGroup("cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7)
+    cloudbeaver_log_group = LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
+    cloudbeaver_init_log_group = LogGroup(
+        "cloudbeaver-init-log-group", name="/ecs/cloudbeaver-init", retention_in_days=7
+    )
 
     # Secrets
     postgres_secret = Secret("postgres-secret", secret_string=config.require_secret("postgres-password"))
@@ -42,7 +44,7 @@ def create_cloudbeaver(
         "cloudbeaver-init-image-repo-role",
         config=config,
         github_oidc_provider_arn=github_oidc_provider_arn,
-        policies={"ecr-policy": create_ecr_policy(cloudbeaver_init_image_repo.arn)},
+        policies={"ecr-policy": allow_repo_push([cloudbeaver_init_image_repo])},
     )
 
     # Exports
@@ -153,9 +155,8 @@ def create_cloudbeaver(
                 "execution_role": {
                     "args": {
                         "inline_policies": [
-                            {"policy": create_secrets_manager_policy(cloudbeaver_secret.arn)},
-                            {"policy": create_secrets_manager_policy(postgres_secret.arn)},
-                            {"policy": create_ecr_policy(cloudbeaver_init_image_repo.arn)},
+                            {"policy": allow_secret_get([cloudbeaver_secret, postgres_secret])},
+                            {"policy": allow_repo_push([cloudbeaver_init_image_repo])},
                         ]
                     }
                 },
@@ -181,7 +182,7 @@ def create_cloudbeaver(
                         "log_configuration": {
                             "log_driver": "awslogs",
                             "options": {
-                                "awslogs-group": "/ecs/cloudbeaver-init",
+                                "awslogs-group": cloudbeaver_init_log_group.name,
                                 "awslogs-region": get_region_output().region,
                                 "awslogs-stream-prefix": "ecs",
                             },
@@ -193,14 +194,8 @@ def create_cloudbeaver(
                             {"name": "POSTGRES_DB", "value": "postgres"},
                             {"name": "POSTGRES_USER", "value": config.require("postgres-user")},
                             {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
-                            {
-                                "name": "_CB_ADMIN_NAME_VERSION",
-                                "value": cloudbeaver_secret.version_id,
-                            },  # Force update on secret change
-                            {
-                                "name": "_POSTGRES_PASSWORD_VERSION",
-                                "value": postgres_secret.version_id,
-                            },  # Force update on secret change
+                            {"name": "_CB_ADMIN_NAME_VERSION", "value": cloudbeaver_secret.version_id},
+                            {"name": "_POSTGRES_PASSWORD_VERSION", "value": postgres_secret.version_id},
                         ],
                         "secrets": [
                             {"name": "POSTGRES_PASSWORD", "value_from": postgres_secret.arn},
@@ -215,7 +210,7 @@ def create_cloudbeaver(
                         "log_configuration": {
                             "log_driver": "awslogs",
                             "options": {
-                                "awslogs-group": "/ecs/cloudbeaver",
+                                "awslogs-group": cloudbeaver_log_group.name,
                                 "awslogs-region": get_region_output().region,
                                 "awslogs-stream-prefix": "ecs",
                             },
@@ -237,14 +232,8 @@ def create_cloudbeaver(
                             },
                             {"name": "CLOUDBEAVER_DB_USER", "value": config.require("postgres-user")},
                             {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
-                            {
-                                "name": "CLOUDBEAVER_DB_USER_VERSION",
-                                "value": postgres_secret.version_id,
-                            },  # Force update on secret change
-                            {
-                                "name": "CLOUDBEAVER_DB_PASSWORD_VERSION",
-                                "value": cloudbeaver_secret.version_id,
-                            },  # Force update on secret change
+                            {"name": "CLOUDBEAVER_DB_USER_VERSION", "value": postgres_secret.version_id},
+                            {"name": "CLOUDBEAVER_DB_PASSWORD_VERSION", "value": cloudbeaver_secret.version_id},
                         ],
                         "secrets": [
                             {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_secret.arn},

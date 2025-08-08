@@ -8,7 +8,7 @@ from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import repo_digest
-from components.role_policies import create_ecr_policy, create_github_actions_role, create_secrets_manager_policy
+from components.role_policies import allow_repo_push, allow_secret_get, create_github_actions_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -41,7 +41,7 @@ def create_tailscale_beacon(
         "tailscale-beacon-image-repo-role",
         config=config,
         github_oidc_provider_arn=github_oidc_provider_arn,
-        policies={"ecr-policy": create_ecr_policy(tailscale_beacon_image_repo.arn)},
+        policies={"ecr-policy": allow_repo_push([tailscale_beacon_image_repo])},
     )
 
     # Exports
@@ -152,9 +152,7 @@ def create_tailscale_beacon(
             },
             task_definition_args={
                 "execution_role": {
-                    "args": {
-                        "inline_policies": [{"policy": create_secrets_manager_policy(tailscale_auth_key_secret.arn)}]
-                    }
+                    "args": {"inline_policies": [{"policy": allow_secret_get([tailscale_auth_key_secret])}]}
                 },
                 "containers": {
                     "tailscale-beacon": {
