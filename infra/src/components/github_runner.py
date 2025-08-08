@@ -22,7 +22,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
         vpc=vpc,
         vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
         rules=[
-            {"to_cidr": "0.0.0.0/0", "ports": [443]},  # Allow egress to the GitHub API
+            {"cidr_name": "anywhere", "to_cidr": "0.0.0.0/0", "ports": [443]},  # Allow egress to the GitHub API
             {"to_security_group": postgres_security_group, "ports": [5432]},
         ],
     )
@@ -60,14 +60,14 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
             "containers": {
                 "runner": {
                     "name": "runner",
-                    "image": get_region_output().name.apply(
+                    "image": get_region_output().region.apply(
                         lambda r: f"{get_caller_identity().account_id}.dkr.ecr.{r}.amazonaws.com/dockerhub/myoung34/github-runner:latest"
                     ),
                     "log_configuration": {
                         "log_driver": "awslogs",
                         "options": {
                             "awslogs-group": "/ecs/github-runner",
-                            "awslogs-region": get_region_output().name,
+                            "awslogs-region": get_region_output().region,
                             "awslogs-stream-prefix": "ecs",
                         },
                     },

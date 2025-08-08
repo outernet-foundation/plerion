@@ -24,37 +24,48 @@ def create_tailscale_beacon(
     cluster: Cluster,
     github_oidc_provider_arn: Output[str],
 ):
-    tailscale_bridge_security_group = SecurityGroup(
-        "tailscale-bridge-security-group",
+    tailscale_beacon_security_group = SecurityGroup(
+        "tailscale-beacon-security-group",
         vpc=vpc,
         vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
         rules=[
-            {"to_cidr": "0.0.0.0/0", "ports": [53], "protocols": ["udp", "tcp"]},
             {
+                "cidr_name": "anywhere",
                 "to_cidr": "0.0.0.0/0",
                 "ports": [53],
                 "protocols": ["udp", "tcp"],
             },  # temp hack, Allow egress for DNS resolution (required for curl and tailscale to resolve hostnames), need a real nat instance instead
-            {"to_cidr": "0.0.0.0/0", "ports": [443]},  # Allow egress to the tailscale control plane (HTTPS)
             {
+                "cidr_name": "anywhere",
+                "to_cidr": "0.0.0.0/0",
+                "ports": [443],
+            },  # Allow egress to the tailscale control plane (HTTPS)
+            {
+                "cidr_name": "anywhere",
                 "to_cidr": "0.0.0.0/0",
                 "ports": [80],
             },  # Allow egress to the tailscale control plane (HTTP) can this be removed?
             {
+                "cidr_name": "anywhere",
                 "to_cidr": "0.0.0.0/0",
                 "ports": [41641],
                 "protocols": ["udp"],
             },  # Allow egress to the tailscale DERP servers (WireGuard over UDP)
-            {"to_cidr": "0.0.0.0/0", "ports": [3478], "protocols": ["udp"]},  # Allow egress for STUN (NAT traversal)
+            {
+                "cidr_name": "anywhere",
+                "to_cidr": "0.0.0.0/0",
+                "ports": [3478],
+                "protocols": ["udp"],
+            },  # Allow egress for STUN (NAT traversal)
         ],
     )
 
     load_balancer_security_group = SecurityGroup(
-        "tailscale-bridge-load-balancer-security-group",
+        "tailscale-beacon-load-balancer-security-group",
         vpc=vpc,
         rules=[
-            {"from_cidr": "0.0.0.0/0", "ports": [80, 443]},
-            {"to_security_group": tailscale_bridge_security_group, "ports": [80]},
+            {"cidr_name": "anywhere", "from_cidr": "0.0.0.0/0", "ports": [80, 443]},
+            {"to_security_group": tailscale_beacon_security_group, "ports": [80]},
         ],
     )
 
@@ -62,7 +73,7 @@ def create_tailscale_beacon(
     # Public ALB (TLS at ALB; HTTP to task)
     # ─────────────────────────────────────────────────────────────────────────
     load_balancer = LoadBalancer(
-        "tailscale-bridge-lb", security_groups=[load_balancer_security_group.id], subnets=vpc.public_subnet_ids
+        "tailscale-beacon-lb", security_groups=[load_balancer_security_group.id], subnets=vpc.public_subnet_ids
     )
 
     # Fargate requires target_type="ip"
@@ -78,7 +89,7 @@ def create_tailscale_beacon(
 
     # HTTPS listener → forward to TG
     Listener(
-        "tailscale-bridge-https-listener",
+        "tailscale-beacon-https-listener",
         load_balancer_arn=load_balancer.arn,
         port=443,
         protocol="HTTPS",
@@ -87,7 +98,7 @@ def create_tailscale_beacon(
     )
 
     Listener(
-        "tailscale-bridge-http-listener",
+        "tailscale-beacon-http-listener",
         load_balancer_arn=load_balancer.arn,
         port=80,
         protocol="HTTP",
@@ -210,7 +221,7 @@ def create_tailscale_beacon(
             desired_count=1,
             network_configuration={
                 "subnets": vpc.public_subnet_ids,
-                "security_groups": [tailscale_bridge_security_group.id],
+                "security_groups": [tailscale_beacon_security_group.id],
                 "assign_public_ip": True,
             },
             task_definition_args={
@@ -240,7 +251,7 @@ def create_tailscale_beacon(
                             "log_driver": "awslogs",
                             "options": {
                                 "awslogs-group": "/ecs/tailscale-beacon",
-                                "awslogs-region": get_region_output().name,
+                                "awslogs-region": get_region_output().region,
                                 "awslogs-stream-prefix": "ecs",
                             },
                         },

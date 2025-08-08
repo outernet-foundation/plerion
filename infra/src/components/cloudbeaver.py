@@ -38,7 +38,7 @@ def create_cloudbeaver(
         vpc=vpc,
         vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
         rules=[
-            {"from_cidr": "0.0.0.0/0", "ports": [8978]},
+            {"cidr_name": "anywhere", "from_cidr": "0.0.0.0/0", "ports": [8978]},
             {"to_security_group": efs_security_group, "ports": [2049]},
             {"to_security_group": postgres_security_group, "ports": [5432]},
         ],
@@ -48,7 +48,7 @@ def create_cloudbeaver(
         "load-balancer-security-group",
         vpc=vpc,
         rules=[
-            {"from_cidr": "0.0.0.0/0", "ports": [80, 443]},
+            {"cidr_name": "anywhere", "from_cidr": "0.0.0.0/0", "ports": [80, 443]},
             {"to_security_group": cloudbeaver_security_group, "ports": [8978]},
         ],
     )
@@ -193,7 +193,7 @@ def create_cloudbeaver(
                         "log_driver": "awslogs",
                         "options": {
                             "awslogs-group": "/ecs/cloudbeaver-init",
-                            "awslogs-region": get_region_output().name,
+                            "awslogs-region": get_region_output().region,
                             "awslogs-stream-prefix": "ecs",
                         },
                     },
@@ -220,14 +220,14 @@ def create_cloudbeaver(
                 },
                 "cloudbeaver": {
                     "name": "cloudbeaver",
-                    "image": get_region_output().name.apply(
+                    "image": get_region_output().region.apply(
                         lambda r: f"{get_caller_identity().account_id}.dkr.ecr.{r}.amazonaws.com/dockerhub/dbeaver/cloudbeaver:latest"
                     ),
                     "log_configuration": {
                         "log_driver": "awslogs",
                         "options": {
                             "awslogs-group": "/ecs/cloudbeaver",
-                            "awslogs-region": get_region_output().name,
+                            "awslogs-region": get_region_output().region,
                             "awslogs-stream-prefix": "ecs",
                         },
                     },

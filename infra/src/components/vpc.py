@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Dict, Sequence, TypedDict, cast, overload
 
 import pulumi
@@ -79,7 +81,7 @@ class Vpc(ComponentResource):
                 VpcEndpoint(
                     f"{sanitized_name}-endpoint",
                     vpc_id=self._vpc.vpc_id,
-                    service_name=pulumi.Output.concat("com.amazonaws.", get_region_output().name, ".", service_name),
+                    service_name=pulumi.Output.concat("com.amazonaws.", get_region_output().region, ".", service_name),
                     vpc_endpoint_type="Interface",
                     subnet_ids=self._vpc.private_subnet_ids.apply(
                         lambda ids: [ids[0]]
@@ -104,7 +106,7 @@ class Vpc(ComponentResource):
             s3_endpoint = VpcEndpoint(
                 "s3-gateway-endpoint",
                 vpc_id=self._vpc.vpc_id,
-                service_name=pulumi.Output.concat("com.amazonaws.", get_region_output().name, ".s3"),
+                service_name=pulumi.Output.concat("com.amazonaws.", get_region_output().region, ".s3"),
                 vpc_endpoint_type="Gateway",
                 route_table_ids=self._vpc.private_subnet_ids.apply(
                     lambda ids: [get_route_table_output(subnet_id=subnet_id).id for subnet_id in ids]
