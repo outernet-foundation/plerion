@@ -1,8 +1,6 @@
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, cast
 
-import boto3
-
 if TYPE_CHECKING:
     from mypy_boto3_secretsmanager import SecretsManagerClient
 else:
@@ -51,6 +49,8 @@ def get_settings() -> Settings:
         print("Settings loaded successfully.")
 
         if settings.postgres_dsn_arn:
+            import boto3
+
             print("Fetching Postgres DSN from Secrets Manager...")
             print(settings.postgres_dsn_arn)
             client: SecretsManagerClient = boto3.client("secretsmanager")  # type: ignore
