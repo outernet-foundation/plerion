@@ -29,6 +29,8 @@ def create_dev_stack(config: Config):
 
     cluster = Cluster("dev-tooling-cluster")
 
+    github_oidc_provider_arn = core_stack.require_output("github_oidc_provider_arn")
+
     create_github_runner(vpc=vpc, config=config, cluster=cluster, postgres_security_group=postgres_security_group)
 
     create_cloudbeaver(
@@ -38,6 +40,7 @@ def create_dev_stack(config: Config):
         postgres_security_group=postgres_security_group,
         db=postgres_instance,
         cluster=cluster,
+        github_oidc_provider_arn=github_oidc_provider_arn,
     )
 
     # 3. Lambda (container image)
@@ -52,7 +55,6 @@ def create_dev_stack(config: Config):
 
     github_org = config.require("github-org")
     github_repo = config.require("github-repo")
-    github_oidc_provider_arn = core_stack.require_output("github_oidc_provider_arn")
     github_assume_role_policy = github_oidc_provider_arn.apply(
         lambda arn: json.dumps({
             "Version": "2012-10-17",

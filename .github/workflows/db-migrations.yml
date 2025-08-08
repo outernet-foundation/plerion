@@ -2,25 +2,24 @@ name: DB Migrations & Image Build
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
-  id-token: write    # ← OIDC token
+  id-token: write # ← OIDC token
   contents: read
 
 jobs:
-  # ───────────────────────────────────────────────────────────────────────────
-  # ⓵ Bootstrap Pulumi: install CLI + ESC + fetch stack outputs
-  # ───────────────────────────────────────────────────────────────────────────
   prepare:
     runs-on: ubuntu-latest
     outputs:
-      DB_ROLE_ARN:   ${{ steps.db-role.outputs.val }}
-      BEACON_REPO:   ${{ steps.beacon-repo.outputs.val }}
-      BEACON_ROLE:   ${{ steps.beacon-role.outputs.val }}
+      DB_ROLE_ARN: ${{ steps.db-role.outputs.val }}
+      BEACON_REPO: ${{ steps.beacon-repo.outputs.val }}
+      BEACON_ROLE: ${{ steps.beacon-role.outputs.val }}
+      CLOUDBEAVER_INIT_REPO: ${{ steps.cloudbeaver-repo.outputs.val }}
+      CLOUDBEAVER_INIT_ROLE: ${{ steps.cloudbeaver-role.outputs.val }}
     defaults:
       run:
-        working-directory: infra   # ← point this at your Pulumi project dir
+        working-directory: infra # ← point this at your Pulumi project dir
 
     steps:
       - uses: actions/checkout@v4
@@ -49,9 +48,14 @@ jobs:
         id: beacon-role
         run: echo "val=$(pulumi stack output --stack core tailscale-beacon-image-repo-role-arn)" >> $GITHUB_OUTPUT
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # ⓶ Build & push the Tailscale-beacon image
-  # ───────────────────────────────────────────────────────────────────────────
+      - name: Export CloudBeaver-Init repo URL
+        id: cloudbeaver-repo
+        run: echo "val=$(pulumi stack output --stack dev cloudbeaver-init-image-repo)" >> $GITHUB_OUTPUT
+
+      - name: Export CloudBeaver-Init push-role ARN
+        id: cloudbeaver-role
+        run: echo "val=$(pulumi stack output --stack dev cloudbeaver-init-image-repo-role-arn)" >> $GITHUB_OUTPUT
+
   build-beacon:
     needs: prepare
     runs-on: ubuntu-latest
@@ -74,9 +78,28 @@ jobs:
           docker build -t $BEACON_REPO:latest services/tailscale-beacon
           docker push $BEACON_REPO:latest
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # ⓷ Run DB migrations
-  # ───────────────────────────────────────────────────────────────────────────
+  build-cloudbeaver-init:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS creds for ECR push
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.prepare.outputs.CLOUDBEAVER_INIT_ROLE }}
+          aws-region: us-east-1
+
+      - name: Log in to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push CloudBeaver-Init image
+        env:
+          CLOUD_BEAVER_INIT_REPO: ${{ needs.prepare.outputs.CLOUDBEAVER_INIT_REPO }}
+        run: |
+          docker build -t $CLOUD_BEAVER_INIT_REPO:latest services/cloudbeaver-init
+          docker push $CLOUD_BEAVER_INIT_REPO:latest
+
   migrate-db:
     needs: prepare
     runs-on: self-hosted
@@ -97,8 +120,8 @@ jobs:
 
       - name: Setup Python & UV
         uses: actions/setup-python@v4
-        with: 
-          python-version: '3.10'
+        with:
+          python-version: "3.10"
 
       - name: Install uv & sync migrations deps
         run: |

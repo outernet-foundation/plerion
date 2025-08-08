@@ -1,12 +1,13 @@
 from pulumi import Config, Input, Output, export
 from pulumi_aws import get_region_output
 from pulumi_aws.cloudwatch import LogGroup
-from pulumi_aws.ecr import Repository, get_image_output, get_images_output
+from pulumi_aws.ecr import Repository, get_images_output
 from pulumi_aws.ecs import Cluster
 from pulumi_aws.lb import Listener, LoadBalancer, TargetGroup
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
+from components.ecr import repo_digest
 from components.role_policies import create_ecr_policy, create_github_actions_role, create_secrets_manager_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
@@ -42,6 +43,10 @@ def create_tailscale_beacon(
         github_oidc_provider_arn=github_oidc_provider_arn,
         policies={"ecr-policy": create_ecr_policy(tailscale_beacon_image_repo.arn)},
     )
+
+    # Exports
+    export("tailscale-beacon-repo", tailscale_beacon_image_repo.repository_url)
+    export("tailscale-beacon-repo-role-arn", github_actions_role.arn)
 
     # Security groups
     tailscale_beacon_security_group = SecurityGroup(
@@ -154,13 +159,7 @@ def create_tailscale_beacon(
                 "containers": {
                     "tailscale-beacon": {
                         "name": "tailscale-beacon",
-                        "image": Output.concat(
-                            tailscale_beacon_image_repo.repository_url,
-                            "@",
-                            get_image_output(
-                                repository_name=tailscale_beacon_image_repo.name, image_tag="latest"
-                            ).image_digest,
-                        ),
+                        "image": repo_digest(tailscale_beacon_image_repo),
                         "environment": [
                             {"name": "TAILNET", "value": config.require("tailnet-name")},
                             {"name": "DOMAIN", "value": domain},
@@ -185,6 +184,3 @@ def create_tailscale_beacon(
             },
         )
     )
-
-    export("tailscale-beacon-image-repo", tailscale_beacon_image_repo.repository_url)
-    export("tailscale-beacon-image-repo-role-arn", github_actions_role.arn)

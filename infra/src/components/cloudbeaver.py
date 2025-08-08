@@ -1,18 +1,16 @@
-from pathlib import Path
-
-from pulumi import Config, Output, StackReference
+from pulumi import Config, Output, StackReference, export
 from pulumi_aws import get_caller_identity, get_region_output
 from pulumi_aws.cloudwatch import LogGroup
-from pulumi_aws.ecr import Repository, get_authorization_token
+from pulumi_aws.ecr import Repository, get_images_output
 from pulumi_aws.ecs import Cluster
 from pulumi_aws.efs import FileSystem, MountTarget
 from pulumi_aws.lb import Listener, LoadBalancer, TargetGroup
 from pulumi_aws.rds import Instance
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
-from pulumi_docker import Image
 
-from components.role_policies import create_ecr_policy, create_secrets_manager_policy
+from components.ecr import repo_digest
+from components.role_policies import create_ecr_policy, create_github_actions_role, create_secrets_manager_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -25,6 +23,7 @@ def create_cloudbeaver(
     postgres_security_group: SecurityGroup,
     db: Instance,
     cluster: Cluster,
+    github_oidc_provider_arn: Output[str],
 ) -> None:
     # Log groups
     LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
@@ -35,10 +34,20 @@ def create_cloudbeaver(
     cloudbeaver_secret = Secret("cloudbeaver-secret", secret_string=config.require_secret("cloudbeaver-password"))
 
     # Image repos
-    Repository("alpine-cache-repo", name="dockerhub/library/alpine", force_delete=config.require_bool("devMode"))
-    cloudbeaver_image_repo = Repository(
-        "cloudbeaver-cache-repo", name="dockerhub/dbeaver/cloudbeaver", force_delete=config.require_bool("devMode")
+    cloudbeaver_init_image_repo = Repository("cloudbeaver-init-repo", force_delete=config.require_bool("devMode"))
+    Repository("cloudbeaver-repo", name="dockerhub/dbeaver/cloudbeaver", force_delete=config.require_bool("devMode"))
+
+    # Github actions role
+    github_actions_role = create_github_actions_role(
+        "cloudbeaver-init-image-repo-role",
+        config=config,
+        github_oidc_provider_arn=github_oidc_provider_arn,
+        policies={"ecr-policy": create_ecr_policy(cloudbeaver_init_image_repo.arn)},
     )
+
+    # Exports
+    export("cloudbeaver-init-image-repo", cloudbeaver_init_image_repo.repository_url)
+    export("cloudbeaver-init-image-repo-role-arn", github_actions_role.arn)
 
     # Security Groups
     efs_security_group = SecurityGroup("cloudbeaver-efs-security-group", vpc=vpc)
@@ -63,21 +72,8 @@ def create_cloudbeaver(
         ],
     )
 
-    # Create a Docker image for CloudBeaver initialization
-    init_image_repo = Repository("cloudbeaver-init-repo", force_delete=config.require_bool("devMode"))
-    dockerfile = Path(config.require("cloudbeaver-init-dockerfile")).resolve()
-    creds = get_authorization_token()
-    init_image = Image(
-        "cloudbeaver-init-image",
-        build={"dockerfile": str(dockerfile), "context": str(dockerfile.parent), "platform": "linux/amd64"},
-        image_name=Output.concat(init_image_repo.repository_url, ":", "latest"),
-        registry={"server": creds.proxy_endpoint, "username": creds.user_name, "password": creds.password},
-    )
-
-    # Create EFS for CloudBeaver workspace
+    # EFS
     efs = FileSystem("cloudbeaver-efs")
-
-    # Create mount targets for the EFS in each private subnet of our VPC
     mount_targets = vpc.private_subnet_ids.apply(
         lambda subnet_ids: [
             MountTarget(
@@ -131,126 +127,132 @@ def create_cloudbeaver(
     )
 
     # DNS records
-    zone_id = core_stack.require_output("zone-id")
-    zone_name = core_stack.require_output("zone-name")
-    domain = zone_name.apply(lambda zone_name: f"cloudbeaver.{zone_name}")
-
+    domain = core_stack.require_output("zone-name").apply(lambda zone_name: f"cloudbeaver.{zone_name}")
     Record(
         "cloudbeaver-domain-record",
-        zone_id=zone_id,
+        zone_id=core_stack.require_output("zone-id"),
         name=domain,
         type="A",
         aliases=[{"name": load_balancer.dns_name, "zone_id": load_balancer.zone_id, "evaluate_target_health": True}],
     )
 
     # Service
-    FargateService(
-        "cloudbeaver-service",
-        name="cloudbeaver-service",
-        cluster=cluster.arn,
-        desired_count=1,
-        network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [cloudbeaver_security_group.id]},
-        task_definition_args={
-            "execution_role": {
-                "args": {
-                    "inline_policies": [
-                        {"policy": create_secrets_manager_policy(cloudbeaver_secret.arn)},
-                        {"policy": create_secrets_manager_policy(postgres_secret.arn)},
-                        {"policy": create_ecr_policy(cloudbeaver_image_repo.arn)},
-                    ]
-                }
+    get_images_output(repository_name=cloudbeaver_init_image_repo.name).apply(
+        lambda images_data: None
+        if not images_data.image_ids  # If there are no images, don't create the service
+        else FargateService(
+            "cloudbeaver-service",
+            name="cloudbeaver-service",
+            cluster=cluster.arn,
+            desired_count=1,
+            network_configuration={
+                "subnets": vpc.private_subnet_ids,
+                "security_groups": [cloudbeaver_security_group.id],
             },
-            "volumes": [
-                {
-                    "name": "efs",
-                    "efs_volume_configuration": {
-                        "file_system_id": efs.id,
-                        "transit_encryption": "ENABLED",
-                        "root_directory":
-                        # Ensure all mount targets are created before using the EFS
-                        mount_targets.apply(lambda mts: Output.all("/", *[mt.id for mt in mts])).apply(lambda _: "/"),
-                    },
-                }
-            ],
-            "containers": {
-                "cloudbeaver-init": {
-                    "name": "cloudbeaver-init",
-                    "image": init_image.repo_digest,
-                    "essential": False,
-                    "log_configuration": {
-                        "log_driver": "awslogs",
-                        "options": {
-                            "awslogs-group": "/ecs/cloudbeaver-init",
-                            "awslogs-region": get_region_output().region,
-                            "awslogs-stream-prefix": "ecs",
-                        },
-                    },
-                    "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
-                    "environment": [
-                        {"name": "POSTGRES_HOST", "value": db.address},
-                        {"name": "POSTGRES_PORT", "value": "5432"},
-                        {"name": "POSTGRES_DB", "value": "postgres"},
-                        {"name": "POSTGRES_USER", "value": config.require("postgres-user")},
-                        {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
-                        {
-                            "name": "_CB_ADMIN_NAME_VERSION",
-                            "value": cloudbeaver_secret.version_id,
-                        },  # Force update on secret change
-                        {
-                            "name": "_POSTGRES_PASSWORD_VERSION",
-                            "value": postgres_secret.version_id,
-                        },  # Force update on secret change
-                    ],
-                    "secrets": [
-                        {"name": "POSTGRES_PASSWORD", "value_from": postgres_secret.arn},
-                        {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_secret.arn},
-                    ],
+            task_definition_args={
+                "execution_role": {
+                    "args": {
+                        "inline_policies": [
+                            {"policy": create_secrets_manager_policy(cloudbeaver_secret.arn)},
+                            {"policy": create_secrets_manager_policy(postgres_secret.arn)},
+                            {"policy": create_ecr_policy(cloudbeaver_init_image_repo.arn)},
+                        ]
+                    }
                 },
-                "cloudbeaver": {
-                    "name": "cloudbeaver",
-                    "image": get_region_output().region.apply(
-                        lambda r: f"{get_caller_identity().account_id}.dkr.ecr.{r}.amazonaws.com/dockerhub/dbeaver/cloudbeaver:latest"
-                    ),
-                    "log_configuration": {
-                        "log_driver": "awslogs",
-                        "options": {
-                            "awslogs-group": "/ecs/cloudbeaver",
-                            "awslogs-region": get_region_output().region,
-                            "awslogs-stream-prefix": "ecs",
-                        },
-                    },
-                    "port_mappings": [
-                        {"container_port": 8978, "host_port": 8978, "target_group": load_balancer_target_group}
-                    ],
-                    "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
-                    "environment": [
-                        {"name": "CB_SERVER_NAME", "value": "CloudBeaver"},
-                        {"name": "CB_SERVER_URL", "value": domain.apply(lambda d: f"https://{d}")},
-                        {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
-                        {"name": "CLOUDBEAVER_DB_DRIVER", "value": "postgres-jdbc"},
-                        {
-                            "name": "CLOUDBEAVER_DB_URL",
-                            "value": Output.all(address=db.address, port=db.port).apply(
-                                lambda args: f"jdbc:postgresql://{args['address']}:{args['port']}/postgres"
+                "volumes": [
+                    {
+                        "name": "efs",
+                        "efs_volume_configuration": {
+                            "file_system_id": efs.id,
+                            "transit_encryption": "ENABLED",
+                            "root_directory":
+                            # Ensure all mount targets are created before using the EFS
+                            mount_targets.apply(lambda mts: Output.all("/", *[mt.id for mt in mts])).apply(
+                                lambda _: "/"
                             ),
                         },
-                        {"name": "CLOUDBEAVER_DB_USER", "value": config.require("postgres-user")},
-                        {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
-                        {
-                            "name": "CLOUDBEAVER_DB_USER_VERSION",
-                            "value": postgres_secret.version_id,
-                        },  # Force update on secret change
-                        {
-                            "name": "CLOUDBEAVER_DB_PASSWORD_VERSION",
-                            "value": cloudbeaver_secret.version_id,
-                        },  # Force update on secret change
-                    ],
-                    "secrets": [
-                        {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_secret.arn},
-                        {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_secret.arn},
-                    ],
-                    "depends_on": [{"container_name": "cloudbeaver-init", "condition": "SUCCESS"}],
+                    }
+                ],
+                "containers": {
+                    "cloudbeaver-init": {
+                        "name": "cloudbeaver-init",
+                        "image": repo_digest(cloudbeaver_init_image_repo),
+                        "essential": False,
+                        "log_configuration": {
+                            "log_driver": "awslogs",
+                            "options": {
+                                "awslogs-group": "/ecs/cloudbeaver-init",
+                                "awslogs-region": get_region_output().region,
+                                "awslogs-stream-prefix": "ecs",
+                            },
+                        },
+                        "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
+                        "environment": [
+                            {"name": "POSTGRES_HOST", "value": db.address},
+                            {"name": "POSTGRES_PORT", "value": "5432"},
+                            {"name": "POSTGRES_DB", "value": "postgres"},
+                            {"name": "POSTGRES_USER", "value": config.require("postgres-user")},
+                            {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
+                            {
+                                "name": "_CB_ADMIN_NAME_VERSION",
+                                "value": cloudbeaver_secret.version_id,
+                            },  # Force update on secret change
+                            {
+                                "name": "_POSTGRES_PASSWORD_VERSION",
+                                "value": postgres_secret.version_id,
+                            },  # Force update on secret change
+                        ],
+                        "secrets": [
+                            {"name": "POSTGRES_PASSWORD", "value_from": postgres_secret.arn},
+                            {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_secret.arn},
+                        ],
+                    },
+                    "cloudbeaver": {
+                        "name": "cloudbeaver",
+                        "image": get_region_output().region.apply(
+                            lambda r: f"{get_caller_identity().account_id}.dkr.ecr.{r}.amazonaws.com/dockerhub/dbeaver/cloudbeaver:latest"
+                        ),
+                        "log_configuration": {
+                            "log_driver": "awslogs",
+                            "options": {
+                                "awslogs-group": "/ecs/cloudbeaver",
+                                "awslogs-region": get_region_output().region,
+                                "awslogs-stream-prefix": "ecs",
+                            },
+                        },
+                        "port_mappings": [
+                            {"container_port": 8978, "host_port": 8978, "target_group": load_balancer_target_group}
+                        ],
+                        "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
+                        "environment": [
+                            {"name": "CB_SERVER_NAME", "value": "CloudBeaver"},
+                            {"name": "CB_SERVER_URL", "value": domain.apply(lambda d: f"https://{d}")},
+                            {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
+                            {"name": "CLOUDBEAVER_DB_DRIVER", "value": "postgres-jdbc"},
+                            {
+                                "name": "CLOUDBEAVER_DB_URL",
+                                "value": Output.all(address=db.address, port=db.port).apply(
+                                    lambda args: f"jdbc:postgresql://{args['address']}:{args['port']}/postgres"
+                                ),
+                            },
+                            {"name": "CLOUDBEAVER_DB_USER", "value": config.require("postgres-user")},
+                            {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
+                            {
+                                "name": "CLOUDBEAVER_DB_USER_VERSION",
+                                "value": postgres_secret.version_id,
+                            },  # Force update on secret change
+                            {
+                                "name": "CLOUDBEAVER_DB_PASSWORD_VERSION",
+                                "value": cloudbeaver_secret.version_id,
+                            },  # Force update on secret change
+                        ],
+                        "secrets": [
+                            {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_secret.arn},
+                            {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_secret.arn},
+                        ],
+                        "depends_on": [{"container_name": "cloudbeaver-init", "condition": "SUCCESS"}],
+                    },
                 },
             },
-        },
+        )
     )
