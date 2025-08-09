@@ -8,7 +8,7 @@ from ..db.piccolo_shims import create_pydantic_model
 from ..db.tables.captures import Capture
 from ..storage import Storage, get_storage
 
-BUCKET = "captures"
+BUCKET = "dev-captures"
 
 router = APIRouter(prefix="/captures", tags=["captures"])
 

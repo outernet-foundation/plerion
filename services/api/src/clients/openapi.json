@@ -5,6 +5,22 @@
     "version": "0.0.1"
   },
   "paths": {
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/captures": {
       "get": {
         "tags": [
