@@ -32,3 +32,10 @@ COPY . .
 # Install the project itself
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
+
+# Entrypoint
+RUN apt-get update && apt-get install -y dos2unix
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN dos2unix /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

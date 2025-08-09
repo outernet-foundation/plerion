@@ -17,6 +17,8 @@ jobs:
       BEACON_ROLE: ${{ steps.beacon-role.outputs.val }}
       CLOUDBEAVER_INIT_REPO: ${{ steps.cloudbeaver-repo.outputs.val }}
       CLOUDBEAVER_INIT_ROLE: ${{ steps.cloudbeaver-role.outputs.val }}
+      API_REPO: ${{ steps.api-repo.outputs.val }}
+      API_ROLE: ${{ steps.api-role.outputs.val }}
     defaults:
       run:
         working-directory: infra # ← point this at your Pulumi project dir
@@ -55,6 +57,14 @@ jobs:
       - name: Export CloudBeaver-Init push-role ARN
         id: cloudbeaver-role
         run: echo "val=$(pulumi stack output --stack dev cloudbeaver-init-image-repo-role-arn)" >> $GITHUB_OUTPUT
+
+      - name: Export API repo URL
+        id: api-repo
+        run: echo "val=$(pulumi stack output --stack dev api-image-repo)" >> $GITHUB_OUTPUT
+
+      - name: Export API push-role ARN
+        id: api-role
+        run: echo "val=$(pulumi stack output --stack dev api-image-repo-role-arn)" >> $GITHUB_OUTPUT
 
   build-beacon:
     needs: prepare
@@ -99,6 +109,28 @@ jobs:
         run: |
           docker build -t $CLOUD_BEAVER_INIT_REPO:latest services/cloudbeaver-init
           docker push $CLOUD_BEAVER_INIT_REPO:latest
+
+  build-api:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS creds for ECR push
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.prepare.outputs.API_ROLE }}
+          aws-region: us-east-1
+
+      - name: Log in to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push API image
+        env:
+          API_REPO: ${{ needs.prepare.outputs.API_REPO }}
+        run: |
+          docker build -t $API_REPO:latest services/api
+          docker push $API_REPO:latest
 
   migrate-db:
     needs: prepare

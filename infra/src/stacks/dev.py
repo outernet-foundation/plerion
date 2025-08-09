@@ -27,7 +27,7 @@ def create_dev_stack(config: Config):
     # 2. Postgres database
     postgres_instance, postgres_connection_secret = create_database(config, postgres_security_group, vpc)
 
-    cluster = Cluster("dev-tooling-cluster")
+    cluster = Cluster("dev-cluster")
 
     github_oidc_provider_arn = core_stack.require_output("github_oidc_provider_arn")
 
@@ -43,14 +43,15 @@ def create_dev_stack(config: Config):
         github_oidc_provider_arn=github_oidc_provider_arn,
     )
 
-    # 3. Lambda (container image)
     create_api(
         config,
         core_stack,
+        cluster=cluster,
         s3_bucket=captures_bucket,
         vpc=vpc,
         postgres_security_group=postgres_security_group,
         postgres_connection_secret=postgres_connection_secret,
+        github_oidc_provider_arn=github_oidc_provider_arn,
     )
 
     github_org = config.require("github-org")

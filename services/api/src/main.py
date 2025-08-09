@@ -48,6 +48,11 @@ app = FastAPI(
 )
 
 
+@app.get("/")
+async def root():
+    return {"message": "Hello, Plerion API!"}
+
+
 # Custom Swagger UI to add add -L to curl commands so they follow redirects
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():

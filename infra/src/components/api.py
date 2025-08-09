@@ -1,19 +1,15 @@
-from __future__ import annotations
-
-import json
-from pathlib import Path
-
 from pulumi import Config, Output, StackReference, export
-from pulumi_aws.apigatewayv2 import Api, ApiMapping, DomainName, Integration, Route, Stage
 from pulumi_aws.cloudwatch import LogGroup
-from pulumi_aws.ecr import Repository, get_authorization_token
-from pulumi_aws.iam import Role
-from pulumi_aws.lambda_ import Function, Permission
+from pulumi_aws.ecr import Repository, get_images_output
+from pulumi_aws.ecs import Cluster
+from pulumi_aws.lb import Listener, LoadBalancer, TargetGroup
 from pulumi_aws.route53 import Record
 from pulumi_aws.s3 import Bucket
-from pulumi_docker import Image
+from pulumi_awsx.ecs import FargateService
 
-from components.role_policies import allow_s3, allow_secret_get
+from components.ecr import repo_digest
+from components.log import log_configuration
+from components.role_policies import allow_repo_push, allow_s3, allow_secret_get, create_github_actions_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -22,155 +18,129 @@ from components.vpc import Vpc
 def create_api(
     config: Config,
     core_stack: StackReference,
-    s3_bucket: Bucket,
     vpc: Vpc,
+    cluster: Cluster,
+    github_oidc_provider_arn: Output[str],
+    s3_bucket: Bucket,
     postgres_security_group: SecurityGroup,
     postgres_connection_secret: Secret,
-    memory_size: int = 512,
-    timeout_seconds: int = 30,
-):
-    # Get zone and certificate info from core stack
-    zone_id = core_stack.require_output("zone-id")
-    zone_name = core_stack.require_output("zone-name")
-    certificate_arn = core_stack.require_output("certificate-arn")
+) -> None:
+    # Log groups
+    api_log_group = LogGroup("api-log-group", name="/ecs/api", retention_in_days=7)
 
-    lambda_security_group = SecurityGroup(
-        "lambda-security-group",
+    # Image repos
+    api_image_repo = Repository("api-repo", force_delete=config.require_bool("devMode"))
+
+    # GitHub Actions role
+    github_actions_role = create_github_actions_role(
+        "api-image-repo-role",
+        config=config,
+        github_oidc_provider_arn=github_oidc_provider_arn,
+        policies={"ecr-policy": allow_repo_push([api_image_repo])},
+    )
+
+    # Exports
+    export("api-image-repo", api_image_repo.repository_url)
+    export("api-image-repo-role-arn", github_actions_role.arn)
+
+    # Security groups
+    api_security_group = SecurityGroup(
+        "api-security-group",
         vpc=vpc,
         vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
         rules=[{"to_security_group": postgres_security_group, "ports": [5432]}],
     )
 
-    repo = Repository("lambda-repo", force_delete=config.require_bool("devMode"))
-
-    role = Role(
-        "api-lambda-role",
-        assume_role_policy=json.dumps({
-            "Version": "2012-10-17",
-            "Statement": [
-                {"Action": "sts:AssumeRole", "Principal": {"Service": "lambda.amazonaws.com"}, "Effect": "Allow"}
-            ],
-        }),
-        managed_policy_arns=[
-            "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
-            "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole",
+    load_balancer_security_group = SecurityGroup(
+        "api-load-balancer-security-group",
+        vpc=vpc,
+        rules=[
+            {"cidr_name": "anywhere", "from_cidr": "0.0.0.0/0", "ports": [80, 443]},
+            {"to_security_group": api_security_group, "ports": [8000]},
         ],
-        inline_policies=[{"policy": allow_secret_get([postgres_connection_secret])}, {"policy": allow_s3(s3_bucket)}],
     )
 
-    # Validate build context early; helps surface mis-path errors during preview.
-    dockerfile = Path(config.require("lambdaDockerfile")).resolve()
-    if not dockerfile.is_file():
-        raise FileNotFoundError(f"Dockerfile not found: {dockerfile}")
-
-    # 2) Credentials for pushing to ECR (no registry_id arg; avoids Output→str type mismatch)
-    creds = get_authorization_token()
-
-    # 3) Build fully-qualified image name as an Output[str]
-    #    repo.repository_url is Output[str]; concat returns Output[str]
-    image_name = Output.concat(repo.repository_url, ":", "latest")
-
-    # 4) Build & push the image (dict style inputs: see Pulumi docs Python examples)
-    image = Image(
-        "api-image",
-        build={"dockerfile": str(dockerfile), "context": str(dockerfile.parent), "platform": "linux/amd64"},
-        image_name=image_name,
-        registry={"server": creds.proxy_endpoint, "username": creds.user_name, "password": creds.password},
+    # Load balancer
+    load_balancer = LoadBalancer(
+        "api-lb", security_groups=[load_balancer_security_group.id], subnets=vpc.public_subnet_ids
     )
 
-    # 5) Lambda from image
-    fn = Function(
-        name="api-lambda",
-        resource_name="api-lambda",
-        package_type="Image",
-        image_uri=image.repo_digest,
-        role=role.arn,
-        timeout=timeout_seconds,
-        memory_size=memory_size,
-        environment={
-            "variables": {
-                "S3_BUCKET_ARN": s3_bucket.arn,
-                "POSTGRES_DSN_ARN": postgres_connection_secret.arn,
-                "POSTGRES_DSN_VERSION": postgres_connection_secret.version_id,  # Force update on secret change
-            }
-        },
-        vpc_config={"subnet_ids": vpc.private_subnet_ids, "security_group_ids": [lambda_security_group.id]},
-    )
-
-    api = Api(resource_name="api-http-api", protocol_type="HTTP")
-
-    integration = Integration(
-        resource_name="lambda-proxy-integration",
-        api_id=api.id,
-        integration_type="AWS_PROXY",
-        integration_uri=fn.invoke_arn,
-        payload_format_version="2.0",
-    )
-
-    Route(
-        resource_name="catchAllRoute",
-        api_id=api.id,
-        route_key="$default",
-        target=integration.id.apply(lambda iid: f"integrations/{iid}"),
-    )
-
-    log_group = LogGroup("api-http-api-logs", retention_in_days=7)
-
-    stage = Stage(
-        resource_name="default-stage",
-        api_id=api.id,
-        name="$default",
-        auto_deploy=True,
-        access_log_settings={
-            "destination_arn": log_group.arn,
-            "format": json.dumps({
-                "requestId": "$context.requestId",
-                "routeKey": "$context.routeKey",
-                "status": "$context.status",
-                "errorMessage": "$context.error.message",
-                "integrationError": "$context.integrationErrorMessage",
-                "integrationStatus": "$context.integrationStatus",
-                "path": "$context.path",
-                "latency": "$context.integrationLatency",
-            }),
+    target_group = TargetGroup(
+        "api-lb-tg",
+        port=8000,
+        protocol="HTTP",
+        target_type="ip",
+        vpc_id=load_balancer.vpc_id,
+        deregistration_delay=60,
+        health_check={
+            "path": "/",
+            "protocol": "HTTP",
+            "interval": 15,
+            "healthy_threshold": 2,
+            "unhealthy_threshold": 10,
         },
     )
 
-    domain_name = zone_name.apply(lambda zone_name: f"api.{zone_name}")
-
-    domain = DomainName(
-        "api-domain",
-        domain_name=domain_name,
-        domain_name_configuration={
-            "certificate_arn": certificate_arn,
-            "endpoint_type": "REGIONAL",
-            "security_policy": "TLS_1_2",
-        },
+    Listener(
+        "api-https-listener",
+        load_balancer_arn=load_balancer.arn,
+        port=443,
+        protocol="HTTPS",
+        certificate_arn=core_stack.require_output("certificate-arn"),
+        default_actions=[{"type": "forward", "target_group_arn": target_group.arn}],
     )
 
-    ApiMapping(resource_name="api-mapping", api_id=api.id, domain_name=domain.domain_name, stage=stage.name)
+    Listener(
+        "api-http-listener",
+        load_balancer_arn=load_balancer.arn,
+        port=80,
+        protocol="HTTP",
+        default_actions=[
+            {"type": "redirect", "redirect": {"protocol": "HTTPS", "port": "443", "status_code": "HTTP_301"}}
+        ],
+    )
 
+    # DNS Records
+    domain = core_stack.require_output("zone-name").apply(lambda zone_name: f"api.{zone_name}")
     Record(
         "api-domain-record",
-        name=domain_name,
+        zone_id=core_stack.require_output("zone-id"),
+        name=domain,
         type="A",
-        zone_id=zone_id,
-        aliases=[
-            {
-                "name": domain.domain_name_configuration.target_domain_name,
-                "zone_id": domain.domain_name_configuration.hosted_zone_id,
-                "evaluate_target_health": False,
-            }
-        ],
+        aliases=[{"name": load_balancer.dns_name, "zone_id": load_balancer.zone_id, "evaluate_target_health": True}],
     )
 
-    # ← NEW: allow API Gateway to invoke the Lambda
-    Permission(
-        resource_name="api-gateway-permission",
-        action="lambda:InvokeFunction",
-        function=fn.name,
-        principal="apigateway.amazonaws.com",
-        source_arn=api.execution_arn.apply(lambda arn: f"{arn}/*/*"),
+    # Service
+    get_images_output(repository_name=api_image_repo.name).apply(
+        lambda images_data: None
+        if not images_data.image_ids  # If there are no images, don't create the service
+        else FargateService(
+            "api-service",
+            name="api-service",
+            cluster=cluster.arn,
+            desired_count=1,
+            network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [api_security_group.id]},
+            task_definition_args={
+                "execution_role": {
+                    "args": {
+                        "inline_policies": [
+                            {"policy": allow_secret_get([postgres_connection_secret])},
+                            {"policy": allow_s3(s3_bucket)},
+                        ]
+                    }
+                },
+                "containers": {
+                    "api": {
+                        "name": "api",
+                        "image": repo_digest(api_image_repo),
+                        "log_configuration": log_configuration(api_log_group),
+                        "port_mappings": [{"container_port": 8000, "host_port": 8000, "target_group": target_group}],
+                        "secrets": [{"name": "POSTGRES_DSN", "value_from": postgres_connection_secret.arn}],
+                        "environment": [
+                            {"name": "_POSTGRES_DSN_VERSION", "value": postgres_connection_secret.version_id}
+                        ],
+                    }
+                },
+            },
+        )
     )
-
-    export("api-url", domain.domain_name.apply(lambda domain_name: f"https://{domain_name}"))
