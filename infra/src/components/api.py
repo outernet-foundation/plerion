@@ -121,14 +121,8 @@ def create_api(
             desired_count=1,
             network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [api_security_group.id]},
             task_definition_args={
-                "execution_role": {
-                    "args": {
-                        "inline_policies": [
-                            {"policy": allow_secret_get([postgres_dsn_secret])},
-                            {"policy": allow_s3(s3_bucket)},
-                        ]
-                    }
-                },
+                "execution_role": {"args": {"inline_policies": [{"policy": allow_secret_get([postgres_dsn_secret])}]}},
+                "task_role": {"args": {"inline_policies": [{"policy": allow_s3(s3_bucket)}]}},
                 "containers": {
                     "api": {
                         "name": "api",
