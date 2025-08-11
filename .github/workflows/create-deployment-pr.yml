@@ -17,13 +17,16 @@ env:
   DEPLOY_BRANCH: bot/deploy
 
 jobs:
+
   prepare-deployment-branch:
+
     runs-on: ubuntu-latest
 
     outputs:
       sha: ${{ steps.prepare-deployment-branch.outputs.sha }}
 
     steps:
+
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
@@ -37,6 +40,7 @@ jobs:
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       
   build-and-push-images:
+
     runs-on: ubuntu-latest
     needs: prepare-deployment-branch
 
@@ -48,6 +52,7 @@ jobs:
           - { name: "tailscale-beacon", context: "./services/tailscale-beacon",  stack: "core" }
         
     steps:
+
       - uses: actions/checkout@v4
         with: 
           fetch-depth: 0
@@ -112,10 +117,12 @@ jobs:
           path: lock-${{ matrix.services.name }}.json
 
   generate-migrations-and-create-deploy-pr:
+
     runs-on: self-hosted # required in order for piccolo to connect to postgres
     needs: build-and-push-images
       
     steps:
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -132,16 +139,13 @@ jobs:
         id: esc
         with:
           environment: tyler-s-hatch/plerion/core
-          keys: |
-            github-app-id
-            github-private-key
 
       - name: Generate GitHub App Token
         id: generate_token
         uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ steps.esc.outputs.github-app-id }}
-          private-key: ${{ steps.esc.outputs.github-private-key }}
+          private-key: ${{ steps.esc.outputs.github-app-private-key }}
 
       - name: Get Pulumi stack outputs
         id: pulumi-outputs
