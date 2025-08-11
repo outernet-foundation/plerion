@@ -132,6 +132,9 @@ jobs:
         id: esc
         with:
           environment: tyler-s-hatch/plerion/core
+          keys: |
+            github-app-id
+            github-private-key
 
       - name: Generate GitHub App Token
         id: generate_token
