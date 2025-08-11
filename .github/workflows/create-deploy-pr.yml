@@ -80,14 +80,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: pulumi-outputs
-          path: pulumi-outs
+          path: pulumi-outputs
             
       - name: Extract per-service outputs
         id: pulumi-outputs
         shell: bash
         run: |
           set -euo pipefail
-          FILE="${{ matrix.services.stack }}.json"
+          FILE="pulumi-outputs/${{ matrix.services.stack }}.json"
           SERVICE="${{ matrix.services.name }}"
           REPO_URL=$(jq -e -r --arg svc "$SERVICE" '.[$svc + "-image-repo-url"]' "$FILE")
           echo "repo-url=$REPO_URL" >> $GITHUB_OUTPUT
@@ -109,19 +109,19 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          IMAGE="${{ steps.pulumi-outputs.outputs.repo_url }}:git-${{ steps.head.outputs.sha }}"
+          IMAGE="${{ steps.pulumi-outputs.outputs.repo-url }}:git-${{ steps.head.outputs.sha }}"
           echo "Building $IMAGE from ${{ matrix.services.build-context }}"
           docker build -t "$IMAGE" "${{ matrix.services.build-context }}"
           docker push "$IMAGE"
-          echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")" >> $GITHUB_OUTPUT
+          echo "repo-digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")" >> $GITHUB_OUTPUT
 
       - name: Write image lock json
         run: |
           jq -n \
-            --arg service "${{ steps.build-and-push.outputs.service }}" \
-            --arg tag "${{ steps.build-and-push.outputs.tag }}" \
-            --arg repo_digest "${{ steps.build-and-push.outputs.repo_digest }}" \
-            '{($service): {tag:$tag, repo_digest:$repo_digest}}' \
+            --arg service "${{ matrix.services.name }}" \
+            --arg tag "git-${{ steps.head.outputs.sha }}" \
+            --arg repo-digest "${{ steps.build-and-push.outputs.repo-digest }}" \
+            '{($service): {tag:$tag, repo-digest:$repo-digest}}' \
             > "lock-${{ matrix.services.name }}.json"
 
       - uses: actions/upload-artifact@v4
