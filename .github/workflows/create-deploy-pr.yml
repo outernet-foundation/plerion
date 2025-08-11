@@ -61,9 +61,9 @@ jobs:
     strategy:
       matrix:
         services:
-          - { name: "api",              context: "./services/api",              stack: "dev"  }
-          - { name: "cloudbeaver-int",  context: "./services/cloudbeaver-int",  stack: "dev"  }
-          - { name: "tailscale-beacon", context: "./services/tailscale-beacon", stack: "core" }
+          - { name: "api",              context: "./services/api",               stack: "dev"  }
+          - { name: "cloudbeaver-init",  context: "./services/cloudbeaver-init", stack: "dev"  }
+          - { name: "tailscale-beacon", context: "./services/tailscale-beacon",  stack: "core" }
         
     steps:
       - uses: actions/checkout@v4
@@ -80,8 +80,7 @@ jobs:
         with:
           name: pulumi-outputs
           path: pulumi-outputs
-            
-          
+
       - name: Extract per-service outputs
         id: pulumi-outputs
         shell: bash
