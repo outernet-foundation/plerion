@@ -36,6 +36,8 @@ jobs:
           git config user.name  "ci-bot"
           git config user.email "ci-bot@yourcompany.com"
           git checkout -B "${{ env.DEPLOY_BRANCH }}" "${{ github.ref_name }}"
+          git reset --hard
+          git clean -xfd
           git push --force-with-lease origin "${{ env.DEPLOY_BRANCH }}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       
