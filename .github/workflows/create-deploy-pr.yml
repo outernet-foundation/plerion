@@ -78,7 +78,7 @@ jobs:
 
       - name: Build & push image
         id: build
-        uses: ./.github/workflows/build-and-push-image
+        uses: ./.github/workflows/build-and-push-image.yml
         with:
           service:           ${{ matrix.services.name }}
           image_tag:         git-${{ steps.head.outputs.sha }}
