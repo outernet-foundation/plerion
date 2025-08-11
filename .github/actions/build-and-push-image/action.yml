@@ -1,48 +1,65 @@
-name: build-push
-description: Build & push a service image to ECR using per-service role/repo from Pulumi outputs
+name: build-and-push-image
+description: Build and push a Docker image to ECR, using Pulumi to get re
 inputs:
-  service:           { required: true, description: "Service name" }
-  image_tag:         { required: true, description: "Immutable image tag" }
-  context:           { required: true, description: "Docker build context path for this service" }
-  pulumi-org:        { required: true, description: "Pulumi Cloud org (for authentication)" }
-  stack:             { required: true, description: "Pulumi stack to pull repo and role ARNs from" }
-  working-directory: { required: false, default: ".", description: "Pulumi project directory (if not repo root)" }
+  service:
+    required: true
+    description: "Service name"
+  image_tag:
+    required: true
+    description: "Immutable image tag"
+  build-context:
+    required: true
+    description: "Docker build context path for this service"
+  stack:
+    required: true
+    description: "Pulumi stack name"
+outputs:
+  repo_digest:
+    value: ${{ steps.meta.outputs.repo_digest }}
+    description: "The digest of the Docker image"
 runs:
   using: composite
   steps:
-    - name: Authenticate with Pulumi
-      uses: pulumi/auth-actions@v1
+    - name: Download Pulumi outputs 
+      uses: actions/download-artifact@v4
       with:
-        organization: ${{ inputs.pulumi-org }}
-
-    - name: Get ARNs
+        name: pulumi-outputs
+        path: pulumi-outs
+          
+    - name: Extract per-service outputs
+      id: pulumi-outputs
       shell: bash
-      working-directory: ${{ inputs.working-directory }}
       run: |
         set -euo pipefail
-        ROLE_ARN="$(pulumi stack output --stack '${{ inputs.stack }}' '${{ inputs.service }}-image-repo-role-arn')"
-        REPO_URL="$(pulumi stack output --stack '${{ inputs.stack }}' '${{ inputs.service }}-image-repo-url')"
-        REGION="$(sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p' <<<"$REPO_URL")"
-
-        echo "ROLE_ARN=$ROLE_ARN"      >> $GITHUB_ENV
-        echo "AWS_REGION=$REGION"      >> $GITHUB_ENV
-        echo "ECR_REPO_URL=$REPO_URL"  >> $GITHUB_ENV
+        FILE="${{ inputs.stack }}.json"
+        SERVICE="${{ inputs.service }}"
+        echo "repo-url=$(jq -e -r --arg svc "$SERVICE" '.[$svc + "-image-repo-url"]' "$FILE")" >> $GITHUB_OUTPUT
+        echo "role=$(jq -e -r --arg svc "$SERVICE" '.[$svc + "-image-repo-role-arn"]' "$FILE")" >> $GITHUB_OUTPUT
+        echo "region=$(sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p' <<<"$REPO_URL")" >> $GITHUB_OUTPUT
 
     - name: Authenticate with AWS
       uses: aws-actions/configure-aws-credentials@v4
       with:
-        role-to-assume: ${{ env.ROLE_ARN }}
-        aws-region:     ${{ env.AWS_REGION }}
+        role-to-assume: ${{ steps.pulumi-outputs.outputs.role }}
+        aws-region:     ${{ steps.pulumi-outputs.outputs.region }}
 
     - name: Authenticate with ECR
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Build and push ${{ inputs.service }}
+    - name: Build and push image
       shell: bash
       run: |
         set -euo pipefail
-        IMAGE="${ECR_REPO_URL}:${{ inputs.image_tag }}"
-        echo "Building $IMAGE from ${{ inputs.context }}"
-        docker build -t "$IMAGE" "${{ inputs.context }}"
+        IMAGE="${{ steps.pulumi-outputs.outputs.repo_url }}:${{ inputs.image_tag }}"
+        echo "Building $IMAGE from ${{ inputs.build-context }}"
+        docker build -t "$IMAGE" "${{ inputs.build-context }}"
         docker push "$IMAGE"
+        echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")" >> $GITHUB_OUTPUT
+
+    - name: Set outputs
+      id: meta
+      shell: bash
+      run: |
+        echo "repo_digest=${{ steps.build.outputs.repo_digest }}" >> $GITHUB_OUTPUT
+

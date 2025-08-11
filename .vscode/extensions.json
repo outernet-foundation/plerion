@@ -8,6 +8,7 @@
     "amazonwebservices.aws-toolkit-vscode",
     "matthewpi.caddyfile-support",
     "emeraldwalk.runonsave",
-    "visualstudiotoolsforunity.vstuc"
+    "visualstudiotoolsforunity.vstuc",
+    "github.vscode-github-actions"
   ]
 }

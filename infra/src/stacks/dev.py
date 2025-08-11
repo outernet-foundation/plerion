@@ -77,8 +77,8 @@ def create_dev_stack(config: Config):
         })
     )
 
-    github_actions_db_migrations_role = Role(
-        "github-actions-db-migrations-role",
+    postgres_migrations_role_arn = Role(
+        "postgres-migrations-role-arn",
         assume_role_policy=github_assume_role_policy,
         inline_policies=[
             {
@@ -95,4 +95,4 @@ def create_dev_stack(config: Config):
         ],
     )
 
-    export("github_actions_db_migrations_role_arn", github_actions_db_migrations_role.arn)
+    export("postgres-migrations-role-arn", postgres_migrations_role_arn.arn)

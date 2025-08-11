@@ -1,0 +1,196 @@
+name: DB Migrations & Image Build
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: create-deploy-pr
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+
+      - name: Prepare deploy branch
+        run: |
+          git config user.name  "ci-bot"
+          git config user.email "ci-bot@yourcompany.com"
+          git checkout -B "$DEPLOY_BRANCH" "$BASE_BRANCH"
+
+      - name: Export Pulumi outputs (dev)
+        working-directory: infra
+        run: pulumi stack output --stack dev --json > dev.json
+
+      - name: Export Pulumi outputs (core)
+        working-directory: infra
+        run: pulumi stack output --stack core --json > core.json
+
+      - name: Upload outputs as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulumi-outputs
+          path: |
+            infra/dev.json
+            infra/core.json
+      
+  build-and-push-images:
+    runs-on: ubuntu-latest
+    needs: prepare
+
+    env:
+      DEPLOY_BRANCH: bot/deploy
+      BASE_BRANCH: main
+
+    strategy:
+      matrix:
+        services:
+          - { name: "api",              context: "./services/api",              stack: "dev"  }
+          - { name: "cloudbeaver-int",  context: "./services/cloudbeaver-int",  stack: "dev"  }
+          - { name: "tailscale-beacon", context: "./services/tailscale-beacon", stack: "core" }
+        
+    steps:
+      - uses: actions/checkout@v4
+        with: 
+          fetch-depth: 0
+          ref: bot/deploy
+
+      - name: Determine PR head SHA (local)
+        id: head
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build & push ${{ matrix.services.name }}
+        id: build
+        uses: ./.github/actions/build-and-push-image
+        with:
+          service:           ${{ matrix.services.name }}
+          image_tag:         git-${{ steps.head.outputs.sha }}
+          build-context:     ${{ matrix.services.context }}
+          stack:             ${{ matrix.services.stack }}
+
+      - name: Emit image lock snippet for ${{ matrix.services.name }}
+        run: |
+          jq -n \
+            --arg service "${{ steps.build.outputs.service }}" \
+            --arg tag "${{ steps.build.outputs.tag }}" \
+            --arg repo_digest "${{ steps.build.outputs.repo_digest }}" \
+            '{($service): {tag:$tag, repo_digest:$repo_digest}}' \
+            > "lock-${{ matrix.services.name }}.json"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lock-snippet-${{ matrix.services.name }}
+          path: lock-${{ matrix.services.name }}.json
+
+  generate-migrations-and-create-deploy-pr:
+    runs-on: ubuntu-latest
+    needs: build-and-push-images
+    
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: bot/deploy
+
+      - name: Download Pulumi outputs
+        uses: actions/download-artifact@v4
+        with:
+          name: pulumi-outputs
+          path: pulumi-outs
+
+      - name: Read DB role + DSN from Pulumi outputs
+        id: pulumi-outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE="pulumi-outs/outs-dev.json"  # adjust if your file lives elsewhere
+          DB_ROLE_ARN=$(jq -e -r '."postgres-migrations-role-arn"' "$FILE")
+          POSTGRES_DSN_ARN=$(jq -e -r '."postgres-dsn-secret-arn"' "$FILE")
+          echo "db_role_arn=$DB_ROLE_ARN"       >> "$GITHUB_OUTPUT"
+          echo "postgres_dsn_arn=$POSTGRES_DSN_ARN" >> "$GITHUB_OUTPUT"
+
+      - name: Configure AWS creds for SecretsManager
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.pulumi-outputs.outputs.db_role_arn }}
+          aws-region: us-east-1
+
+      - name: Fetch Postgres DSN secret
+        id: get-postgres-dsn
+        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        with:
+          secret-ids: POSTGRES_DSN, ${{ steps.pulumi-outputs.outputs.postgres_dsn_arn }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install UV
+        run: |
+          pip install uv --root-user-action=ignore
+
+      - name: Install dependencies
+        working-directory: services/api
+        run: |
+          uv sync --frozen
+
+      - name: Generate migration
+        working-directory: services/api
+        run: |
+          export PICCOLO_CONF=src.db.conf
+          uv run piccolo migrations new all --auto --auto_input=y || true
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: lock-snippet-*
+          merge-multiple: true
+          path: .lock-snippets
+
+      - name: Build image-lock.json
+        run: |
+          mkdir -p deploy
+          jq -s 'reduce .[] as $i ({}; . * $i)' .lock-snippets/*.json > deploy/image-lock.json
+          echo "Final lock file:"
+          cat deploy/image-lock.json
+
+      - name: Commit lock file + migrations
+        run: |
+          set -e
+          git config user.name  "ci-bot"
+          git config user.email "ci-bot@yourcompany.com"
+
+          git add deploy/image-lock.json
+          git add -A **/migrations/*.py || true
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore(deploy): update image-lock.json and migrations"
+            git push --force-with-lease origin bot/deploy
+          else
+            echo "No changes to lock file or migrations"
+          fi
+
+      - name: Open / refresh Deploy PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          
+          TITLE="Deploy (bot)"
+          BODY="Merging this PR will apply migrations and deploy infra/images."
+
+          if gh pr view bot/deploy --base main >/dev/null 2>&1; then
+            gh pr edit bot/deploy --base main --title "$TITLE" --body "$BODY"
+          else
+            gh pr create --head bot/deploy --base main --title "$TITLE" --body "$BODY"
+          fi
