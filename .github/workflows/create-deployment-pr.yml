@@ -141,17 +141,17 @@ jobs:
           requested-token-type: urn:pulumi:token-type:access_token:personal
           scope: user:tyler-s-hatch
 
-      - uses: pulumi/esc-action@v1
-        id: esc
-        with:
-          environment: tyler-s-hatch/plerion/core
+      # - uses: pulumi/esc-action@v1
+      #   id: esc
+      #   with:
+      #     environment: tyler-s-hatch/plerion/core
 
-      - name: Generate GitHub App Token
-        id: generate_token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ steps.esc.outputs.github-app-id }}
-          private-key: ${{ steps.esc.outputs.github-app-private-key }}
+      # - name: Generate GitHub App Token
+      #   id: generate_token
+      #   uses: actions/create-github-app-token@v1
+      #   with:
+      #     app-id: ${{ steps.esc.outputs.github-app-id }}
+      #     private-key: ${{ steps.esc.outputs.github-app-private-key }}
 
       - name: Get Pulumi stack outputs
         id: pulumi-outputs
@@ -225,7 +225,7 @@ jobs:
 
       - name: Open / refresh Deploy PR
         env:
-          GH_TOKEN: ${{ steps.generate_token.outputs.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
           
