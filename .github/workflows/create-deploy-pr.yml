@@ -76,21 +76,51 @@ jobs:
         id: head
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Build & push image
-        id: build
-        uses: ./.github/workflows/build-and-push-image.yml
+      - name: Download Pulumi outputs 
+        uses: actions/download-artifact@v4
         with:
-          service:           ${{ matrix.services.name }}
-          image_tag:         git-${{ steps.head.outputs.sha }}
-          build-context:     ${{ matrix.services.context }}
-          stack:             ${{ matrix.services.stack }}
+          name: pulumi-outputs
+          path: pulumi-outs
+            
+      - name: Extract per-service outputs
+        id: pulumi-outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE="${{ matrix.services.stack }}.json"
+          SERVICE="${{ matrix.services.name }}"
+          REPO_URL=$(jq -e -r --arg svc "$SERVICE" '.[$svc + "-image-repo-url"]' "$FILE")
+          echo "repo-url=$REPO_URL" >> $GITHUB_OUTPUT
+          echo "role=$(jq -e -r --arg svc "$SERVICE" '.[$svc + "-image-repo-role-arn"]' "$FILE")" >> $GITHUB_OUTPUT
+          echo "region=$(sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p' <<<"$REPO_URL")" >> $GITHUB_OUTPUT
+
+      - name: Authenticate with AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.pulumi-outputs.outputs.role }}
+          aws-region:     ${{ steps.pulumi-outputs.outputs.region }}
+
+      - name: Authenticate with ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: build-and-push
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="${{ steps.pulumi-outputs.outputs.repo_url }}:git-${{ steps.head.outputs.sha }}"
+          echo "Building $IMAGE from ${{ matrix.services.build-context }}"
+          docker build -t "$IMAGE" "${{ matrix.services.build-context }}"
+          docker push "$IMAGE"
+          echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")" >> $GITHUB_OUTPUT
 
       - name: Write image lock json
         run: |
           jq -n \
-            --arg service "${{ steps.build.outputs.service }}" \
-            --arg tag "${{ steps.build.outputs.tag }}" \
-            --arg repo_digest "${{ steps.build.outputs.repo_digest }}" \
+            --arg service "${{ steps.build-and-push.outputs.service }}" \
+            --arg tag "${{ steps.build-and-push.outputs.tag }}" \
+            --arg repo_digest "${{ steps.build-and-push.outputs.repo_digest }}" \
             '{($service): {tag:$tag, repo_digest:$repo_digest}}' \
             > "lock-${{ matrix.services.name }}.json"
 
