@@ -1,4 +1,4 @@
-name: Create Deploy PR
+name: Create Deployment PR
 
 on:
   push:
@@ -184,9 +184,9 @@ jobs:
 
       - name: Fetch Postgres DSN secret
         id: get-postgres-dsn
-        uses: aws-actions/aws-secretsmanager-get-secrets@v1
+        uses: aws-actions/aws-secretsmanager-get-secrets@v2
         with:
-          secret-ids: POSTGRES_DSN, ${{ steps.pulumi-outputs.outputs.postgres_dsn_arn }}
+          secret-ids: POSTGRES_DSN,${{ steps.pulumi-outputs.outputs.postgres_dsn_arn }}
 
       - name: Setup Python
         uses: actions/setup-python@v4
