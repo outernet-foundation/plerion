@@ -62,6 +62,7 @@ jobs:
 
       - name: Get Pulumi stack outputs
         id: pulumi-stack-outputs
+        working-directory: infra
         shell: bash
         run: |
           set -euo pipefail
