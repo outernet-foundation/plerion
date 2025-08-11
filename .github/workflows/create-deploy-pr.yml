@@ -1,4 +1,4 @@
-name: DB Migrations & Image Build
+name: Create Deploy PR
 
 on:
   push:
@@ -78,7 +78,7 @@ jobs:
 
       - name: Build & push image
         id: build
-        uses: ./.github/actions/build-and-push-image
+        uses: ./.github/workflows/build-and-push-image
         with:
           service:           ${{ matrix.services.name }}
           image_tag:         git-${{ steps.head.outputs.sha }}

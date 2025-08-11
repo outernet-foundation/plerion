@@ -1,0 +1,66 @@
+name: Build and Push Image
+
+on:
+  workflow_call:
+    inputs:
+      service:
+        required: true
+        type: string
+      image_tag:
+        required: true
+        type: string
+      build-context:
+        required: true
+        type: string
+      stack:
+        required: true
+        type: string
+    outputs:
+      repo_digest:
+        value: ${{ jobs.build-and-push-image.outputs.repo_digest }}
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    outputs:
+      repo_digest: ${{ steps.build-and-push.outputs.repo_digest }}
+    steps:
+      - name: Download Pulumi outputs 
+        uses: actions/download-artifact@v4
+        with:
+          name: pulumi-outputs
+          path: pulumi-outs
+            
+      - name: Extract per-service outputs
+        id: pulumi-outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          FILE="${{ inputs.stack }}.json"
+          SERVICE="${{ inputs.service }}"
+          REPO_URL=$(jq -e -r --arg svc "$SERVICE" '.[$svc + "-image-repo-url"]' "$FILE")
+          echo "repo-url=$REPO_URL" >> $GITHUB_OUTPUT
+          echo "role=$(jq -e -r --arg svc "$SERVICE" '.[$svc + "-image-repo-role-arn"]' "$FILE")" >> $GITHUB_OUTPUT
+          echo "region=$(sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p' <<<"$REPO_URL")" >> $GITHUB_OUTPUT
+
+      - name: Authenticate with AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.pulumi-outputs.outputs.role }}
+          aws-region:     ${{ steps.pulumi-outputs.outputs.region }}
+
+      - name: Authenticate with ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        id: build-and-push
+        shell: bash
+        run: |
+          set -euo pipefail
+          IMAGE="${{ steps.pulumi-outputs.outputs.repo_url }}:${{ inputs.image_tag }}"
+          echo "Building $IMAGE from ${{ inputs.build-context }}"
+          docker build -t "$IMAGE" "${{ inputs.build-context }}"
+          docker push "$IMAGE"
+          echo "repo_digest=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")" >> $GITHUB_OUTPUT
+
