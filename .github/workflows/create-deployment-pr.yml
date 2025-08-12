@@ -100,6 +100,19 @@ jobs:
         id: check
         shell: bash
         run: |
+          # aws ecr describe-images \
+          # --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
+          # --query 'imageDetails[*].imageTags[]' \
+          # --output text || echo "Failed to list images"
+        
+          # # Now try the specific lookup
+          # echo "Looking for specific tag..."
+          # aws ecr describe-images \
+          #   --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
+          #   --image-ids imageTag="${{ steps.tree-hash.outputs.tree_tag }}" \
+          #   --query 'imageDetails[0].imageDigest' \
+          #   --output text
+          
           set -euo pipefail
           echo "${{ steps.pulumi.outputs.repo_name }}"
           echo "${{ steps.tree-hash.outputs.tree_tag }}"
@@ -115,7 +128,6 @@ jobs:
             echo "Not found"
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
-
 
       - name: Tag existing image
         if: steps.check.outputs.exists == 'true'
