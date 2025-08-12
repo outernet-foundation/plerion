@@ -112,6 +112,7 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
+          
       - name: Tag existing image
         if: steps.check.outputs.exists == 'true'
         shell: bash
