@@ -11,8 +11,8 @@ from pulumi_awsx.ecs import FargateService
 from components.ecr import pullthrough_repo_digest, repo_digest
 from components.log import log_configuration
 from components.role_policies import (
+    allow_image_repo_actions,
     allow_repo_pullthrough,
-    allow_repo_push,
     allow_secret_get,
     create_github_actions_role,
 )
@@ -53,7 +53,7 @@ def create_cloudbeaver(
         "cloudbeaver-init-image-repo-role",
         config=config,
         github_oidc_provider_arn=github_oidc_provider_arn,
-        policies={"ecr-policy": allow_repo_push([cloudbeaver_init_image_repo])},
+        policies={"ecr-policy": allow_image_repo_actions([cloudbeaver_init_image_repo])},
     )
 
     # Exports

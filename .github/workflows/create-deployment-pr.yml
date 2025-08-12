@@ -17,17 +17,15 @@ env:
   DEPLOY_BRANCH: bot/deploy
 
 jobs:
-
   prepare-deployment-branch:
-
     runs-on: ubuntu-latest
 
     outputs:
       sha: ${{ steps.prepare-deployment-branch.outputs.sha }}
 
     steps:
-
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
       - name: Prepare deployment branch
@@ -40,30 +38,35 @@ jobs:
           git clean -xfd
           git push --force-with-lease origin "${{ env.DEPLOY_BRANCH }}"
           echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
-      
-  build-and-push-images:
 
+  build-and-push-images:
     runs-on: ubuntu-latest
     needs: prepare-deployment-branch
 
     strategy:
       matrix:
         services:
-          - { name: "api",              context: "./services/api",               stack: "dev"  }
-          - { name: "cloudbeaver-init", context: "./services/cloudbeaver-init", stack: "dev"  }
-          - { name: "tailscale-beacon", context: "./services/tailscale-beacon",  stack: "core" }
-        
-    steps:
+          - { name: "api", context: "./services/api", stack: "dev" }
+          - { name: "cloudbeaver-init", context: "./services/cloudbeaver-init", stack: "dev" }
+          - { name: "tailscale-beacon", context: "./services/tailscale-beacon", stack: "core" }
 
-      - uses: actions/checkout@v4
-        with: 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
           fetch-depth: 0
           ref: ${{ env.DEPLOY_BRANCH }}
 
-      - name: Install Pulumi CLI
+      - name: Calculate tree hash
+        id: tree-hash
+        run: |
+          TREE_HASH=$(git rev-parse HEAD:${{ matrix.services.context }})
+          echo "tree_tag=tree-${TREE_HASH:0:12}" >> $GITHUB_OUTPUT
+
+      - name: Setup Pulumi
         uses: pulumi/setup-pulumi@v2
 
-      - name: Authenticate with Pulumi (OIDC)
+      - name: Authenticate Pulumi
         uses: pulumi/auth-actions@v1
         with:
           organization: tyler-s-hatch
@@ -71,72 +74,102 @@ jobs:
           scope: user:tyler-s-hatch
 
       - name: Get Pulumi stack outputs
-        id: pulumi-stack-outputs
+        id: pulumi
         working-directory: infra
-        shell: bash
         run: |
           set -euo pipefail
           REPO_URL=$(pulumi stack output --stack ${{ matrix.services.stack }} ${{ matrix.services.name }}-image-repo-url)
           echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
+          echo "repo_name=$(basename $REPO_URL)" >> $GITHUB_OUTPUT
           echo "role_arn=$(pulumi stack output --stack ${{ matrix.services.stack }} ${{ matrix.services.name }}-image-repo-role-arn)" >> $GITHUB_OUTPUT
-          echo "region=$(sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p' <<<"$REPO_URL")" >> $GITHUB_OUTPUT
+          echo "region=$(echo $REPO_URL | sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p')" >> $GITHUB_OUTPUT
 
-      - name: Authenticate with AWS
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ steps.pulumi-stack-outputs.outputs.role_arn }}
-          aws-region: ${{ steps.pulumi-stack-outputs.outputs.region }}
+          role-to-assume: ${{ steps.pulumi.outputs.role_arn }}
+          aws-region: ${{ steps.pulumi.outputs.region }}
 
-      - name: Authenticate with ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push image
-        id: build-and-push
-        shell: bash
+      - name: Check for existing image
+        id: check
         run: |
-          set -euo pipefail
-          IMAGE="${{ steps.pulumi-stack-outputs.outputs.repo_url }}:git-${{ needs.prepare-deployment-branch.outputs.sha }}"
-          echo "Building $IMAGE from ${{ matrix.services.context }}"
-          docker build -t "$IMAGE" "${{ matrix.services.context }}"
-          docker push "$IMAGE"
-          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' "$IMAGE")
-          
-          # Set outputs for later use
-          echo "repo_digest=$DIGEST" >> $GITHUB_OUTPUT
-          echo "service=${{ matrix.services.name }}" >> $GITHUB_OUTPUT
-          echo "tag=git-${{ needs.prepare-deployment-branch.outputs.sha }}" >> $GITHUB_OUTPUT
+          if DIGEST=$(aws ecr describe-images \
+              --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
+              --image-ids imageTag="${{ steps.tree-hash.outputs.tree_tag }}" \
+              --query 'imageDetails[0].imageDigest' \
+              --output text 2>/dev/null); then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Tag existing image
+        if: steps.check.outputs.exists == 'true'
+        run: |
+          aws ecr put-image-tag \
+            --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
+            --image-tag "git-${{ needs.prepare-deployment-branch.outputs.sha }}" \
+            --image-digest "${{ steps.check.outputs.digest }}"
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        if: steps.check.outputs.exists == 'false'
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+        if: steps.check.outputs.exists == 'false'
+
+      - name: Build and push Docker image
+        if: steps.check.outputs.exists == 'false'
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.services.context }}
+          push: true
+          tags: |
+            ${{ steps.pulumi.outputs.repo_url }}:git-${{ needs.prepare-deployment-branch.outputs.sha }}
+            ${{ steps.pulumi.outputs.repo_url }}:${{ steps.tree-hash.outputs.tree_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
 
       - name: Write image lock json
         run: |
+          if [ "${{ steps.check.outputs.exists }}" == "true" ]; then
+            DIGEST="${{ steps.check.outputs.digest }}"
+          else
+            DIGEST="${{ steps.build.outputs.digest }}"
+          fi
+          
           jq -n \
             --arg service "${{ matrix.services.name }}" \
             --arg tag "git-${{ needs.prepare-deployment-branch.outputs.sha }}" \
-            --arg repo_digest "${{ steps.build-and-push.outputs.repo_digest }}" \
+            --arg repo_digest "${{ steps.pulumi.outputs.repo_url }}@$DIGEST" \
             '{($service): {tag:$tag, repo_digest:$repo_digest}}' \
             > "lock-${{ matrix.services.name }}.json"
 
-      - uses: actions/upload-artifact@v4
+      - name: Upload lock snippet
+        uses: actions/upload-artifact@v4
         with:
           name: lock-snippet-${{ matrix.services.name }}
           path: lock-${{ matrix.services.name }}.json
 
   generate-migrations-and-create-deploy-pr:
-
     runs-on: self-hosted # required in order for piccolo to connect to postgres
     needs: build-and-push-images
-      
-    steps:
 
-      - uses: actions/checkout@v4
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
           ref: ${{ env.DEPLOY_BRANCH }}
 
-      - name: Install Pulumi CLI
+      - name: Setup Pulumi
         uses: pulumi/setup-pulumi@v2
 
-      - name: Authenticate with Pulumi (OIDC)
+      - name: Authenticate Pulumi
         uses: pulumi/auth-actions@v1
         with:
           organization: tyler-s-hatch
@@ -164,11 +197,11 @@ jobs:
           echo "postgres_dsn_secret_arn=$(pulumi stack output --stack dev postgres-dsn-secret-arn)" >> $GITHUB_OUTPUT
           echo "role_arn=$(pulumi stack output --stack dev postgres-migrations-role-arn)" >> $GITHUB_OUTPUT
 
-      - name: Configure AWS creds for SecretsManager
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ steps.pulumi-outputs.outputs.role_arn }}
-          aws-region: us-east-1
+          aws-region: us-east-1 # TODO pull this from somewhere
 
       - name: Fetch Postgres DSN secret
         id: get-postgres-dsn
@@ -176,27 +209,23 @@ jobs:
         with:
           secret-ids: POSTGRES_DSN,${{ steps.pulumi-outputs.outputs.postgres_dsn_secret_arn }}
 
-      - name: Setup Python
-        uses: actions/setup-python@v4
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.10"
-
-      - name: Install UV
-        run: |
-          pip install uv --root-user-action=ignore
-
-      - name: Install dependencies
-        working-directory: services/api
-        run: |
-          uv sync --frozen
+          enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
 
       - name: Generate migration
         working-directory: services/api
         run: |
           export PICCOLO_CONF=src.db.conf
+          uv sync --frozen
           uv run piccolo migrations new all --auto --auto_input=y || true
 
-      - uses: actions/download-artifact@v4
+      - name: Download lock snippets
+        uses: actions/download-artifact@v4
         with:
           pattern: lock-snippet-*
           merge-multiple: true
@@ -204,38 +233,19 @@ jobs:
 
       - name: Build image-lock.json
         run: |
-          mkdir -p deploy
-          jq -s 'reduce .[] as $i ({}; . * $i)' .lock-snippets/*.json > deploy/image-lock.json
+          jq -s 'reduce .[] as $i ({}; . * $i)' .lock-snippets/*.json > infra/image-lock.json
           echo "Final lock file:"
-          cat deploy/image-lock.json
+          cat infra/image-lock.json
 
-      - name: Commit lock file + migrations
-        run: |
-          set -e
-          git config user.name  "ci-bot"
-          git config user.email "ci-bot@yourcompany.com"
-
-          git add deploy/image-lock.json
-          git add -A **/migrations/*.py || true
-
-          if ! git diff --cached --quiet; then
-            git commit -m "chore(deploy): update image-lock.json and migrations"
-            git push --force-with-lease origin ${{ env.DEPLOY_BRANCH }}
-          else
-            echo "No changes to lock file or migrations"
-          fi
-
-      - name: Open / refresh Deploy PR
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -e
-          
-          TITLE="Deploy (bot)"
-          BODY="Merging this PR will apply migrations and deploy infra/images."
-
-          if gh pr view ${{ env.DEPLOY_BRANCH }} --base main >/dev/null 2>&1; then
-            gh pr edit ${{ env.DEPLOY_BRANCH }} --base main --title "$TITLE" --body "$BODY"
-          else
-            gh pr create --head ${{ env.DEPLOY_BRANCH }} --base main --title "$TITLE" --body "$BODY"
-          fi
+      - name: Create / update Deploy PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ github.token }}
+          branch: ${{ env.DEPLOY_BRANCH }}
+          base: ${{ github.ref_name }}
+          title: "Deploy (bot)"
+          body: "Merging this PR will apply migrations and deploy infra/images."
+          commit-message: "chore(deploy): update image-lock.json and migrations"
+          add-paths: |
+            infra/image-lock.json
+            **/migrations/*.py

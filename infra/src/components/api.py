@@ -9,7 +9,7 @@ from pulumi_awsx.ecs import FargateService
 
 from components.ecr import repo_digest
 from components.log import log_configuration
-from components.role_policies import allow_repo_push, allow_s3, allow_secret_get, create_github_actions_role
+from components.role_policies import allow_image_repo_actions, allow_s3, allow_secret_get, create_github_actions_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -36,7 +36,7 @@ def create_api(
         "api-image-repo-role",
         config=config,
         github_oidc_provider_arn=github_oidc_provider_arn,
-        policies={"ecr-policy": allow_repo_push([api_image_repo])},
+        policies={"ecr-policy": allow_image_repo_actions([api_image_repo])},
     )
 
     # Exports

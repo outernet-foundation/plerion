@@ -38,7 +38,7 @@ def create_github_actions_role(
     )
 
 
-def allow_repo_push(repos: List[Repository]):
+def allow_image_repo_actions(repos: List[Repository]):
     return Output.all(*[repo.arn for repo in repos]).apply(
         lambda arns: json.dumps({
             "Version": "2012-10-17",
@@ -54,6 +54,8 @@ def allow_repo_push(repos: List[Repository]):
                         "ecr:UploadLayerPart",
                         "ecr:CompleteLayerUpload",
                         "ecr:PutImage",
+                        "ecr:DescribeImages",
+                        "ecr:PutImageTagMutability",
                     ],
                     "Resource": arns,
                 },
