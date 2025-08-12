@@ -30,10 +30,12 @@ jobs:
 
       - name: Prepare deployment branch
         id: prepare-deployment-branch
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name  "ci-bot"
           git config user.email "ci-bot@yourcompany.com"
-          git checkout -B "${{ env.DEPLOY_BRANCH }}" "${{ github.ref_name }}"
+          git checkout -B "${{ env.DEPLOY_BRANCH }}" origin/"${{ github.ref_name }}"
           git reset --hard
           git clean -xfd
           git push --force-with-lease origin "${{ env.DEPLOY_BRANCH }}"
@@ -59,7 +61,9 @@ jobs:
 
       - name: Calculate tree hash
         id: tree-hash
+        shell: bash
         run: |
+          set -euo pipefail
           TREE_HASH=$(git rev-parse HEAD:${{ matrix.services.context }})
           echo "tree_tag=tree-${TREE_HASH:0:12}" >> $GITHUB_OUTPUT
 
@@ -70,11 +74,12 @@ jobs:
         uses: pulumi/auth-actions@v1
         with:
           organization: tyler-s-hatch
-          requested-token-type: urn:pulumi:token-type:access_token:personal
+          requested-token-type: urn:pulumi:token-type:access_token:automation
           scope: user:tyler-s-hatch
 
       - name: Get Pulumi stack outputs
         id: pulumi
+        shell: bash
         working-directory: infra
         run: |
           set -euo pipefail
@@ -92,7 +97,9 @@ jobs:
 
       - name: Check for existing image
         id: check
+        shell: bash
         run: |
+          set -euo pipefail
           if DIGEST=$(aws ecr describe-images \
               --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
               --image-ids imageTag="${{ steps.tree-hash.outputs.tree_tag }}" \
@@ -106,7 +113,9 @@ jobs:
 
       - name: Tag existing image
         if: steps.check.outputs.exists == 'true'
+        shell: bash
         run: |
+          set -euo pipefail
           aws ecr put-image-tag \
             --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
             --image-tag "git-${{ needs.prepare-deployment-branch.outputs.sha }}" \
@@ -135,7 +144,9 @@ jobs:
           provenance: false
 
       - name: Write image lock json
+        shell: bash
         run: |
+          set -euo pipefail
           if [ "${{ steps.check.outputs.exists }}" == "true" ]; then
             DIGEST="${{ steps.check.outputs.digest }}"
           else
