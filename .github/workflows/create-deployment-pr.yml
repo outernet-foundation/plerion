@@ -106,13 +106,15 @@ jobs:
               --image-ids imageTag="${{ steps.tree-hash.outputs.tree_tag }}" \
               --query 'imageDetails[0].imageDigest' \
               --output text 2>/dev/null); then
+            echo "Found"
             echo "exists=true" >> $GITHUB_OUTPUT
             echo "digest=$DIGEST" >> $GITHUB_OUTPUT
           else
+            echo "Not found"
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-          
+
       - name: Tag existing image
         if: steps.check.outputs.exists == 'true'
         shell: bash
