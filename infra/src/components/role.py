@@ -1,5 +1,5 @@
 import json
-from typing import Iterable
+from typing import Iterable, overload
 
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions
 from pulumi_aws import iam
@@ -49,27 +49,46 @@ def ecs_assume_role_policy():
 
 
 class Role(ComponentResource):
+    @overload
     def __init__(
-        self, name: str, assume_role_policy: Input[str] | None = None, opts: ResourceOptions | None = None
+        self, resource_name: str, *, assume_role_policy: Input[str] | None = None, opts: ResourceOptions | None = None
+    ) -> None: ...
+
+    @overload
+    def __init__(
+        self, resource_name: str, *, name: Input[str] | None = None, opts: ResourceOptions | None = None
+    ) -> None: ...
+
+    def __init__(
+        self,
+        resource_name: str,
+        *,
+        assume_role_policy: Input[str] | None = None,
+        name: Input[str] | None = None,
+        opts: ResourceOptions | None = None,
     ) -> None:
-        super().__init__("custom:Role", name, opts=opts)
+        super().__init__("custom:Role", resource_name, opts=opts)
 
         self._child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
+        self._resource_name = resource_name
 
         if assume_role_policy:
-            self.role = iam.Role(name, assume_role_policy=assume_role_policy, opts=self._child_opts)
+            self._role = iam.Role(resource_name, assume_role_policy=assume_role_policy, opts=self._child_opts)
         else:
-            self.role = get_role_output(name=name)
+            self._role = get_role_output(name=name)
 
-        self.name = name
-        self.arn = self.role.arn
+        self.arn = self._role.arn
+        self.name = self._role.name
 
-        self.register_outputs({"name": self.name, "arn": self.arn})
+        self.register_outputs({"name": self._resource_name, "arn": self.arn})
 
     def attach_policy(self, policy_name: str, policy_json: Input[str]):
-        policy = Policy(f"{self.name}-{policy_name}", policy=policy_json, opts=self._child_opts)
+        policy = Policy(f"{self._resource_name}-{policy_name}", policy=policy_json, opts=self._child_opts)
         RolePolicyAttachment(
-            f"{self.name}-{policy_name}-attachment", role=self.name, policy_arn=policy.arn, opts=self._child_opts
+            f"{self._resource_name}-{policy_name}-attachment",
+            role=self._role.name,
+            policy_arn=policy.arn,
+            opts=self._child_opts,
         )
 
     def allow_service_deployment(

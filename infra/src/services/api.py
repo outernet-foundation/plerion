@@ -8,8 +8,8 @@ from pulumi_aws.s3 import Bucket
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import repo_digest
-from components.iam import Role, ecs_assume_role_policy
 from components.log import log_configuration
+from components.role import Role, ecs_assume_role_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -103,40 +103,36 @@ def create_api(
     )
 
     # Execution role
-    execution_role = Role("api-execution-role", ecs_assume_role_policy())
+    execution_role = Role("api-execution-role", assume_role_policy=ecs_assume_role_policy())
     execution_role.allow_secret_get([postgres_dsn_secret])
 
     # Task role
-    task_role = Role("api-task-role", ecs_assume_role_policy())
+    task_role = Role("api-task-role", assume_role_policy=ecs_assume_role_policy())
     task_role.allow_s3(s3_bucket)
 
-    # Service
-    api_service = get_images_output(repository_name=api_image_repo.name).apply(
-        lambda images_data: None
-        if not images_data.image_ids  # If there are no images, don't create the service
-        else FargateService(
-            "api-service",
-            name="api-service",
-            cluster=cluster.arn,
-            desired_count=1,
-            network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [api_security_group.id]},
-            task_definition_args={
-                "execution_role": {"role_arn": execution_role.arn},
-                "task_role": {"role_arn": task_role.arn},
-                "containers": {
-                    "api": {
-                        "name": "api",
-                        "image": repo_digest(api_image_repo),
-                        "log_configuration": log_configuration(api_log_group),
-                        "port_mappings": [{"container_port": 8000, "host_port": 8000, "target_group": target_group}],
-                        "secrets": [{"name": "POSTGRES_DSN", "value_from": postgres_dsn_secret.arn}],
-                        "environment": [{"name": "_POSTGRES_DSN_VERSION", "value": postgres_dsn_secret.version_id}],
-                    }
-                },
+    service = FargateService(
+        "api-service",
+        name="api-service",
+        cluster=cluster.arn,
+        desired_count=get_images_output(repository_name=api_image_repo.name).apply(
+            lambda output: 1 if output.image_ids else 0
+        ),  # Set desired count to 0 if the image repository is empty
+        network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [api_security_group.id]},
+        task_definition_args={
+            "execution_role": {"role_arn": execution_role.arn},
+            "task_role": {"role_arn": task_role.arn},
+            "containers": {
+                "api": {
+                    "name": "api",
+                    "image": repo_digest(api_image_repo),
+                    "log_configuration": log_configuration(api_log_group),
+                    "port_mappings": [{"container_port": 8000, "host_port": 8000, "target_group": target_group}],
+                    "secrets": [{"name": "POSTGRES_DSN", "value_from": postgres_dsn_secret.arn}],
+                    "environment": [{"name": "_POSTGRES_DSN_VERSION", "value": postgres_dsn_secret.version_id}],
+                }
             },
-        )
+        },
     )
 
-    # Allow service deployment role to deploy this service
-    if api_service:
-        deploy_role.allow_service_deployment([api_service.arn], [execution_role.arn])
+    # Allow the deployment role to deploy this service
+    deploy_role.allow_service_deployment([service.service.arn], [execution_role.arn])

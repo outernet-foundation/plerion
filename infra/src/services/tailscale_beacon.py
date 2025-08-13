@@ -7,8 +7,8 @@ from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import repo_digest
-from components.iam import Role, ecs_assume_role_policy
 from components.log import log_configuration
+from components.role import Role, ecs_assume_role_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -131,44 +131,41 @@ def create_tailscale_beacon(
             )
 
     # Execution role
-    execution_role = Role("tailscale-beacon-exec-role", ecs_assume_role_policy())
+    execution_role = Role("tailscale-beacon-exec-role", assume_role_policy=ecs_assume_role_policy())
     execution_role.allow_secret_get([tailscale_auth_key_secret])
 
     # Service
-    tailscale_service = get_images_output(repository_name=tailscale_beacon_image_repo.name).apply(
-        lambda images_data: None
-        if not images_data.image_ids  # If there are no images, don't create the service
-        else FargateService(
-            "tailscale-beacon-service",
-            name="tailscale-beacon-service",
-            cluster=cluster.arn,
-            desired_count=1,
-            network_configuration={
-                "subnets": vpc.public_subnet_ids,
-                "security_groups": [tailscale_beacon_security_group.id],
-                "assign_public_ip": True,
+    tailscale_service = FargateService(
+        "tailscale-beacon-service",
+        name="tailscale-beacon-service",
+        cluster=cluster.arn,
+        desired_count=get_images_output(repository_name=tailscale_beacon_image_repo.name).apply(
+            lambda output: 1 if output.image_ids else 0
+        ),  # Set desired count to 0 if the image repository is empty
+        network_configuration={
+            "subnets": vpc.public_subnet_ids,
+            "security_groups": [tailscale_beacon_security_group.id],
+            "assign_public_ip": True,
+        },
+        task_definition_args={
+            "execution_role": {"role_arn": execution_role.arn},
+            "containers": {
+                "tailscale-beacon": {
+                    "name": "tailscale-beacon",
+                    "image": repo_digest(tailscale_beacon_image_repo),
+                    "log_configuration": log_configuration(tailscale_beacon_log_group),
+                    "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
+                    "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
+                    "environment": [
+                        {"name": "TAILNET", "value": config.require("tailnet-name")},
+                        {"name": "DOMAIN", "value": domain},
+                        {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
+                        {"name": "_TS_AUTHKEY_VERSION", "value": tailscale_auth_key_secret.version_id},
+                    ],
+                }
             },
-            task_definition_args={
-                "execution_role": {"role_arn": execution_role.arn},
-                "containers": {
-                    "tailscale-beacon": {
-                        "name": "tailscale-beacon",
-                        "image": repo_digest(tailscale_beacon_image_repo),
-                        "log_configuration": log_configuration(tailscale_beacon_log_group),
-                        "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
-                        "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
-                        "environment": [
-                            {"name": "TAILNET", "value": config.require("tailnet-name")},
-                            {"name": "DOMAIN", "value": domain},
-                            {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
-                            {"name": "_TS_AUTHKEY_VERSION", "value": tailscale_auth_key_secret.version_id},
-                        ],
-                    }
-                },
-            },
-        )
+        },
     )
 
     # Allow service deployment role to deploy this service
-    if tailscale_service:
-        deploy_role.allow_service_deployment([tailscale_service.arn], [execution_role.arn])
+    deploy_role.allow_service_deployment([tailscale_service.service.arn], [execution_role.arn])

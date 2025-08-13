@@ -7,7 +7,7 @@ from pulumi_aws.ecs import Cluster
 from pulumi_aws.iam import OpenIdConnectProvider
 from pulumi_aws.route53 import Record, Zone
 
-from components.iam import Role, github_actions_assume_role_policy
+from components.role import Role, github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc, VpcInfo
 from services.tailscale_beacon import create_tailscale_beacon
@@ -21,27 +21,13 @@ def create_core_stack(config: Config):
         thumbprint_lists=["6938fd4d98bab03faadb97b34396831e3780aea1"],  # GitHub OIDC thumbprint
     )
 
-    # main_prepare_deploy_role = github_actions_assume_role_policy(
-    #     name="main-prepare-deploy-pr-role",
-    #     config=config,
-    #     github_oidc_provider_arn=github_oidc_provider.arn,
-    #     environment="main-prepare-deploy-pr",
-    # )
-
     main_prepare_deploy_role = Role(
-        name="main-prepare-deploy-role",
+        resource_name="main-prepare-deploy-role",
         assume_role_policy=github_actions_assume_role_policy(config, github_oidc_provider.arn, "main-prepare-deploy"),
     )
 
-    # main_deploy_role = github_actions_assume_role_policy(
-    #     name="main-deploy-role",
-    #     config=config,
-    #     github_oidc_provider_arn=github_oidc_provider.arn,
-    #     environment="main-deploy",
-    # )
-
     main_deploy_role = Role(
-        name="main-deploy-role",
+        resource_name="main-deploy-role",
         assume_role_policy=github_actions_assume_role_policy(config, github_oidc_provider.arn, "main-deploy"),
     )
 
@@ -99,7 +85,9 @@ def create_core_stack(config: Config):
     )
 
     export("main-prepare-deploy-role-arn", main_prepare_deploy_role.arn)
+    export("main-prepare-deploy-role-name", main_prepare_deploy_role.name)
     export("main-deploy-role-arn", main_deploy_role.arn)
+    export("main-deploy-role-name", main_deploy_role.name)
     export("zone-id", zone.id)
     export("zone-name", zone.name)
     export("zone-name-servers", zone.name_servers)

@@ -5,8 +5,8 @@ from pulumi_aws.ecs import Cluster
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import pullthrough_repo_digest
-from components.iam import Role, ecs_assume_role_policy
 from components.log import log_configuration
+from components.role import Role, ecs_assume_role_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -38,7 +38,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
     )
 
     # Execution role
-    execution_role = Role("github-runner-execution-role", ecs_assume_role_policy())
+    execution_role = Role("github-runner-execution-role", assume_role_policy=ecs_assume_role_policy())
     execution_role.allow_secret_get([github_app_private_key_secret])
     execution_role.allow_repo_pullthrough([github_runner_image_repo])
 

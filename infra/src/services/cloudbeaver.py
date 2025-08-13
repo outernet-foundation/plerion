@@ -9,8 +9,8 @@ from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import pullthrough_repo_digest, repo_digest
-from components.iam import Role, ecs_assume_role_policy
 from components.log import log_configuration
+from components.role import Role, ecs_assume_role_policy
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -135,96 +135,87 @@ def create_cloudbeaver(
     )
 
     # Execution role
-    execution_role = Role("cloudbeaver-execution-role", ecs_assume_role_policy())
+    execution_role = Role("cloudbeaver-execution-role", assume_role_policy=ecs_assume_role_policy())
     execution_role.allow_secret_get([cloudbeaver_password_secret, postgres_password_secret])
     execution_role.allow_repo_pullthrough([cloudbeaver_image_repo])
 
     # Service
-    cloudbeaver_service = get_images_output(repository_name=cloudbeaver_init_image_repo.name).apply(
-        lambda images_data: None
-        if not images_data.image_ids  # If there are no images, don't create the service
-        else FargateService(
-            "cloudbeaver-service",
-            name="cloudbeaver-service",
-            cluster=cluster.arn,
-            desired_count=1,
-            network_configuration={
-                "subnets": vpc.private_subnet_ids,
-                "security_groups": [cloudbeaver_security_group.id],
-            },
-            task_definition_args={
-                "execution_role": {"role_arn": execution_role.arn},
-                "volumes": [
-                    {
-                        "name": "efs",
-                        "efs_volume_configuration": {
-                            "file_system_id": efs.id,
-                            "transit_encryption": "ENABLED",
-                            "root_directory":
-                            # Ensure all mount targets are created before using the EFS
-                            mount_targets.apply(lambda mts: Output.all(*[mt.id for mt in mts]).apply(lambda _: "/")),
+    cloudbeaver_service = FargateService(
+        "cloudbeaver-service",
+        name="cloudbeaver-service",
+        cluster=cluster.arn,
+        desired_count=get_images_output(repository_name=cloudbeaver_init_image_repo.name).apply(
+            lambda output: 1 if output.image_ids else 0
+        ),  # Set desired count to 0 if the cloudbeaver-init image repository is empty (the cloudbeaver repository itself is a pullthrough cache and will always have images)
+        network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [cloudbeaver_security_group.id]},
+        task_definition_args={
+            "execution_role": {"role_arn": execution_role.arn},
+            "volumes": [
+                {
+                    "name": "efs",
+                    "efs_volume_configuration": {
+                        "file_system_id": efs.id,
+                        "transit_encryption": "ENABLED",
+                        "root_directory":
+                        # Ensure all mount targets are created before using the EFS
+                        mount_targets.apply(lambda mts: Output.all(*[mt.id for mt in mts]).apply(lambda _: "/")),
+                    },
+                }
+            ],
+            "containers": {
+                "cloudbeaver-init": {
+                    "name": "cloudbeaver-init",
+                    "image": repo_digest(cloudbeaver_init_image_repo),
+                    "essential": False,
+                    "log_configuration": log_configuration(cloudbeaver_init_log_group),
+                    "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
+                    "secrets": [
+                        {"name": "POSTGRES_PASSWORD", "value_from": postgres_password_secret.arn},
+                        {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_password_secret.arn},
+                    ],
+                    "environment": [
+                        {"name": "POSTGRES_HOST", "value": db.address},
+                        {"name": "POSTGRES_PORT", "value": "5432"},
+                        {"name": "POSTGRES_DB", "value": "postgres"},
+                        {"name": "POSTGRES_USER", "value": config.require("postgres-user")},
+                        {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
+                        {"name": "_CB_ADMIN_NAME_VERSION", "value": cloudbeaver_password_secret.version_id},
+                        {"name": "_POSTGRES_PASSWORD_VERSION", "value": postgres_password_secret.version_id},
+                    ],
+                },
+                "cloudbeaver": {
+                    "name": "cloudbeaver",
+                    "depends_on": [{"container_name": "cloudbeaver-init", "condition": "SUCCESS"}],
+                    "image": pullthrough_repo_digest(cloudbeaver_image_repo),
+                    "log_configuration": log_configuration(cloudbeaver_log_group),
+                    "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
+                    "port_mappings": [
+                        {"container_port": 8978, "host_port": 8978, "target_group": load_balancer_target_group}
+                    ],
+                    "secrets": [
+                        {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_password_secret.arn},
+                        {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_password_secret.arn},
+                    ],
+                    "environment": [
+                        {"name": "CB_SERVER_NAME", "value": "CloudBeaver"},
+                        {"name": "CB_SERVER_URL", "value": domain.apply(lambda d: f"https://{d}")},
+                        {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
+                        {"name": "CLOUDBEAVER_DB_DRIVER", "value": "postgres-jdbc"},
+                        {
+                            "name": "CLOUDBEAVER_DB_URL",
+                            "value": Output.concat(
+                                "jdbc:postgresql://", db.address, ":", db.port.apply(str), "/postgres"
+                            ),
                         },
-                    }
-                ],
-                "containers": {
-                    "cloudbeaver-init": {
-                        "name": "cloudbeaver-init",
-                        "image": repo_digest(cloudbeaver_init_image_repo),
-                        "essential": False,
-                        "log_configuration": log_configuration(cloudbeaver_init_log_group),
-                        "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
-                        "secrets": [
-                            {"name": "POSTGRES_PASSWORD", "value_from": postgres_password_secret.arn},
-                            {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_password_secret.arn},
-                        ],
-                        "environment": [
-                            {"name": "POSTGRES_HOST", "value": db.address},
-                            {"name": "POSTGRES_PORT", "value": "5432"},
-                            {"name": "POSTGRES_DB", "value": "postgres"},
-                            {"name": "POSTGRES_USER", "value": config.require("postgres-user")},
-                            {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
-                            {"name": "_CB_ADMIN_NAME_VERSION", "value": cloudbeaver_password_secret.version_id},
-                            {"name": "_POSTGRES_PASSWORD_VERSION", "value": postgres_password_secret.version_id},
-                        ],
-                    },
-                    "cloudbeaver": {
-                        "name": "cloudbeaver",
-                        "depends_on": [{"container_name": "cloudbeaver-init", "condition": "SUCCESS"}],
-                        "image": pullthrough_repo_digest(cloudbeaver_image_repo),
-                        "log_configuration": log_configuration(cloudbeaver_log_group),
-                        "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
-                        "port_mappings": [
-                            {"container_port": 8978, "host_port": 8978, "target_group": load_balancer_target_group}
-                        ],
-                        "secrets": [
-                            {"name": "CLOUDBEAVER_DB_PASSWORD", "value_from": postgres_password_secret.arn},
-                            {"name": "CB_ADMIN_PASSWORD", "value_from": cloudbeaver_password_secret.arn},
-                        ],
-                        "environment": [
-                            {"name": "CB_SERVER_NAME", "value": "CloudBeaver"},
-                            {"name": "CB_SERVER_URL", "value": domain.apply(lambda d: f"https://{d}")},
-                            {"name": "CB_ADMIN_NAME", "value": config.require("cloudbeaver-user")},
-                            {"name": "CLOUDBEAVER_DB_DRIVER", "value": "postgres-jdbc"},
-                            {
-                                "name": "CLOUDBEAVER_DB_URL",
-                                "value": Output.concat(
-                                    "jdbc:postgresql://", db.address, ":", db.port.apply(str), "/postgres"
-                                ),
-                            },
-                            {"name": "CLOUDBEAVER_DB_USER", "value": config.require("postgres-user")},
-                            {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
-                            {"name": "CLOUDBEAVER_DB_USER_VERSION", "value": postgres_password_secret.version_id},
-                            {
-                                "name": "_CLOUDBEAVER_DB_PASSWORD_VERSION",
-                                "value": cloudbeaver_password_secret.version_id,
-                            },
-                        ],
-                    },
+                        {"name": "CLOUDBEAVER_DB_USER", "value": config.require("postgres-user")},
+                        {"name": "CLOUDBEAVER_DB_SCHEMA", "value": "cloudbeaver"},
+                        {"name": "CLOUDBEAVER_DB_USER_VERSION", "value": postgres_password_secret.version_id},
+                        {"name": "_CLOUDBEAVER_DB_PASSWORD_VERSION", "value": cloudbeaver_password_secret.version_id},
+                    ],
                 },
             },
-        )
+        },
     )
 
     # Allow service deployment role to deploy this service
-    if cloudbeaver_service:
-        deploy_role.allow_service_deployment([cloudbeaver_service.arn], [execution_role.arn])
+    deploy_role.allow_service_deployment([cloudbeaver_service.service.arn], [execution_role.arn])

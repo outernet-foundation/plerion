@@ -1,7 +1,7 @@
 import pulumi_aws as aws
 from pulumi import Config, Output, export
 
-from components.iam import Role
+from components.role import Role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc

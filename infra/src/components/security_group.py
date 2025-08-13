@@ -42,7 +42,7 @@ class SecurityGroup(ComponentResource):
     @overload
     def __init__(
         self,
-        name: str,
+        resource_name: str,
         vpc: "Vpc",
         *,
         vpc_endpoints: List[str] | None = None,
@@ -53,7 +53,7 @@ class SecurityGroup(ComponentResource):
     @overload
     def __init__(
         self,
-        name: str,
+        resource_name: str,
         vpc: "Vpc",
         *,
         security_group_id: Input[str],
@@ -64,7 +64,7 @@ class SecurityGroup(ComponentResource):
 
     def __init__(
         self,
-        name: str,
+        resource_name: str,
         vpc: "Vpc",
         *,
         security_group_id: Input[str] | None = None,
@@ -72,16 +72,16 @@ class SecurityGroup(ComponentResource):
         rules: List[SecurityGroupRule] = [],
         opts: ResourceOptions | None = None,
     ):
-        super().__init__("custom:SecurityGroup", name, opts=opts)
+        super().__init__("custom:SecurityGroup", resource_name, opts=opts)
 
         self._child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
-        self._name = name
+        self._resource_name = resource_name
         self._rule_ids: List[Output[str]] = []
 
         if security_group_id is not None:
             self._security_group = get_security_group_output(id=security_group_id)
         else:
-            self._security_group = ec2.SecurityGroup(name, vpc_id=vpc.id, opts=self._child_opts)
+            self._security_group = ec2.SecurityGroup(resource_name, vpc_id=vpc.id, opts=self._child_opts)
 
         self.id = self._security_group.id
         self.arn = self._security_group.arn
@@ -119,7 +119,7 @@ class SecurityGroup(ComponentResource):
                     if "to_security_group" in rule:
                         to_security_group = rule["to_security_group"]
                         SecurityGroupEgressRule(
-                            f"{self._name}-egress-to-{to_security_group._name}-{port}-{protocol}",
+                            f"{self._resource_name}-egress-to-{to_security_group._name}-{port}-{protocol}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -129,7 +129,7 @@ class SecurityGroup(ComponentResource):
                         )
 
                         SecurityGroupIngressRule(
-                            f"{to_security_group._name}-ingress-from-{self._name}-{port}-{protocol}",
+                            f"{to_security_group._name}-ingress-from-{self._resource_name}-{port}-{protocol}",
                             security_group_id=to_security_group._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -141,7 +141,7 @@ class SecurityGroup(ComponentResource):
                     elif "to_prefix_list_id" in rule:
                         to_prefix_list_id = rule["to_prefix_list_id"]
                         SecurityGroupEgressRule(
-                            f"{self._name}-egress-to-prefix-list-{rule['prefix_name']}-{port}-{protocol}",
+                            f"{self._resource_name}-egress-to-prefix-list-{rule['prefix_name']}-{port}-{protocol}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -153,7 +153,7 @@ class SecurityGroup(ComponentResource):
                     elif "to_cidr" in rule:
                         to_cidr = rule["to_cidr"]
                         SecurityGroupEgressRule(
-                            f"{self._name}-egress-to-cidr-{rule['cidr_name']}-{port}-{protocol}",
+                            f"{self._resource_name}-egress-to-cidr-{rule['cidr_name']}-{port}-{protocol}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -165,7 +165,7 @@ class SecurityGroup(ComponentResource):
                     elif "from_cidr" in rule:
                         from_cidr = rule["from_cidr"]
                         SecurityGroupIngressRule(
-                            f"{self._name}-ingress-from-cidr-{rule['cidr_name']}-{port}-{protocol}",
+                            f"{self._resource_name}-ingress-from-cidr-{rule['cidr_name']}-{port}-{protocol}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
