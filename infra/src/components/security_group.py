@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, NotRequired, Required, Sequence, TypedDict, Union, assert_never, overload
 
-import pulumi_aws as aws
 from pulumi import ComponentResource, Input, Output, ResourceOptions
+from pulumi_aws import ec2
+from pulumi_aws.ec2 import get_security_group_output
 from pulumi_aws.vpc import SecurityGroupEgressRule, SecurityGroupIngressRule
 
 if TYPE_CHECKING:
@@ -78,9 +79,9 @@ class SecurityGroup(ComponentResource):
         self._rule_ids: List[Output[str]] = []
 
         if security_group_id is not None:
-            self._security_group = aws.ec2.get_security_group_output(id=security_group_id)
+            self._security_group = get_security_group_output(id=security_group_id)
         else:
-            self._security_group = aws.ec2.SecurityGroup(name, vpc_id=vpc.id, opts=self._child_opts)
+            self._security_group = ec2.SecurityGroup(name, vpc_id=vpc.id, opts=self._child_opts)
 
         self.id = self._security_group.id
         self.arn = self._security_group.arn

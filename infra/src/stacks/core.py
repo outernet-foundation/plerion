@@ -7,7 +7,7 @@ from pulumi_aws.ecs import Cluster
 from pulumi_aws.iam import OpenIdConnectProvider
 from pulumi_aws.route53 import Record, Zone
 
-from components.iam import create_github_actions_role
+from components.iam import Role, github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc, VpcInfo
 from services.tailscale_beacon import create_tailscale_beacon
@@ -21,18 +21,28 @@ def create_core_stack(config: Config):
         thumbprint_lists=["6938fd4d98bab03faadb97b34396831e3780aea1"],  # GitHub OIDC thumbprint
     )
 
-    main_prepare_deploy_role = create_github_actions_role(
-        name="main-prepare-deploy-pr-role",
-        config=config,
-        github_oidc_provider_arn=github_oidc_provider.arn,
-        environment="main-prepare-deploy-pr",
+    # main_prepare_deploy_role = github_actions_assume_role_policy(
+    #     name="main-prepare-deploy-pr-role",
+    #     config=config,
+    #     github_oidc_provider_arn=github_oidc_provider.arn,
+    #     environment="main-prepare-deploy-pr",
+    # )
+
+    main_prepare_deploy_role = Role(
+        name="main-prepare-deploy-role",
+        assume_role_policy=github_actions_assume_role_policy(config, github_oidc_provider.arn, "main-prepare-deploy"),
     )
 
-    main_deploy_role = create_github_actions_role(
+    # main_deploy_role = github_actions_assume_role_policy(
+    #     name="main-deploy-role",
+    #     config=config,
+    #     github_oidc_provider_arn=github_oidc_provider.arn,
+    #     environment="main-deploy",
+    # )
+
+    main_deploy_role = Role(
         name="main-deploy-role",
-        config=config,
-        github_oidc_provider_arn=github_oidc_provider.arn,
-        environment="main-deploy",
+        assume_role_policy=github_actions_assume_role_policy(config, github_oidc_provider.arn, "main-deploy"),
     )
 
     domain = config.require("domain")
@@ -84,13 +94,11 @@ def create_core_stack(config: Config):
         domain=domain,
         certificate_arn=certificate.arn,
         cluster=cluster,
-        deploy_role_name=main_deploy_role.name,
-        prepare_deploy_role_name=main_prepare_deploy_role.name,
+        deploy_role=main_deploy_role,
+        prepare_deploy_role=main_prepare_deploy_role,
     )
 
-    export("main-prepare-deploy-role-name", main_prepare_deploy_role.name)
     export("main-prepare-deploy-role-arn", main_prepare_deploy_role.arn)
-    export("main-deploy-role-name", main_deploy_role.name)
     export("main-deploy-role-arn", main_deploy_role.arn)
     export("zone-id", zone.id)
     export("zone-name", zone.name)

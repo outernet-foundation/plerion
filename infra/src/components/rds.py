@@ -1,13 +1,13 @@
 import pulumi_aws as aws
-from pulumi import Config, Input, Output, export
+from pulumi import Config, Output, export
 
-from components.iam import allow_secret_get
+from components.iam import Role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
 
-def create_database(config: Config, vpc: Vpc, deploy_role_name: Input[str]):
+def create_database(config: Config, vpc: Vpc, deploy_role: Role):
     db_user: str = config.require("postgres-user")
     db_password_output = config.require_secret("postgres-password")
 
@@ -36,7 +36,7 @@ def create_database(config: Config, vpc: Vpc, deploy_role_name: Input[str]):
         ),
     )
 
-    allow_secret_get(deploy_role_name, [postgres_dsn_secret])
+    deploy_role.allow_secret_get([postgres_dsn_secret])
     export("postgres-dsn-secret-arn", postgres_dsn_secret.arn)
 
     return postgres, postgres_security_group, postgres_dsn_secret

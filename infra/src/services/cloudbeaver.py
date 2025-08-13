@@ -1,4 +1,4 @@
-from pulumi import Config, Input, Output, StackReference
+from pulumi import Config, Output, StackReference
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecr import Repository, get_images_output
 from pulumi_aws.ecs import Cluster
@@ -9,13 +9,7 @@ from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import pullthrough_repo_digest, repo_digest
-from components.iam import (
-    allow_image_repo_actions,
-    allow_repo_pullthrough,
-    allow_secret_get,
-    allow_service_deployment,
-    create_ecs_role,
-)
+from components.iam import Role, ecs_assume_role_policy
 from components.log import log_configuration
 from components.secret import Secret
 from components.security_group import SecurityGroup
@@ -29,8 +23,8 @@ def create_cloudbeaver(
     postgres_security_group: SecurityGroup,
     db: Instance,
     cluster: Cluster,
-    prepare_deploy_role_name: Input[str],
-    deploy_role_name: Input[str],
+    prepare_deploy_role: Role,
+    deploy_role: Role,
 ) -> None:
     # Log groups
     cloudbeaver_log_group = LogGroup("cloudbeaver-log-group", name="/ecs/cloudbeaver", retention_in_days=7)
@@ -51,7 +45,7 @@ def create_cloudbeaver(
     )
 
     # Allow image repo action role to push to this image repo
-    allow_image_repo_actions(prepare_deploy_role_name, [cloudbeaver_init_image_repo])
+    prepare_deploy_role.allow_image_repo_actions([cloudbeaver_init_image_repo])
 
     # Security Groups
     efs_security_group = SecurityGroup("cloudbeaver-efs-security-group", vpc=vpc)
@@ -141,9 +135,9 @@ def create_cloudbeaver(
     )
 
     # Execution role
-    execution_role = create_ecs_role("cloudbeaver-execution-role")
-    allow_secret_get("cloudbeaver-execution-role", [cloudbeaver_password_secret, postgres_password_secret])
-    allow_repo_pullthrough("cloudbeaver-execution-role", [cloudbeaver_image_repo])
+    execution_role = Role("cloudbeaver-execution-role", ecs_assume_role_policy())
+    execution_role.allow_secret_get([cloudbeaver_password_secret, postgres_password_secret])
+    execution_role.allow_repo_pullthrough([cloudbeaver_image_repo])
 
     # Service
     cloudbeaver_service = get_images_output(repository_name=cloudbeaver_init_image_repo.name).apply(
@@ -233,4 +227,4 @@ def create_cloudbeaver(
 
     # Allow service deployment role to deploy this service
     if cloudbeaver_service:
-        allow_service_deployment(deploy_role_name, [cloudbeaver_service.arn], [execution_role.arn])
+        deploy_role.allow_service_deployment([cloudbeaver_service.arn], [execution_role.arn])

@@ -7,7 +7,7 @@ from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import repo_digest
-from components.iam import allow_image_repo_actions, allow_secret_get, allow_service_deployment, create_ecs_role
+from components.iam import Role, ecs_assume_role_policy
 from components.log import log_configuration
 from components.secret import Secret
 from components.security_group import SecurityGroup
@@ -23,8 +23,8 @@ def create_tailscale_beacon(
     domain: Input[str],
     certificate_arn: Input[str],
     cluster: Cluster,
-    prepare_deploy_role_name: Input[str],
-    deploy_role_name: Input[str],
+    prepare_deploy_role: Role,
+    deploy_role: Role,
 ):
     # Log groups
     tailscale_beacon_log_group = LogGroup(
@@ -40,7 +40,7 @@ def create_tailscale_beacon(
     tailscale_beacon_image_repo = Repository("tailscale-beacon-image-repo", force_delete=config.require_bool("devMode"))
 
     # Allow image repo action role to push to this image repo
-    allow_image_repo_actions(prepare_deploy_role_name, [tailscale_beacon_image_repo])
+    prepare_deploy_role.allow_image_repo_actions([tailscale_beacon_image_repo])
 
     # Security groups
     tailscale_beacon_security_group = SecurityGroup(
@@ -131,8 +131,8 @@ def create_tailscale_beacon(
             )
 
     # Execution role
-    execution_role = create_ecs_role("tailscale-beacon-exec-role")
-    allow_secret_get("tailscale-beacon-exec-role", [tailscale_auth_key_secret])
+    execution_role = Role("tailscale-beacon-exec-role", ecs_assume_role_policy())
+    execution_role.allow_secret_get([tailscale_auth_key_secret])
 
     # Service
     tailscale_service = get_images_output(repository_name=tailscale_beacon_image_repo.name).apply(
@@ -171,4 +171,4 @@ def create_tailscale_beacon(
 
     # Allow service deployment role to deploy this service
     if tailscale_service:
-        allow_service_deployment(deploy_role_name, [tailscale_service.arn], [execution_role.arn])
+        deploy_role.allow_service_deployment([tailscale_service.arn], [execution_role.arn])

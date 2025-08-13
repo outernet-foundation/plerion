@@ -1,4 +1,4 @@
-from pulumi import Config, Input, StackReference
+from pulumi import Config, StackReference
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecr import Repository, get_images_output
 from pulumi_aws.ecs import Cluster
@@ -8,13 +8,7 @@ from pulumi_aws.s3 import Bucket
 from pulumi_awsx.ecs import FargateService
 
 from components.ecr import repo_digest
-from components.iam import (
-    allow_image_repo_actions,
-    allow_s3,
-    allow_secret_get,
-    allow_service_deployment,
-    create_ecs_role,
-)
+from components.iam import Role, ecs_assume_role_policy
 from components.log import log_configuration
 from components.secret import Secret
 from components.security_group import SecurityGroup
@@ -29,8 +23,8 @@ def create_api(
     s3_bucket: Bucket,
     postgres_security_group: SecurityGroup,
     postgres_dsn_secret: Secret,
-    prepare_deploy_role_name: Input[str],
-    deploy_role_name: Input[str],
+    prepare_deploy_role: Role,
+    deploy_role: Role,
 ) -> None:
     # Log groups
     api_log_group = LogGroup("api-log-group", name="/ecs/api", retention_in_days=7)
@@ -39,7 +33,7 @@ def create_api(
     api_image_repo = Repository("api-repo", force_delete=config.require_bool("devMode"))
 
     # Allow image repo actions role to push to this image repo
-    allow_image_repo_actions(prepare_deploy_role_name, [api_image_repo])
+    prepare_deploy_role.allow_image_repo_actions([api_image_repo])
 
     # Security groups
     api_security_group = SecurityGroup(
@@ -109,12 +103,12 @@ def create_api(
     )
 
     # Execution role
-    execution_role = create_ecs_role("api-execution-role")
-    allow_secret_get("api-execution-role", [postgres_dsn_secret])
+    execution_role = Role("api-execution-role", ecs_assume_role_policy())
+    execution_role.allow_secret_get([postgres_dsn_secret])
 
     # Task role
-    task_role = create_ecs_role("api-task-role")
-    allow_s3("api-task-role", s3_bucket)
+    task_role = Role("api-task-role", ecs_assume_role_policy())
+    task_role.allow_s3(s3_bucket)
 
     # Service
     api_service = get_images_output(repository_name=api_image_repo.name).apply(
@@ -145,4 +139,4 @@ def create_api(
 
     # Allow service deployment role to deploy this service
     if api_service:
-        allow_service_deployment(deploy_role_name, [api_service.arn], [execution_role.arn])
+        deploy_role.allow_service_deployment([api_service.arn], [execution_role.arn])
