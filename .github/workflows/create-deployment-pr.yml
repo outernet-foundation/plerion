@@ -85,7 +85,7 @@ jobs:
           REPO_URL=$(pulumi stack output --stack ${{ matrix.services.stack }} ${{ matrix.services.name }}-image-repo-url)
           echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
           echo "repo_name=$(basename $REPO_URL)" >> $GITHUB_OUTPUT
-          echo "role_arn=$(pulumi stack output --stack ${{ matrix.services.stack }} ${{ matrix.services.name }}-image-repo-role-arn)" >> $GITHUB_OUTPUT
+          echo "role_arn=$(pulumi stack output --stack prepare-deploy-role-arn)" >> $GITHUB_OUTPUT
           echo "region=$(echo $REPO_URL | sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p')" >> $GITHUB_OUTPUT
 
       - name: Configure AWS credentials
@@ -189,15 +189,15 @@ jobs:
           git reset --hard
           git clean -xfd
 
-      - name: Setup Pulumi
-        uses: pulumi/setup-pulumi@v2
+      # - name: Setup Pulumi
+      #   uses: pulumi/setup-pulumi@v2
 
-      - name: Authenticate Pulumi
-        uses: pulumi/auth-actions@v1
-        with:
-          organization: tyler-s-hatch
-          requested-token-type: urn:pulumi:token-type:access_token:personal
-          scope: user:tyler-s-hatch
+      # - name: Authenticate Pulumi
+      #   uses: pulumi/auth-actions@v1
+      #   with:
+      #     organization: tyler-s-hatch
+      #     requested-token-type: urn:pulumi:token-type:access_token:personal
+      #     scope: user:tyler-s-hatch
 
       # - uses: pulumi/esc-action@v1
       #   id: esc
@@ -211,26 +211,26 @@ jobs:
       #     app-id: ${{ steps.esc.outputs.github-app-id }}
       #     private-key: ${{ steps.esc.outputs.github-app-private-key }}
 
-      - name: Get Pulumi stack outputs
-        id: pulumi-outputs
-        working-directory: infra
-        shell: bash
-        run: |
-          set -euo pipefail
-          echo "postgres_dsn_secret_arn=$(pulumi stack output --stack dev postgres-dsn-secret-arn)" >> $GITHUB_OUTPUT
-          echo "role_arn=$(pulumi stack output --stack dev postgres-migrations-role-arn)" >> $GITHUB_OUTPUT
+      # - name: Get Pulumi stack outputs
+      #   id: pulumi-outputs
+      #   working-directory: infra
+      #   shell: bash
+      #   run: |
+      #     set -euo pipefail
+      #     echo "postgres_dsn_secret_arn=$(pulumi stack output --stack dev postgres-dsn-secret-arn)" >> $GITHUB_OUTPUT
+      #     echo "role_arn=$(pulumi stack output --stack dev postgres-migrations-role-arn)" >> $GITHUB_OUTPUT
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ steps.pulumi-outputs.outputs.role_arn }}
-          aws-region: us-east-1 # TODO pull this from somewhere
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ steps.pulumi-outputs.outputs.role_arn }}
+      #     aws-region: us-east-1 # TODO pull this from somewhere
 
-      - name: Fetch Postgres DSN secret
-        id: get-postgres-dsn
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: POSTGRES_DSN,${{ steps.pulumi-outputs.outputs.postgres_dsn_secret_arn }}
+      # - name: Fetch Postgres DSN secret
+      #   id: get-postgres-dsn
+      #   uses: aws-actions/aws-secretsmanager-get-secrets@v2
+      #   with:
+      #     secret-ids: POSTGRES_DSN,${{ steps.pulumi-outputs.outputs.postgres_dsn_secret_arn }}
 
       - name: Setup UV
         uses: astral-sh/setup-uv@v6
@@ -243,7 +243,7 @@ jobs:
       - name: Generate migration
         working-directory: services/api
         run: |
-          export PICCOLO_CONF=src.db.conf
+          export PICCOLO_CONF=src.db.local_conf
           uv sync --frozen
           uv run piccolo migrations new all --auto --auto_input=y || true
 

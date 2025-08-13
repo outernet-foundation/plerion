@@ -84,8 +84,8 @@ def create_core_stack(config: Config):
         domain=domain,
         certificate_arn=certificate.arn,
         cluster=cluster,
-        main_deploy_role_name=main_deploy_role.name,
-        main_prepare_deploy_role_name=main_prepare_deploy_role.name,
+        deploy_role_name=main_deploy_role.name,
+        prepare_deploy_role_name=main_prepare_deploy_role.name,
     )
 
     export("main-prepare-deploy-role-name", main_prepare_deploy_role.name)
