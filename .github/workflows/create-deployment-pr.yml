@@ -52,7 +52,6 @@ jobs:
           - { name: "cloudbeaver", stack: "dev", first_party: false, docker_image: "dbeaver/cloudbeaver:latest" }
           - { name: "github-runner", stack: "dev", first_party: false, docker_image: "myoung34/github-runner:latest" }
 
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -96,33 +95,32 @@ jobs:
 
       - name: Calculate first party image build context hash
         if: ${{ matrix.services.first_party }}
-        id: context-hash
+        id: tree-hash
         shell: bash
         run: |
           set -euo pipefail
-          CONTEXT_HASH=$(git rev-parse HEAD:${{ matrix.services.context }})
-          echo "context_hash=${CONTEXT_HASH:0:12}" >> $GITHUB_OUTPUT
-          echo $CONTEXT_HASH
+          TREE_HASH=$(git rev-parse HEAD:${{ matrix.services.context }})
+          echo "tree-hash=${TREE_HASH:0:12}" >> $GITHUB_OUTPUT
+          echo $TREE_HASH
 
-      - name: Check for existing first party image with matching context hash
+      - name: Check for existing first party image by tree tag
         if: ${{ matrix.services.first_party }}
         id: check
         shell: bash
-        run: |          
+        run: |
           set -euo pipefail
-          echo "${{ steps.pulumi.outputs.repo_name }}"
-          echo "${{ steps.context-hash.outputs.context_hash }}"
+          REPO="${{ steps.pulumi.outputs.repo_name }}"
+          TREE_TAG="${{ steps.tree-hash.outputs.tree_tag }}"
+
           if DIGEST=$(aws ecr describe-images \
-              --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
-              --image-ids imageTag="${{ steps.context-hash.outputs.context_hash }}" \
+              --repository-name "$REPO" \
+              --image-ids imageTag="$TREE_TAG" \
               --query 'imageDetails[0].imageDigest' \
               --output text 2>/dev/null); then
-            echo "Found"
-            echo "exists=true" >> $GITHUB_OUTPUT
-            echo "digest=$DIGEST" >> $GITHUB_OUTPUT
+            echo "exists=true"  >> "$GITHUB_OUTPUT"
+            echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
           else
-            echo "Not found"
-            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Build and push first party image
@@ -136,64 +134,90 @@ jobs:
           push: true
           tags: |
             ${{ steps.pulumi.outputs.repo_url }}:${{ needs.prepare-deployment-branch.outputs.sha_tag }}
-            ${{ steps.pulumi.outputs.repo_url }}:${{ steps.context-hash.outputs.context_hash }}
+            ${{ steps.pulumi.outputs.repo_url }}:${{ steps.tree-hash.outputs.tree_hash }}
           cache-from: type=gha,scope=${{ matrix.services.name }}
           cache-to: type=gha,scope=${{ matrix.services.name }},mode=max
           provenance: false
 
-      - name: Write first party image lock json
+      - name: Prepare lock fields (first party)
         if: ${{ matrix.services.first_party }}
+        id: prep_lock_first
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${{ steps.check.outputs.exists }}" == "true" ]; then
+          KEY="${{ steps.pulumi.outputs.repo_name }}"
+
+          if [ "${{ steps.check.outputs.exists }}" = "true" ]; then
             DIGEST="${{ steps.check.outputs.digest }}"
           else
             DIGEST="${{ steps.build.outputs.digest }}"
           fi
 
-          # Write the lock entry
-          jq -n \
-            --arg service "${{ matrix.services.name }}" \
-            --arg tag "${{ needs.prepare-deployment-branch.outputs.sha_tag }}" \
-            --arg digest "$DIGEST" \
-            --arg context-hash "${{ steps.context-hash.outputs.context_hash }}" \
-            '{($service): {tag:$tag, digest:$digest, context-hash:$context-hash}}' \
-            > "lock-${{ matrix.services.name }}.json"
+          SHA_TAG="${{ needs.prepare-deployment-branch.outputs.sha_tag }}"   # e.g., git-<sha>
+          TREE_TAG="${{ steps.tree-hash.outputs.tree_hash }}"                 # e.g., tree-<hash>
 
-      - name: Write third party image lock json
+          TAGS_JSON=$(jq -cn --arg a "$SHA_TAG" --arg b "$TREE_TAG" '[ $a, $b ]')
+          TAGS_B64=$(printf %s "$TAGS_JSON" | base64 -w0 2>/dev/null || printf %s "$TAGS_JSON" | base64 | tr -d '\n')
+
+          {
+            echo "key=$KEY"
+            echo "digest=$DIGEST"
+            echo "tags_b64=$TAGS_B64"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Prepare lock fields (third party)
         if: ${{ !matrix.services.first_party }}
+        id: prep_lock_third
         shell: bash
         run: |
           set -euo pipefail
-          if [ -f "infra/image-lock.json" ] && jq -e --arg service "${{ matrix.services.name }}" 'has($service)' infra/image-lock.json >/dev/null 2>&1; then
-            echo "Entry for ${{ matrix.services.name }} already exists in lock file"
-            DIGEST=$(jq -r --arg service "${{ matrix.services.name }}" '.[$service].digest' infra/image-lock.json)
-            TAG=$(jq -r --arg service "${{ matrix.services.name }}" '.[$service].tag' infra/image-lock.json)
+          LOCK="infra/image-lock.json"
+          KEY="${{ steps.pulumi.outputs.repo_name }}"
+          ECR_URL="${{ steps.pulumi.outputs.repo_url }}"
+
+          if [ -f "$LOCK" ] && jq -e --arg k "$KEY" 'has($k) or (.repositories? and .repositories|has($k))' "$LOCK" >/dev/null 2>&1; then
+            DIGEST="$(jq -r --arg k "$KEY" '
+              if has($k) then .[$k].digest
+              else .repositories[$k].digest
+              end' "$LOCK")"
+            TAGS_JSON="$(jq -c --arg k "$KEY" '
+              if has($k) then .[$k].tags // []
+              else .repositories[$k].tags // []
+              end' "$LOCK")"
           else
-            echo "exists=false" >> $GITHUB_OUTPUT
-            echo "No entry for ${{ matrix.services.name }} in lock file"
+            echo "Initializing lock for $KEY from ECR tag 'latest'…"
+            docker pull "$ECR_URL:latest"
 
-            # Pull the image through the pull-through cache to populate ECR
-            docker pull "${{ steps.pulumi.outputs.repo_url }}:latest"
+            DETAILS="$(aws ecr describe-images \
+              --repository-name "$KEY" \
+              --image-ids imageTag=latest \
+              --query 'imageDetails[0]' \
+              --output json)"
 
-            # Get the digest from ECR after the pull
-            DIGEST=$(aws ecr describe-images \
-              --repository-name "${{ steps.pulumi.outputs.repo_name }}" \
-              --image-ids imageTag="latest" \
-              --query 'imageDetails[0].imageDigest' \
-              --output text)
-
-            TAG="latest"
+            DIGEST="$(jq -r '.imageDigest // empty' <<< "$DETAILS")"
+            TAGS_JSON="$(jq -c '.imageTags // []' <<< "$DETAILS")"
           fi
 
-          # Write the lock entry
-          jq -n \
-            --arg service "${{ matrix.services.name }}" \
-            --arg tag "$TAG" \
-            --arg digest "$DIGEST" \
-            '{($service): {tag:$tag, digest:$digest}}' \
-            > "lock-${{ matrix.services.name }}.json"
+          TAGS_B64=$(printf %s "$TAGS_JSON" | base64 -w0 2>/dev/null || printf %s "$TAGS_JSON" | base64 | tr -d '\n')
+
+          {
+            echo "key=$KEY"
+            echo "digest=$DIGEST"
+            echo "tags_b64=$TAGS_B64"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Write lock snippet
+        shell: bash
+        run: |
+          set -euo pipefail
+          NAME="${{ matrix.services.name }}"
+          KEY="${{ steps.prep_lock_first.outputs.key || steps.prep_lock_third.outputs.key }}"
+          DIGEST="${{ steps.prep_lock_first.outputs.digest || steps.prep_lock_third.outputs.digest }}"
+          TAGS_B64="${{ steps.prep_lock_first.outputs.tags_b64 || steps.prep_lock_third.outputs.tags_b64 }}"
+          TAGS_JSON="$(echo "$TAGS_B64" | base64 -d 2>/dev/null || echo "$TAGS_B64" | base64 --decode 2>/dev/null)"
+
+          jq -n --arg k "$KEY" --arg d "$DIGEST" --argjson tags "$TAGS_JSON" \
+            '{($k): {digest:$d, tags:$tags}}' > "lock-${NAME}.json"
 
       - name: Upload lock snippet
         uses: actions/upload-artifact@v4
@@ -203,7 +227,7 @@ jobs:
 
   generate-migrations-and-create-deploy-pr:
 
-    runs-on: self-hosted # required in order for piccolo to connect to postgres
+    runs-on: ubuntu-latest
     needs: build-and-push-images
 
     steps:
