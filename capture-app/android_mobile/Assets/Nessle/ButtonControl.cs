@@ -21,7 +21,7 @@ namespace Nessle
             rootLayout.childControlWidth = true;
 
             this.Children(
-                background = UIBuilder.Image().FillParent().IgnoreLayout(true).Color(new Color(0.345098f, 0.345098f, 0.345098f)),
+                background = UIBuilder.Image().FillParent().IgnoreLayout(true),
                 contentLayout = UIBuilder.HorizontalLayout().ControlChildSize(true).Alignment(TextAnchor.MiddleCenter)
                     .Padding(new RectOffset(3, 3, 3, 3)).Spacing(5)
             );

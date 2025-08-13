@@ -13,3 +13,11 @@ MonoBehaviour:
   m_Name: UIResources
   m_EditorClassIdentifier: 
   _roundedBox: {fileID: 21300000, guid: 015ddd0cfb8b7ee449920b61d26c3e9d, type: 3}
+  _panelColor: {r: 0.21960786, g: 0.21960786, b: 0.21960786, a: 1}
+  _buttonColor: {r: 0.34509805, g: 0.34509805, b: 0.34509805, a: 1}
+  _inputFieldColor: {r: 0.15686275, g: 0.15686275, b: 0.15686275, a: 1}
+  _panelHeaderColor: {r: 0.078431375, g: 0.078431375, b: 0.078431375, a: 1}
+  _sectionHeaderColor: {r: 0.23529413, g: 0.23529413, b: 0.23529413, a: 1}
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _scrollBarHandleColor: {r: 0.29803923, g: 0.29803923, b: 0.29803923, a: 1}
+  _scrollBarBackgroundColor: {r: 0.16862746, g: 0.16862746, b: 0.16862746, a: 1}

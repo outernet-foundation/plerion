@@ -15,6 +15,7 @@ using System.Net.Http;
 using System.IO;
 
 using System.Net.Http.Headers;
+using Nessle;
 
 namespace PlerionClient.Client
 {
@@ -103,9 +104,9 @@ public class CaptureController : MonoBehaviour
     public RectTransform capturesTable;
     public RectTransform captureRowPrefab;
 
-    [SerializeField][Range(0, 5)] float captureIntervalSeconds = 0.5f;
+    public Canvas canvas;
 
-    private static Environment environment = Environment.Local;
+    [SerializeField][Range(0, 5)] float captureIntervalSeconds = 0.5f;
 
     static private QueueSynchronizationContext context = new QueueSynchronizationContext();
     private ObservableProperty<CaptureState> captureStatus = new ObservableProperty<CaptureState>(context, CaptureState.Idle);
@@ -113,16 +114,19 @@ public class CaptureController : MonoBehaviour
     private IDisposable disposables;
     private CapturesApi capturesApi;
 
+    public Color color;
+
+    private UnityComponentControl<Canvas> canvasControl;
+
     void Awake()
     {
-        var temp = Application.streamingAssetsPath;
+        var plerionAPIBaseUrl = "https://api.outernetfoundation.org";
 
-        var plerionAPIBaseUrl = environment switch
-        {
-            Environment.Local => "https://desktop-otd3rch-api.outernetfoundation.org",
-            Environment.Remote => "https://api.outernetfoundation.org",
-            _ => throw new ArgumentOutOfRangeException(nameof(environment), environment, null)
-        };
+#if UNITY_EDITOR
+        var editorSettings = EditorSettings.GetOrCreateInstance();
+        if (editorSettings.overrideEnvironment)
+            plerionAPIBaseUrl = editorSettings.overrideEnvironmentURL;
+#endif
 
         capturesApi = new CapturesApi(new Configuration
         {
@@ -132,11 +136,34 @@ public class CaptureController : MonoBehaviour
         ZedCaptureController.Initialize();
         UpdateCaptureList();
 
+        UIBuilder.DefaultButtonStyle = UIPresets.StylePillButton;
+        UIBuilder.DefaultScrollbarStyle = UIPresets.StyleRoundedScrollBar;
+        UIBuilder.DefaultInputFieldStyle = UIPresets.StylePillInputField;
+        UIBuilder.DefaultLabelStyle = UIPresets.StyleStandardText;
+        UIBuilder.DefaultScrollRectStyle = UIPresets.StyleStandardScrollRect;
+        UIBuilder.DefaultDropdownStyle = UIPresets.StyleStandardDropdown;
+
+        canvasControl = new UnityComponentControl<Canvas>(canvas).Children(UIPresets.SafeArea().FillParent().Children(
+            UIBuilder.Image().FillParent().Color(UIResources.PanelColor),
+            UIBuilder.VerticalLayout().FillParent().ControlChildSize(true).ChildForceExpandWidth(true).Spacing(5).Padding(new RectOffset(5, 5, 5, 5)).Children(
+                UIPresets.VerticalScrollRect().FlexibleHeight(true).Content(
+
+                ),
+                UIPresets.Row().Children(
+                    UIBuilder.Button().Content(UIBuilder.Label().Text("Start Capture")),
+                    UIBuilder.Dropdown().PreferredWidth(100).PreferredHeight(25.65f).Style(x =>
+                    {
+                        x.component.options.Clear();
+                        x.component.options = new List<TMP_Dropdown.OptionData>() { new TMP_Dropdown.OptionData() { text = "cat" }, new TMP_Dropdown.OptionData() { text = "dog" } };
+                    }
+                )
+            )
+        )));
+
         captureMode.options.Clear();
+
         foreach (var mode in Enum.GetValues(typeof(Capture.Mode)))
-        {
             captureMode.options.Add(new TMP_Dropdown.OptionData(mode.ToString()));
-        }
 
         var captureModeEventStream = captureMode
             .OnValueChangedAsObservable()
@@ -160,53 +187,53 @@ public class CaptureController : MonoBehaviour
                     _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
                 }),
 
-            captureStatus
-                .Select(state =>
-                    state == CaptureState.Idle || state == CaptureState.Capturing)
-                .Subscribe(isIdleOrCapturing => startStopButton.interactable = isIdleOrCapturing),
+                captureStatus
+                    .Select(state =>
+                        state == CaptureState.Idle || state == CaptureState.Capturing)
+                    .Subscribe(isIdleOrCapturing => startStopButton.interactable = isIdleOrCapturing),
 
-            captureStatus
-                .Select(state =>
-                    state == CaptureState.Idle)
-                .Subscribe(isIdle => captureMode.interactable = isIdle),
+                captureStatus
+                    .Select(state =>
+                        state == CaptureState.Idle)
+                    .Subscribe(isIdle => captureMode.interactable = isIdle),
 
-            captureStatus
-                .Where(state =>
-                    state is CaptureState.Idle)
-                .Skip(1) // Skip the initial state
-                .Subscribe(UpdateCaptureList),
+                captureStatus
+                    .Where(state =>
+                        state is CaptureState.Idle)
+                    .Skip(1) // Skip the initial state
+                    .Subscribe(UpdateCaptureList),
 
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (_, CaptureState.Starting or CaptureState.Stopping))
-                .Subscribe(_ => Debug.LogError("Impossible!")),
+                captureControlEventStream
+                    .Where(@event =>
+                        @event is (_, CaptureState.Starting or CaptureState.Stopping))
+                    .Subscribe(_ => Debug.LogError("Impossible!")),
 
-            captureModeEventStream
-                .WithLatestFrom(captureStatus, (mode, state) => (mode, state))
-                .Where(@event =>
-                    @event is (_, CaptureState.Starting or CaptureState.Stopping))
-                .Subscribe(_ => Debug.LogError("Impossible!")),
+                captureModeEventStream
+                    .WithLatestFrom(captureStatus, (mode, state) => (mode, state))
+                    .Where(@event =>
+                        @event is (_, CaptureState.Starting or CaptureState.Stopping))
+                    .Subscribe(_ => Debug.LogError("Impossible!")),
 
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Local, CaptureState.Idle))
-                .SubscribeAwait(StartLocalCapture),
+                captureControlEventStream
+                    .Where(@event =>
+                        @event is (Capture.Mode.Local, CaptureState.Idle))
+                    .SubscribeAwait(StartLocalCapture),
 
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Local, CaptureState.Capturing))
-                .Subscribe(StopLocalCapture),
+                captureControlEventStream
+                    .Where(@event =>
+                        @event is (Capture.Mode.Local, CaptureState.Capturing))
+                    .Subscribe(StopLocalCapture),
 
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Zed, CaptureState.Idle))
-                .SubscribeAwait(StartZedCapture),
+                captureControlEventStream
+                    .Where(@event =>
+                        @event is (Capture.Mode.Zed, CaptureState.Idle))
+                    .SubscribeAwait(StartZedCapture),
 
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Zed, CaptureState.Capturing))
-                .SubscribeAwait(StopZedCapture)
-        );
+                captureControlEventStream
+                    .Where(@event =>
+                        @event is (Capture.Mode.Zed, CaptureState.Capturing))
+                    .SubscribeAwait(StopZedCapture)
+            );
     }
 
     void OnDestroy()
@@ -243,12 +270,6 @@ public class CaptureController : MonoBehaviour
         captureStatus.EnqueueSet(CaptureState.Idle);
     }
 
-    [Serializable]
-    class CaptureUploadRequest
-    {
-        public string filename { get; set; }
-    }
-
     async void UpdateCaptureList()
     {
         // Clear captures table
@@ -270,6 +291,11 @@ public class CaptureController : MonoBehaviour
             });
 
         captures = localCaptures.ToList();
+        captures.Add(new Capture { Name = "dog", Type = Capture.Mode.Local });
+        captures.Add(new Capture { Name = "string", Type = Capture.Mode.Local });
+        captures.Add(new Capture { Name = "cats", Type = Capture.Mode.Local });
+        captures.Add(new Capture { Name = "z1", Type = Capture.Mode.Zed });
+        captures.Add(new Capture { Name = "z2", Type = Capture.Mode.Zed });
 
         var capturesFromServer = await capturesApi.GetCapturesAsync(
             captures.Select(c => c.Name).ToList());

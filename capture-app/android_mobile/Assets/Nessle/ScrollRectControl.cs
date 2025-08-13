@@ -7,24 +7,27 @@ namespace Nessle
 {
     public class ScrollRectControl : UnityComponentControl<ScrollRect>
     {
+        public IUnityComponentControl<Image> background { get; }
+        public IUnityControl viewport { get; }
+        public IUnityControl content { get; }
         public ScrollbarControl horizontalScrollbar { get; }
         public ScrollbarControl verticalScrollbar { get; }
-        public ImageMaskControl viewport { get; }
-        public UnityComponentControl<VerticalLayoutGroup> content { get; }
 
         public ScrollRectControl(
+            IUnityComponentControl<Image> background = default,
             ScrollbarControl horizontalScrollbar = default,
             ScrollbarControl verticalScrollbar = default,
-            ImageMaskControl viewport = default,
-            UnityComponentControl<VerticalLayoutGroup> content = default
-        ) : base()
+            IUnityControl viewport = default,
+            IUnityControl content = default
+        ) : base(UIBuilder.GameObject<ScrollRect>())
         {
             this.Children(
+                this.background = (background ?? UIBuilder.Image()).Name("Background").FillParent(),
+                this.viewport = (viewport ?? UIBuilder.ComponentControl<RectMask2D>()).Name("Viewport").FillParent().Children(
+                    this.content = (content ?? UIBuilder.VerticalLayout().ControlChildSize(true)).Name("Content")
+                ),
                 this.horizontalScrollbar = horizontalScrollbar ?? UIBuilder.Scrollbar().SizeDelta(new Vector2(0, 10)).FillParentWidth().SetPivot(new Vector2(0.5f, 0)).AnchorToBottom().Direction(Scrollbar.Direction.LeftToRight),
-                this.verticalScrollbar = verticalScrollbar ?? UIBuilder.Scrollbar().SizeDelta(new Vector2(10, 0)).FillParentHeight().SetPivot(new Vector2(1, 0.5f)).AnchorToRight().Direction(Scrollbar.Direction.BottomToTop),
-                this.viewport = viewport ?? UIBuilder.ImageMask().FillParent().Children(
-                    this.content = content ?? UIBuilder.VerticalLayout()
-                )
+                this.verticalScrollbar = verticalScrollbar ?? UIBuilder.Scrollbar().SizeDelta(new Vector2(10, 0)).FillParentHeight().SetPivot(new Vector2(1, 0.5f)).AnchorToRight().Direction(Scrollbar.Direction.BottomToTop)
             );
 
             component.horizontalScrollbar = this.horizontalScrollbar.component;
@@ -38,8 +41,8 @@ namespace Nessle
             component.vertical = true;
             component.horizontal = true;
 
-            component.viewport = (RectTransform)this.viewport.component.transform;
-            component.content = (RectTransform)this.content.component.transform;
+            component.viewport = this.viewport.rectTransform;
+            component.content = this.content.rectTransform;
         }
     }
 }

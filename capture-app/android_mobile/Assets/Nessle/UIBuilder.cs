@@ -10,6 +10,19 @@ namespace Nessle
 {
     public static class UIBuilder
     {
+        public static Action<ButtonControl> DefaultButtonStyle;
+        public static Action<UnityComponentControl<TextMeshProUGUI>> DefaultLabelStyle;
+        public static Action<InputFieldControl> DefaultInputFieldStyle;
+        public static Action<ScrollbarControl> DefaultScrollbarStyle;
+        public static Action<ScrollRectControl> DefaultScrollRectStyle;
+        public static Action<DropdownControl> DefaultDropdownStyle;
+
+        private static T StyleIfNecessary<T>(this T control, Action<T> defaultStyle)
+        {
+            defaultStyle?.Invoke(control);
+            return control;
+        }
+
         public static T GameObject<T>(params Type[] additionalComponents)
             where T : Component => GameObject<T>(typeof(T).Name, additionalComponents);
 
@@ -54,16 +67,19 @@ namespace Nessle
             => ComponentControl<RectTransform>();
 
         public static UnityComponentControl<Image> Image()
-            => ComponentControl<Image>();
+            => ComponentControl<Image>().Color(UnityEngine.Color.white);
 
         public static UnityComponentControl<TextMeshProUGUI> Label()
-            => ComponentControl<TextMeshProUGUI>();
+            => ComponentControl<TextMeshProUGUI>().StyleIfNecessary(DefaultLabelStyle);
 
         public static UnityComponentControl<RectTransform> Space()
             => ComponentControl<RectTransform>();
 
         public static ButtonControl Button()
-            => new ButtonControl();
+            => new ButtonControl().StyleIfNecessary(DefaultButtonStyle);
+
+        public static DropdownControl Dropdown()
+            => new DropdownControl().StyleIfNecessary(DefaultDropdownStyle);
 
         public static UnityComponentControl<HorizontalLayoutGroup> HorizontalLayout()
             => ComponentControl<HorizontalLayoutGroup>().ChildForceExpand(false).ControlChildSize(false);
@@ -75,17 +91,18 @@ namespace Nessle
             => ComponentControl<RectMask2D>();
 
         public static ScrollRectControl ScrollRect(
+            IUnityComponentControl<Image> background = default,
             ScrollbarControl horizontalScrollbar = default,
             ScrollbarControl verticalScrollbar = default,
             ImageMaskControl viewport = default,
-            UnityComponentControl<VerticalLayoutGroup> content = default
-        ) => new ScrollRectControl(horizontalScrollbar, verticalScrollbar, viewport, content);
+            IUnityControl content = default
+        ) => new ScrollRectControl(background, horizontalScrollbar, verticalScrollbar, viewport, content).StyleIfNecessary(DefaultScrollRectStyle);
 
         public static ScrollbarControl Scrollbar(
             UnityComponentControl<Image> background = default,
             UnityComponentControl<RectTransform> slidingArea = default,
             UnityComponentControl<Image> handle = default
-        ) => new ScrollbarControl(background, slidingArea, handle);
+        ) => new ScrollbarControl(background, slidingArea, handle).StyleIfNecessary(DefaultScrollbarStyle);
 
         public static ToggleControl Toggle()
             => new ToggleControl();
@@ -94,7 +111,7 @@ namespace Nessle
             UnityComponentControl<RectTransform> textViewport = default,
             UnityComponentControl<TextMeshProUGUI> inputText = default,
             UnityComponentControl<TextMeshProUGUI> placeholderText = default
-        ) => new InputFieldControl(textViewport, inputText, placeholderText);
+        ) => new InputFieldControl(textViewport, inputText, placeholderText).StyleIfNecessary(DefaultInputFieldStyle);
 
         public static Vector3Control Vector3(
             UnityComponentControl<HorizontalLayoutGroup> layout = default,
@@ -566,6 +583,13 @@ namespace Nessle
             where T : IUnityControl
         {
             control.AddBinding(fitContentHorizontal.Subscribe(x => control.gameObject.GetOrAddComponent<ContentSizeFitter>().horizontalFit = x.currentValue));
+            return control;
+        }
+
+        public static T SetSiblingOrder<T>(this T control, int index)
+            where T : IUnityControl
+        {
+            control.rectTransform.SetSiblingIndex(index);
             return control;
         }
 
@@ -1382,6 +1406,44 @@ namespace Nessle
             where T : IUnityComponentControl<Scrollbar>
         {
             control.component.onValueChanged.AddListener(onValueChanged);
+            return control;
+        }
+
+        public static T Value<T>(this T control, int value)
+            where T : IUnityComponentControl<TMP_Dropdown>
+        {
+            control.component.value = value;
+            return control;
+        }
+
+        public static T Value<T>(this T control, IValueObservable<int> value)
+            where T : IUnityComponentControl<TMP_Dropdown>
+        {
+            control.AddBinding(value.Subscribe(x => control.component.value = x.currentValue));
+            return control;
+        }
+
+        public static T Options<T>(this T control, List<TMP_Dropdown.OptionData> options)
+            where T : IUnityComponentControl<TMP_Dropdown>
+        {
+            control.component.options = options;
+            return control;
+        }
+
+        public static T Value<T>(this T control, IListObservable<TMP_Dropdown.OptionData> options)
+            where T : IUnityComponentControl<TMP_Dropdown>
+        {
+            List<TMP_Dropdown.OptionData> opts = new List<TMP_Dropdown.OptionData>();
+            control.AddBinding(options.Subscribe(x =>
+            {
+                switch (x.operationType)
+                {
+                    case OpType.Add: opts.Insert(x.index, x.element); break;
+                    case OpType.Remove: opts.RemoveAt(x.index); break;
+                }
+
+                control.component.options = opts;
+            }));
             return control;
         }
 

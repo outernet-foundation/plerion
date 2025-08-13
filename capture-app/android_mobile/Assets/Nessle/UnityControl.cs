@@ -7,6 +7,7 @@ namespace Nessle
     public interface IUnityControl : IControl
     {
         GameObject gameObject { get; }
+        RectTransform rectTransform { get; }
         void AddChild(IUnityControl child);
         void RemoveChild(IUnityControl child);
     }
@@ -32,6 +33,7 @@ namespace Nessle
     {
         public IControl parent { get; private set; }
         public GameObject gameObject { get; private set; }
+        public RectTransform rectTransform => (RectTransform)gameObject.transform;
 
         private HashSet<IControl> _children = new HashSet<IControl>();
         private List<IDisposable> _bindings = new List<IDisposable>();
