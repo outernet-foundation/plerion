@@ -29,7 +29,7 @@ def github_actions_assume_role_policy(config: Config, github_oidc_provider_arn: 
                         },
                         "StringEquals": {
                             "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
-                            "token.actions.githubusercontent.com:repository": repo,
+                            # "token.actions.githubusercontent.com:repository": repo,
                             # "token.actions.githubusercontent.com:environment": environment,
                         },
                     },
