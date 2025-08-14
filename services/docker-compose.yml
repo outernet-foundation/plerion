@@ -33,7 +33,9 @@ services:
     volumes:
       - ./api:/workspace
     environment:
-      POSTGRES_DSN: ${POSTGRES_DSN}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
       PYTHONPATH: /workspace
     depends_on:
       postgres:
@@ -138,7 +140,9 @@ services:
     ports:
       - "8000:8000"
     environment:
-      POSTGRES_DSN: ${POSTGRES_DSN}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_HOST: ${POSTGRES_HOST}
       S3_ENDPOINT_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}

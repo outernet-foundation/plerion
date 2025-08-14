@@ -1,11 +1,13 @@
 from functools import lru_cache
 
-from pydantic import AnyHttpUrl, PostgresDsn, model_validator
+from pydantic import AnyHttpUrl, model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    postgres_dsn: PostgresDsn | None = None
+    postgres_user: str | None = None
+    postgres_password: str | None = None
+    postgres_host: str | None = None
     s3_endpoint_url: AnyHttpUrl | None = None
     s3_access_key: str | None = None
     s3_secret_key: str | None = None

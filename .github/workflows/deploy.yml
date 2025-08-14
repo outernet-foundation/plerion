@@ -37,6 +37,9 @@ jobs:
         id: esc
         with:
           environment: tyler-s-hatch/plerion/core
+          export-environment-variables: |
+            POSTGRES_USER=postgres.user
+            POSTGRES_PASSWORD=postgres.password
 
       - name: Generate GitHub App Token
         id: generate_token
@@ -51,20 +54,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          echo "postgres_dsn_secret_arn=$(pulumi stack output --stack dev postgres-dsn-secret-arn)" >> $GITHUB_OUTPUT
+          echo "postgres-host=$(pulumi stack output --stack dev postgres-host)" >> $GITHUB_OUTPUT
           echo "role_arn=$(pulumi stack output --stack core main-deploy-role-arn)" >> $GITHUB_OUTPUT
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ steps.pulumi-outputs.outputs.role_arn }}
-          aws-region: us-east-1 # TODO pull this from somewhere
-
-      - name: Fetch Postgres DSN secret
-        id: get-postgres-dsn
-        uses: aws-actions/aws-secretsmanager-get-secrets@v2
-        with:
-          secret-ids: POSTGRES_DSN,${{ steps.pulumi-outputs.outputs.postgres_dsn_secret_arn }}
 
       - name: Setup UV
         uses: astral-sh/setup-uv@v6
@@ -78,6 +69,7 @@ jobs:
         working-directory: services/api
         env:
           PICCOLO_CONF: src.db.conf
+          POSTGRES_HOST: ${{ steps.pulumi-outputs.outputs.postgres-host }}
         run: |
           uv sync --frozen
           uv run piccolo migrations forwards all
