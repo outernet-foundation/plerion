@@ -15,9 +15,15 @@ from services.github_runner import create_github_runner
 def create_dev_stack(config: Config):
     core_stack = StackReference("tyler-s-hatch/plerion_infra/core")
     main_prepare_deploy_role = Role(
-        "main-prepare-deploy-role", name=core_stack.require_output("main-prepare-deploy-role-name")
+        "main-prepare-deploy-role",
+        name=core_stack.require_output("main-prepare-deploy-role-name"),
+        arn=core_stack.require_output("main-prepare-deploy-role-arn"),
     )
-    main_deploy_role = Role("main-deploy-role", name=core_stack.require_output("main-deploy-role-name"))
+    main_deploy_role = Role(
+        "main-deploy-role",
+        name=core_stack.require_output("main-deploy-role-name"),
+        arn=core_stack.require_output("main-deploy-role-arn"),
+    )
 
     vpc = Vpc(name="main-vpc", vpc_info=cast(Output[VpcInfo], core_stack.require_output("vpc-info")))
 

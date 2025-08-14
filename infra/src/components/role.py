@@ -3,7 +3,7 @@ from typing import Iterable, overload
 
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions
 from pulumi_aws import iam
-from pulumi_aws.iam import RolePolicy, get_role_output
+from pulumi_aws.iam import RolePolicy
 from pulumi_aws.s3 import Bucket
 
 from components.repository import Repository
@@ -57,7 +57,12 @@ class Role(ComponentResource):
 
     @overload
     def __init__(
-        self, resource_name: str, *, name: Input[str] | None = None, opts: ResourceOptions | None = None
+        self,
+        resource_name: str,
+        *,
+        name: Input[str] | None = None,
+        arn: Input[str] | None = None,
+        opts: ResourceOptions | None = None,
     ) -> None: ...
 
     def __init__(
@@ -66,6 +71,7 @@ class Role(ComponentResource):
         *,
         assume_role_policy: Input[str] | None = None,
         name: Input[str] | None = None,
+        arn: Input[str] | None = None,
         opts: ResourceOptions | None = None,
     ) -> None:
         super().__init__("custom:Role", resource_name, opts=opts)
@@ -75,14 +81,15 @@ class Role(ComponentResource):
 
         if assume_role_policy:
             self._role = iam.Role(resource_name, assume_role_policy=assume_role_policy, opts=self._child_opts)
+            self.arn = self._role.arn
+            self.name = self._role.name
+        elif name and arn:
+            self.arn = Output.from_input(arn)
+            self.name = Output.from_input(name)
         else:
-            self._role = get_role_output(name=name)
+            raise ValueError("Either assume_role_policy or both name and arn must be provided")
 
-        self.arn = self._role.arn
-        self.name = self._role.name
-        self.id = self._role.id
-
-        self.register_outputs({"name": self._resource_name, "arn": self.arn, "id": self.id})
+        self.register_outputs({"name": self._resource_name, "arn": self.arn})
 
     # CAUTION: Do not use RolePolicyAttachment until this bug is fixed: https://github.com/pulumi/pulumi-aws/issues/4235
     # That bug is why we are manually writing inline policies that could be existing managed policies instead
