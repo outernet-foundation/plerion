@@ -97,7 +97,7 @@ jobs:
         run: |
           set -euo pipefail
           TREE_HASH=$(git rev-parse HEAD:${{ matrix.images.context }})
-          echo "tree_tag=tree-${TREE_HASH:0:12}" >> $GITHUB_OUTPUT
+          echo "tree_tag=tree-${TREE_HASH}" >> $GITHUB_OUTPUT
           echo $TREE_HASH
 
       - name: Check for existing first party image by tree tag
