@@ -14,11 +14,11 @@ permissions:
   id-token: write
 
 jobs:
-  deploy:
+  apply-migrations:
     if: >
       github.event.pull_request.merged == true &&
       github.event.pull_request.head.ref == 'bot/deploy'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted # needs self hosted runner inside vpc in order to connect to postgres
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -74,13 +74,56 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
-    #   - name: Apply migrations
-    #     working-directory: services/api
-    #     env:
-    #       PICCOLO_CONF: src.db.conf
-    #     run: |
-    #         uv sync --frozen 
-    #         uv run piccolo migrations forwards all
+      - name: Apply migrations
+        working-directory: services/api
+        env:
+          PICCOLO_CONF: src.db.conf
+        run: |
+          uv sync --frozen
+          uv run piccolo migrations forwards all
+
+  deploy-images:
+    needs: apply-migrations
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Pulumi
+        uses: pulumi/setup-pulumi@v2
+
+      - name: Authenticate Pulumi
+        uses: pulumi/auth-actions@v1
+        with:
+          organization: tyler-s-hatch
+          requested-token-type: urn:pulumi:token-type:access_token:personal
+          scope: user:tyler-s-hatch
+
+      - uses: pulumi/esc-action@v1
+        id: esc
+        with:
+          environment: tyler-s-hatch/plerion/core
+
+      - name: Generate GitHub App Token
+        id: generate_token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ steps.esc.outputs.github-app-id }}
+          private-key: ${{ steps.esc.outputs.github-app-private-key }}
+
+      - name: Get Pulumi stack outputs
+        id: pulumi-outputs
+        working-directory: infra
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "role_arn=$(pulumi stack output --stack core main-deploy-role-arn)" >> $GITHUB_OUTPUT
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ steps.pulumi-outputs.outputs.role_arn }}
+          aws-region: us-east-1 # TODO pull this from somewhere
 
       - name: Deploy infrastructure changes
         working-directory: infra
