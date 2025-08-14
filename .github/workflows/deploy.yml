@@ -125,6 +125,14 @@ jobs:
           role-to-assume: ${{ steps.pulumi-outputs.outputs.role_arn }}
           aws-region: us-east-1 # TODO pull this from somewhere
 
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
+
       - name: Deploy infrastructure changes
         working-directory: infra
         run: |
