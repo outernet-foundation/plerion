@@ -45,11 +45,11 @@ jobs:
 
     strategy:
       matrix:
-        services:
-          - { name: "api", context: "./services/api", stack: "dev", first_party: true }
-          - { name: "cloudbeaver-init", context: "./services/cloudbeaver-init", stack: "dev", first_party: true }
+        images:
+          - { name: "api", stack: "dev", first_party: true, context: "./services/api" }
+          - { name: "cloudbeaver-init", stack: "dev", first_party: true, context: "./services/cloudbeaver-init" }
           - { name: "cloudbeaver", stack: "dev", first_party: false, docker_image: "dbeaver/cloudbeaver:latest" }
-          - { name: "tailscale-beacon", context: "./services/tailscale-beacon", stack: "core", first_party: true }
+          - { name: "tailscale-beacon", stack: "core", first_party: true, context: "./services/tailscale-beacon" }
           - { name: "github-runner", stack: "dev", first_party: false, docker_image: "myoung34/github-runner:latest" }
 
     steps:
@@ -75,7 +75,7 @@ jobs:
         working-directory: infra
         run: |
           set -euo pipefail
-          REPO_URL=$(pulumi stack output --stack ${{ matrix.services.stack }} ${{ matrix.services.name }}-image-repo-url)
+          REPO_URL=$(pulumi stack output --stack ${{ matrix.images.stack }} ${{ matrix.images.name }}-image-repo-url)
           echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
           echo "repo_name=$(basename $REPO_URL)" >> $GITHUB_OUTPUT
           echo "role_arn=$(pulumi stack output --stack core main-prepare-deploy-role-arn)" >> $GITHUB_OUTPUT
@@ -93,17 +93,17 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Calculate first party image build context hash
-        if: ${{ matrix.services.first_party }}
+        if: ${{ matrix.images.first_party }}
         id: tree-hash
         shell: bash
         run: |
           set -euo pipefail
-          TREE_HASH=$(git rev-parse HEAD:${{ matrix.services.context }})
+          TREE_HASH=$(git rev-parse HEAD:${{ matrix.images.context }})
           echo "tree_hash=${TREE_HASH:0:12}" >> $GITHUB_OUTPUT
           echo $TREE_HASH
 
       - name: Check for existing first party image by tree tag
-        if: ${{ matrix.services.first_party }}
+        if: ${{ matrix.images.first_party }}
         id: check
         shell: bash
         run: |
@@ -123,23 +123,23 @@ jobs:
           fi
 
       - name: Build and push first party image
-        if: ${{ matrix.services.first_party }} && steps.check.outputs.exists == 'false'
+        if: ${{ matrix.images.first_party && steps.check.outputs.exists == 'false'}} 
         id: build
         uses: docker/build-push-action@v6
         env:
           BUILDKIT_PROGRESS: plain
         with:
-          context: ${{ matrix.services.context }}
+          context: ${{ matrix.images.context }}
           push: true
           tags: |
             ${{ steps.pulumi.outputs.repo_url }}:${{ needs.prepare-deployment-branch.outputs.sha_tag }}
             ${{ steps.pulumi.outputs.repo_url }}:${{ steps.tree-hash.outputs.tree_hash }}
-          cache-from: type=gha,scope=${{ matrix.services.name }}
-          cache-to: type=gha,scope=${{ matrix.services.name }},mode=max
+          cache-from: type=gha,scope=${{ matrix.images.name }}
+          cache-to: type=gha,scope=${{ matrix.images.name }},mode=max
           provenance: false
 
       - name: Prepare lock fields (first party)
-        if: ${{ matrix.services.first_party }}
+        if: ${{ matrix.images.first_party }}
         id: prep_lock_first
         shell: bash
         run: |
@@ -165,7 +165,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
       - name: Prepare lock fields (third party)
-        if: ${{ !matrix.services.first_party }}
+        if: ${{ !matrix.images.first_party }}
         id: prep_lock_third
         shell: bash
         run: |
@@ -209,7 +209,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          NAME="${{ matrix.services.name }}"
+          NAME="${{ matrix.images.name }}"
           KEY="${{ steps.prep_lock_first.outputs.key || steps.prep_lock_third.outputs.key }}"
           DIGEST="${{ steps.prep_lock_first.outputs.digest || steps.prep_lock_third.outputs.digest }}"
           TAGS_B64="${{ steps.prep_lock_first.outputs.tags_b64 || steps.prep_lock_third.outputs.tags_b64 }}"
@@ -221,8 +221,8 @@ jobs:
       - name: Upload lock snippet
         uses: actions/upload-artifact@v4
         with:
-          name: lock-snippet-${{ matrix.services.name }}
-          path: lock-${{ matrix.services.name }}.json
+          name: lock-snippet-${{ matrix.images.name }}
+          path: lock-${{ matrix.images.name }}.json
 
   generate-migrations-and-create-deploy-pr:
 
