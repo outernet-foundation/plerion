@@ -30,7 +30,6 @@ jobs:
 
       - name: Ensure remote deploy branch exists, create git sha tag
         id: prepare-deployment-branch
-        shell: bash
         run: |
           set -euo pipefail
           if ! git ls-remote --exit-code --heads origin bot/deploy >/dev/null 2>&1; then
@@ -71,7 +70,6 @@ jobs:
 
       - name: Get Pulumi stack outputs
         id: pulumi
-        shell: bash
         working-directory: infra
         run: |
           set -euo pipefail
@@ -96,7 +94,6 @@ jobs:
       - name: Calculate first party image build context hash
         if: ${{ matrix.images.first_party }}
         id: tree-hash
-        shell: bash
         run: |
           set -euo pipefail
           TREE_HASH=$(git rev-parse HEAD:${{ matrix.images.context }})
@@ -106,7 +103,6 @@ jobs:
       - name: Check for existing first party image by tree tag
         if: ${{ matrix.images.first_party }}
         id: check
-        shell: bash
         run: |
           set -euo pipefail
           REPO="${{ steps.pulumi.outputs.repo_name }}"
@@ -141,8 +137,7 @@ jobs:
 
       - name: Prepare lock fields (first party)
         if: ${{ matrix.images.first_party }}
-        id: prep_lock_first
-        shell: bash
+        id: prep_lock_first_party
         run: |
           set -euo pipefail
           KEY="${{ steps.pulumi.outputs.repo_name }}"
@@ -167,8 +162,7 @@ jobs:
 
       - name: Prepare lock fields (third party)
         if: ${{ !matrix.images.first_party }}
-        id: prep_lock_third
-        shell: bash
+        id: prep_lock_third_party
         run: |
           set -euo pipefail
           LOCK="infra/image-lock.json"
@@ -208,13 +202,12 @@ jobs:
 
           
       - name: Write lock snippet
-        shell: bash
         run: |
           set -euo pipefail
           NAME="${{ matrix.images.name }}"
-          KEY="${{ steps.prep_lock_first.outputs.key || steps.prep_lock_third.outputs.key }}"
-          DIGEST="${{ steps.prep_lock_first.outputs.digest || steps.prep_lock_third.outputs.digest }}"
-          TAGS_B64="${{ steps.prep_lock_first.outputs.tags_b64 || steps.prep_lock_third.outputs.tags_b64 }}"
+          KEY="${{ steps.prep_lock_first_party.outputs.key || steps.prep_lock_third_party.outputs.key }}"
+          DIGEST="${{ steps.prep_lock_first_party.outputs.digest || steps.prep_lock_third_party.outputs.digest }}"
+          TAGS_B64="${{ steps.prep_lock_first_party.outputs.tags_b64 || steps.prep_lock_third_party.outputs.tags_b64 }}"
           TAGS_JSON="$(echo "$TAGS_B64" | base64 -d 2>/dev/null || echo "$TAGS_B64" | base64 --decode 2>/dev/null)"
 
           jq -n --arg k "$KEY" --arg d "$DIGEST" --argjson tags "$TAGS_JSON" \
@@ -240,55 +233,11 @@ jobs:
 
       - name: Reset deployment branch
         id: reset-deployment-branch
-        shell: bash
         run: |
           set -euo pipefail
           git checkout -B "${{ env.DEPLOY_BRANCH }}" origin/"${{ github.ref_name }}"
           git reset --hard
           git clean -xfd
-
-      # - name: Setup Pulumi
-      #   uses: pulumi/setup-pulumi@v2
-
-      # - name: Authenticate Pulumi
-      #   uses: pulumi/auth-actions@v1
-      #   with:
-      #     organization: tyler-s-hatch
-      #     requested-token-type: urn:pulumi:token-type:access_token:personal
-      #     scope: user:tyler-s-hatch
-
-      # - uses: pulumi/esc-action@v1
-      #   id: esc
-      #   with:
-      #     environment: tyler-s-hatch/plerion/core
-
-      # - name: Generate GitHub App Token
-      #   id: generate_token
-      #   uses: actions/create-github-app-token@v1
-      #   with:
-      #     app-id: ${{ steps.esc.outputs.github-app-id }}
-      #     private-key: ${{ steps.esc.outputs.github-app-private-key }}
-
-      # - name: Get Pulumi stack outputs
-      #   id: pulumi-outputs
-      #   working-directory: infra
-      #   shell: bash
-      #   run: |
-      #     set -euo pipefail
-      #     echo "postgres_dsn_secret_arn=$(pulumi stack output --stack dev postgres-dsn-secret-arn)" >> $GITHUB_OUTPUT
-      #     echo "role_arn=$(pulumi stack output --stack dev postgres-migrations-role-arn)" >> $GITHUB_OUTPUT
-
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v4
-      #   with:
-      #     role-to-assume: ${{ steps.pulumi-outputs.outputs.role_arn }}
-      #     aws-region: us-east-1 # TODO pull this from somewhere
-
-      # - name: Fetch Postgres DSN secret
-      #   id: get-postgres-dsn
-      #   uses: aws-actions/aws-secretsmanager-get-secrets@v2
-      #   with:
-      #     secret-ids: POSTGRES_DSN,${{ steps.pulumi-outputs.outputs.postgres_dsn_secret_arn }}
 
       - name: Setup UV
         uses: astral-sh/setup-uv@v6
@@ -300,8 +249,9 @@ jobs:
 
       - name: Generate migration
         working-directory: services/api
+        env:
+          PICCOLO_CONF: src.db.local_conf
         run: |
-          export PICCOLO_CONF=src.db.local_conf
           uv sync --frozen
           uv run piccolo migrations new all --auto --auto_input=y || true
 
