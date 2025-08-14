@@ -3,7 +3,7 @@ from typing import Iterable, overload
 
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions
 from pulumi_aws import iam
-from pulumi_aws.iam import Policy, RolePolicyAttachment, get_role_output
+from pulumi_aws.iam import RolePolicy, get_role_output
 from pulumi_aws.s3 import Bucket
 
 from components.repository import Repository
@@ -80,31 +80,79 @@ class Role(ComponentResource):
 
         self.arn = self._role.arn
         self.name = self._role.name
+        self.id = self._role.id
 
-        self.register_outputs({"name": self._resource_name, "arn": self.arn})
+        self.register_outputs({"name": self._resource_name, "arn": self.arn, "id": self.id})
+
+    # CAUTION: Do not use RolePolicyAttachment until this bug is fixed: https://github.com/pulumi/pulumi-aws/issues/4235
+    # That bug is why we are manually writing inline policies that could be existing managed policies instead
 
     def attach_policy(self, policy_name: str, policy_json: Input[str]):
-        policy = Policy(f"{self._resource_name}-{policy_name}", policy=policy_json, opts=self._child_opts)
-        RolePolicyAttachment(
-            f"{self._resource_name}-{policy_name}-attachment",
-            role=self._role.name,
-            policy_arn=policy.arn,
-            opts=self._child_opts,
+        RolePolicy(
+            f"{self._resource_name}-{policy_name}-attachment", role=self.name, policy=policy_json, opts=self._child_opts
         )
 
     def attach_ecs_task_execution_role_policy(self):
-        RolePolicyAttachment(
-            f"{self._resource_name}-ecs-task-execution-role-policy",
-            role=self._role.name,
-            policy_arn="arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+        RolePolicy(
+            f"{self._resource_name}-ecs-task-execution-role",
+            role=self.name,
+            policy=json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "ecr:GetAuthorizationToken",
+                            "ecr:BatchCheckLayerAvailability",
+                            "ecr:GetDownloadUrlForLayer",
+                            "ecr:BatchGetImage",
+                            "logs:CreateLogStream",
+                            "logs:PutLogEvents",
+                        ],
+                        "Resource": "*",
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": ["secretsmanager:GetSecretValue", "ssm:GetParameters"],
+                        "Resource": "*",
+                    },
+                ],
+            }),
             opts=self._child_opts,
         )
 
     def attach_read_only_access_role_policy(self):
-        RolePolicyAttachment(
-            f"{self._resource_name}-read-only-access-role-policy",
-            role=self._role.name,
-            policy_arn="arn:aws:iam::aws:policy/ReadOnlyAccess",
+        RolePolicy(
+            f"{self._resource_name}-read-only-access",
+            role=self.name,
+            policy=json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Sid": "ReadOnlyCoreInfra",
+                        "Effect": "Allow",
+                        "Action": [
+                            "ec2:Describe*",
+                            "elasticloadbalancing:Describe*",
+                            "ecs:Describe*",
+                            "ecs:List*",
+                            "ecr:DescribeRepositories",
+                            "ecr:DescribeImages",
+                            "ecr:GetRepositoryPolicy",
+                            "ecr:ListImages",
+                            "ecr:ListTagsForResource",
+                            "cloudwatch:Describe*",
+                            "cloudwatch:Get*",
+                            "cloudwatch:List*",
+                            "logs:DescribeLogGroups",
+                            "logs:DescribeLogStreams",
+                            "logs:GetLogEvents",
+                            "logs:FilterLogEvents",
+                        ],
+                        "Resource": "*",
+                    }
+                ],
+            }),
             opts=self._child_opts,
         )
 

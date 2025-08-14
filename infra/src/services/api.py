@@ -118,7 +118,7 @@ def create_api(
         "api-service",
         name="api-service",
         cluster=cluster.arn,
-        desired_count=1,
+        desired_count=0,
         network_configuration={"subnets": vpc.private_subnet_ids, "security_groups": [api_security_group.id]},
         task_definition_args={
             "execution_role": {"role_arn": execution_role.arn},

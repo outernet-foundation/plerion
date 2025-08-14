@@ -22,7 +22,7 @@ class CaptureModel(create_pydantic_model(Capture)):
 
 
 @router.get("")
-async def get_captres(
+async def get_captures(
     filenames: Optional[List[str]] = Query(
         None, description="Optional list of filenames to filter by"
     ),
@@ -35,7 +35,7 @@ async def get_captres(
 
 
 @router.get("/{id}")
-async def get_capture(
+async def get_capure(
     id: str,
 ) -> CaptureModel:
     row = await Capture.objects().get(Capture.id == id)
