@@ -11,7 +11,14 @@ from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
 
-def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_security_group: SecurityGroup) -> None:
+def create_github_runner(
+    config: Config,
+    vpc: Vpc,
+    cluster: Cluster,
+    postgres_security_group: SecurityGroup,
+    prepare_deploy_role: Role,
+    deploy_role: Role,
+) -> None:
     # Log groups
     github_runner_log_group = LogGroup("github-runner-log-group", name="/ecs/github-runner", retention_in_days=7)
 
@@ -24,6 +31,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
     github_runner_image_repo = Repository(
         "github-runner-cache-repo", name="dockerhub/myoung34/github-runner", force_delete=config.require_bool("devMode")
     )
+    prepare_deploy_role.allow_image_repo_actions([github_runner_image_repo])
     export("github-runner-image-repo-url", github_runner_image_repo.url)
 
     # Security groups
@@ -48,7 +56,7 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
         return
 
     # Service
-    FargateService(
+    service = FargateService(
         "github-runner-service",
         name="github-runner-service",
         cluster=cluster.arn,
@@ -78,3 +86,5 @@ def create_github_runner(config: Config, vpc: Vpc, cluster: Cluster, postgres_se
             },
         },
     )
+
+    deploy_role.allow_service_deployment("github-runner", [service.service.arn], [execution_role.arn])

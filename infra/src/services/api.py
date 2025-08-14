@@ -30,10 +30,8 @@ def create_api(
 
     # Image repos
     api_image_repo = Repository("api-repo", "api", force_delete=config.require_bool("devMode"))
-    export("api-image-repo-url", api_image_repo.url)
-    
-    # Allow image repo actions role to push to this image repo
     prepare_deploy_role.allow_image_repo_actions([api_image_repo])
+    export("api-image-repo-url", api_image_repo.url)
 
     # Security groups
     api_security_group = SecurityGroup(
@@ -114,7 +112,7 @@ def create_api(
 
     if not digest:
         return
-    
+
     service = FargateService(
         "api-service",
         name="api-service",

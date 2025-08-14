@@ -154,20 +154,7 @@ class Role(ComponentResource):
             Output.all(*[repo.arn for repo in repos]).apply(
                 lambda arns: json.dumps({
                     "Version": "2012-10-17",
-                    "Statement": [
-                        {"Effect": "Allow", "Action": "ecr:GetAuthorizationToken", "Resource": "*"},
-                        {
-                            "Effect": "Allow",
-                            "Action": [
-                                "ecr:BatchImportUpstreamImage",
-                                "ecr:BatchCheckLayerAvailability",
-                                "ecr:GetDownloadUrlForLayer",
-                                "ecr:BatchGetImage",
-                                "ecr:DescribeImages",
-                            ],
-                            "Resource": arns,
-                        },
-                    ],
+                    "Statement": [{"Effect": "Allow", "Action": ["ecr:BatchImportUpstreamImage"], "Resource": arns}],
                 })
             ),
         )

@@ -29,7 +29,14 @@ def create_dev_stack(config: Config):
 
     cluster = Cluster("main-cluster")
 
-    create_github_runner(vpc=vpc, config=config, cluster=cluster, postgres_security_group=postgres_security_group)
+    create_github_runner(
+        vpc=vpc,
+        config=config,
+        cluster=cluster,
+        postgres_security_group=postgres_security_group,
+        prepare_deploy_role=main_prepare_deploy_role,
+        deploy_role=main_deploy_role,
+    )
 
     create_cloudbeaver(
         config,

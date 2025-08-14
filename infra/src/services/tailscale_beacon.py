@@ -36,11 +36,11 @@ def create_tailscale_beacon(
     )
 
     # Image repos
-    tailscale_beacon_image_repo = Repository("tailscale-beacon-image-repo", "tailscale-beacon", force_delete=config.require_bool("devMode"))
-    export("tailscale-beacon-image-repo-url", tailscale_beacon_image_repo.url)
-    
-    # Allow image repo action role to push to this image repo
+    tailscale_beacon_image_repo = Repository(
+        "tailscale-beacon-image-repo", "tailscale-beacon", force_delete=config.require_bool("devMode")
+    )
     prepare_deploy_role.allow_image_repo_actions([tailscale_beacon_image_repo])
+    export("tailscale-beacon-image-repo-url", tailscale_beacon_image_repo.url)
 
     # Security groups
     tailscale_beacon_security_group = SecurityGroup(
@@ -171,4 +171,4 @@ def create_tailscale_beacon(
     )
 
     # Allow service deployment role to deploy this service
-    deploy_role.allow_service_deployment("tailscale-beacon",[tailscale_service.service.arn], [execution_role.arn])
+    deploy_role.allow_service_deployment("tailscale-beacon", [tailscale_service.service.arn], [execution_role.arn])
