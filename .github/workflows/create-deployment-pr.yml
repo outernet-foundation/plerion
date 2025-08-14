@@ -134,7 +134,7 @@ jobs:
           push: true
           tags: |
             ${{ steps.pulumi.outputs.repo_url }}:${{ needs.prepare-deployment-branch.outputs.sha_tag }}
-            ${{ steps.pulumi.outputs.repo_url }}:${{ steps.tree-hash.outputs.tree_hash }}
+            ${{ steps.pulumi.outputs.repo_url }}:${{ steps.tree-hash.outputs.tree_tag }}
           cache-from: type=gha,scope=${{ matrix.images.name }}
           cache-to: type=gha,scope=${{ matrix.images.name }},mode=max
           provenance: false
@@ -154,7 +154,7 @@ jobs:
           fi
 
           SHA_TAG="${{ needs.prepare-deployment-branch.outputs.sha_tag }}"   # e.g., git-<sha>
-          TREE_TAG="${{ steps.tree-hash.outputs.tree_hash }}"                 # e.g., tree-<hash>
+          TREE_TAG="${{ steps.tree-hash.outputs.tree_tag }}"                 # e.g., tree-<hash>
 
           TAGS_JSON=$(jq -cn --arg a "$SHA_TAG" --arg b "$TREE_TAG" '[ $a, $b ]')
           TAGS_B64=$(printf %s "$TAGS_JSON" | base64 -w0 2>/dev/null || printf %s "$TAGS_JSON" | base64 | tr -d '\n')
