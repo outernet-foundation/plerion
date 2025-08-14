@@ -98,17 +98,17 @@ namespace Example
             HttpClient httpClient = new HttpClient();
             HttpClientHandler httpClientHandler = new HttpClientHandler();
             var apiInstance = new CapturesApi(httpClient, config, httpClientHandler);
-            var bodyCreateCaptue = new BodyCreateCaptue(); // BodyCreateCaptue | 
+            var bodyCreateCapture = new BodyCreateCapture(); // BodyCreateCapture | 
 
             try
             {
-                // Create Captue
-                CaptureModel result = apiInstance.CreateCaptue(bodyCreateCaptue);
+                // Create Capture
+                CaptureModel result = apiInstance.CreateCapture(bodyCreateCapture);
                 Debug.WriteLine(result);
             }
             catch (ApiException e)
             {
-                Debug.Print("Exception when calling CapturesApi.CreateCaptue: " + e.Message );
+                Debug.Print("Exception when calling CapturesApi.CreateCapture: " + e.Message );
                 Debug.Print("Status Code: "+ e.ErrorCode);
                 Debug.Print(e.StackTrace);
             }
@@ -125,18 +125,18 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*CapturesApi* | [**CreateCaptue**](docs/CapturesApi.md#createcaptue) | **POST** /captures | Create Captue
+*CapturesApi* | [**CreateCapture**](docs/CapturesApi.md#createcapture) | **POST** /captures | Create Capture
 *CapturesApi* | [**DownloadCaptureFile**](docs/CapturesApi.md#downloadcapturefile) | **GET** /captures/{id}/file | Download Capture File
 *CapturesApi* | [**GetCapture**](docs/CapturesApi.md#getcapture) | **GET** /captures/{id} | Get Capture
 *CapturesApi* | [**GetCaptures**](docs/CapturesApi.md#getcaptures) | **GET** /captures | Get Captures
-*CapturesApi* | [**UploadCaptureFile**](docs/CapturesApi.md#uploadcapturefile) | **PUT** /captures/{id}/file | Upload Capture File
+*CapturesApi* | [**UploadCaptreFile**](docs/CapturesApi.md#uploadcaptrefile) | **PUT** /captures/{id}/file | Upload Captre File
 *DefaultApi* | [**Root**](docs/DefaultApi.md#root) | **GET** / | Root
 
 
 <a id="documentation-for-models"></a>
 ## Documentation for Models
 
- - [Model.BodyCreateCaptue](docs/BodyCreateCaptue.md)
+ - [Model.BodyCreateCapture](docs/BodyCreateCapture.md)
  - [Model.CaptureModel](docs/CaptureModel.md)
  - [Model.HTTPValidationError](docs/HTTPValidationError.md)
  - [Model.ValidationError](docs/ValidationError.md)

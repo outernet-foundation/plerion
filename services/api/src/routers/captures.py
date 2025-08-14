@@ -49,7 +49,7 @@ async def get_capture(
 
 
 @router.post("")
-async def create_captue(
+async def create_capture(
     filename: str = Body(..., embed=True),
 ) -> CaptureModel:
     exists = await Capture.objects().get(Capture.filename == filename)
@@ -70,7 +70,7 @@ async def create_captue(
     status_code=status.HTTP_307_TEMPORARY_REDIRECT,
     openapi_extra={"requestBody": {"required": True, "content": binary_schema}},
 )
-async def upload_capture_file(
+async def upload_captre_file(
     request: Request,
     id: str,
     storage: Storage = Depends(get_storage),

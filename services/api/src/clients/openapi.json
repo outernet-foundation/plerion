@@ -82,14 +82,14 @@
         "tags": [
           "captures"
         ],
-        "summary": "Create Captue",
-        "operationId": "create_captue",
+        "summary": "Create Capture",
+        "operationId": "create_capture",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_captue"
+                "$ref": "#/components/schemas/Body_create_capture"
               }
             }
           }
@@ -165,8 +165,8 @@
         "tags": [
           "captures"
         ],
-        "summary": "Upload Capture File",
-        "operationId": "upload_capture_file",
+        "summary": "Upload Captre File",
+        "operationId": "upload_captre_file",
         "parameters": [
           {
             "name": "id",
@@ -263,7 +263,7 @@
   },
   "components": {
     "schemas": {
-      "Body_create_captue": {
+      "Body_create_capture": {
         "properties": {
           "filename": {
             "type": "string",
@@ -274,7 +274,7 @@
         "required": [
           "filename"
         ],
-        "title": "Body_create_captue"
+        "title": "Body_create_capture"
       },
       "CaptureModel": {
         "properties": {
