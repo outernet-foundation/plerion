@@ -48,8 +48,8 @@ jobs:
         services:
           - { name: "api", context: "./services/api", stack: "dev", first_party: true }
           - { name: "cloudbeaver-init", context: "./services/cloudbeaver-init", stack: "dev", first_party: true }
-          - { name: "tailscale-beacon", context: "./services/tailscale-beacon", stack: "core", first_party: true }
           - { name: "cloudbeaver", stack: "dev", first_party: false, docker_image: "dbeaver/cloudbeaver:latest" }
+          - { name: "tailscale-beacon", context: "./services/tailscale-beacon", stack: "core", first_party: true }
           - { name: "github-runner", stack: "dev", first_party: false, docker_image: "myoung34/github-runner:latest" }
 
     steps:
@@ -78,7 +78,7 @@ jobs:
           REPO_URL=$(pulumi stack output --stack ${{ matrix.services.stack }} ${{ matrix.services.name }}-image-repo-url)
           echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
           echo "repo_name=$(basename $REPO_URL)" >> $GITHUB_OUTPUT
-          echo "role_arn=$(pulumi stack output --stack prepare-deploy-role-arn)" >> $GITHUB_OUTPUT
+          echo "role_arn=$(pulumi stack output --stack core main-prepare-deploy-role-arn)" >> $GITHUB_OUTPUT
           echo "region=$(echo $REPO_URL | sed -n 's#.*\.dkr\.ecr\.\([^.]*\)\.amazonaws\.com/.*#\1#p')" >> $GITHUB_OUTPUT
 
       - name: Configure AWS credentials
