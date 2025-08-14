@@ -214,8 +214,8 @@
         "tags": [
           "captures"
         ],
-        "summary": "Download Capture Fsile",
-        "operationId": "download_capture_fsile",
+        "summary": "Download Capture File",
+        "operationId": "download_capture_file",
         "parameters": [
           {
             "name": "id",
