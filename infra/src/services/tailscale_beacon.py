@@ -132,6 +132,7 @@ def create_tailscale_beacon(
 
     # Execution role
     execution_role = Role("tailscale-beacon-exec-role", assume_role_policy=ecs_assume_role_policy())
+    execution_role.attach_ecs_task_execution_role_policy()
     execution_role.allow_secret_get([tailscale_auth_key_secret])
 
     digest = tailscale_beacon_image_repo.locked_digest()

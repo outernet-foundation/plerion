@@ -47,6 +47,7 @@ def create_github_runner(
 
     # Execution role
     execution_role = Role("github-runner-execution-role", assume_role_policy=ecs_assume_role_policy())
+    execution_role.attach_ecs_task_execution_role_policy()
     execution_role.allow_secret_get([github_app_private_key_secret])
     execution_role.allow_repo_pullthrough([github_runner_image_repo])
 

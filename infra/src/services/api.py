@@ -102,6 +102,7 @@ def create_api(
 
     # Execution role
     execution_role = Role("api-execution-role", assume_role_policy=ecs_assume_role_policy())
+    execution_role.attach_ecs_task_execution_role_policy()
     execution_role.allow_secret_get([postgres_dsn_secret])
 
     # Task role

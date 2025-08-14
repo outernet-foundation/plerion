@@ -91,6 +91,13 @@ class Role(ComponentResource):
             opts=self._child_opts,
         )
 
+    def attach_ecs_task_execution_role_policy(self):
+        RolePolicyAttachment(
+            f"{self._resource_name}-ecs-task-execution-role-policy",
+            role=self._role.name,
+            policy_arn="arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy",
+        )
+
     def allow_service_deployment(
         self,
         service_name: str,

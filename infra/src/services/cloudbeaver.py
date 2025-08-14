@@ -137,6 +137,7 @@ def create_cloudbeaver(
 
     # Execution role
     execution_role = Role("cloudbeaver-execution-role", assume_role_policy=ecs_assume_role_policy())
+    execution_role.attach_ecs_task_execution_role_policy()
     execution_role.allow_secret_get([cloudbeaver_password_secret, postgres_password_secret])
     execution_role.allow_repo_pullthrough([cloudbeaver_image_repo])
 

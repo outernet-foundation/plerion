@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Dict, List, TypedDict, cast
 
@@ -10,9 +11,11 @@ from pulumi_aws import ecr
 
 
 class Repository(ComponentResource):
-    def __init__(self, resource_name: str, name: str, force_delete: bool | None = None, opts: ResourceOptions | None = None):
+    def __init__(
+        self, resource_name: str, name: str, force_delete: bool | None = None, opts: ResourceOptions | None = None
+    ):
         super().__init__("custom:Repository", resource_name, opts=opts)
-        
+
         self._child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
         self._name = name
         self._repo = ecr.Repository(resource_name, name=name, force_delete=force_delete, opts=self._child_opts)
@@ -28,19 +31,27 @@ class Repository(ComponentResource):
         digest: str
         tags: List[str]  # optional metadata; not used for resolution
 
-    def locked_digest(self, lock_path: str = "infra/image-lock.json") -> Output[str] | None:
-        if not Path(lock_path).exists():
+    def locked_digest(self, lock_path: str = "image-lock.json") -> Output[str] | None:
+        project_root = Path(os.getcwd())
+        while project_root != project_root.parent:
+            if (project_root / "Pulumi.yaml").exists():
+                break
+            project_root = project_root.parent
+
+        lock_file = project_root / lock_path
+
+        if not lock_file.exists():
             return None
 
-        data_raw: object = json.loads(Path(lock_path).read_text())
+        data_raw: object = json.loads(lock_file.read_text())
         data_map: Dict[str, object] = cast(Dict[str, object], data_raw)
         container_raw: object = data_map.get("repositories", data_map)
         container: Dict[str, object] = cast(Dict[str, object], container_raw)
         entry_raw: object = container.get(self._name)
-        
+
         if not isinstance(entry_raw, dict):
             return None
-        
+
         entry_map: Dict[str, object] = cast(Dict[str, object], entry_raw)
         digest: object = entry_map.get("digest")
 
