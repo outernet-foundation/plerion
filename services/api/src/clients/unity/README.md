@@ -127,8 +127,8 @@ Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 *CapturesApi* | [**CreateCapture**](docs/CapturesApi.md#createcapture) | **POST** /captures | Create Capture
 *CapturesApi* | [**DownloadCaptureFile**](docs/CapturesApi.md#downloadcapturefile) | **GET** /captures/{id}/file | Download Capture File
+*CapturesApi* | [**GetCaptres**](docs/CapturesApi.md#getcaptres) | **GET** /captures | Get Captres
 *CapturesApi* | [**GetCapture**](docs/CapturesApi.md#getcapture) | **GET** /captures/{id} | Get Capture
-*CapturesApi* | [**GetCaptures**](docs/CapturesApi.md#getcaptures) | **GET** /captures | Get Captures
 *CapturesApi* | [**UploadCaptureFile**](docs/CapturesApi.md#uploadcapturefile) | **PUT** /captures/{id}/file | Upload Capture File
 *DefaultApi* | [**Root**](docs/DefaultApi.md#root) | **GET** / | Root
 
