@@ -3,6 +3,9 @@ name: Create Deployment PR
 on:
   push:
     branches: [main]
+    paths:
+      - '!infra/image_lock.json'
+      - '!services/api/db/migrations/**'
 
 concurrency:
   group: create-deploy-pr

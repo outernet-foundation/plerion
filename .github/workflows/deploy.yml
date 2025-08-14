@@ -5,8 +5,12 @@ on:
     types: [closed]
     branches: [main]
 
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
 jobs:
-  migrate_db:
+  deploy:
     if: >
       github.event.pull_request.merged == true &&
       github.event.pull_request.head.ref == 'bot/deploy'
