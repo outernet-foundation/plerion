@@ -770,6 +770,13 @@ namespace Nessle
             return control;
         }
 
+        public static T Interactable<T>(this T control, IValueObservable<bool> interactable)
+            where T : IUnityComponentControl<Selectable>
+        {
+            control.AddBinding(interactable.Subscribe(x => control.component.interactable = x.currentValue));
+            return control;
+        }
+
         public static T Sprite<T>(this T control, Sprite sprite)
             where T : IUnityComponentControl<Image>
         {

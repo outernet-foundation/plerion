@@ -3,8 +3,8 @@ using UnityEditor;
 
 namespace PlerionClient.Client
 {
-    [CustomEditor(typeof(CaptureController))]
-    public class CaptureControllerEditor : Editor
+    [CustomEditor(typeof(AppSetup))]
+    public class AppSetupEditor : Editor
     {
         private static bool foldoutOpen = true;
         public override void OnInspectorGUI()
