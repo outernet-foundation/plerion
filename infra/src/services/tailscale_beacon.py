@@ -1,10 +1,10 @@
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions, export
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
-from pulumi_aws.lb import Listener, LoadBalancer, TargetGroup
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
+from components.load_balancer import LoadBalancer
 from components.log import log_configuration
 from components.repository import Repository
 from components.role import Role, ecs_assume_role_policy
@@ -93,7 +93,6 @@ class TailscaleBeacon(ComponentResource):
             opts=self._child_opts,
         )
 
-        # Load balancer
         load_balancer_security_group = SecurityGroup(
             "tailscale-beacon-load-balancer-security-group",
             vpc=vpc,
@@ -104,42 +103,16 @@ class TailscaleBeacon(ComponentResource):
             opts=self._child_opts,
         )
 
+        # Load balancer
         load_balancer = LoadBalancer(
-            "tailscale-beacon-lb",
-            security_groups=[load_balancer_security_group.id],
-            subnets=vpc.public_subnet_ids,
-            opts=self._child_opts,
-        )
-
-        target_group = TargetGroup(
-            "tailscale-beacon-tg",
-            vpc_id=vpc.id,
+            "api-loadbalancer",
+            "api",
+            vpc=vpc,
+            securityGroup=load_balancer_security_group,
+            certificate_arn=certificate_arn,
             port=80,
-            protocol="HTTP",
-            target_type="ip",
             deregistration_delay=30,
             health_check={"path": "/health", "matcher": "200-399"},
-            opts=self._child_opts,
-        )
-
-        Listener(
-            "tailscale-beacon-https-listener",
-            load_balancer_arn=load_balancer.arn,
-            port=443,
-            protocol="HTTPS",
-            certificate_arn=certificate_arn,
-            default_actions=[{"type": "forward", "target_group_arn": target_group.arn}],
-            opts=self._child_opts,
-        )
-
-        Listener(
-            "tailscale-beacon-http-listener",
-            load_balancer_arn=load_balancer.arn,
-            port=80,
-            protocol="HTTP",
-            default_actions=[
-                {"type": "redirect", "redirect": {"protocol": "HTTPS", "port": "443", "status_code": "HTTP_301"}}
-            ],
             opts=self._child_opts,
         )
 
@@ -168,11 +141,6 @@ class TailscaleBeacon(ComponentResource):
         execution_role.attach_ecs_task_execution_role_policy()
         execution_role.allow_secret_get([tailscale_auth_key_secret])
 
-        digest = tailscale_beacon_image_repo.locked_digest()
-
-        if not digest:
-            return
-
         # Service
         tailscale_service = FargateService(
             "tailscale-beacon-service",
@@ -189,9 +157,11 @@ class TailscaleBeacon(ComponentResource):
                 "containers": {
                     "tailscale-beacon": {
                         "name": "tailscale-beacon",
-                        "image": digest,
+                        "image": tailscale_beacon_image_repo.locked_digest(),
                         "log_configuration": log_configuration(tailscale_beacon_log_group),
-                        "port_mappings": [{"container_port": 80, "host_port": 80, "target_group": target_group}],
+                        "port_mappings": [
+                            {"container_port": 80, "host_port": 80, "target_group": load_balancer.target_group}
+                        ],
                         "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
                         "environment": [
                             {"name": "TAILNET", "value": config.require("tailnet-name")},

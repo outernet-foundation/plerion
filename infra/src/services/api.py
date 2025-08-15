@@ -109,11 +109,6 @@ class Api(ComponentResource):
         task_role = Role("api-task-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts)
         task_role.allow_s3(s3_bucket)
 
-        digest = api_image_repo.locked_digest()
-
-        if not digest:
-            return
-
         service = FargateService(
             "api-service",
             name="api-service",
@@ -126,7 +121,7 @@ class Api(ComponentResource):
                 "containers": {
                     "api": {
                         "name": "api",
-                        "image": digest,
+                        "image": api_image_repo.locked_digest(),
                         "log_configuration": log_configuration(api_log_group),
                         "port_mappings": [
                             {"container_port": 8000, "host_port": 8000, "target_group": load_balancer.target_group}

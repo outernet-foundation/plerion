@@ -3,6 +3,7 @@ from typing import cast
 from pulumi import Config, Output, StackReference
 from pulumi_aws.ecs import Cluster
 
+from components.nat_instnace import NatInstance
 from components.rds import create_database
 from components.role import Role
 from components.s3 import create_storage
@@ -26,6 +27,8 @@ def create_dev_stack(config: Config):
     )
 
     vpc = Vpc(name="main-vpc", vpc_info=cast(Output[VpcInfo], core_stack.require_output("vpc-info")))
+
+    NatInstance("main-nat-instance", vpc=vpc)
 
     captures_bucket = create_storage(core_stack)
 

@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, TypedDict, cast
 
-from pulumi import ComponentResource, Output, ResourceOptions
+from pulumi import ComponentResource, ResourceOptions
 from pulumi_aws import ecr
 
 
@@ -31,7 +31,7 @@ class Repository(ComponentResource):
         digest: str
         tags: List[str]  # optional metadata; not used for resolution
 
-    def locked_digest(self, lock_path: str = "image-lock.json") -> Output[str] | None:
+    def locked_digest(self, lock_path: str = "image-lock.json"):
         project_root = Path(os.getcwd())
         while project_root != project_root.parent:
             if (project_root / "Pulumi.yaml").exists():
@@ -41,7 +41,7 @@ class Repository(ComponentResource):
         lock_file = project_root / lock_path
 
         if not lock_file.exists():
-            return None
+            raise FileNotFoundError(f"Lock file not found: {lock_file}")
 
         data_raw: object = json.loads(lock_file.read_text())
         data_map: Dict[str, object] = cast(Dict[str, object], data_raw)
@@ -50,7 +50,7 @@ class Repository(ComponentResource):
         entry_raw: object = container.get(self._name)
 
         if not isinstance(entry_raw, dict):
-            return None
+            raise ValueError(f"Invalid entry in lock file for {self._name}: {entry_raw}")
 
         entry_map: Dict[str, object] = cast(Dict[str, object], entry_raw)
         digest: object = entry_map.get("digest")

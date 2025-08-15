@@ -146,12 +146,6 @@ class Cloudbeaver(ComponentResource):
         execution_role.allow_secret_get([cloudbeaver_password_secret, postgres_password_secret])
         execution_role.allow_repo_pullthrough([cloudbeaver_image_repo])
 
-        cloudbeaver_init_digest = cloudbeaver_init_image_repo.locked_digest()
-        cloudbeaver_digest = cloudbeaver_image_repo.locked_digest()
-
-        if not cloudbeaver_init_digest or not cloudbeaver_digest:
-            return
-
         # Service
         cloudbeaver_service = FargateService(
             "cloudbeaver-service",
@@ -179,7 +173,7 @@ class Cloudbeaver(ComponentResource):
                 "containers": {
                     "cloudbeaver-init": {
                         "name": "cloudbeaver-init",
-                        "image": cloudbeaver_init_digest,
+                        "image": cloudbeaver_init_image_repo.locked_digest(),
                         "essential": False,
                         "log_configuration": log_configuration(cloudbeaver_init_log_group),
                         "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
@@ -200,7 +194,7 @@ class Cloudbeaver(ComponentResource):
                     "cloudbeaver": {
                         "name": "cloudbeaver",
                         "depends_on": [{"container_name": "cloudbeaver-init", "condition": "SUCCESS"}],
-                        "image": cloudbeaver_digest,
+                        "image": cloudbeaver_image_repo.locked_digest(),
                         "log_configuration": log_configuration(cloudbeaver_log_group),
                         "mount_points": [{"source_volume": "efs", "container_path": "/opt/cloudbeaver/workspace"}],
                         "port_mappings": [

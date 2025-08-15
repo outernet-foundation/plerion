@@ -1,6 +1,6 @@
 from pulumi import ComponentResource, Input, ResourceOptions
 from pulumi_aws import lb
-from pulumi_aws.lb import Listener, TargetGroup
+from pulumi_aws.lb import Listener, TargetGroup, TargetGroupHealthCheckArgsDict
 
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -16,6 +16,10 @@ class LoadBalancer(ComponentResource):
         certificate_arn: Input[str],
         port: Input[int],
         *,
+        deregistration_delay: Input[int] = 60,
+        health_check: TargetGroupHealthCheckArgsDict = TargetGroupHealthCheckArgsDict(
+            path="/", protocol="HTTP", interval=15, healthy_threshold=2, unhealthy_threshold=10
+        ),
         opts: ResourceOptions | None = None,
     ):
         super().__init__("custom:LoadBalancer", resource_name, opts=opts)
@@ -36,14 +40,8 @@ class LoadBalancer(ComponentResource):
             protocol="HTTP",
             target_type="ip",
             vpc_id=self.load_balancer.vpc_id,
-            deregistration_delay=60,
-            health_check={
-                "path": "/",
-                "protocol": "HTTP",
-                "interval": 15,
-                "healthy_threshold": 2,
-                "unhealthy_threshold": 10,
-            },
+            deregistration_delay=deregistration_delay,
+            health_check=health_check,
             opts=self._child_opts,
         )
 

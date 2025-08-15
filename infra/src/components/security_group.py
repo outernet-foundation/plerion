@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from ipaddress import ip_network
 from typing import TYPE_CHECKING, List, NotRequired, Required, Sequence, TypedDict, Union, assert_never, overload
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
@@ -36,6 +37,14 @@ class _FromCidr(_BaseRule, total=False):
 
 
 SecurityGroupRule = Union[_ToSG, _ToPrefix, _ToCidr, _FromCidr]
+
+
+def amazon_provided_dns_cidr(vpc_cidr: Input[str]) -> Output[str]:
+    """
+    Return the /32 CIDR for the Amazon-provided DNS resolver of a VPC.
+    AWS defines this as <primary VPC CIDR base> + 2.
+    """
+    return Output.from_input(vpc_cidr).apply(lambda cidr: f"{ip_network(cidr, strict=False).network_address + 2}/32")
 
 
 class SecurityGroup(ComponentResource):
@@ -87,15 +96,11 @@ class SecurityGroup(ComponentResource):
         self.arn = self._security_group.arn
 
         if vpc_endpoints:
-            # Allow access to VPC DNS resolver
-            #     # TODO:
-            #     #
-            #     # From chatgpt: "You allow DNS egress to the entire VPC CIDR on 53. Stricter is better: Allow UDP/TCP
-            #     # 53 only to the VPC resolver (the VPC base address + 2 for each subnet). If your SG helper doesn’t have
-            #     # a “to resolver” convenience, calculate those IPs per subnet and allow to that set only."
             rules.append({
-                "cidr_name": "vpc-dns",
-                "to_cidr": vpc.cidr_block,
+                "cidr_name": "amazon-provided-dns",
+                "to_cidr": Output.from_input(vpc.cidr_block).apply(
+                    lambda cidr: f"{ip_network(cidr, strict=False).network_address + 2}/32"
+                ),  # The /32 CIDR for the Amazon-provided DNS resolver of a VPC, defined by aws as <primary VPC CIDR base> + 2.
                 "ports": [53],
                 "protocols": ["tcp", "udp"],
             })

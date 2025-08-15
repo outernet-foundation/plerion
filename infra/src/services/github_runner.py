@@ -73,11 +73,6 @@ class GithubRunner(ComponentResource):
         execution_role.allow_secret_get([github_app_private_key_secret])
         execution_role.allow_repo_pullthrough([github_runner_image_repo])
 
-        digest = github_runner_image_repo.locked_digest()
-
-        if not digest:
-            return
-
         # Service
         service = FargateService(
             "github-runner-service",
@@ -85,17 +80,15 @@ class GithubRunner(ComponentResource):
             cluster=cluster.arn,
             desired_count=1,
             network_configuration={
-                # TODO: create a nat instance instead of using public subnets
-                "subnets": vpc.public_subnet_ids,
+                "subnets": vpc.private_subnet_ids,
                 "security_groups": [github_runner_security_group.id],
-                "assign_public_ip": True,
             },
             task_definition_args={
                 "execution_role": {"role_arn": execution_role.arn},
                 "containers": {
                     "runner": {
                         "name": "runner",
-                        "image": digest,
+                        "image": github_runner_image_repo.locked_digest(),
                         "log_configuration": log_configuration(github_runner_log_group),
                         "secrets": [{"name": "APP_PRIVATE_KEY", "value_from": github_app_private_key_secret.arn}],
                         "environment": [
