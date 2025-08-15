@@ -174,8 +174,13 @@ components:
         filename:
           title: Filename
           type: string
+        id:
+          format: uuid
+          title: Id
+          type: string
       required:
       - filename
+      - id
       title: Body_create_capture
     CaptureModel:
       example:

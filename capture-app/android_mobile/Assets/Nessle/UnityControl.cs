@@ -89,7 +89,7 @@ namespace Nessle
             }
 
             _children.Remove(child);
-            child.gameObject.transform.SetParent(null);
+            child.gameObject.transform.SetParent(null, false);
         }
 
         public void SetParent(IControl parent)

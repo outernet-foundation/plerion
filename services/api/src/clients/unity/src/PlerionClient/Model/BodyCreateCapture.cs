@@ -40,7 +40,8 @@ namespace PlerionClient.Model
         /// Initializes a new instance of the <see cref="BodyCreateCapture" /> class.
         /// </summary>
         /// <param name="filename">filename (required).</param>
-        public BodyCreateCapture(string filename = default)
+        /// <param name="id">id (required).</param>
+        public BodyCreateCapture(string filename = default, Guid id = default)
         {
             // to ensure "filename" is required (not null)
             if (filename == null)
@@ -48,6 +49,7 @@ namespace PlerionClient.Model
                 throw new ArgumentNullException("filename is a required property for BodyCreateCapture and cannot be null");
             }
             this.Filename = filename;
+            this.Id = id;
         }
 
         /// <summary>
@@ -55,6 +57,12 @@ namespace PlerionClient.Model
         /// </summary>
         [DataMember(Name = "filename", IsRequired = true, EmitDefaultValue = true)]
         public string Filename { get; set; }
+
+        /// <summary>
+        /// Gets or Sets Id
+        /// </summary>
+        [DataMember(Name = "id", IsRequired = true, EmitDefaultValue = true)]
+        public Guid Id { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -65,6 +73,7 @@ namespace PlerionClient.Model
             StringBuilder sb = new StringBuilder();
             sb.Append("class BodyCreateCapture {\n");
             sb.Append("  Filename: ").Append(Filename).Append("\n");
+            sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

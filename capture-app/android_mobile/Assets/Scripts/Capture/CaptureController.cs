@@ -1,7 +1,7 @@
 using System;
 using System.IO;
-using System.Threading;
 using System.Linq;
+using System.Threading;
 
 using UnityEngine;
 using UnityEngine.UI;
@@ -44,11 +44,14 @@ namespace PlerionClient.Client
             App.RegisterObserver(HandleCaptureStatusChanged, App.state.captureStatus);
         }
 
+        void OnDestroy()
+        {
+            ui.Dispose();
+            currentCaptureTask.Cancel();
+        }
+
         private void HandleCaptureStatusChanged(NodeChangeEventArgs args)
         {
-            if (args.initialize)
-                return;
-
             switch (App.state.captureStatus.value)
             {
                 case CaptureStatus.Idle:
@@ -59,7 +62,7 @@ namespace PlerionClient.Client
                     currentCaptureTask = TaskHandle.Execute(async token =>
                     {
                         await StartCapture(App.state.captureMode.value, token);
-                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Capturing));
+                        App.state.ExecuteActionOrDelay(new SetCaptureStatusAction(CaptureStatus.Capturing));
                     });
                     break;
 
@@ -67,13 +70,13 @@ namespace PlerionClient.Client
                     currentCaptureTask = TaskHandle.Execute(async token =>
                     {
                         await StopCapture(App.state.captureMode.value, token);
-                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Idle));
+                        App.state.ExecuteActionOrDelay(new SetCaptureStatusAction(CaptureStatus.Idle));
                     });
                     break;
             }
         }
 
-        private async UniTask StartCapture(CaptureType captureType, CancellationToken cancellationToken = default)
+        private async UniTask StopCapture(CaptureType captureType, CancellationToken cancellationToken = default)
         {
             switch (captureType)
             {
@@ -88,7 +91,7 @@ namespace PlerionClient.Client
             }
         }
 
-        private async UniTask StopCapture(CaptureType captureType, CancellationToken cancellationToken = default)
+        private async UniTask StartCapture(CaptureType captureType, CancellationToken cancellationToken = default)
         {
             switch (captureType)
             {
@@ -103,18 +106,10 @@ namespace PlerionClient.Client
             }
         }
 
-        void OnDestroy()
-        {
-            ui.Dispose();
-            currentCaptureTask.Cancel();
-        }
-
         private async UniTask UpdateCaptureList()
         {
             var localCaptures = LocalCaptureController.GetCaptures().ToList();
-
-            var remoteCaptures = await capturesApi.GetCapturesAsync(
-                localCaptures.ToList());
+            var remoteCaptures = await capturesApi.GetCapturesAsync(localCaptures.ToList());
 
             App.state.captures.ExecuteActionOrDelay(
                 (localCaptures, remoteCaptures),
@@ -126,7 +121,7 @@ namespace PlerionClient.Client
                         var newCapture = state.Add();
                         newCapture.name.value = capture;
                         newCapture.type.value = CaptureType.Local;
-                        newCapture.uploaded.value = remoteCaptures.Select(capture => capture.Filename).Contains(capture);
+                        newCapture.uploaded.value = data.remoteCaptures.Select(capture => capture.Filename).Contains(capture);
                     }
                 }
             );
@@ -134,7 +129,7 @@ namespace PlerionClient.Client
 
         private async UniTask UploadCapture(string name, CaptureType type, CancellationToken cancellationToken)
         {
-            var response = await capturesApi.CreateCaptureAsync(new PlerionClient.Model.BodyCreateCapture(name));
+            var response = await capturesApi.CreateCaptureAsync(new Model.BodyCreateCapture(name, Guid.NewGuid()));
 
             if (type == CaptureType.Zed)
             {
@@ -164,7 +159,7 @@ namespace PlerionClient.Client
                         VerticalScrollRect().FlexibleHeight(true).Content(
                             VerticalLayout().ChildForceExpandWidth(true).ControlChildSize(true).Spacing(10).Children(
                                 App.state.captures
-                                    .SelectDynamic(x => ConstructCaptureRow(x).WithMetadata(x.name))
+                                    .CreateDynamic(x => ConstructCaptureRow(x).WithMetadata(x.name))
                                     .OrderByDynamic(x => x.metadata.AsObservable())
                             )
                         ),

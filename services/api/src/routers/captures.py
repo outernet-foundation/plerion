@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from fastapi.responses import RedirectResponse
@@ -51,6 +52,7 @@ async def get_capture(
 @router.post("")
 async def create_capture(
     filename: str = Body(..., embed=True),
+    id: UUID = Body(..., embed=True),
 ) -> CaptureModel:
     exists = await Capture.objects().get(Capture.filename == filename)
 
@@ -60,7 +62,7 @@ async def create_capture(
             detail=f"Capture with filename '{filename}' already exists",
         )
 
-    row = await Capture.objects().create(filename=filename)
+    row = await Capture.objects().create(filename=filename, id=id)
 
     return CaptureModel.model_validate(row)
 

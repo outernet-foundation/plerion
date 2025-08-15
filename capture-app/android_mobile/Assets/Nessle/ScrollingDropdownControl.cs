@@ -22,14 +22,19 @@ namespace Nessle
             get => _value;
             set
             {
-                if (_value == value)
+                if (_settingFromProperty || _value == value)
                     return;
+
+                _settingFromProperty = true;
+                component.value = value;
+                _settingFromProperty = false;
 
                 _value = value;
                 onChange.Invoke(value);
             }
         }
 
+        private bool _settingFromProperty = false;
         private int _value;
 
         public ScrollingDropdownControl(

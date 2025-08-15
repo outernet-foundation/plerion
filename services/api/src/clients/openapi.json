@@ -268,11 +268,17 @@
           "filename": {
             "type": "string",
             "title": "Filename"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
           }
         },
         "type": "object",
         "required": [
-          "filename"
+          "filename",
+          "id"
         ],
         "title": "Body_create_capture"
       },
@@ -340,23 +346,6 @@
               }
             ],
             "title": "Uploaded At",
-            "extra": {
-              "nullable": true,
-              "secret": false,
-              "unique": false
-            }
-          },
-          "deleted_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Deleted At",
             "extra": {
               "nullable": true,
               "secret": false,

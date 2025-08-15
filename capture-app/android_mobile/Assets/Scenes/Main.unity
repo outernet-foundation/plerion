@@ -530,6 +530,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   captureControllerPrefab: {fileID: 5391395635588278998, guid: 139cc86c2a14cc74d9f55224f45e567f,
     type: 3}
+  overridePlerionAPIBaseURL: 1
+  plerionAPIBaseURL: https://elliot-laptop-api.outernetfoundation.org
 --- !u!4 &1934444639
 Transform:
   m_ObjectHideFlags: 0

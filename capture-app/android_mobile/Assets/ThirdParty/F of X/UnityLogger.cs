@@ -33,24 +33,24 @@ namespace FofX
         }
 
         public void Debug(string message)
-            => UnityEngine.Debug.Log($"<color=00FFFF>[DEBUG]</color> {message}");
+            => UnityEngine.Debug.Log($"<color=#00FFFF>[DEBUG]</color> {message}");
 
         public void Error(string message)
-            => UnityEngine.Debug.LogError($"<color=FF0000>[ERROR]</color> {message}");
+            => UnityEngine.Debug.LogError($"<color=#FF0000>[ERROR]</color> {message}");
 
         public void Error(Exception exception)
-            => UnityEngine.Debug.LogError($"<color=FF0000>[ERROR]</color> {exception}");
+            => UnityEngine.Debug.LogError($"<color=#FF0000>[ERROR]</color> {exception}");
 
         public void Error(string message, Exception exception)
-            => UnityEngine.Debug.LogError($"<color=FF0000>[ERROR]</color> Message: {message}\nException: {exception}");
+            => UnityEngine.Debug.LogError($"<color=#FF0000>[ERROR]</color> Message: {message}\nException: {exception}");
 
         public void Info(string message)
-            => UnityEngine.Debug.Log($"<color=00FF00>[INFO]</color> {message}");
+            => UnityEngine.Debug.Log($"<color=#00FF00>[INFO]</color> {message}");
 
         public void Trace(string message)
             => UnityEngine.Debug.Log($"[TRACE] {message}");
 
         public void Warning(string message)
-            => UnityEngine.Debug.LogWarning($"<color=FFFF00>[WARN]</color> Message: {message}");
+            => UnityEngine.Debug.LogWarning($"<color=#FFFF00>[WARN]</color> Message: {message}");
     }
 }
