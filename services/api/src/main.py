@@ -17,7 +17,6 @@ def use_handler_name(route: APIRoute) -> str:
     return route.name
 
 
-#
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     # Importing the DB connects to the DB, which we don't want to during openapi generation.

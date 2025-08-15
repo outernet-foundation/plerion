@@ -102,6 +102,7 @@ class Api(ComponentResource):
 
         # Execution role
         execution_role = Role("api-execution-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts)
+        execution_role.allow_secret_get([postgres_password_secret])
         execution_role.attach_ecs_task_execution_role_policy()
 
         # Task role
