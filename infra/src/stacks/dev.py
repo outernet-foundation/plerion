@@ -3,7 +3,7 @@ from typing import cast
 from pulumi import Config, Output, StackReference
 from pulumi_aws.ecs import Cluster
 
-from components.nat_instnace import NatInstance
+from components.nat_instance import NatInstance
 from components.rds import create_database
 from components.role import Role
 from components.s3 import create_storage

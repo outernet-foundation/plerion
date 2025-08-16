@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - "services/**"
-      - "!services/api/db/migrations/**"
+      - "!services/api/src/db/migrations/**"
 
 concurrency:
   group: create-deploy-pr
