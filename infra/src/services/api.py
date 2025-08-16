@@ -48,11 +48,7 @@ class Api(ComponentResource):
         api_image_repo = Repository(
             "api-repo",
             "api",
-            opts=ResourceOptions.merge(
-                self._child_opts,
-                ResourceOptions(retain_on_delete=True),
-                # ResourceOptions(import_="api")
-            ),
+            opts=ResourceOptions.merge(self._child_opts, ResourceOptions(retain_on_delete=True, import_="api")),
         )
         prepare_deploy_role.allow_image_repo_actions([api_image_repo])
         export("api-image-repo-url", api_image_repo.url)

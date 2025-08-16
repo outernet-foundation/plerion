@@ -120,11 +120,14 @@ class SecurityGroup(ComponentResource):
             protocols = rule["protocols"] if "protocols" in rule else ["tcp"]
 
             for port in ports:
+                port_string = "all" if port == 0 else port
                 for protocol in protocols:
+                    protocol_string = "all" if protocol == "-1" else protocol
+                    port_protocol_string = f"{port_string}-{protocol_string}"
                     if "to_security_group" in rule:
                         to_security_group = rule["to_security_group"]
                         SecurityGroupEgressRule(
-                            f"{self._resource_name}-egress-to-{to_security_group._name}-{port}-{protocol}",
+                            f"{self._resource_name}-egress-to-{to_security_group._name}-{port_protocol_string}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -134,7 +137,7 @@ class SecurityGroup(ComponentResource):
                         )
 
                         SecurityGroupIngressRule(
-                            f"{to_security_group._name}-ingress-from-{self._resource_name}-{port}-{protocol}",
+                            f"{to_security_group._name}-ingress-from-{self._resource_name}-{port_protocol_string}",
                             security_group_id=to_security_group._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -146,7 +149,7 @@ class SecurityGroup(ComponentResource):
                     elif "to_prefix_list_id" in rule:
                         to_prefix_list_id = rule["to_prefix_list_id"]
                         SecurityGroupEgressRule(
-                            f"{self._resource_name}-egress-to-prefix-list-{rule['prefix_name']}-{port}-{protocol}",
+                            f"{self._resource_name}-egress-to-prefix-list-{rule['prefix_name']}-{port_protocol_string}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -158,7 +161,7 @@ class SecurityGroup(ComponentResource):
                     elif "to_cidr" in rule:
                         to_cidr = rule["to_cidr"]
                         SecurityGroupEgressRule(
-                            f"{self._resource_name}-egress-to-cidr-{rule['cidr_name']}-{port}-{protocol}",
+                            f"{self._resource_name}-egress-to-cidr-{rule['cidr_name']}-{port_protocol_string}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,
@@ -170,7 +173,7 @@ class SecurityGroup(ComponentResource):
                     elif "from_cidr" in rule:
                         from_cidr = rule["from_cidr"]
                         SecurityGroupIngressRule(
-                            f"{self._resource_name}-ingress-from-cidr-{rule['cidr_name']}-{port}-{protocol}",
+                            f"{self._resource_name}-ingress-from-cidr-{rule['cidr_name']}-{port_protocol_string}",
                             security_group_id=self._security_group.id,
                             ip_protocol=protocol,
                             from_port=port,

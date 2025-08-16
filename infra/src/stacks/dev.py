@@ -28,7 +28,7 @@ def create_dev_stack(config: Config):
 
     vpc = Vpc(name="main-vpc", vpc_info=cast(Output[VpcInfo], core_stack.require_output("vpc-info")))
 
-    NatInstance("main-nat-instance", vpc=vpc)
+    NatInstance("main-nat", vpc=vpc)
 
     captures_bucket = create_storage(core_stack)
 

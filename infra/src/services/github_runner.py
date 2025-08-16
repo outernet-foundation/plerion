@@ -45,9 +45,7 @@ class GithubRunner(ComponentResource):
             name="dockerhub/myoung34/github-runner",
             force_delete=config.require_bool("devMode"),
             opts=ResourceOptions.merge(
-                self._child_opts,
-                ResourceOptions(retain_on_delete=True),
-                # ResourceOptions(import_="dockerhub/myoung34/github-runner")
+                self._child_opts, ResourceOptions(retain_on_delete=True, import_="dockerhub/myoung34/github-runner")
             ),
         )
         prepare_deploy_role.allow_image_repo_actions([github_runner_image_repo])

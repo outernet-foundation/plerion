@@ -32,13 +32,21 @@ class NatInstance(ComponentResource):
 
         # Security groups
         nat_sg = SecurityGroup(
-            f"{resource_name}-sg",
+            f"{resource_name}-security-group",
             vpc=vpc,
             rules=[
-                # Ingress from VPC (all protocols)
-                {"cidr_name": "vpc", "from_cidr": vpc.cidr_block, "ports": [0], "protocols": ["-1"]},
-                # Egress to Internet (all protocols)
-                {"cidr_name": "anywhere", "to_cidr": "0.0.0.0/0", "ports": [0], "protocols": ["-1"]},
+                {
+                    "cidr_name": "vpc",
+                    "from_cidr": vpc.cidr_block,
+                    "ports": [0],
+                    "protocols": ["-1"],
+                },  # Allow ingress from VPC over all protocols
+                {
+                    "cidr_name": "anywhere",
+                    "to_cidr": "0.0.0.0/0",
+                    "ports": [0],
+                    "protocols": ["-1"],
+                },  # Allow egress to anywhere over all protocols
             ],
             opts=self._child_opts,
         )
@@ -55,7 +63,7 @@ class NatInstance(ComponentResource):
 
         # EC2 Instance
         instance = aws.ec2.Instance(
-            f"{resource_name}",
+            f"{resource_name}-instance",
             ami=al2023_ami.id,
             instance_type="t4g.nano",
             subnet_id=vpc.public_subnet_ids.apply(lambda ids: ids[0]),
@@ -68,9 +76,12 @@ class NatInstance(ComponentResource):
         )
 
         # Elastic IP
-        eip = aws.ec2.Eip(f"{resource_name}-eip", domain="vpc", opts=self._child_opts)
+        eip = aws.ec2.Eip(f"{resource_name}-elastic-ip", domain="vpc", opts=self._child_opts)
         aws.ec2.EipAssociation(
-            f"{resource_name}-eip-assoc", instance_id=instance.id, allocation_id=eip.id, opts=self._child_opts
+            f"{resource_name}-elastic-ip-association",
+            instance_id=instance.id,
+            allocation_id=eip.id,
+            opts=self._child_opts,
         )
 
         # Outputs
@@ -80,11 +91,11 @@ class NatInstance(ComponentResource):
         self.routes = vpc.private_subnet_ids.apply(
             lambda ids: [
                 aws.ec2.Route(
-                    f"{resource_name}-rt-{i}",
+                    f"{resource_name}-route-{i}",
                     aws.ec2.RouteArgs(
-                        route_table_id=get_route_table_output(subnet_id=sid).id,  # Input[str]
+                        route_table_id=get_route_table_output(subnet_id=sid).id,
                         destination_cidr_block="0.0.0.0/0",
-                        network_interface_id=instance.primary_network_interface_id,  # Input[str]
+                        network_interface_id=instance.primary_network_interface_id,
                     ),
                     opts=self._child_opts,
                 )
