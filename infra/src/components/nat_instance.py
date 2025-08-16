@@ -1,14 +1,16 @@
-from pulumi import ComponentResource, ResourceOptions
+from pulumi import ComponentResource, Output, ResourceOptions
 from pulumi_aws.ec2 import Instance, Route, RouteArgs, get_route_table_output
 from pulumi_aws.ssm import get_parameter_output
 
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
+
 # https://docs.aws.amazon.com/vpc/latest/userguide/work-with-nat-instances.html
-user_data = """
+def user_data(vpc_cidr: str) -> str:
+    return f"""
 #!/bin/bash
-set -eux
+set -euxo pipefail
 
 # Enable IP forwarding
 echo 'net.ipv4.ip_forward=1' >/etc/sysctl.d/99-nat.conf
@@ -19,21 +21,24 @@ yum -y install iptables-services
 systemctl enable --now iptables
 
 # Determine egress network interface name
-OUT_IF="$(ip route show default | awk '{print $5; exit}')"
+OUT_IF="$(ip route show default | awk '{{print $5; exit}}')"
 
-# Allow egress to use this instance’s public IP via NAT
+# Allow egress to use this instance’s public IP via NAT (MASQUERADE); add rule if absent
 iptables -C -t nat POSTROUTING -o "$OUT_IF" -j MASQUERADE 2>/dev/null || iptables -t nat -A POSTROUTING -o "$OUT_IF" -j MASQUERADE
+
+# Default to disallowing all forwarding
+iptables -P FORWARD DROP
 
 # Clear existing forwarding rules
 iptables -F FORWARD
 
-# Allow ingress for already established connections
+# Allow ingress from already established connections
 iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
 
-# Allow egress from private subnets to the internet
-iptables -A FORWARD -o "$OUT_IF" -j ACCEPT
+# Allow egress from the vpc's private subnets to the internet
+iptables -A FORWARD -s "{vpc_cidr}" -o "$OUT_IF" -j ACCEPT
 
-# Save iptables rules
+# Persist rules
 service iptables save
 """
 
@@ -77,7 +82,7 @@ class NatInstance(ComponentResource):
             vpc_security_group_ids=[security_group.id],
             associate_public_ip_address=True,
             source_dest_check=False,
-            user_data=user_data,
+            user_data=Output.from_input(vpc.cidr_block).apply(lambda cidr: user_data(cidr)),
             metadata_options={"http_tokens": "required"},
             opts=self._child_opts,
         )
