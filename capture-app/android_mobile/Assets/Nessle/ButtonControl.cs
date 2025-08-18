@@ -1,19 +1,21 @@
+using System;
 using System.Collections.Generic;
 using ObserveThing;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System;
 
 namespace Nessle
 {
-    public class ButtonControl : UnityComponentControl<Button>
+    public class ButtonControl : UnityControl, IUnityComponentControl<Button>
     {
+        public Button component { get; private set; }
         public UnityComponentControl<HorizontalLayoutGroup> contentLayout { get; }
         public UnityComponentControl<Image> background { get; }
 
-        public ButtonControl() : base(UIBuilder.GameObject<Button>(typeof(HorizontalLayoutGroup)))
+        public ButtonControl() : base(new GameObject(nameof(ButtonControl), typeof(Button), typeof(HorizontalLayoutGroup)))
         {
+            component = gameObject.GetComponent<Button>();
+
             this.Children(
                 background = UIBuilder.Image().FillParent().IgnoreLayout(true),
                 contentLayout = new UnityComponentControl<HorizontalLayoutGroup>(gameObject.GetComponent<HorizontalLayoutGroup>())

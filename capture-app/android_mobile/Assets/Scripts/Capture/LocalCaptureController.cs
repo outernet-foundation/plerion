@@ -40,7 +40,7 @@ public static class LocalCaptureController
     static ARCameraManager cameraManager;
     static float captureIntervalSeconds;
 
-    static string sessionId;
+    static Guid sessionId;
     static string sessionDirectory;
     static StreamWriter poseWriter;
     static readonly object inputOutputLock = new();
@@ -52,21 +52,22 @@ public static class LocalCaptureController
     static string SessionDir(string name) => Path.Combine(RecordingsRoot, name);
     static string ZipPath(string name) => Path.Combine(RecordingsRoot, $"{name}.zip");
 
-    public static IEnumerable<string> GetCaptures()
+    public static IEnumerable<Guid> GetCaptures()
     {
         if (!Directory.Exists(RecordingsRoot))
-            return Array.Empty<string>();
+            return Array.Empty<Guid>();
 
         // Only return capture names that have a completed ZIP alongside them
         return new DirectoryInfo(RecordingsRoot)
             .GetDirectories()
             .Select(d => d.Name)
-            .Where(name => File.Exists(ZipPath(name)));
+            .Where(name => File.Exists(ZipPath(name)))
+            .Select(Guid.Parse);
     }
 
-    public static async UniTask<byte[]> GetCapture(string captureName)
+    public static async UniTask<byte[]> GetCapture(Guid captureID)
     {
-        string zipFilePath = ZipPath(captureName);
+        string zipFilePath = ZipPath(captureID.ToString());
 
         if (!File.Exists(zipFilePath))
         {
@@ -103,8 +104,8 @@ public static class LocalCaptureController
         string recordingsRoot = Path.Combine(
             Application.persistentDataPath, "Captures");
 
-        sessionId = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
-        sessionDirectory = SessionDir(sessionId);
+        sessionId = Guid.NewGuid();
+        sessionDirectory = SessionDir(sessionId.ToString());
         Directory.CreateDirectory(Path.Combine(sessionDirectory, "images"));
 
         poseWriter = new StreamWriter(
@@ -132,7 +133,7 @@ public static class LocalCaptureController
         nextCaptureTime = 0;
 
         // Put the zip *next to* the sessionDirectory
-        string zipFilePath = ZipPath(sessionId);
+        string zipFilePath = ZipPath(sessionId.ToString());
         System.IO.Compression.ZipFile.CreateFromDirectory(sessionDirectory, zipFilePath);
     }
 

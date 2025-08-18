@@ -218,4 +218,24 @@ namespace ObserveThing
         public static IDictionaryObservable<TKey, TValue> AsObservable<TKey, TValue>(this IDictionaryObservable<TKey, TValue> observable)
             => observable;
     }
+
+    public class Disposable : IDisposable
+    {
+        private bool _disposed;
+        private Action _onDispose;
+
+        public Disposable(Action onDispose)
+        {
+            _onDispose = onDispose;
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+            _onDispose?.Invoke();
+        }
+    }
 }

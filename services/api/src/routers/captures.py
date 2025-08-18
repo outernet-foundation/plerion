@@ -24,12 +24,12 @@ class CaptureModel(create_pydantic_model(Capture)):
 
 @router.get("")
 async def get_captures(
-    filenames: Optional[List[str]] = Query(
+    captureids: Optional[List[UUID]] = Query(
         None, description="Optional list of filenames to filter by"
     ),
 ) -> List[CaptureModel]:
-    if filenames:
-        rows = await Capture.objects().where(Capture.filename.is_in(filenames))
+    if captureids:
+        rows = await Capture.objects().where(Capture.id.is_in(captureids))
     else:
         rows = await Capture.objects()
     return [CaptureModel.model_validate(r) for r in rows]
@@ -37,7 +37,7 @@ async def get_captures(
 
 @router.get("/{id}")
 async def get_capture(
-    id: str,
+    id: UUID,
 ) -> CaptureModel:
     row = await Capture.objects().get(Capture.id == id)
     if not row:
@@ -74,14 +74,14 @@ async def create_capture(
 )
 async def upload_capture_file(
     request: Request,
-    id: str,
+    id: UUID,
     storage: Storage = Depends(get_storage),
 ) -> RedirectResponse:
     if not await Capture.exists().where(Capture.id == id):
         raise HTTPException(404, f"Capture {id} not found")
 
     try:
-        url = storage.presign_put(BUCKET, id)
+        url = storage.presign_put(BUCKET, str(id))
         print(url)
     except Exception as exc:
         raise HTTPException(502, f"Presign failed: {exc}") from exc

@@ -22,10 +22,11 @@ paths:
       - description: Optional list of filenames to filter by
         explode: true
         in: query
-        name: filenames
+        name: captureids
         required: false
         schema:
           items:
+            format: uuid
             type: string
           nullable: true
           type: array
@@ -81,6 +82,7 @@ paths:
         name: id
         required: true
         schema:
+          format: uuid
           title: Id
           type: string
         style: simple
@@ -142,6 +144,7 @@ paths:
         name: id
         required: true
         schema:
+          format: uuid
           title: Id
           type: string
         style: simple

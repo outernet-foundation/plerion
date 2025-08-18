@@ -1,12 +1,14 @@
-using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Nessle
 {
-    public class ScrollingDropdownControl : UnityComponentControl<TMP_Dropdown>, IValueControl<int>
+    public class ScrollingDropdownControl : UnityValueControl<int>, IUnityComponentControl<TMP_Dropdown>
     {
+        public TMP_Dropdown component { get; }
+
+        public IUnityComponentControl<TMP_Dropdown> dropdown { get; }
         public IUnityComponentControl<Image> background { get; }
         public IUnityComponentControl<TextMeshProUGUI> captionText { get; }
         public IUnityComponentControl<Image> arrow { get; private set; }
@@ -15,27 +17,6 @@ namespace Nessle
         public IUnityComponentControl<Image> itemBackground { get; }
         public IUnityComponentControl<TextMeshProUGUI> itemLabel { get; }
         public IUnityComponentControl<Image> itemCheckmark { get; }
-
-        public event Action<int> onChange;
-        public int value
-        {
-            get => _value;
-            set
-            {
-                if (_settingFromProperty || _value == value)
-                    return;
-
-                _settingFromProperty = true;
-                component.value = value;
-                _settingFromProperty = false;
-
-                _value = value;
-                onChange.Invoke(value);
-            }
-        }
-
-        private bool _settingFromProperty = false;
-        private int _value;
 
         public ScrollingDropdownControl(
             IUnityComponentControl<Image> background = default,
@@ -46,8 +27,10 @@ namespace Nessle
             IUnityComponentControl<Image> itemBackground = default,
             IUnityComponentControl<TextMeshProUGUI> itemLabel = default,
             IUnityComponentControl<Image> itemCheckmark = default
-        ) : base(UIBuilder.GameObject<TMP_Dropdown>())
+        ) : base(new GameObject(nameof(ScrollingDropdownControl), typeof(TMP_Dropdown)))
         {
+            component = gameObject.GetComponent<TMP_Dropdown>();
+
             this.Children(
                 this.background = background ?? new UnityComponentControl<Image>(gameObject.AddComponent<Image>()),
                 this.captionText = captionText ?? UIBuilder.Label().FillParent().Alignment(TextAlignmentOptions.CaplineLeft).Margin(new Vector4(12, 0, 0, 0)),
@@ -89,6 +72,12 @@ namespace Nessle
             this.template.gameObject.SetActive(false);
 
             component.onValueChanged.AddListener(x => value = x);
+            value = component.value;
+        }
+
+        protected override void HandleValueChanged()
+        {
+            dropdown.component.value = value;
         }
     }
 }

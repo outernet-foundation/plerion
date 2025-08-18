@@ -124,7 +124,7 @@ public static class ZedCaptureController
         return new List<string>(); // Placeholder for actual implementation
     }
 
-    public static async UniTask<byte[]> GetCapture(string captureName)
+    public static async UniTask<byte[]> GetCapture(Guid captureName)
     {
         // return await RestClient.Get<byte[]>($"{jetsonIP}/capture/{captureName}");
         return new byte[0]; // Placeholder for actual implementation

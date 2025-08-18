@@ -39,9 +39,9 @@ namespace PlerionClient.Client
         public static void StylePillInputField(InputFieldControl inputField)
         {
             StylePill(inputField.background);
-            inputField.background.PixelsPerUnitMultiplier(1.4f).Color(UIResources.InputFieldColor);
-            inputField.inputText.Margin(new Vector4(25, 0, 0, 0));
-            inputField.placeholderText.Margin(new Vector4(25, 0, 0, 0));
+            inputField.background.PixelsPerUnitMultiplier(2.8f).Color(UIResources.InputFieldColor);
+            inputField.inputText.Margin(new Vector4(10, 0, 0, 0));
+            inputField.placeholderText.Margin(new Vector4(10, 0, 0, 0));
         }
 
         public static ScrollbarControl RoundedScrollBar()
@@ -61,7 +61,7 @@ namespace PlerionClient.Client
 
         public static void StyleStandardText(IUnityComponentControl<TextMeshProUGUI> text)
         {
-            text.Color(UIResources.TextColor).FontSize(14);
+            text.Color(UIResources.TextColor).FontSize(14).Alignment(TextAlignmentOptions.CaplineLeft);
         }
 
         public static ScrollRectControl StandardScrollRect()

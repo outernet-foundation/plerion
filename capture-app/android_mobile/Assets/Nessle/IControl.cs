@@ -1,4 +1,5 @@
 using System;
+using ObserveThing;
 
 namespace Nessle
 {
@@ -11,9 +12,8 @@ namespace Nessle
         void RemoveBinding(IDisposable binding);
     }
 
-    public interface IValueControl<T> : IControl
+    public interface IValueControl<T> : IControl, IValueObservable<T>
     {
         T value { get; set; }
-        public event Action<T> onChange;
     }
 }

@@ -1,15 +1,18 @@
 using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace Nessle
 {
-    public class ImageMaskControl : UnityComponentControl<Mask>
+    public class ImageMaskControl : UnityControl, IUnityComponentControl<Mask>
     {
+        public Mask component { get; }
         public UnityComponentControl<Image> image { get; private set; }
 
-        public ImageMaskControl() : base(UIBuilder.GameObject<Mask>())
+        public ImageMaskControl() : base(new GameObject(nameof(ImageMaskControl), typeof(Mask), typeof(Image)))
         {
-            image = new UnityComponentControl<Image>(gameObject.AddComponent<Image>());
+            component = gameObject.GetComponent<Mask>();
+            image = gameObject.ComponentControl<Image>();
         }
     }
 

@@ -1,12 +1,11 @@
-using System;
-using ObserveThing;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Nessle
 {
-    public class ScrollRectControl : UnityComponentControl<ScrollRect>
+    public class ScrollRectControl : UnityValueControl<Vector2>, IUnityComponentControl<ScrollRect>
     {
+        public ScrollRect component { get; }
         public IUnityComponentControl<Image> background { get; }
         public IUnityControl viewport { get; }
         public IUnityControl content { get; }
@@ -19,8 +18,10 @@ namespace Nessle
             ScrollbarControl verticalScrollbar = default,
             IUnityControl viewport = default,
             IUnityControl content = default
-        ) : base(UIBuilder.GameObject<ScrollRect>())
+        ) : base(new GameObject(nameof(ScrollRectControl), typeof(ScrollRect)))
         {
+            component = gameObject.GetComponent<ScrollRect>();
+
             this.Children(
                 this.background = (background ?? UIBuilder.Image()).Name("Background").FillParent(),
                 this.viewport = (viewport ?? UIBuilder.ComponentControl<RectMask2D>()).Name("Viewport").FillParent().Children(
@@ -43,6 +44,13 @@ namespace Nessle
 
             component.viewport = this.viewport.rectTransform;
             component.content = this.content.rectTransform;
+
+            component.onValueChanged.AddListener(x => value = x);
+        }
+
+        protected override void HandleValueChanged()
+        {
+            component.normalizedPosition = value;
         }
     }
 }

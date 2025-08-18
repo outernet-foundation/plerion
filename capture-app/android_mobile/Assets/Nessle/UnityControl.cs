@@ -17,7 +17,7 @@ namespace Nessle
         T component { get; }
     }
 
-    public class UnityComponentControl<T> : UnityControl, IUnityComponentControl<T> where T : Component
+    public sealed class UnityComponentControl<T> : UnityControl, IUnityComponentControl<T> where T : Component
     {
         public T component { get; private set; }
 
@@ -33,9 +33,9 @@ namespace Nessle
     {
         public IControl parent { get; private set; }
         public GameObject gameObject { get; private set; }
-        public RectTransform rectTransform => (RectTransform)gameObject.transform;
+        public RectTransform rectTransform { get; private set; }
 
-        private HashSet<IControl> _children = new HashSet<IControl>();
+        protected HashSet<IControl> _children = new HashSet<IControl>();
         private List<IDisposable> _bindings = new List<IDisposable>();
 
         public UnityControl(string name = null) : this(new GameObject(name)) { }
@@ -45,6 +45,7 @@ namespace Nessle
                 gameObject = new GameObject();
 
             this.gameObject = gameObject;
+            rectTransform = gameObject.GetOrAddComponent<RectTransform>();
         }
 
         public void Dispose()
@@ -77,7 +78,9 @@ namespace Nessle
             }
 
             _children.Add(child);
-            child.gameObject.transform.SetParent(gameObject.transform, false);
+
+            if (child.rectTransform != rectTransform)
+                child.rectTransform.SetParent(rectTransform, false);
         }
 
         void IUnityControl.RemoveChild(IUnityControl child)
@@ -89,7 +92,7 @@ namespace Nessle
             }
 
             _children.Remove(child);
-            child.gameObject.transform.SetParent(null, false);
+            child.rectTransform.SetParent(null, false);
         }
 
         public void SetParent(IControl parent)
@@ -124,7 +127,7 @@ namespace Nessle
 
         public void SetSiblingIndex(int index)
         {
-            gameObject.transform.SetSiblingIndex(index);
+            rectTransform.SetSiblingIndex(index);
         }
     }
 }

@@ -1,6 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 
 using UnityEngine;
@@ -108,38 +108,56 @@ namespace PlerionClient.Client
 
         private async UniTask UpdateCaptureList()
         {
-            var localCaptures = LocalCaptureController.GetCaptures().ToList();
-            var remoteCaptures = await capturesApi.GetCapturesAsync(localCaptures.ToList());
+            // var localCaptures = LocalCaptureController.GetCaptures().ToList();
+            // var remoteCaptureList = await capturesApi.GetCapturesAsync(localCaptures);
+
+            // var captureData = localCaptures.ToDictionary(x => x, x => remoteCaptureList.FirstOrDefault(y => y.Id == x));
+
+            var captureData = new Dictionary<Guid, Model.CaptureModel>()
+            {
+                { Guid.NewGuid(), new Model.CaptureModel() { Filename = "Cat" }},
+                { Guid.NewGuid(), new Model.CaptureModel() { Filename = "Dog" }},
+                { Guid.NewGuid(), null}
+            };
 
             App.state.captures.ExecuteActionOrDelay(
-                (localCaptures, remoteCaptures),
-                (data, state) =>
+                captureData,
+                (captures, state) =>
                 {
-                    state.Clear();
-                    foreach (var capture in data.localCaptures)
-                    {
-                        var newCapture = state.Add();
-                        newCapture.name.value = capture;
-                        newCapture.type.value = CaptureType.Local;
-                        newCapture.uploaded.value = data.remoteCaptures.Select(capture => capture.Filename).Contains(capture);
-                    }
+                    state.SetFrom(
+                        captures,
+                        copy: (key, remote, local) =>
+                        {
+                            if (remote == null) //capture is local only
+                            {
+                                // local.name.value = capture;
+                                local.type.value = CaptureType.Local;
+                                local.uploaded.value = false;
+                                return;
+                            }
+
+                            local.name.value = remote.Filename;
+                            local.type.value = CaptureType.Local;
+                            local.uploaded.value = true;
+                        }
+                    );
                 }
             );
         }
 
-        private async UniTask UploadCapture(string name, CaptureType type, CancellationToken cancellationToken)
+        private async UniTask UploadCapture(Guid id, CaptureType type, CancellationToken cancellationToken)
         {
-            var response = await capturesApi.CreateCaptureAsync(new Model.BodyCreateCapture(name, Guid.NewGuid()));
+            var response = await capturesApi.CreateCaptureAsync(new Model.BodyCreateCapture(id: id));
 
             if (type == CaptureType.Zed)
             {
-                var captureData = await ZedCaptureController.GetCapture(name);
-                await capturesApi.UploadCaptureFileAsync(response.Id.ToString(), new MemoryStream(captureData), cancellationToken);
+                var captureData = await ZedCaptureController.GetCapture(id);
+                await capturesApi.UploadCaptureFileAsync(response.Id.Value, new MemoryStream(captureData), cancellationToken);
             }
             else if (type == CaptureType.Local)
             {
-                var captureData = await LocalCaptureController.GetCapture(name);
-                await capturesApi.UploadCaptureFileAsync(response.Id.ToString(), new MemoryStream(captureData), cancellationToken);
+                var captureData = await LocalCaptureController.GetCapture(id);
+                await capturesApi.UploadCaptureFileAsync(response.Id.Value, new MemoryStream(captureData), cancellationToken);
             }
 
             await UpdateCaptureList();
@@ -159,7 +177,7 @@ namespace PlerionClient.Client
                         VerticalScrollRect().FlexibleHeight(true).Content(
                             VerticalLayout().ChildForceExpandWidth(true).ControlChildSize(true).Spacing(10).Children(
                                 App.state.captures
-                                    .CreateDynamic(x => ConstructCaptureRow(x).WithMetadata(x.name))
+                                    .CreateDynamic(x => ConstructCaptureRow(x.Value).WithMetadata(x.Value.name))
                                     .OrderByDynamic(x => x.metadata.AsObservable())
                             )
                         ),
@@ -198,8 +216,12 @@ namespace PlerionClient.Client
         private IUnityComponentControl<HorizontalLayoutGroup> ConstructCaptureRow(CaptureState capture)
         {
             return Row().Children(
-                Label()
-                    .Text(capture.name.AsObservable())
+                EditableLabel()
+                    .BindValue(
+                        capture.name,
+                        x => IsDefaultRowLabel(x, capture.id) ? null : x,
+                        x => string.IsNullOrEmpty(x) ? DefaultRowLabel(capture.id) : x
+                    )
                     .MinHeight(25)
                     .FlexibleWidth(true),
                 Label()
@@ -210,8 +232,14 @@ namespace PlerionClient.Client
                     .Interactable(capture.uploaded.AsObservable().SelectDynamic(x => !x))
                     .PreferredWidth(100)
                     .Content(Label().Text(capture.uploaded.SelectDynamic(x => x ? "Uploaded" : "Upload")).Alignment(TextAlignmentOptions.CaplineGeoAligned))
-                    .OnClick(() => UploadCapture(capture.name.value, capture.type.value, default).Forget())
+                    .OnClick(() => UploadCapture(capture.id, capture.type.value, default).Forget())
             );
         }
+
+        private string DefaultRowLabel(Guid id)
+            => $"<i>Unnamed [{id}]";
+
+        private bool IsDefaultRowLabel(string source, Guid id)
+            => source == DefaultRowLabel(id);
     }
 }

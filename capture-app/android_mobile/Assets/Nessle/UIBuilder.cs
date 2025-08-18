@@ -61,8 +61,8 @@ namespace Nessle
         public static UnityComponentControl<T> ComponentControl<T>()
             where T : Component => new UnityComponentControl<T>(GameObject<T>());
 
-        public static CanvasControl Canvas()
-            => new CanvasControl();
+        public static UnityComponentControl<T> ComponentControl<T>(this GameObject gameObject)
+            where T : Component => new UnityComponentControl<T>(gameObject.GetOrAddComponent<T>());
 
         public static UnityComponentControl<RectTransform> RectTransform()
             => ComponentControl<RectTransform>();
@@ -87,6 +87,9 @@ namespace Nessle
 
         public static UnityComponentControl<RectMask2D> RectMask()
             => ComponentControl<RectMask2D>();
+
+        public static EditableLabelControl EditableLabel()
+            => new EditableLabelControl();
 
         public static ScrollingDropdownControl ScrollingDropdown(
             IUnityComponentControl<Image> background = default,
@@ -197,7 +200,7 @@ namespace Nessle
         public static T OnChange<T, U>(this T control, Action<U> onChange)
             where T : IValueControl<U>
         {
-            control.onChange += onChange;
+            control.AddBinding(control.Subscribe(x => onChange(x.currentValue)));
             return control;
         }
 
@@ -1394,6 +1397,22 @@ namespace Nessle
             where T : IUnityComponentControl<TMP_InputField>
         {
             control.component.onDeselect.AddListener(onDeselect);
+            return control;
+        }
+
+        public static TControl BindInput<TControl, TSource, TDest>(this TControl control, IValueControl<TDest> bindTo, Func<TSource, TDest> toDest, Func<TDest, TSource> toSource)
+            where TControl : IValueControl<TSource>
+        {
+            control.AddBinding(bindTo.Subscribe(x => control.value = toSource(x.currentValue)));
+            bindTo.AddBinding(control.Subscribe(x => bindTo.value = toDest(x.currentValue)));
+            return control;
+        }
+
+        public static T BindInput<T, U>(this T control, IValueControl<U> bindTo)
+            where T : IValueControl<U>
+        {
+            control.AddBinding(bindTo.Subscribe(x => control.value = x.currentValue));
+            bindTo.AddBinding(control.Subscribe(x => bindTo.value = x.currentValue));
             return control;
         }
 

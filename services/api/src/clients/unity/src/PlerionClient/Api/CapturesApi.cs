@@ -69,7 +69,7 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>CaptureModel</returns>
-        CaptureModel GetCapture(string id);
+        CaptureModel GetCapture(Guid id);
 
         /// <summary>
         /// Get Capture
@@ -80,14 +80,14 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>ApiResponse of CaptureModel</returns>
-        ApiResponse<CaptureModel> GetCaptureWithHttpInfo(string id);
+        ApiResponse<CaptureModel> GetCaptureWithHttpInfo(Guid id);
         /// <summary>
         /// Get Captures
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <returns>List&lt;CaptureModel&gt;</returns>
-        List<CaptureModel> GetCaptures(List<string> filenames = default);
+        List<CaptureModel> GetCaptures(List<Guid> captureids = default);
 
         /// <summary>
         /// Get Captures
@@ -96,9 +96,9 @@ namespace PlerionClient.Api
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;CaptureModel&gt;</returns>
-        ApiResponse<List<CaptureModel>> GetCapturesWithHttpInfo(List<string> filenames = default);
+        ApiResponse<List<CaptureModel>> GetCapturesWithHttpInfo(List<Guid> captureids = default);
         /// <summary>
         /// Upload Capture File
         /// </summary>
@@ -106,7 +106,7 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="body"></param>
         /// <returns></returns>
-        void UploadCaptureFile(string id, FileParameter body);
+        void UploadCaptureFile(Guid id, FileParameter body);
 
         /// <summary>
         /// Upload Capture File
@@ -118,7 +118,7 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="body"></param>
         /// <returns>ApiResponse of Object(void)</returns>
-        ApiResponse<Object> UploadCaptureFileWithHttpInfo(string id, FileParameter body);
+        ApiResponse<Object> UploadCaptureFileWithHttpInfo(Guid id, FileParameter body);
         #endregion Synchronous Operations
     }
 
@@ -184,7 +184,7 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of CaptureModel</returns>
-        System.Threading.Tasks.Task<CaptureModel> GetCaptureAsync(string id, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<CaptureModel> GetCaptureAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get Capture
@@ -196,7 +196,7 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (CaptureModel)</returns>
-        System.Threading.Tasks.Task<ApiResponse<CaptureModel>> GetCaptureWithHttpInfoAsync(string id, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<CaptureModel>> GetCaptureWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Captures
         /// </summary>
@@ -204,10 +204,10 @@ namespace PlerionClient.Api
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;CaptureModel&gt;</returns>
-        System.Threading.Tasks.Task<List<CaptureModel>> GetCapturesAsync(List<string> filenames = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<CaptureModel>> GetCapturesAsync(List<Guid> captureids = default, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get Captures
@@ -216,10 +216,10 @@ namespace PlerionClient.Api
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;CaptureModel&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<CaptureModel>>> GetCapturesWithHttpInfoAsync(List<string> filenames = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<CaptureModel>>> GetCapturesWithHttpInfoAsync(List<Guid> captureids = default, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Upload Capture File
         /// </summary>
@@ -231,7 +231,7 @@ namespace PlerionClient.Api
         /// <param name="body"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of void</returns>
-        System.Threading.Tasks.Task UploadCaptureFileAsync(string id, FileParameter body, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task UploadCaptureFileAsync(Guid id, FileParameter body, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Upload Capture File
@@ -244,7 +244,7 @@ namespace PlerionClient.Api
         /// <param name="body"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> UploadCaptureFileWithHttpInfoAsync(string id, FileParameter body, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<Object>> UploadCaptureFileWithHttpInfoAsync(Guid id, FileParameter body, System.Threading.CancellationToken cancellationToken = default);
         #endregion Asynchronous Operations
     }
 
@@ -698,7 +698,7 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>CaptureModel</returns>
-        public CaptureModel GetCapture(string id)
+        public CaptureModel GetCapture(Guid id)
         {
             PlerionClient.Client.ApiResponse<CaptureModel> localVarResponse = GetCaptureWithHttpInfo(id);
             return localVarResponse.Data;
@@ -710,12 +710,8 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>ApiResponse of CaptureModel</returns>
-        public PlerionClient.Client.ApiResponse<CaptureModel> GetCaptureWithHttpInfo(string id)
+        public PlerionClient.Client.ApiResponse<CaptureModel> GetCaptureWithHttpInfo(Guid id)
         {
-            // verify the required parameter 'id' is set
-            if (id == null)
-                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'id' when calling CapturesApi->GetCapture");
-
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
@@ -754,7 +750,7 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of CaptureModel</returns>
-        public async System.Threading.Tasks.Task<CaptureModel> GetCaptureAsync(string id, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<CaptureModel> GetCaptureAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
             PlerionClient.Client.ApiResponse<CaptureModel> localVarResponse = await GetCaptureWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
@@ -767,12 +763,8 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (CaptureModel)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<CaptureModel>> GetCaptureWithHttpInfoAsync(string id, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<CaptureModel>> GetCaptureWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
-            // verify the required parameter 'id' is set
-            if (id == null)
-                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'id' when calling CapturesApi->GetCapture");
-
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
@@ -811,11 +803,11 @@ namespace PlerionClient.Api
         /// Get Captures 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <returns>List&lt;CaptureModel&gt;</returns>
-        public List<CaptureModel> GetCaptures(List<string> filenames = default)
+        public List<CaptureModel> GetCaptures(List<Guid> captureids = default)
         {
-            PlerionClient.Client.ApiResponse<List<CaptureModel>> localVarResponse = GetCapturesWithHttpInfo(filenames);
+            PlerionClient.Client.ApiResponse<List<CaptureModel>> localVarResponse = GetCapturesWithHttpInfo(captureids);
             return localVarResponse.Data;
         }
 
@@ -823,9 +815,9 @@ namespace PlerionClient.Api
         /// Get Captures 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;CaptureModel&gt;</returns>
-        public PlerionClient.Client.ApiResponse<List<CaptureModel>> GetCapturesWithHttpInfo(List<string> filenames = default)
+        public PlerionClient.Client.ApiResponse<List<CaptureModel>> GetCapturesWithHttpInfo(List<Guid> captureids = default)
         {
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
@@ -843,9 +835,9 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            if (filenames != null)
+            if (captureids != null)
             {
-                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "filenames", filenames));
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "captureids", captureids));
             }
 
 
@@ -865,12 +857,12 @@ namespace PlerionClient.Api
         /// Get Captures 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;CaptureModel&gt;</returns>
-        public async System.Threading.Tasks.Task<List<CaptureModel>> GetCapturesAsync(List<string> filenames = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<CaptureModel>> GetCapturesAsync(List<Guid> captureids = default, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<List<CaptureModel>> localVarResponse = await GetCapturesWithHttpInfoAsync(filenames, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<CaptureModel>> localVarResponse = await GetCapturesWithHttpInfoAsync(captureids, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -878,10 +870,10 @@ namespace PlerionClient.Api
         /// Get Captures 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="filenames">Optional list of filenames to filter by (optional)</param>
+        /// <param name="captureids">Optional list of filenames to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;CaptureModel&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<CaptureModel>>> GetCapturesWithHttpInfoAsync(List<string> filenames = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<CaptureModel>>> GetCapturesWithHttpInfoAsync(List<Guid> captureids = default, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
@@ -901,9 +893,9 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            if (filenames != null)
+            if (captureids != null)
             {
-                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "filenames", filenames));
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "captureids", captureids));
             }
 
 
@@ -927,7 +919,7 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="body"></param>
         /// <returns></returns>
-        public void UploadCaptureFile(string id, FileParameter body)
+        public void UploadCaptureFile(Guid id, FileParameter body)
         {
             UploadCaptureFileWithHttpInfo(id, body);
         }
@@ -939,12 +931,8 @@ namespace PlerionClient.Api
         /// <param name="id"></param>
         /// <param name="body"></param>
         /// <returns>ApiResponse of Object(void)</returns>
-        public PlerionClient.Client.ApiResponse<Object> UploadCaptureFileWithHttpInfo(string id, FileParameter body)
+        public PlerionClient.Client.ApiResponse<Object> UploadCaptureFileWithHttpInfo(Guid id, FileParameter body)
         {
-            // verify the required parameter 'id' is set
-            if (id == null)
-                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'id' when calling CapturesApi->UploadCaptureFile");
-
             // verify the required parameter 'body' is set
             if (body == null)
                 throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'body' when calling CapturesApi->UploadCaptureFile");
@@ -990,7 +978,7 @@ namespace PlerionClient.Api
         /// <param name="body"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of void</returns>
-        public async System.Threading.Tasks.Task UploadCaptureFileAsync(string id, FileParameter body, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task UploadCaptureFileAsync(Guid id, FileParameter body, System.Threading.CancellationToken cancellationToken = default)
         {
             await UploadCaptureFileWithHttpInfoAsync(id, body, cancellationToken).ConfigureAwait(false);
         }
@@ -1003,12 +991,8 @@ namespace PlerionClient.Api
         /// <param name="body"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> UploadCaptureFileWithHttpInfoAsync(string id, FileParameter body, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> UploadCaptureFileWithHttpInfoAsync(Guid id, FileParameter body, System.Threading.CancellationToken cancellationToken = default)
         {
-            // verify the required parameter 'id' is set
-            if (id == null)
-                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'id' when calling CapturesApi->UploadCaptureFile");
-
             // verify the required parameter 'body' is set
             if (body == null)
                 throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'body' when calling CapturesApi->UploadCaptureFile");

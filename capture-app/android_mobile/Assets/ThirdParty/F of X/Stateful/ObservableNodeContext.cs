@@ -192,6 +192,15 @@ namespace FofX.Stateful
                 toExecute.Clear();
                 delayedActionDepth++;
             }
+
+            if (delayedActionDepth == MAX_DELAYED_ACTION_DEPTH)
+            {
+                // If we exceeded max delay depth, it's possible there are remaining actions enqueued.
+                // Clear these actions to ensure no further abberant behaviour.
+                _delayedActions1.Clear();
+                _delayedActions2.Clear();
+                throw new Exception("Max delayed action depth exceeded. Confirm no loops are present in observers (state change > observer delays action > state changes > observer delays action...etc). If no loops are present, consider increasing the max depth allowed (ObservableNodeContext.MAX_DELAYED_ACTION_DEPTH).");
+            }
         }
 
         private void NotifyObserversAndReset(LogLevel logLevel)

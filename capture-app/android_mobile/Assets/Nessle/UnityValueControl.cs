@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using ObserveThing;
 using UnityEngine;
 
 namespace Nessle
@@ -10,24 +12,34 @@ namespace Nessle
             get => _value;
             set
             {
-                if (_settingValue || Equals(_value, value))
+                if (Equals(_value, value))
                     return;
 
                 _value = value;
-                _settingValue = true;
                 HandleValueChanged();
-                onChange?.Invoke(value);
-                _settingValue = false;
+
+                _args.previousValue = _args.currentValue;
+                _args.currentValue = value;
+
+                foreach (var observer in _observers)
+                    observer.OnNext(_args);
             }
         }
 
-        public event Action<T> onChange;
         private T _value;
-        private bool _settingValue;
+        private ValueEventArgs<T> _args = new ValueEventArgs<T>();
+        private List<ObserveThing.IObserver<IValueEventArgs<T>>> _observers = new List<ObserveThing.IObserver<IValueEventArgs<T>>>();
 
         public UnityValueControl(string name = null) : this(new GameObject(name)) { }
         public UnityValueControl(GameObject gameObject) : base(gameObject) { }
 
         protected virtual void HandleValueChanged() { }
+
+        public IDisposable Subscribe(ObserveThing.IObserver<IValueEventArgs<T>> observer)
+        {
+            _observers.Add(observer);
+            observer.OnNext(_args);
+            return new Disposable(() => _observers.Remove(observer));
+        }
     }
 }

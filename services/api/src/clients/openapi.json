@@ -30,7 +30,7 @@
         "operationId": "get_captures",
         "parameters": [
           {
-            "name": "filenames",
+            "name": "captureids",
             "in": "query",
             "required": false,
             "schema": {
@@ -38,7 +38,8 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "uuid"
                   }
                 },
                 {
@@ -46,7 +47,7 @@
                 }
               ],
               "description": "Optional list of filenames to filter by",
-              "title": "Filenames"
+              "title": "Captureids"
             },
             "description": "Optional list of filenames to filter by"
           }
@@ -132,6 +133,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "uuid",
               "title": "Id"
             }
           }
@@ -174,6 +176,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "uuid",
               "title": "Id"
             }
           }
