@@ -1,3 +1,5 @@
 __pycache__/
+**/.venv/
+**/*.egg-info
 # Ignore Piccolo auto-generated dev migrations
 **/migrations/*_auto-dev.py

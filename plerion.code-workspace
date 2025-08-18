@@ -14,6 +14,14 @@
     {
       "path": "capture-app/android_mobile",
       "name": "capture-app-android-mobile"
+    },
+    {
+      "path": "capture-app/zed",
+      "name": "capture-app-zed"
+    },
+    {
+      "path": "common",
+      "name": "common"
     }
   ],
   "settings": {
@@ -45,6 +53,7 @@
     },
     "editor.formatOnSave": true,
     "dotnet.defaultSolution": "capture-app/android_mobile/android_mobile.sln",
+    "python.terminal.activateEnvironment": true,
     "python.languageServer": "Pylance",
     "python.analysis.languageServerMode": "default",
     "python.analysis.diagnosticMode": "workspace",

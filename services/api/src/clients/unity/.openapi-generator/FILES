@@ -5,7 +5,6 @@ api/openapi.yaml
 appveyor.yml
 git_push.sh
 src/PlerionClient/Api/CapturesApi.cs
-src/PlerionClient/Api/DefaultApi.cs
 src/PlerionClient/Client/ApiClient.cs
 src/PlerionClient/Client/ApiException.cs
 src/PlerionClient/Client/ApiResponse.cs

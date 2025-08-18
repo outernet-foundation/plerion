@@ -1,4 +1,4 @@
-FROM caddy:2.8.4-alpine
+FROM docker.io/library/caddy:2.8.4-alpine
 
 RUN apk add --no-cache bash dos2unix
 

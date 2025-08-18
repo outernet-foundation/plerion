@@ -27,14 +27,20 @@ public class SolutionGenerator : AssetPostprocessor
                 assetPath = Path.Combine(projectDirectory, assetPath);
             }
 
-            string codeCommand = line < 0
-                ? $"code -r \"{workspaceFile}\" -g \"{assetPath}\""
-                : $"code -r \"{workspaceFile}\" -g \"{assetPath}:{line}\"";
+            string arguments = line < 0
+                ? $"-r \"{workspaceFile}\" -g \"{assetPath}\""
+                : $"-r \"{workspaceFile}\" -g \"{assetPath}:{line}\"";
+
 
             Process.Start(new ProcessStartInfo
             {
+#if UNITY_EDITOR_WIN
                 FileName = "cmd.exe",
-                Arguments = $"/c {codeCommand}",
+                Arguments = $"/c code {arguments}",
+#elif UNITY_EDITOR_LINUX
+                FileName = "code",
+                Arguments = arguments,
+#endif
                 CreateNoWindow = true,
                 UseShellExecute = false
             });

@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - "services/**"
+      - "common/**"
       - "!services/api/src/db/migrations/**"
 
 concurrency:
@@ -51,12 +52,17 @@ jobs:
           - name: "api"
             stack: "dev"
             first_party: true
-            context: "./services/api"
+            context: "."
+            dockerfile: "./services/api/Dockerfile"
+            hash_paths: |
+              services/api
+              common
 
           - name: "cloudbeaver-init"
             stack: "dev"
             first_party: true
             context: "./services/cloudbeaver-init"
+            dockerfile: "Dockerfile"
 
           - name: "cloudbeaver"
             stack: "dev"
@@ -66,10 +72,12 @@ jobs:
             stack: "core"
             first_party: true
             context: "./services/tailscale-beacon"
+            dockerfile: "Dockerfile"
 
           - name: "github-runner"
             stack: "dev"
             first_party: false
+
 
     steps:
       - name: Checkout code
@@ -116,9 +124,22 @@ jobs:
         id: tree-hash
         run: |
           set -euo pipefail
-          TREE_HASH=$(git rev-parse HEAD:${{ matrix.images.context }})
-          echo "tree_tag=tree-${TREE_HASH}" >> $GITHUB_OUTPUT
-          echo $TREE_HASH
+          if [ -n "${{ matrix.images.hash_paths || '' }}" ]; then
+            H=""
+            # Hash each path listed in hash_paths and combine
+            while IFS= read -r P; do
+              [ -z "$P" ] && continue
+              H="$H $(git rev-parse HEAD:$P)"
+            done <<'EOF'
+            ${{ matrix.images.hash_paths }}
+            EOF
+            TREE_HASH=$(printf "%s" "$H" | sha256sum | cut -d' ' -f1)
+          else
+            # Fallback: hash the single context dir (non-api images)
+            TREE_HASH=$(git rev-parse HEAD:${{ matrix.images.context }})
+          fi
+          echo "tree_tag=tree-${TREE_HASH}" >> "$GITHUB_OUTPUT"
+          echo "$TREE_HASH"
 
       - name: Check for existing first party image by tree tag
         if: ${{ matrix.images.first_party }}
@@ -147,6 +168,7 @@ jobs:
           BUILDKIT_PROGRESS: plain
         with:
           context: ${{ matrix.images.context }}
+          file: ${{ matrix.images.dockerfile }}
           push: true
           tags: |
             ${{ steps.pulumi.outputs.repo_url }}:${{ needs.prepare-deployment-branch.outputs.sha_tag }}

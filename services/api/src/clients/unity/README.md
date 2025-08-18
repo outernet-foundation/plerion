@@ -130,7 +130,6 @@ Class | Method | HTTP request | Description
 *CapturesApi* | [**GetCapture**](docs/CapturesApi.md#getcapture) | **GET** /captures/{id} | Get Capture
 *CapturesApi* | [**GetCaptures**](docs/CapturesApi.md#getcaptures) | **GET** /captures | Get Captures
 *CapturesApi* | [**UploadCaptureFile**](docs/CapturesApi.md#uploadcapturefile) | **PUT** /captures/{id}/file | Upload Capture File
-*DefaultApi* | [**Root**](docs/DefaultApi.md#root) | **GET** / | Root
 
 
 <a id="documentation-for-models"></a>

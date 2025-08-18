@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "common",
     "boto3==1.39.5",
     "fastapi>=0.116.1",
     "piccolo[postgres]>=1.27.1",
@@ -28,3 +29,6 @@ typeCheckingMode = "strict"
 
 [tool.ruff.lint]
 extend-select = ["I"]
+
+[tool.uv.sources]
+common = { path = "../../common", editable = true }

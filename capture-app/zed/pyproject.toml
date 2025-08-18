@@ -1,0 +1,16 @@
+[project]
+name = "zed"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["common", "fastapi>=0.116.1"]
+
+[tool.pyright]
+typeCheckingMode = "strict"
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.uv.sources]
+common = { path = "../../common", editable = true }

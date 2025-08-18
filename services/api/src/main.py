@@ -1,20 +1,13 @@
 import os
 from contextlib import asynccontextmanager
 
+from common.fastapi import create_fastapi_app
 from fastapi import FastAPI
-from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse
-from fastapi.routing import APIRoute
 
 from .routers.captures import router as captures_router
 from .settings import get_settings
 
 settings = get_settings()
-
-
-# Make codegened client functions use the same name as their corresponding server functions
-def use_handler_name(route: APIRoute) -> str:
-    return route.name
 
 
 @asynccontextmanager
@@ -35,50 +28,9 @@ async def lifespan(_: FastAPI):
             await DB.close_connection_pool()
 
 
-app = FastAPI(
+app = create_fastapi_app(
     title="Plerion API",
-    version="0.0.1",
-    generate_unique_id_function=use_handler_name,
     lifespan=lifespan,
-    docs_url=None,  # ← disable the built-in Swagger UI at /docs
-    redoc_url=None,  # ← disable the built-in Redoc at /redoc
 )
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello, Plerion API!"}
-
-
-# Custom Swagger UI to add add -L to curl commands so they follow redirects
-@app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
-    orig_resp: HTMLResponse = get_swagger_ui_html(
-        openapi_url=app.openapi_url or "/openapi.json",
-        title=f"{app.title} – Swagger UI",
-    )
-    body_bytes = bytes(orig_resp.body)
-    raw_html = body_bytes.decode("utf-8")
-
-    modified_html = raw_html.replace(
-        "SwaggerUIBundle({",
-        """SwaggerUIBundle({
-             requestInterceptor: (req) => {
-               req.curlOptions = ['-L'];
-               return req;
-             },""",
-    )
-
-    # copy all headers *except* the old Content-Length
-    filtered_headers = {
-        k: v for k, v in orig_resp.headers.items() if k.lower() != "content-length"
-    }
-
-    return HTMLResponse(
-        content=modified_html,
-        status_code=orig_resp.status_code,
-        headers=filtered_headers,
-    )
-
 
 app.include_router(captures_router)

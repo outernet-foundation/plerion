@@ -1,13 +1,14 @@
 volumes:
   postgres_data:
   minio_data:
-  venv_data:
+  api_venv:
+  common_venv:
   uv_cache:
   cloudbeaver_data:
 
 services:
   postgres:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -61,7 +62,7 @@ services:
     restart: "no"
 
   cloudbeaver:
-    image: dbeaver/cloudbeaver:latest
+    image: docker.io/dbeaver/cloudbeaver:latest
     ports:
       - "8978:8978"
     depends_on:
@@ -88,7 +89,7 @@ services:
       retries: 3
 
   minio:
-    image: minio/minio:latest
+    image: docker.io/minio/minio:latest
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -114,7 +115,7 @@ services:
       - minio
 
   minio_init:
-    image: minio/mc:latest
+    image: docker.io/minio/mc:latest
     depends_on:
       minio:
         condition: service_healthy
@@ -130,12 +131,13 @@ services:
 
   api:
     build:
-      context: ./api
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: services/api/Dockerfile
     working_dir: /app
     entrypoint: >
       bash -c "
-        uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app --reload-include '**/*.py'
+        cd /app/services/api && \
+        uv run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/services/api --reload-include '**/*.py'
       "
     ports:
       - "8000:8000"
@@ -154,6 +156,8 @@ services:
       minio_init:
         condition: service_completed_successfully
     volumes:
-      - ./api:/app
-      - venv_data:/app/.venv
+      - ./api:/app/services/api
+      - ../common:/app/common
+      - api_venv:/app/services/api/.venv
+      - common_venv:/app/common/.venv
       - uv_cache:/root/.cache/uv
