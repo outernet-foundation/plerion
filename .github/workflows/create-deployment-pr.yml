@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - ".github/workflows/create-deployment-pr.yml"
       - "services/**"
       - "common/**"
       - "!services/api/src/db/migrations/**"
