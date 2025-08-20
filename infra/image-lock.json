@@ -1,16 +1,16 @@
 {
   "api": {
-    "digest": "sha256:3bd2f3fa5a1c886e291c2f84e1ccf3e5e811b6ebf2cb6b25fee87a689cb86709",
+    "digest": "sha256:8a838c924e10375b898c2af01488bae1b0eb6be5d277d1c5778a83ee9552d54a",
     "tags": [
-      "git-b9a73b1a63ec5863dde6d2a8438b72cd2eb42855",
-      "tree-e8b93301a510fa23651bfd1152e933621af2e0ff"
+      "git-a041b84086c7354c96ed7722afb5128515645e34",
+      "tree-f02d1e3678002b7ca39b1d1d9c6887b68b45f31d"
     ]
   },
   "cloudbeaver-init": {
-    "digest": "sha256:2d46e2203c5b48cf34c6c23f3abe297bab22aa2d42d79e27c9fc2c5e49795c4c",
+    "digest": "sha256:86feb130d29214908613054c4832227e6daea19bfd8dfe53ae7441116f0b7a6d",
     "tags": [
-      "git-b9a73b1a63ec5863dde6d2a8438b72cd2eb42855",
-      "tree-20b07e3295002ab9d44146f47e4114175ab13c70"
+      "git-a041b84086c7354c96ed7722afb5128515645e34",
+      "tree-39a2c91f17b5f5e7b181fe6b78a80a1d73b41520"
     ]
   },
   "dockerhub/dbeaver/cloudbeaver": {
@@ -26,10 +26,10 @@
     ]
   },
   "tailscale-beacon": {
-    "digest": "sha256:6e413ded87d3c2a89f6375dceb3dd7a82c66eec49a30797655e3ae4d2e4c7208",
+    "digest": "sha256:449595499794772af68e1e2df3cc6d914e034dbae7d096c20c7ea90df20da30c",
     "tags": [
-      "git-b9a73b1a63ec5863dde6d2a8438b72cd2eb42855",
-      "tree-5f2094fa1ec64f5dc246aa0f020edda3312861c3"
+      "git-a041b84086c7354c96ed7722afb5128515645e34",
+      "tree-3720e15ddabee5f34493c63b408fe00e8299a4b0"
     ]
   }
 }
