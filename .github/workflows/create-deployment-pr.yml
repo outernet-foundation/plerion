@@ -78,7 +78,6 @@ jobs:
             stack: "dev"
             first_party: false
 
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -122,22 +121,26 @@ jobs:
       - name: Calculate first party image build context hash
         if: ${{ matrix.images.first_party }}
         id: tree-hash
+        shell: bash
         run: |
           set -euo pipefail
-          if [ -n "${{ matrix.images.hash_paths || '' }}" ]; then
+
+          PATHS="${{ matrix.images.hash_paths || '' }}"
+
+          if [ -n "$PATHS" ]; then
             H=""
-            # Hash each path listed in hash_paths and combine
+            # Iterate each non-empty line in hash_paths
             while IFS= read -r P; do
               [ -z "$P" ] && continue
               H="$H $(git rev-parse HEAD:$P)"
-            done <<'EOF'
-            ${{ matrix.images.hash_paths }}
-            EOF
-            TREE_HASH=$(printf "%s" "$H" | sha256sum | cut -d' ' -f1)
+            done <<< "$PATHS"
+
+            TREE_HASH=$(printf '%s' "$H" | sha256sum | cut -d' ' -f1)
           else
-            # Fallback: hash the single context dir (non-api images)
+            # Fallback: hash the single context directory (for images without hash_paths)
             TREE_HASH=$(git rev-parse HEAD:${{ matrix.images.context }})
           fi
+
           echo "tree_tag=tree-${TREE_HASH}" >> "$GITHUB_OUTPUT"
           echo "$TREE_HASH"
 
