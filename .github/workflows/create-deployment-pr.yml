@@ -54,7 +54,7 @@ jobs:
             stack: "dev"
             first_party: true
             context: "."
-            dockerfile: "./services/api/Dockerfile"
+            dockerfile: "services/api/Dockerfile"
             hash_paths: |
               services/api
               common
@@ -63,7 +63,7 @@ jobs:
             stack: "dev"
             first_party: true
             context: "./services/cloudbeaver-init"
-            dockerfile: "./Dockerfile"
+            dockerfile: "Dockerfile"
 
           - name: "cloudbeaver"
             stack: "dev"
@@ -73,7 +73,7 @@ jobs:
             stack: "core"
             first_party: true
             context: "./services/tailscale-beacon"
-            dockerfile: "./Dockerfile"
+            dockerfile: "Dockerfile"
 
           - name: "github-runner"
             stack: "dev"
@@ -172,7 +172,7 @@ jobs:
           BUILDKIT_PROGRESS: plain
         with:
           context: ${{ matrix.images.context }}
-          file: ${{ matrix.images.dockerfile }}
+          file: "${{ matrix.images.context }}/${{ matrix.images.dockerfile }}"
           push: true
           tags: |
             ${{ steps.pulumi.outputs.repo_url }}:${{ needs.prepare-deployment-branch.outputs.sha_tag }}
