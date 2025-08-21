@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Plerion API
-  version: 0.0.1
+  version: 0.1.0
 servers:
 - url: /
 paths:
@@ -9,13 +9,14 @@ paths:
     get:
       operationId: get_captures
       parameters:
-      - description: Optional list of filenames to filter by
+      - description: Optional list of Ids to filter by
         explode: true
         in: query
-        name: filenames
+        name: ids
         required: false
         schema:
           items:
+            format: uuid
             type: string
           nullable: true
           type: array
@@ -71,6 +72,7 @@ paths:
         name: id
         required: true
         schema:
+          format: uuid
           title: Id
           type: string
         style: simple
@@ -90,15 +92,16 @@ paths:
       summary: Get Capture
       tags:
       - captures
-  /captures/{id}/file:
+  /captures/{id}/tar:
     get:
-      operationId: download_capture_file
+      operationId: download_capture_tar
       parameters:
       - explode: false
         in: path
         name: id
         required: true
         schema:
+          format: uuid
           title: Id
           type: string
         style: simple
@@ -110,7 +113,7 @@ paths:
           description: Successful Response
         "200":
           content:
-            application/octet-stream:
+            application/x-tar:
               schema:
                 format: binary
                 type: string
@@ -121,23 +124,24 @@ paths:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
-      summary: Download Capture File
+      summary: Download Capture Tar
       tags:
       - captures
     put:
-      operationId: upload_capture_file
+      operationId: upload_capture_tar
       parameters:
       - explode: false
         in: path
         name: id
         required: true
         schema:
+          format: uuid
           title: Id
           type: string
         style: simple
       requestBody:
         content:
-          application/octet-stream:
+          application/x-tar:
             schema:
               format: binary
               type: string
@@ -154,18 +158,23 @@ paths:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
-      summary: Upload Capture File
+      summary: Upload Capture Tar
       tags:
       - captures
 components:
   schemas:
     Body_create_capture:
       properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
         filename:
           title: Filename
           type: string
       required:
       - filename
+      - id
       title: Body_create_capture
     CaptureModel:
       example:
@@ -176,20 +185,36 @@ components:
       properties:
         id:
           format: uuid
-          nullable: true
+          title: Id
           type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: false
         filename:
           maxLength: 255
-          nullable: true
+          title: Filename
           type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: true
         created_at:
           format: date-time
-          nullable: true
+          title: Created At
           type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: false
         uploaded_at:
           format: date-time
           nullable: true
           type: string
+      required:
+      - created_at
+      - filename
+      - id
       title: CaptureModel
       extra: {}
     HTTPValidationError:

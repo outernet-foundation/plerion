@@ -122,7 +122,7 @@ services:
     entrypoint: >
       /bin/sh -c "
         mc alias set local http://minio:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY} && \
-        mc mb --ignore-existing local/captures
+        mc mb --ignore-existing local/dev-captures
       "
     environment:
       S3_ACCESS_KEY: "${S3_ACCESS_KEY}"

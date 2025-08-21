@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Plerion API",
-    "version": "0.0.1"
+    "version": "0.1.0"
   },
   "paths": {
     "/captures": {
@@ -14,7 +14,7 @@
         "operationId": "get_captures",
         "parameters": [
           {
-            "name": "filenames",
+            "name": "ids",
             "in": "query",
             "required": false,
             "schema": {
@@ -22,17 +22,18 @@
                 {
                   "type": "array",
                   "items": {
-                    "type": "string"
+                    "type": "string",
+                    "format": "uuid"
                   }
                 },
                 {
                   "type": "null"
                 }
               ],
-              "description": "Optional list of filenames to filter by",
-              "title": "Filenames"
+              "description": "Optional list of Ids to filter by",
+              "title": "Ids"
             },
-            "description": "Optional list of filenames to filter by"
+            "description": "Optional list of Ids to filter by"
           }
         ],
         "responses": {
@@ -116,6 +117,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "uuid",
               "title": "Id"
             }
           }
@@ -144,13 +146,13 @@
         }
       }
     },
-    "/captures/{id}/file": {
+    "/captures/{id}/tar": {
       "put": {
         "tags": [
           "captures"
         ],
-        "summary": "Upload Capture File",
-        "operationId": "upload_capture_file",
+        "summary": "Upload Capture Tar",
+        "operationId": "upload_capture_tar",
         "parameters": [
           {
             "name": "id",
@@ -158,6 +160,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "uuid",
               "title": "Id"
             }
           }
@@ -185,7 +188,7 @@
         "requestBody": {
           "required": true,
           "content": {
-            "application/octet-stream": {
+            "application/x-tar": {
               "schema": {
                 "type": "string",
                 "format": "binary"
@@ -198,8 +201,8 @@
         "tags": [
           "captures"
         ],
-        "summary": "Download Capture File",
-        "operationId": "download_capture_file",
+        "summary": "Download Capture Tar",
+        "operationId": "download_capture_tar",
         "parameters": [
           {
             "name": "id",
@@ -207,6 +210,7 @@
             "required": true,
             "schema": {
               "type": "string",
+              "format": "uuid",
               "title": "Id"
             }
           }
@@ -222,7 +226,7 @@
           },
           "200": {
             "content": {
-              "application/octet-stream": {
+              "application/x-tar": {
                 "schema": {
                   "type": "string",
                   "format": "binary"
@@ -249,6 +253,11 @@
     "schemas": {
       "Body_create_capture": {
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
           "filename": {
             "type": "string",
             "title": "Filename"
@@ -256,6 +265,7 @@
         },
         "type": "object",
         "required": [
+          "id",
           "filename"
         ],
         "title": "Body_create_capture"
@@ -263,15 +273,8 @@
       "CaptureModel": {
         "properties": {
           "id": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "uuid",
             "title": "Id",
             "extra": {
               "nullable": false,
@@ -280,15 +283,8 @@
             }
           },
           "filename": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "maxLength": 255,
             "title": "Filename",
             "extra": {
               "nullable": false,
@@ -297,15 +293,8 @@
             }
           },
           "created_at": {
-            "anyOf": [
-              {
-                "type": "string",
-                "format": "date-time"
-              },
-              {
-                "type": "null"
-              }
-            ],
+            "type": "string",
+            "format": "date-time",
             "title": "Created At",
             "extra": {
               "nullable": false,
@@ -332,6 +321,11 @@
           }
         },
         "type": "object",
+        "required": [
+          "id",
+          "filename",
+          "created_at"
+        ],
         "title": "CaptureModel",
         "extra": {}
       },

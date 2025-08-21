@@ -10,7 +10,6 @@ using System.Linq;
 using Unity.VisualScripting;
 using PlerionClient.Client;
 using PlerionClient.Api;
-using System.IO;
 
 public class Capture
 {
@@ -20,6 +19,7 @@ public class Capture
         Zed
     }
 
+    public Guid Id { get; set; }
     public string Name { get; set; }
     public Mode Type { get; set; }
     public CaptureRow Row { get; set; }
@@ -72,7 +72,7 @@ public class CaptureController : MonoBehaviour
 
         var plerionAPIBaseUrl = environment switch
         {
-            Environment.Local => "https://desktop-otd3rch-api.outernetfoundation.org",
+            Environment.Local => "https://tyler-ms-7e12-api.outernetfoundation.org",
             Environment.Remote => "https://api.outernetfoundation.org",
             _ => throw new ArgumentOutOfRangeException(nameof(environment), environment, null)
         };
@@ -83,7 +83,7 @@ public class CaptureController : MonoBehaviour
         });
 
         ZedCaptureController.Initialize();
-        UpdateCaptureList();
+        UpdateCaptureList().Forget();
 
         captureMode.options.Clear();
         foreach (var mode in Enum.GetValues(typeof(Capture.Mode)))
@@ -127,7 +127,7 @@ public class CaptureController : MonoBehaviour
                 .Where(state =>
                     state is CaptureState.Idle)
                 .Skip(1) // Skip the initial state
-                .Subscribe(UpdateCaptureList),
+                .SubscribeAwait(UpdateCaptureList),
 
             captureControlEventStream
                 .Where(@event =>
@@ -185,7 +185,7 @@ public class CaptureController : MonoBehaviour
     private async UniTask StartZedCapture(CancellationToken cancellationToken)
     {
         captureStatus.EnqueueSet(CaptureState.Starting);
-        await ZedCaptureController.StartCapture(cancellationToken, captureIntervalSeconds);
+        await ZedCaptureController.StartCapture(captureIntervalSeconds, cancellationToken);
         captureStatus.EnqueueSet(CaptureState.Capturing);
     }
 
@@ -202,74 +202,101 @@ public class CaptureController : MonoBehaviour
         public string filename { get; set; }
     }
 
-    async void UpdateCaptureList()
+    async UniTask UpdateCaptureList(CancellationToken cancellationToken = default)
     {
-        // Clear captures table
-        if (captures != null)
+        try
         {
+            // Clear captures table
+            if (captures != null)
+            {
+                foreach (var capture in captures)
+                {
+                    capture.disposables.Dispose();
+                    Destroy(capture.Row.gameObject);
+                }
+            }
+
+            var localCaptures = LocalCaptureController
+                .GetCaptures()
+                .Select(id => new Capture
+                {
+                    Id = id,
+                    Name = id.ToString(),
+                    Type = Capture.Mode.Local
+                });
+
+            IEnumerable<Capture> zedCaptures;
+            try
+            {
+                zedCaptures = (await ZedCaptureController
+                    .GetCaptures())
+                    .Select(id => new Capture
+                    {
+                        Id = id,
+                        Name = id.ToString(),
+                        Type = Capture.Mode.Zed
+                    });
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"Failed to get ZED captures: {e.Message}");
+                zedCaptures = Enumerable.Empty<Capture>();
+            }
+
+            captures = localCaptures.Concat(zedCaptures).ToList();
+
+            var capturesFromServer = await capturesApi.GetCapturesAsync(
+                captures.Select(c => c.Id).ToList());
+
+            var databaseCaptures = capturesFromServer
+                .ToList();
+
             foreach (var capture in captures)
             {
-                capture.disposables.Dispose();
-                Destroy(capture.Row.gameObject);
+                var gameObject = Instantiate(captureRowPrefab, capturesTable);
+                capture.Row = gameObject.GetComponent<CaptureRow>();
+                capture.Row.captureName.text = capture.Name;
+                capture.Row.captureType.text = capture.Type.ToString();
+
+                if (databaseCaptures.Select(capture => capture.Id).Contains(capture.Id))
+                {
+                    capture.Row.uploadButton.interactable = false;
+                    capture.Row.uploadButtonText.text = "Uploaded";
+                    capture.disposables = Disposable.Empty;
+                }
+                else
+                {
+                    capture.Row.uploadButton.interactable = true;
+                    capture.Row.uploadButtonText.text = "Upload";
+
+                    async UniTask UploadCapture(CancellationToken cancellationToken)
+                    {
+                        capture.Row.uploadButton.interactable = false;
+                        capture.Row.uploadButtonText.text = "Uploading";
+
+                        var response = await capturesApi.CreateCaptureAsync(new PlerionClient.Model.BodyCreateCapture(capture.Id, capture.Name));
+
+                        var captureData = capture.Type switch
+                        {
+                            Capture.Mode.Zed => await ZedCaptureController.GetCapture(capture.Id, cancellationToken),
+                            Capture.Mode.Local => await LocalCaptureController.GetCapture(capture.Id),
+                            _ => throw new ArgumentOutOfRangeException()
+                        };
+
+                        await capturesApi.UploadCaptureTarAsync(response.Id, captureData, cancellationToken);
+
+                        UpdateCaptureList().Forget();
+                    }
+
+                    capture.disposables = capture.Row.uploadButton.onClick
+                        .AsObservable()
+                        .SubscribeAwait(UploadCapture);
+                }
             }
         }
-
-        var localCaptures = LocalCaptureController
-            .GetCaptures()
-            .Select(name => new Capture
-            {
-                Name = name,
-                Type = Capture.Mode.Local
-            });
-
-        captures = localCaptures.ToList();
-
-        var capturesFromServer = await capturesApi.GetCapturesAsync(
-            captures.Select(c => c.Name).ToList());
-
-        var databaseCaptures = capturesFromServer
-            .ToList();
-
-        foreach (var capture in captures)
+        catch (Exception e)
         {
-            var gameObject = Instantiate(captureRowPrefab, capturesTable);
-            capture.Row = gameObject.GetComponent<CaptureRow>();
-            capture.Row.captureName.text = capture.Name;
-            capture.Row.captureType.text = capture.Type.ToString();
-
-            if (databaseCaptures.Select(capture => capture.Filename).Contains(capture.Name))
-            {
-                capture.Row.uploadButton.interactable = false;
-                capture.Row.uploadButtonText.text = "Uploaded";
-                capture.disposables = Disposable.Empty;
-            }
-            else
-            {
-                capture.Row.uploadButton.interactable = true;
-                capture.Row.uploadButtonText.text = "Upload";
-
-                async UniTask UploadCapture(CancellationToken cancellationToken)
-                {
-                    var response = await capturesApi.CreateCaptureAsync(new PlerionClient.Model.BodyCreateCapture(capture.Name));
-
-                    if (capture.Type == Capture.Mode.Zed)
-                    {
-                        var captureData = await ZedCaptureController.GetCapture(capture.Name);
-                        await capturesApi.UploadCaptureFileAsync(response.Id.ToString(), new MemoryStream(captureData), cancellationToken);
-                    }
-                    else if (capture.Type == Capture.Mode.Local)
-                    {
-                        var captureData = await LocalCaptureController.GetCapture(capture.Name);
-                        await capturesApi.UploadCaptureFileAsync(response.Id.ToString(), new MemoryStream(captureData), cancellationToken);
-                    }
-
-                    UpdateCaptureList();
-                }
-
-                capture.disposables = capture.Row.uploadButton.onClick
-                    .AsObservable()
-                    .SubscribeAwait(UploadCapture);
-            }
+            Debug.LogError($"Failed to update capture list: {e.Message}");
         }
     }
 }

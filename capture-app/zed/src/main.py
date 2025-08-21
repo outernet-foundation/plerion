@@ -1,8 +1,7 @@
-from fastapi import FastAPI
+from common.fastapi import create_fastapi_app
 
-app = FastAPI()
+from .routers.captures import router as captures_router
 
+app = create_fastapi_app("Zed API")
 
-@app.get("/health")
-def health():
-    return {"ok": True}
+app.include_router(captures_router)

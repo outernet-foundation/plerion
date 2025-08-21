@@ -11,7 +11,8 @@ def use_handler_name(route: APIRoute) -> str:
 
 
 def create_fastapi_app(
-    title: str, lifespan: StatelessLifespan[FastAPI] | StatefulLifespan[FastAPI] | None
+    title: str,
+    lifespan: StatelessLifespan[FastAPI] | StatefulLifespan[FastAPI] | None = None,
 ) -> FastAPI:
     app = FastAPI(
         title=title,

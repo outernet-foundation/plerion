@@ -1,9 +1,0 @@
-cython
-pyopengl
-requests
-opencv-python
-numpy>=1.23,<1.27
-scipy
-scipy-stubs
-litestar
-uvicorn

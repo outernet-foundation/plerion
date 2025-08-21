@@ -4,13 +4,31 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["common", "fastapi>=0.116.1"]
+dependencies = [
+    "common",
+    "pyzed ; sys_platform == 'linux' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and python_version >= '3.13' and python_version < '3.14'",
+    "fastapi>=0.116.1",
+    "scipy>=1.16.1",
+    "uvicorn>=0.35.0",
+    "openapi-generator-cli>=7.14.0",
+]
+
+[dependency-groups]
+dev = ["scipy-stubs"]
 
 [tool.pyright]
 typeCheckingMode = "strict"
+stubPath = "typings"
 
 [tool.ruff.lint]
 extend-select = ["I"]
 
 [tool.uv.sources]
 common = { path = "../../common", editable = true }
+pyzed = { index = "pyzed" }
+
+[[tool.uv.index]]
+name = "pyzed"
+url = "third-party/pyzed"
+format = "flat"
+explicit = true

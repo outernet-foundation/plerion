@@ -2,6 +2,7 @@
 *.sln
 Assets/Packages/
 Build/
+Build.meta
 Builds/
 Library/
 Logs/

@@ -40,7 +40,7 @@ public static class LocalCaptureController
     static ARCameraManager cameraManager;
     static float captureIntervalSeconds;
 
-    static string sessionId;
+    static Guid sessionId;
     static string sessionDirectory;
     static StreamWriter poseWriter;
     static readonly object inputOutputLock = new();
@@ -52,34 +52,19 @@ public static class LocalCaptureController
     static string SessionDir(string name) => Path.Combine(RecordingsRoot, name);
     static string ZipPath(string name) => Path.Combine(RecordingsRoot, $"{name}.zip");
 
-    public static IEnumerable<string> GetCaptures()
+    public static IEnumerable<Guid> GetCaptures()
     {
         if (!Directory.Exists(RecordingsRoot))
-            return Array.Empty<string>();
+            return Array.Empty<Guid>();
 
-        // Only return capture names that have a completed ZIP alongside them
         return new DirectoryInfo(RecordingsRoot)
             .GetDirectories()
             .Select(d => d.Name)
-            .Where(name => File.Exists(ZipPath(name)));
+            .Select(name => Guid.Parse(name));
     }
 
-    public static async UniTask<byte[]> GetCapture(string captureName)
-    {
-        string zipFilePath = ZipPath(captureName);
-
-        if (!File.Exists(zipFilePath))
-        {
-            Debug.LogError($"[LocalCaptureController] ZIP not found at {zipFilePath}");
-            throw new FileNotFoundException($"Zip file not found: {zipFilePath}");
-        }
-
-        var bytes = await File.ReadAllBytesAsync(zipFilePath);
-        if (bytes == null || bytes.Length == 0)
-            Debug.LogWarning($"[LocalCaptureController] ZIP at {zipFilePath} is empty.");
-
-        return bytes;
-    }
+    public static async UniTask<Stream> GetCapture(Guid captureId)
+        => await TarUtils.CreateTarAsync(SessionDir(captureId.ToString()));
 
     public static async UniTask StartCapture(
         CancellationToken cancellationToken,
@@ -103,8 +88,8 @@ public static class LocalCaptureController
         string recordingsRoot = Path.Combine(
             Application.persistentDataPath, "Captures");
 
-        sessionId = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
-        sessionDirectory = SessionDir(sessionId);
+        sessionId = Guid.NewGuid();
+        sessionDirectory = SessionDir(sessionId.ToString());
         Directory.CreateDirectory(Path.Combine(sessionDirectory, "images"));
 
         poseWriter = new StreamWriter(
@@ -132,7 +117,7 @@ public static class LocalCaptureController
         nextCaptureTime = 0;
 
         // Put the zip *next to* the sessionDirectory
-        string zipFilePath = ZipPath(sessionId);
+        string zipFilePath = ZipPath(sessionId.ToString());
         System.IO.Compression.ZipFile.CreateFromDirectory(sessionDirectory, zipFilePath);
     }
 
@@ -173,7 +158,7 @@ public static class LocalCaptureController
         if (!cameraManager.TryAcquireLatestCpuImage(out var cpuImage)) return;
 
         long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        string relativeImagePath = $"images/{timestampMilliseconds}_mono.png";
+        string relativeImagePath = $"images/{timestampMilliseconds}_mono.jpg";
         string absoluteImagePath = Path.Combine(sessionDirectory, relativeImagePath);
 
         // Write pose row: timestamp, tx,ty,tz, qx,qy,qz,qw
@@ -218,10 +203,10 @@ public static class LocalCaptureController
 
         texture.LoadRawTextureData(pixelBuffer);
         texture.Apply(false, false);
-        byte[] pngBytes = texture.EncodeToPNG();
+        byte[] jpgBytes = texture.EncodeToJPG();
         UnityEngine.Object.Destroy(texture);
 
         Directory.CreateDirectory(Path.GetDirectoryName(absoluteImagePath)!);
-        await File.WriteAllBytesAsync(absoluteImagePath, pngBytes);
+        await File.WriteAllBytesAsync(absoluteImagePath, jpgBytes);
     }
 }
