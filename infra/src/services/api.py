@@ -94,7 +94,7 @@ class Api(ComponentResource):
         api_security_group = SecurityGroup(
             "api-security-group",
             vpc=vpc,
-            vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
+            vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3", "batch"],
             rules=[{"to_security_group": postgres_security_group, "ports": [5432]}],
             opts=self._child_opts,
         )
