@@ -85,6 +85,8 @@ class Api(ComponentResource):
             features_worker_image_repo,
         ])
         export("api-image-repo-url", api_image_repo.url)
+        export("reconstruction-worker-image-repo-url", reconstruction_worker_image_repo.url)
+        export("features-worker-image-repo-url", features_worker_image_repo.url)
 
         # Security groups
         api_security_group = SecurityGroup(

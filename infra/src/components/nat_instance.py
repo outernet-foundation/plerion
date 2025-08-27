@@ -73,7 +73,12 @@ class NatInstance(ComponentResource):
         # EC2
         instance = Instance(
             f"{resource_name}-instance",
-            ami="resolve:ssm:/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-arm64-gp2",
+            # aws ssm get-parameter \
+            # --name "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-arm64-gp2" \
+            # --region us-east-1 \
+            # --query "Parameter.Value" \
+            # --output text
+            ami="ami-07f49305857a65449",
             instance_type="t4g.nano",
             subnet_id=vpc.public_subnet_ids.apply(lambda ids: ids[0]),
             vpc_security_group_ids=[security_group.id],
