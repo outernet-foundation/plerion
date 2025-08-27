@@ -6,11 +6,13 @@ from pulumi_aws.route53 import Record
 from pulumi_aws.s3 import Bucket
 from pulumi_awsx.ecs import FargateService
 
-from components.assume_role_policies import ecs_assume_role_policy
+from components.batch_job_definition import BatchJobDefinition
+from components.batch_job_environment import BatchJobEnvironment
 from components.load_balancer import LoadBalancer
 from components.log import log_configuration
 from components.repository import Repository
 from components.role import Role
+from components.roles import ecs_execution_role, ecs_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -139,31 +141,33 @@ class Api(ComponentResource):
         )
 
         # Batch jobs
-        # batch_job_environment = BatchJobEnvironment("api-batch-job-environment", vpc=vpc, opts=self._child_opts)
+        batch_job_environment = BatchJobEnvironment("api-batch-job-environment", vpc=vpc, opts=self._child_opts)
 
-        # features_batch_job = BatchJobDefinition(
-        #     "features-job", image_repo=features_worker_image_repo, opts=self._child_opts
-        # )
-        # features_batch_job.job_role.allow_s3(s3_bucket)
+        features_batch_job_definition = BatchJobDefinition(
+            "features-job", image_repo=features_worker_image_repo, opts=self._child_opts
+        )
+        features_batch_job_definition.job_role.allow_s3(s3_bucket)
 
-        # reconstruction_batch_job = BatchJobDefinition(
-        #     "reconstruction-job", image_repo=reconstruction_worker_image_repo, opts=self._child_opts
-        # )
-        # reconstruction_batch_job.job_role.allow_batch_job_submission(
-        #     job_environment=batch_job_environment, job_definitions=[features_batch_job]
-        # )
+        reconstruction_batch_job_definition = BatchJobDefinition(
+            "reconstruction-job", image_repo=reconstruction_worker_image_repo, opts=self._child_opts
+        )
+        reconstruction_batch_job_definition.job_role.allow_s3(s3_bucket)
+        reconstruction_batch_job_definition.job_role.allow_batch_job_submission(
+            job_environment=batch_job_environment, job_definitions=[features_batch_job_definition]
+        )
+        export("job-queue-arn", batch_job_environment.job_queue_arn)
+        export("reconstruction-job-definition-arn", reconstruction_batch_job_definition.arn)
 
         # Execution role
-        execution_role = Role("api-execution-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts)
+        execution_role = ecs_execution_role("api-execution-role", opts=self._child_opts)
         execution_role.allow_secret_get([postgres_password_secret])
-        execution_role.attach_ecs_task_execution_role_policy()
 
         # Task role
-        task_role = Role("api-task-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts)
+        task_role = ecs_role("api-task-role", opts=self._child_opts)
         task_role.allow_s3(s3_bucket)
-        # task_role.allow_batch_job_submission(
-        #     job_environment=batch_job_environment, job_definitions=[reconstruction_batch_job]
-        # )
+        task_role.allow_batch_job_submission(
+            job_environment=batch_job_environment, job_definitions=[reconstruction_batch_job_definition]
+        )
 
         service = FargateService(
             "api-service",

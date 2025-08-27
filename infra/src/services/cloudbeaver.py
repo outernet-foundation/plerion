@@ -6,11 +6,11 @@ from pulumi_aws.rds import Instance
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
-from components.assume_role_policies import ecs_assume_role_policy
 from components.load_balancer import LoadBalancer
 from components.log import log_configuration
 from components.repository import Repository
 from components.role import Role
+from components.roles import ecs_execution_role, ecs_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -136,15 +136,12 @@ class Cloudbeaver(ComponentResource):
         )
 
         # Execution role
-        execution_role = Role(
-            "cloudbeaver-execution-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts
-        )
-        execution_role.attach_ecs_task_execution_role_policy()
+        execution_role = ecs_execution_role("cloudbeaver-execution-role", opts=self._child_opts)
         execution_role.allow_secret_get([cloudbeaver_password_secret, postgres_password_secret])
         execution_role.allow_repo_pullthrough([cloudbeaver_image_repo])
 
         # Task role
-        task_role = Role("cloudbeaver-task-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts)
+        task_role = ecs_role("cloudbeaver-task-role", opts=self._child_opts)
 
         # Service
         cloudbeaver_service = FargateService(

@@ -4,11 +4,11 @@ from pulumi_aws.ecs import Cluster
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
-from components.assume_role_policies import ecs_assume_role_policy
 from components.load_balancer import LoadBalancer
 from components.log import log_configuration
 from components.repository import Repository
 from components.role import Role
+from components.roles import ecs_execution_role, ecs_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -136,16 +136,11 @@ class TailscaleBeacon(ComponentResource):
                 )
 
         # Execution role
-        execution_role = Role(
-            "tailscale-beacon-exec-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts
-        )
-        execution_role.attach_ecs_task_execution_role_policy()
+        execution_role = ecs_execution_role("tailscale-beacon-exec-role", opts=self._child_opts)
         execution_role.allow_secret_get([tailscale_auth_key_secret])
 
         # Task role
-        task_role = Role(
-            "tailscale-beacon-task-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts
-        )
+        task_role = ecs_role("tailscale-beacon-task-role", opts=self._child_opts)
 
         # Service
         tailscale_service = FargateService(

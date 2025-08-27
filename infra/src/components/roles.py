@@ -1,6 +1,8 @@
 import json
 
-from pulumi import Config, Output
+from pulumi import Config, Output, ResourceOptions
+
+from components.role import Role
 
 
 def github_actions_assume_role_policy(
@@ -34,11 +36,37 @@ def github_actions_assume_role_policy(
     })
 
 
-def ecs_assume_role_policy() -> str:
-    # Static JSON is fine to keep as a plain string
-    return json.dumps({
-        "Version": "2012-10-17",
-        "Statement": [
-            {"Effect": "Allow", "Principal": {"Service": "ecs-tasks.amazonaws.com"}, "Action": "sts:AssumeRole"}
-        ],
-    })
+def ecs_role(resource_name: str, opts: ResourceOptions | None = None):
+    return Role(
+        resource_name,
+        assume_role_policy=json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [
+                {"Effect": "Allow", "Principal": {"Service": "ecs-tasks.amazonaws.com"}, "Action": "sts:AssumeRole"}
+            ],
+        }),
+        opts=opts,
+    )
+
+
+def ecs_execution_role(resource_name: str, opts: ResourceOptions | None = None):
+    role = ecs_role(resource_name, opts=opts)
+    role.attach_ecs_task_execution_role_policy()
+    return role
+
+
+def ec2_role(resource_name: str, opts: ResourceOptions | None = None):
+    role = Role(
+        resource_name,
+        assume_role_policy=json.dumps({
+            "Version": "2012-10-17",
+            "Statement": [
+                {"Effect": "Allow", "Principal": {"Service": "ec2.amazonaws.com"}, "Action": "sts:AssumeRole"}
+            ],
+        }),
+        opts=opts,
+    )
+
+    role.attach_ec2_instance_role_policy()
+
+    return role

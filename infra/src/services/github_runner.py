@@ -3,10 +3,10 @@ from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
 from pulumi_awsx.ecs import FargateService
 
-from components.assume_role_policies import ecs_assume_role_policy
 from components.log import log_configuration
 from components.repository import Repository
 from components.role import Role
+from components.roles import ecs_execution_role, ecs_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -65,15 +65,12 @@ class GithubRunner(ComponentResource):
         )
 
         # Execution role
-        execution_role = Role(
-            "github-runner-execution-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts
-        )
-        execution_role.attach_ecs_task_execution_role_policy()
+        execution_role = ecs_execution_role("github-runner-execution-role", opts=self._child_opts)
         execution_role.allow_secret_get([github_app_private_key_secret])
         execution_role.allow_repo_pullthrough([github_runner_image_repo])
 
         # Task role
-        task_role = Role("github-runner-task-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts)
+        task_role = ecs_role("github-runner-task-role", opts=self._child_opts)
 
         # Service
         service = FargateService(

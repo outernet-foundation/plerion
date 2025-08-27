@@ -22,17 +22,14 @@ async def create_reconstruction(capture_id: UUID):
             detail=f"Capture with id {capture_id} not found",
         )
 
-    job_queue = settings.reconstruction_job_queue
-    job_definition = settings.reconstruction_job_definition
-
     batch: BatchClient = boto3.client(  # type: ignore[call-arg]
         "batch", region_name=os.getenv("AWS_REGION", "us-east-1")
     )
 
     batch.submit_job(
         jobName=f"reconstruction-{capture_id}",
-        jobQueue=job_queue,
-        jobDefinition=job_definition,
+        jobQueue=settings.job_queue_arn,
+        jobDefinition=settings.reconstruction_job_definition_arn,
         containerOverrides={
             "environment": [
                 {"name": "CAPTURE_ID", "value": str(capture_id)},

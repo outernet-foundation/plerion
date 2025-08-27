@@ -5,8 +5,8 @@ from pulumi_aws.ecs import Cluster
 from pulumi_aws.iam import OpenIdConnectProvider
 from pulumi_aws.route53 import Record, Zone
 
-from components.assume_role_policies import github_actions_assume_role_policy
 from components.role import Role
+from components.roles import github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc, VpcInfo
 from services.tailscale_beacon import TailscaleBeacon

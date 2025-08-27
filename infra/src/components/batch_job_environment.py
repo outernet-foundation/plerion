@@ -1,8 +1,8 @@
 from pulumi import ComponentResource, ResourceOptions
 from pulumi_aws.batch import ComputeEnvironment, JobQueue
+from pulumi_aws.iam import InstanceProfile
 
-from components.assume_role_policies import ecs_assume_role_policy
-from components.role import Role
+from components.roles import ec2_role, ecs_execution_role
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
@@ -21,6 +21,11 @@ class BatchJobEnvironment(ComponentResource):
             opts=self._child_opts,
         )
 
+        self.instance_role = ec2_role(f"{resource_name}-instance-role", opts=self._child_opts)
+        self.instance_profile = InstanceProfile(
+            f"{resource_name}-instance-profile", role=self.instance_role.name, opts=self._child_opts
+        )
+
         self.compute_environment = ComputeEnvironment(
             f"{resource_name}-compute-environment",
             type="MANAGED",
@@ -29,8 +34,10 @@ class BatchJobEnvironment(ComponentResource):
                 "min_vcpus": 0,
                 "max_vcpus": 32,
                 "instance_types": ["g5.xlarge"],
+                "instance_role": self.instance_profile.arn,
                 "subnets": vpc.private_subnet_ids,
                 "security_group_ids": [self.security_group.id],
+                "ec2_configurations": [{"image_type": "ECS_AL2_NVIDIA"}],
             },
             state="ENABLED",
             opts=self._child_opts,
@@ -44,11 +51,8 @@ class BatchJobEnvironment(ComponentResource):
             opts=self._child_opts,
         )
 
-        self.execution_role = Role(
-            f"{resource_name}-execution-role", assume_role_policy=ecs_assume_role_policy(), opts=self._child_opts
-        )
-        self.execution_role.attach_ecs_task_execution_role_policy()
+        self.execution_role = ecs_execution_role(f"{resource_name}-execution-role", opts=self._child_opts)
 
-        self.queue_arn = self.job_queue.arn
+        self.job_queue_arn = self.job_queue.arn
 
-        self.register_outputs({"queue_arn": self.queue_arn})
+        self.register_outputs({"job_queue_arn": self.job_queue_arn})

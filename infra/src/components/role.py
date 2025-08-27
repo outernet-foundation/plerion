@@ -95,6 +95,37 @@ class Role(ComponentResource):
             opts=self._child_opts,
         )
 
+    def attach_ec2_instance_role_policy(self):
+        RolePolicy(
+            f"{self._resource_name}-ec2-instance-role",
+            role=self.name,
+            policy=json.dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "ecs:DiscoverPollEndpoint",
+                            "ecs:Poll",
+                            "ecs:RegisterContainerInstance",
+                            "ecs:DeregisterContainerInstance",
+                            "ecs:Submit*",
+                            "ecs:StartTelemetrySession",
+                            "ecs:UpdateContainerInstancesState",
+                        ],
+                        "Resource": "*",
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": ["ec2:DescribeInstances", "ec2:DescribeTags", "ec2:DescribeNetworkInterfaces"],
+                        "Resource": "*",
+                    },
+                    {"Effect": "Allow", "Action": ["logs:CreateLogStream", "logs:PutLogEvents"], "Resource": "*"},
+                ],
+            }),
+            opts=self._child_opts,
+        )
+
     def attach_read_only_access_role_policy(self):
         RolePolicy(
             f"{self._resource_name}-read-only-access",
@@ -241,7 +272,7 @@ class Role(ComponentResource):
                 {
                     "Effect": "Allow",
                     "Action": ["batch:SubmitJob"],
-                    "Resource": [job_environment.queue_arn] + [jd.arn for jd in job_definitions],
+                    "Resource": [job_environment.job_queue_arn] + [jd.arn for jd in job_definitions],
                 },
                 {"Effect": "Allow", "Action": ["batch:DescribeJobs"], "Resource": "*"},
                 {
