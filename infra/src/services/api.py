@@ -155,8 +155,6 @@ class Api(ComponentResource):
         reconstruction_batch_job_definition.job_role.allow_batch_job_submission(
             job_environment=batch_job_environment, job_definitions=[features_batch_job_definition]
         )
-        export("job-queue-arn", batch_job_environment.job_queue_arn)
-        export("reconstruction-job-definition-arn", reconstruction_batch_job_definition.arn)
 
         # Execution role
         execution_role = ecs_execution_role("api-execution-role", opts=self._child_opts)
@@ -190,6 +188,11 @@ class Api(ComponentResource):
                         "environment": [
                             {"name": "POSTGRES_USER", "value": postgres_instance.username},
                             {"name": "POSTGRES_HOST", "value": postgres_instance.address},
+                            {"name": "JOB_QUEUE_ARN", "value": batch_job_environment.job_queue_arn},
+                            {
+                                "name": "RECONSTRUCTION_JOB_DEFINITION_ARN",
+                                "value": reconstruction_batch_job_definition.arn,
+                            },
                             {"name": "_POSTGRES_PASSWORD_VERSION", "value": postgres_password_secret.version_id},
                         ],
                     }

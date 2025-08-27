@@ -35,9 +35,9 @@ class ApiSettings(DatabaseSettings):
 
 @lru_cache()
 def get_database_settings() -> DatabaseSettings:
-    return DatabaseSettings.model_validate({})
+    return DatabaseSettings()
 
 
 @lru_cache()
 def get_api_settings() -> ApiSettings:
-    return ApiSettings.model_validate({})
+    return ApiSettings()  # type: ignore

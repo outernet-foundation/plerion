@@ -6,6 +6,7 @@ volumes:
   uv_cache:
   cloudbeaver_data:
 
+
 services:
   postgres:
     image: docker.io/library/postgres:16-alpine
@@ -14,11 +15,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "pg_isready -q -h localhost -p 5432 -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
-        ]
+      test: [ "CMD-SHELL", "pg_isready -q -h localhost -p 5432 -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
       interval: 1s
       timeout: 1s
       retries: 30
@@ -83,7 +80,7 @@ services:
     volumes:
       - cloudbeaver_data:/opt/cloudbeaver/workspace
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8978"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8978" ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -99,7 +96,7 @@ services:
       MINIO_BROWSER_REDIRECT_URL: "https://${DEVICE_NAME}-minioconsole.${DOMAIN}"
       MINIO_SERVER_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      test: [ "CMD", "curl", "-f", "http://localhost:9000/minio/health/ready" ]
       interval: 5s
       retries: 12
 
@@ -148,6 +145,8 @@ services:
       S3_ENDPOINT_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
+      RECONSTRUCTION_JOB_DEFINITION_ARN: ${RECONSTRUCTION_JOB_DEFINITION_ARN}
+      JOB_QUEUE_ARN: ${JOB_QUEUE_ARN}
     depends_on:
       postgres:
         condition: service_healthy
