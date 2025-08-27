@@ -5,8 +5,8 @@ import boto3
 from fastapi import APIRouter, HTTPException, status
 from mypy_boto3_batch import BatchClient
 
-from ..db.tables.captures import Capture
-from ..settings import get_api_settings
+from db.tables.captures import Capture
+from settings import get_api_settings
 
 router = APIRouter(prefix="/reconstructions", tags=["reconstructions"])
 
@@ -22,10 +22,12 @@ async def create_reconstruction(capture_id: UUID):
             detail=f"Capture with id {capture_id} not found",
         )
 
+    print("Creating AWS Batch client...")
     batch: BatchClient = boto3.client(  # type: ignore[call-arg]
         "batch", region_name=os.getenv("AWS_REGION", "us-east-1")
     )
 
+    print("Submitting reconstruction job to AWS Batch...")
     batch.submit_job(
         jobName=f"reconstruction-{capture_id}",
         jobQueue=settings.job_queue_arn,
@@ -36,5 +38,6 @@ async def create_reconstruction(capture_id: UUID):
             ]
         },
     )
+    print("Reconstruction job submitted.")
 
     pass
