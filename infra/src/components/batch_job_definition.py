@@ -24,26 +24,24 @@ class BatchJobDefinition(ComponentResource):
         self.job_definition = JobDefinition(
             f"{resource_name}-job-definition",
             type="container",
-            container_properties=Output.secret(
-                Output.json_dumps({
-                    "image": image_repo.locked_digest(),
-                    "executionRoleArn": self.execution_role.arn,
-                    "jobRoleArn": self.job_role.arn,
-                    "resourceRequirements": [
-                        {"type": "VCPU", "value": "1"},
-                        {"type": "GPU", "value": "1"},
-                        {"type": "MEMORY", "value": "1024"},
-                    ],
-                    "logConfiguration": {
-                        "logDriver": "awslogs",
-                        "options": {
-                            "awslogs-group": self.log_group.name,
-                            "awslogs-region": get_region_output().region,
-                            "awslogs-stream-prefix": "ecs",
-                        },
+            container_properties=Output.json_dumps({
+                "image": image_repo.locked_digest(),
+                "executionRoleArn": self.execution_role.arn,
+                "jobRoleArn": self.job_role.arn,
+                "resourceRequirements": [
+                    {"type": "VCPU", "value": "1"},
+                    {"type": "GPU", "value": "1"},
+                    {"type": "MEMORY", "value": "1024"},
+                ],
+                "logConfiguration": {
+                    "logDriver": "awslogs",
+                    "options": {
+                        "awslogs-group": self.log_group.name,
+                        "awslogs-region": get_region_output().region,
+                        "awslogs-stream-prefix": "ecs",
                     },
-                })
-            ),
+                },
+            }),
             opts=self._child_opts,
         )
 
