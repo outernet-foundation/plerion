@@ -46,9 +46,11 @@ class BatchJobDefinition(ComponentResource):
         )
 
         self.arn = self.job_definition.arn
+        self.arn_prefix = self.job_definition.arn_prefix
 
         self.register_outputs({
             "arn": self.arn,
+            "arn_prefix": self.arn_prefix,
             "execution_role_arn": self.execution_role.arn,
             "job_role_arn": self.job_role.arn,
         })

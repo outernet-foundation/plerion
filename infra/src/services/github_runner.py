@@ -105,5 +105,5 @@ class GithubRunner(ComponentResource):
         )
 
         deploy_role.allow_service_deployment(
-            "github-runner", [service.service.arn], [execution_role.arn, task_role.arn]
+            "github-runner", passroles=[execution_role, task_role], services=[service.service]
         )

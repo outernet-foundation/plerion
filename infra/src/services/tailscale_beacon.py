@@ -179,5 +179,5 @@ class TailscaleBeacon(ComponentResource):
 
         # Allow service deployment role to deploy this service
         deploy_role.allow_service_deployment(
-            "tailscale-beacon", [tailscale_service.service.arn], [execution_role.arn, task_role.arn]
+            "tailscale-beacon", passroles=[execution_role, task_role], services=[tailscale_service.service]
         )

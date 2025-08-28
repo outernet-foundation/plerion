@@ -227,7 +227,6 @@ class Cloudbeaver(ComponentResource):
             opts=self._child_opts,
         )
 
-        # Allow service deployment role to deploy this service
         deploy_role.allow_service_deployment(
-            "cloudbeaver", [cloudbeaver_service.service.arn], [execution_role.arn, task_role.arn]
+            "cloudbeaver", passroles=[execution_role, task_role], services=[cloudbeaver_service.service]
         )

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Iterable, List, NamedTuple, overload
 
 from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_aws import iam
+from pulumi_aws.ecs import Service
 from pulumi_aws.iam import RolePolicy
 from pulumi_aws.s3 import Bucket
 
@@ -159,6 +160,7 @@ class Role(ComponentResource):
                         "Sid": "ReadOnlyCoreInfra",
                         "Effect": "Allow",
                         "Action": [
+                            "batch:Describe*",
                             "ec2:Describe*",
                             "elasticloadbalancing:Describe*",
                             "ecs:Describe*",
@@ -184,29 +186,41 @@ class Role(ComponentResource):
         )
 
     def allow_service_deployment(
-        self,
-        service_name: str,
-        ecs_service_arns: Iterable[str | Output[str]],
-        passrole_arns: Iterable[str | Output[str]],
+        self, deployment_name: str, passroles: Iterable[Role], services: Iterable[Service | Output[Service]]
     ):
-        # No apply: feed Inputs directly, Pulumi will resolve them inside Output.json_dumps
         self.attach_policy(
-            f"allow-ecs-service-deploy-{service_name}",
+            f"allow-ecs-service-deploy-{deployment_name}",
+            Output.json_dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {"Effect": "Allow", "Action": ["iam:PassRole"], "Resource": [role.arn for role in passroles]},
+                    {
+                        "Effect": "Allow",
+                        "Action": ["ecs:UpdateService"],
+                        "Resource": [service.arn for service in services],
+                    },
+                    {
+                        "Effect": "Allow",
+                        "Action": ["ecs:RegisterTaskDefinition", "ecs:DeregisterTaskDefinition"],
+                        "Resource": "*",
+                    },
+                ],
+            }),
+        )
+
+    def allow_batch_job_definition_update(
+        self, deployment_name: str, job_definitions: Iterable[BatchJobDefinition | Output[BatchJobDefinition]]
+    ):
+        self.attach_policy(
+            f"allow-batch-job-definition-update-{deployment_name}",
             Output.json_dumps({
                 "Version": "2012-10-17",
                 "Statement": [
                     {
                         "Effect": "Allow",
-                        "Action": [
-                            "ecs:RegisterTaskDefinition",
-                            "ecs:DeregisterTaskDefinition",
-                            "ecs:Describe*",
-                            "ecs:List*",
-                        ],
-                        "Resource": "*",
-                    },
-                    {"Effect": "Allow", "Action": ["ecs:UpdateService"], "Resource": list(ecs_service_arns)},
-                    {"Effect": "Allow", "Action": ["iam:PassRole"], "Resource": list(passrole_arns)},
+                        "Action": ["batch:RegisterJobDefinition", "batch:DeregisterJobDefinition"],
+                        "Resource": [job_definition.arn_prefix for job_definition in job_definitions],
+                    }
                 ],
             }),
         )

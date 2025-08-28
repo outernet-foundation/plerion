@@ -201,5 +201,7 @@ class Api(ComponentResource):
             opts=self._child_opts,
         )
 
-        # Allow the deployment role to deploy this service
-        deploy_role.allow_service_deployment("api", [service.service.arn], [execution_role.arn, task_role.arn])
+        deploy_role.allow_service_deployment("api", passroles=[execution_role, task_role], services=[service.service])
+        deploy_role.allow_batch_job_definition_update(
+            "api", job_definitions=[features_batch_job_definition, reconstruction_batch_job_definition]
+        )
