@@ -2,7 +2,7 @@ from pulumi import ComponentResource, ResourceOptions
 from pulumi_aws.batch import ComputeEnvironment, JobQueue
 from pulumi_aws.iam import InstanceProfile
 
-from components.roles import ec2_role, ecs_execution_role
+from components.roles import ec2_role
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
@@ -28,6 +28,7 @@ class BatchJobEnvironment(ComponentResource):
                 "ecs",
                 "ecs-agent",
                 "ecs-telemetry",
+                "batch",
                 # "ssm",
                 # "ssmmessages",
                 # "ec2messages",
@@ -65,8 +66,6 @@ class BatchJobEnvironment(ComponentResource):
             compute_environment_orders=[{"order": 1, "compute_environment": self.compute_environment.arn}],
             opts=self._child_opts,
         )
-
-        self.execution_role = ecs_execution_role(f"{resource_name}-execution-role", opts=self._child_opts)
 
         self.job_queue_arn = self.job_queue.arn
 

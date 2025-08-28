@@ -295,7 +295,6 @@ class Role(ComponentResource):
                     {
                         "Effect": "Allow",
                         "Action": ["s3:GetObject", "s3:PutObject"],
-                        # Use concat to avoid .apply; this yields "<bucket-arn>/*"
                         "Resource": Output.concat(s3_bucket.arn, "/*"),
                     }
                 ],
@@ -305,21 +304,22 @@ class Role(ComponentResource):
     def allow_batch_job_submission(
         self, job_environment: BatchJobEnvironment, job_definitions: List[BatchJobDefinition]
     ) -> None:
-        # Output.json_dumps resolves queue ARN and all job/role ARNs without apply
         policy_json = Output.json_dumps({
             "Version": "2012-10-17",
             "Statement": [
                 {
                     "Effect": "Allow",
                     "Action": ["batch:SubmitJob"],
-                    "Resource": [job_environment.job_queue_arn] + [jd.arn for jd in job_definitions],
+                    "Resource": [job_environment.job_queue_arn]
+                    + [job_definition.arn_prefix for job_definition in job_definitions],
                 },
                 {"Effect": "Allow", "Action": ["batch:DescribeJobs"], "Resource": "*"},
                 {
                     "Effect": "Allow",
                     "Action": ["iam:PassRole"],
                     "Resource": (
-                        [jd.execution_role.arn for jd in job_definitions] + [jd.job_role.arn for jd in job_definitions]
+                        [job_definition.execution_role.arn for job_definition in job_definitions]
+                        + [job_definition.job_role.arn for job_definition in job_definitions]
                     ),
                 },
             ],

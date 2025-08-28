@@ -9,12 +9,14 @@ from settings import get_settings
 settings = get_settings()
 
 
-##
+###
 def main():
     print(f"Starting reconstruction for capture id {settings.capture_id}")
 
+    print("Creating AWS Batch client...")
     client: BatchClient = boto3.client("batch", region_name="us-east-1")  # type: ignore[call-arg]
 
+    print("Submitting reconstruction job to AWS Batch...")
     response = client.submit_job(
         jobName=f"reconstruction-features-{settings.capture_id}",
         jobQueue=settings.job_queue_arn,
@@ -36,6 +38,8 @@ def main():
         if status in ["SUCCEEDED", "FAILED"]:
             break
         time.sleep(1 + random.random())
+
+    print(f"Job {job_id} finished with status {status}")
 
 
 if __name__ == "__main__":
