@@ -205,6 +205,11 @@ class Api(ComponentResource):
         deploy_role.allow_service_deployment("api", passroles=[execution_role, task_role], services=[service.service])
         deploy_role.allow_batch_job_definition_update(
             "api",
-            passroles=[features_batch_job_definition.job_role, reconstruction_batch_job_definition.job_role],
+            passroles=[
+                features_batch_job_definition.job_role,
+                features_batch_job_definition.execution_role,
+                reconstruction_batch_job_definition.job_role,
+                reconstruction_batch_job_definition.execution_role,
+            ],
             job_definitions=[features_batch_job_definition, reconstruction_batch_job_definition],
         )
