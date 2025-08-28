@@ -31,14 +31,14 @@ async def create_reconstruction(capture_id: UUID):
     batch.submit_job(
         jobName=f"reconstruction-{capture_id}",
         jobQueue=settings.job_queue_arn,
-        jobDefinition=settings.reconstruction_job_definition_arn,
+        jobDefinition=settings.reconstruction_job_definition_arn_prefix,
         containerOverrides={
             "environment": [
                 {"name": "CAPTURE_ID", "value": str(capture_id)},
                 {"name": "JOB_QUEUE_ARN", "value": settings.job_queue_arn},
                 {
-                    "name": "FEATURES_JOB_DEFINITION_ARN",
-                    "value": settings.features_job_definition_arn,
+                    "name": "FEATURES_JOB_DEFINITION_ARN_PREFIX",
+                    "value": settings.features_job_definition_arn_prefix,
                 },
             ]
         },

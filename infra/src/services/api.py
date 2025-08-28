@@ -190,10 +190,13 @@ class Api(ComponentResource):
                             {"name": "POSTGRES_HOST", "value": postgres_instance.address},
                             {"name": "JOB_QUEUE_ARN", "value": batch_job_environment.job_queue_arn},
                             {
-                                "name": "RECONSTRUCTION_JOB_DEFINITION_ARN",
-                                "value": reconstruction_batch_job_definition.arn,
+                                "name": "RECONSTRUCTION_JOB_DEFINITION_ARN_PREFIX",
+                                "value": reconstruction_batch_job_definition.arn_prefix,
                             },
-                            {"name": "FEATURES_JOB_DEFINITION_ARN", "value": features_batch_job_definition.arn},
+                            {
+                                "name": "FEATURES_JOB_DEFINITION_ARN_PREFIX",
+                                "value": features_batch_job_definition.arn_prefix,
+                            },
                             {"name": "_POSTGRES_PASSWORD_VERSION", "value": postgres_password_secret.version_id},
                         ],
                     }

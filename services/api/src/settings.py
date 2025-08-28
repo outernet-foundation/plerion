@@ -18,8 +18,8 @@ class ApiSettings(DatabaseSettings):
     s3_secret_key: str | None = None
 
     job_queue_arn: str = Field()
-    reconstruction_job_definition_arn: str = Field()
-    features_job_definition_arn: str = Field()
+    reconstruction_job_definition_arn_prefix: str = Field()
+    features_job_definition_arn_prefix: str = Field()
 
     @model_validator(mode="after")
     def check_storage_config(self):

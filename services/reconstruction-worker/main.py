@@ -20,7 +20,7 @@ def main():
     response = client.submit_job(
         jobName=f"reconstruction-features-{settings.capture_id}",
         jobQueue=settings.job_queue_arn,
-        jobDefinition=settings.features_job_definition_arn,
+        jobDefinition=settings.features_job_definition_arn_prefix,
         arrayProperties={"size": 2},
         containerOverrides={
             "environment": [

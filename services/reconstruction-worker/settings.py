@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     capture_id: str = Field()
     job_queue_arn: str = Field()
-    features_job_definition_arn: str = Field()
+    features_job_definition_arn_prefix: str = Field()
 
 
 @lru_cache()
