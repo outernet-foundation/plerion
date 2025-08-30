@@ -131,14 +131,13 @@ services:
       context: ..
       dockerfile: services/api/Dockerfile
     working_dir: /app
-    entrypoint: >
-      bash -c "
-        cd /app/services/api && \
-        uv run --no-sync uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/services/api --reload-dir /app/common --reload-include '**/*.py'
-      "
     ports:
       - "8000:8000"
     environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+      RELOAD: ${RELOAD_API}
+      DEBUG_PORT: ${DEBUG_PORT_API}
+      DEBUG_WAIT: ${DEBUG_WAIT_API}
       BACKEND: compose
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -146,10 +145,9 @@ services:
       S3_ENDPOINT_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
+      JOB_QUEUE_ARN: dummy
       RECONSTRUCTION_JOB_DEFINITION_ARN_PREFIX: reconstruction-worker:latest
       FEATURES_JOB_DEFINITION_ARN_PREFIX: features-worker:latest
-      JOB_QUEUE_ARN: dummy
-      DOCKER_HOST: unix:///var/run/docker.sock
     depends_on:
       postgres:
         condition: service_healthy
@@ -160,21 +158,21 @@ services:
     volumes:
       - ./api:/app/services/api
       - ../common:/app/common
-      - api_venv:/app/services/api/.venv
-      - common_venv:/app/common/.venv
+      # - api_venv:/app/services/api/.venv
+      # - common_venv:/app/common/.venv
       - uv_cache:/root/.cache/uv
       - /var/run/docker.sock:/var/run/docker.sock
 
   reconstruction-worker:
     profiles: [ "tasks" ]
-    image: reconstruction-worker:latest
+    image: reconstruction-worker
     build:
       context: ..
       dockerfile: services/reconstruction-worker/Dockerfile
 
   features-worker:
     profiles: [ "tasks" ]
-    image: features-worker:latest
+    image: features-worker
     build:
       context: ..
       dockerfile: services/features-worker/Dockerfile
