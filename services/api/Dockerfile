@@ -15,6 +15,9 @@ ENV UV_NO_INSTALLER_METADATA=1
 # Enable copy mode to support bind mount caching.
 ENV UV_LINK_MODE=copy
 
+# Move the venv out of the project directory to prevent docker compose bind mounts from clobbering it
+ENV UV_PROJECT_ENVIRONMENT=/opt/uv/venv
+
 ENV PICCOLO_CONF="src.db.conf"
 
 WORKDIR /app/services/api

@@ -158,8 +158,6 @@ services:
     volumes:
       - ./api:/app/services/api
       - ../common:/app/common
-      # - api_venv:/app/services/api/.venv
-      # - common_venv:/app/common/.venv
       - uv_cache:/root/.cache/uv
       - /var/run/docker.sock:/var/run/docker.sock
 
