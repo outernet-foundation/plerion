@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-uv run main.py
+uv run --no-sync main.py
