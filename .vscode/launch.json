@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach to API (debugpy:5678)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": { "host": "127.0.0.1", "port": 5678 },
+      "justMyCode": false,
+      "pathMappings": [
+        { "localRoot": "${workspaceFolder}/services/api", "remoteRoot": "/app/services/api" },
+        { "localRoot": "${workspaceFolder}/common",      "remoteRoot": "/app/common" }
+      ]
+    }
+  ]
+}

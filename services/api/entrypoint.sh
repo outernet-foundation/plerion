@@ -9,13 +9,12 @@ if [[ "${RELOAD:-}" == "true" ]]; then
   UVICORN_ARGS+=( "--reload" "--reload-dir" "/app/services/api" "--reload-dir" "/app/common" "--reload-include" "**/*.py" )
 fi
 
-if [[ -n "${DEBUG_PORT:-}" ]]; then
-  DEBUG_LISTEN="0.0.0.0:${DEBUG_PORT}"
+if [[ "${DEBUG:-}" == "true" ]]; then
   DEBUG_WAIT_FLAG=()
   if [[ "${DEBUG_WAIT:-}" == "true" ]]; then
     DEBUG_WAIT_FLAG+=( "--wait-for-client" )
   fi
-  exec uv run --no-sync python -Xfrozen_modules=off -m debugpy --listen "${DEBUG_LISTEN}" "${DEBUG_WAIT_FLAG[@]}" -m uvicorn "${UVICORN_ARGS[@]}"
+  exec uv run --no-sync python -Xfrozen_modules=off -m debugpy --listen 0.0.0.0:5678 "${DEBUG_WAIT_FLAG[@]}" -m uvicorn "${UVICORN_ARGS[@]}"
 else
   exec uv run --no-sync uvicorn "${UVICORN_ARGS[@]}"
 fi

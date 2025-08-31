@@ -133,10 +133,11 @@ services:
     working_dir: /app
     ports:
       - "8000:8000"
+      - "5678:5678"
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
       RELOAD: ${RELOAD_API}
-      DEBUG_PORT: ${DEBUG_PORT_API}
+      DEBUG: ${DEBUG_API}
       DEBUG_WAIT: ${DEBUG_WAIT_API}
       BACKEND: compose
       POSTGRES_USER: ${POSTGRES_USER}
