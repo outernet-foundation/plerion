@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
-    backend: Literal["aws", "compose"] = Field()
+    backend: Literal["aws", "docker"] = Field()
     capture_id: str = Field()
     job_queue_arn: str = Field()
     features_job_definition_arn_prefix: str = Field()

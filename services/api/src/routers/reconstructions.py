@@ -1,4 +1,3 @@
-from pathlib import Path
 from uuid import UUID
 
 from common.batch_client import create_batch_client
@@ -22,21 +21,30 @@ async def create_reconstruction(capture_id: UUID):
         )
 
     print("Creating AWS Batch client...")
-    client = create_batch_client(
-        settings.backend, Path("../docker-compose.yml").resolve()
-    )
+    client = create_batch_client(settings.backend)
+
+    environment_variables = {
+        "BACKEND": settings.backend,
+        "CAPTURE_ID": str(capture_id),
+        "JOB_QUEUE_ARN": settings.job_queue_arn,
+        "FEATURES_JOB_DEFINITION_ARN_PREFIX": settings.features_job_definition_arn_prefix,
+    }
+
+    if settings.debug_reconstruction:
+        environment_variables["DEBUG"] = "true"
+    if settings.debug_wait_reconstruction:
+        environment_variables["DEBUG_WAIT"] = "true"
+    if settings.debug_features:
+        environment_variables["DEBUG_FEATURES"] = "true"
+    if settings.debug_wait_features:
+        environment_variables["DEBUG_WAIT_FEATURES"] = "true"
 
     print("Submitting reconstruction job to AWS Batch...")
     client.submit_job(
         f"reconstruction-{capture_id}",
         settings.job_queue_arn,
         settings.reconstruction_job_definition_arn_prefix,
-        environment_variables={
-            "BACKEND": settings.backend,
-            "CAPTURE_ID": str(capture_id),
-            "JOB_QUEUE_ARN": settings.job_queue_arn,
-            "FEATURES_JOB_DEFINITION_ARN_PREFIX": settings.features_job_definition_arn_prefix,
-        },
+        environment_variables=environment_variables,
     )
     print("Reconstruction job submitted.")
 

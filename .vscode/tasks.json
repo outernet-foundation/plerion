@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "python",
       "args": [
-        "${workspaceFolder}/.vscode/sync_python_projects.py",
+        "${workspaceFolder}/.vscode/scripts/sync_python_projects.py",
         "${workspaceFolder}"
       ],
       "problemMatcher": [],
@@ -17,6 +17,12 @@
         "revealProblems": "onProblem",
         "close": true
       }
-    }
+    },
+    {
+      "label": "plerion:build-recon-targets",
+      "type": "shell",
+      "command": "${workspaceFolder}/scripts/list_debug_targets.py reconstruction-worker 2>&1 | tee ${workspaceFolder}/.vscode/recon_targets.log > ${workspaceFolder}/.vscode/recon_targets.txt",
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true }
+    },
   ]
 }

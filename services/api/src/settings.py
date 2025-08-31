@@ -14,7 +14,7 @@ class DatabaseSettings(BaseSettings):
 
 
 class ApiSettings(DatabaseSettings):
-    backend: Literal["aws", "compose"] = Field()
+    backend: Literal["aws", "docker"] = Field()
 
     s3_endpoint_url: AnyHttpUrl | None = None
     s3_access_key: str | None = None
@@ -23,6 +23,11 @@ class ApiSettings(DatabaseSettings):
     job_queue_arn: str = Field()
     reconstruction_job_definition_arn_prefix: str = Field()
     features_job_definition_arn_prefix: str = Field()
+
+    debug_reconstruction: bool | None = None
+    debug_wait_reconstruction: bool | None = None
+    debug_features: bool | None = None
+    debug_wait_features: bool | None = None
 
     @model_validator(mode="after")
     def check_storage_config(self):

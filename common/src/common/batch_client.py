@@ -1,17 +1,25 @@
-from pathlib import Path
-from typing import Literal
+from typing import Dict, Literal, Protocol
 
-from .batch_client_api import BatchClient
 from .batch_client_aws import AwsBatchClient
-from .batch_client_compose import ComposeBatchClient
+from .batch_client_docker import DockerBatchClient
 
 
-def create_batch_client(
-    backend: Literal["aws", "compose"], compose_file: Path | None = None
-) -> BatchClient:
+class BatchClient(Protocol):
+    def submit_job(
+        self,
+        name: str,
+        queue_name: str,
+        job_definition_name: str,
+        *,
+        array_size: int | None = None,
+        environment_variables: Dict[str, str] | None = None,
+    ) -> str: ...
+
+    def get_job_status(self, job_id: str) -> str: ...
+
+
+def create_batch_client(backend: Literal["aws", "docker"]) -> BatchClient:
     if backend == "aws":
         return AwsBatchClient()
-    elif backend == "compose":
-        if compose_file is None:
-            raise ValueError("compose_file must be provided for compose backend")
-        return ComposeBatchClient(compose_file)
+    elif backend == "docker":
+        return DockerBatchClient()

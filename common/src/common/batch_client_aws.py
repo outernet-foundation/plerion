@@ -19,8 +19,8 @@ class AwsBatchClient:
         queue_name: str,
         job_definition_name: str,
         *,
-        environment_variables: Dict[str, str] | None = None,
         array_size: int | None = None,
+        environment_variables: Dict[str, str] | None = None,
     ) -> str:
         job: SubmitJobRequestTypeDef = {
             "jobName": name,

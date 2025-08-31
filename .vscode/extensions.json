@@ -10,6 +10,7 @@
     "emeraldwalk.runonsave",
     "visualstudiotoolsforunity.vstuc",
     "github.vscode-github-actions",
-    "ms-vscode-remote.remote-containers"
+    "ms-vscode-remote.remote-containers",
+    "rioj7.command-variable"
   ]
 }

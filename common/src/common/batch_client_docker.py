@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import threading
 import uuid
-from pathlib import Path
 from typing import Dict, Literal
 
 import docker
@@ -11,9 +10,8 @@ from docker.types import DeviceRequest
 Status = Literal["SUBMITTED", "RUNNING", "SUCCEEDED", "FAILED", "UNKNOWN"]
 
 
-class ComposeBatchClient:
-    def __init__(self, compose_file: Path) -> None:
-        self.compose_file = compose_file
+class DockerBatchClient:
+    def __init__(self) -> None:
         self.jobs: Dict[str, Dict[str, Status]] = {}
         self._docker = docker.from_env()
 
@@ -23,8 +21,8 @@ class ComposeBatchClient:
         queue_name: str,
         job_definition_name: str,
         *,
-        environment_variables: Dict[str, str] | None = None,
         array_size: int | None = None,
+        environment_variables: Dict[str, str] | None = None,
     ) -> str:
         if array_size is None:
             array_size = 1
@@ -35,23 +33,30 @@ class ComposeBatchClient:
         self.jobs[job_id] = {}
 
         for index in range(array_size):
-            env = dict(environment_variables or {})
-            env["DOCKER_HOST"] = "unix:///var/run/docker.sock"
-            env["BATCH_JOB_ARRAY_INDEX"] = str(index)
+            environment = dict(environment_variables or {})
+            environment["DOCKER_HOST"] = "unix:///var/run/docker.sock"
+            environment["BATCH_JOB_ARRAY_INDEX"] = str(index)
 
             container = self._docker.containers.run(
                 image=job_definition_name,
-                command=None,
-                environment=env,
+                environment=environment,
                 volumes={
                     "/var/run/docker.sock": {
                         "bind": "/var/run/docker.sock",
                         "mode": "rw",
                     }
+                },  # So task can submit subtasks
+                ports={
+                    "5678/tcp": ("127.0.0.1", 0)
+                },  # Forward the debugging port to a random host port
+                labels={
+                    "plerion.debug": "1",
+                    "plerion.service": job_definition_name,
+                    "plerion.job": job_id,
+                    "plerion.job.index": str(index),
                 },
                 detach=True,
-                remove=True,
-                tty=False,
+                remove=False,
                 device_requests=[DeviceRequest(count=-1, capabilities=[["gpu"]])],
             )
 
