@@ -250,6 +250,9 @@ jobs:
             echo "Initializing lock for $KEY from ECR tag 'latest'…"
             docker pull "$ECR_URL:latest"
 
+            # I think there is a timing issue here; upon adding a new third party image,
+            # the image may not be immediately available in ECR after the very first pull;
+            # I had rerun a failed workflow the first time to get it to succeed
             DETAILS="$(aws ecr describe-images \
               --repository-name "$KEY" \
               --image-ids imageTag=latest \

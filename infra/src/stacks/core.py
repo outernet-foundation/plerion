@@ -71,11 +71,7 @@ def create_core_stack(config: Config):
         credential_arn=dockerhub_secret.arn,
     )
 
-    PullThroughCacheRule(
-        "quay-pull-through-cache-rule",
-        ecr_repository_prefix="quay",
-        upstream_registry_url="quay.io",  # Quay upstream
-    )
+    PullThroughCacheRule("quay-pull-through-cache-rule", ecr_repository_prefix="quay", upstream_registry_url="quay.io")
 
     vpc = Vpc(name="main-vpc")
 
