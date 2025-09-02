@@ -97,6 +97,10 @@ jobs:
               services/features-worker
               common
 
+          - name: "oauth2-proxy"
+            stack: "dev"
+            first_party: false
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
