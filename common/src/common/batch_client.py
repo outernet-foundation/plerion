@@ -12,7 +12,7 @@ class BatchClient(Protocol):
         job_definition_name: str,
         *,
         array_size: int | None = None,
-        environment_variables: Dict[str, str] | None = None,
+        environment: Dict[str, str] | None = None,
     ) -> str: ...
 
     def get_job_status(self, job_id: str) -> str: ...

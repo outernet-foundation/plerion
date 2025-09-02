@@ -1,4 +1,4 @@
-from pulumi import ComponentResource, Config, Output, ResourceOptions, StackReference, export
+from pulumi import ComponentResource, Config, Input, Output, ResourceOptions, export
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
 from pulumi_aws.rds import Instance
@@ -23,7 +23,9 @@ class Api(ComponentResource):
         self,
         resource_name: str,
         config: Config,
-        core_stack: StackReference,
+        zone_id: Input[str],
+        zone_name: Input[str],
+        certificate_arn: Input[str],
         vpc: Vpc,
         cluster: Cluster,
         s3_bucket: Bucket,
@@ -115,7 +117,7 @@ class Api(ComponentResource):
             "api",
             vpc=vpc,
             securityGroup=load_balancer_security_group,
-            certificate_arn=core_stack.require_output("certificate-arn"),
+            certificate_arn=certificate_arn,
             port=8000,
             health_check={
                 "path": "/health",
@@ -128,10 +130,10 @@ class Api(ComponentResource):
         )
 
         # DNS Records
-        domain = Output.concat("api.", core_stack.require_output("zone-name"))
+        domain = Output.concat("api.", zone_name)
         Record(
             "api-domain-record",
-            zone_id=core_stack.require_output("zone-id"),
+            zone_id=zone_id,
             name=domain,
             type="A",
             aliases=[
@@ -167,6 +169,7 @@ class Api(ComponentResource):
             job_environment=batch_job_environment, job_definitions=[reconstruction_batch_job_definition]
         )
 
+        # Service
         service = FargateService(
             "api-service",
             name="api-service",
@@ -206,6 +209,7 @@ class Api(ComponentResource):
             opts=self._child_opts,
         )
 
+        # Allow service deployment
         deploy_role.allow_service_deployment("api", passroles=[execution_role, task_role], services=[service.service])
         deploy_role.allow_batch_job_definition_update(
             "api",

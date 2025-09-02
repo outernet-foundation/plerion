@@ -20,7 +20,7 @@ class AwsBatchClient:
         job_definition_name: str,
         *,
         array_size: int | None = None,
-        environment_variables: Dict[str, str] | None = None,
+        environment: Dict[str, str] | None = None,
     ) -> str:
         job: SubmitJobRequestTypeDef = {
             "jobName": name,
@@ -28,11 +28,10 @@ class AwsBatchClient:
             "jobDefinition": job_definition_name,
         }
 
-        if environment_variables is not None:
+        if environment is not None:
             job["containerOverrides"] = {
                 "environment": [
-                    {"name": key, "value": value}
-                    for key, value in environment_variables.items()
+                    {"name": key, "value": value} for key, value in environment.items()
                 ]
             }
 

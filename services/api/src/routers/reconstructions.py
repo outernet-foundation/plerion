@@ -23,7 +23,7 @@ async def create_reconstruction(capture_id: UUID):
     print("Creating AWS Batch client...")
     client = create_batch_client(settings.backend)
 
-    environment_variables = {
+    environment = {
         "BACKEND": settings.backend,
         "CAPTURE_ID": str(capture_id),
         "JOB_QUEUE_ARN": settings.job_queue_arn,
@@ -31,20 +31,20 @@ async def create_reconstruction(capture_id: UUID):
     }
 
     if settings.debug_reconstruction:
-        environment_variables["DEBUG"] = "true"
+        environment["DEBUG"] = "true"
     if settings.debug_wait_reconstruction:
-        environment_variables["DEBUG_WAIT"] = "true"
+        environment["DEBUG_WAIT"] = "true"
     if settings.debug_features:
-        environment_variables["DEBUG_FEATURES"] = "true"
+        environment["DEBUG_FEATURES"] = "true"
     if settings.debug_wait_features:
-        environment_variables["DEBUG_WAIT_FEATURES"] = "true"
+        environment["DEBUG_WAIT_FEATURES"] = "true"
 
     print("Submitting reconstruction job to AWS Batch...")
     client.submit_job(
         f"reconstruction-{capture_id}",
         settings.job_queue_arn,
         settings.reconstruction_job_definition_arn_prefix,
-        environment_variables=environment_variables,
+        environment=environment,
     )
     print("Reconstruction job submitted.")
 

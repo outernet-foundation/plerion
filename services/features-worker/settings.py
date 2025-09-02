@@ -2,12 +2,10 @@ from functools import lru_cache
 from typing import Literal
 
 from pydantic import AliasChoices, Field
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
-
     backend: Literal["aws", "docker"]
     capture_id: str
     batch_job_array_index: str = Field(

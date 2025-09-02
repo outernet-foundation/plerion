@@ -11,17 +11,23 @@ settings = get_settings()
 def main():
     print("Submitting job")
     client = create_batch_client(settings.backend)
+
+    environment = {
+        "BACKEND": settings.backend,
+        "CAPTURE_ID": settings.capture_id,
+    }
+
+    if settings.debug_features:
+        environment["DEBUG"] = "true"
+    if settings.debug_wait_features:
+        environment["DEBUG_WAIT"] = "true"
+
     job_id = client.submit_job(
         f"reconstruction-features-{settings.capture_id}",
         settings.job_queue_arn,
         settings.features_job_definition_arn_prefix,
         array_size=2,
-        environment_variables={
-            "BACKEND": settings.backend,
-            "CAPTURE_ID": settings.capture_id,
-            "DEBUG": settings.debug_features,
-            "DEBUG_WAIT": settings.debug_wait_features,
-        },
+        environment=environment,
     )
 
     print("Awaiting job completion")

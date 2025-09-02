@@ -9,6 +9,7 @@ from components.role import Role
 from components.roles import github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc, VpcInfo
+from services.oauth import Oauth
 from services.tailscale_beacon import TailscaleBeacon
 
 
@@ -70,9 +71,27 @@ def create_core_stack(config: Config):
         credential_arn=dockerhub_secret.arn,
     )
 
+    PullThroughCacheRule(
+        "quay-pull-through-cache-rule",
+        ecr_repository_prefix="quay",
+        upstream_registry_url="quay.io",  # Quay upstream
+    )
+
     vpc = Vpc(name="main-vpc")
 
     cluster = Cluster("core-tooling-cluster")
+
+    Oauth(
+        resource_name="oauth",
+        config=config,
+        vpc=vpc,
+        zone_id=zone.id,
+        zone_name=zone.name,
+        certificate_arn=certificate.arn,
+        cluster=cluster,
+        deploy_role=main_deploy_role,
+        prepare_deploy_role=main_prepare_deploy_role,
+    )
 
     TailscaleBeacon(
         resource_name="tailscale-beacon",

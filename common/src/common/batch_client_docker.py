@@ -22,7 +22,7 @@ class DockerBatchClient:
         job_definition_name: str,
         *,
         array_size: int | None = None,
-        environment_variables: Dict[str, str] | None = None,
+        environment: Dict[str, str] | None = None,
     ) -> str:
         if array_size is None:
             array_size = 1
@@ -33,7 +33,7 @@ class DockerBatchClient:
         self.jobs[job_id] = {}
 
         for index in range(array_size):
-            environment = dict(environment_variables or {})
+            environment = dict(environment or {})
             environment["DOCKER_HOST"] = "unix:///var/run/docker.sock"
             environment["BATCH_JOB_ARRAY_INDEX"] = str(index)
 
