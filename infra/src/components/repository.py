@@ -6,19 +6,30 @@ import os
 from pathlib import Path
 from typing import Dict, List, TypedDict, cast
 
-from pulumi import ComponentResource, ResourceOptions
+from pulumi import ComponentResource, Input, ResourceOptions
 from pulumi_aws import ecr
+from pulumi_aws.ecr import get_repository_output
 
 
 class Repository(ComponentResource):
     def __init__(
-        self, resource_name: str, name: str, force_delete: bool | None = None, opts: ResourceOptions | None = None
+        self,
+        resource_name: str,
+        name: Input[str],
+        *,
+        adopt: bool = False,
+        force_delete: bool | None = None,
+        opts: ResourceOptions | None = None,
     ):
         super().__init__("custom:Repository", resource_name, opts=opts)
 
+        self._resource_name = resource_name
         self._child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
-        self._name = name
-        self._repo = ecr.Repository(resource_name, name=name, force_delete=force_delete, opts=self._child_opts)
+
+        if adopt:
+            self._repo = get_repository_output(name=name)
+        else:
+            self._repo = ecr.Repository(resource_name, name=name, force_delete=force_delete, opts=self._child_opts)
 
         self.resource_name = resource_name
 

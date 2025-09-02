@@ -79,7 +79,6 @@ class Cloudbeaver(ComponentResource):
             vpc=vpc,
             vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
             rules=[
-                {"cidr_name": "anywhere", "from_cidr": "0.0.0.0/0", "ports": [8978]},
                 {"to_security_group": efs_security_group, "ports": [2049]},
                 {"to_security_group": postgres_security_group, "ports": [5432]},
             ],
@@ -91,7 +90,7 @@ class Cloudbeaver(ComponentResource):
             vpc=vpc,
             rules=[
                 {"cidr_name": "anywhere", "from_cidr": "0.0.0.0/0", "ports": [80, 443]},
-                {"to_security_group": cloudbeaver_security_group, "ports": [8978]},
+                {"to_security_group": cloudbeaver_security_group, "ports": [4180]},
             ],
             opts=self._child_opts,
         )
@@ -118,8 +117,15 @@ class Cloudbeaver(ComponentResource):
             vpc=vpc,
             securityGroup=load_balancer_security_group,
             certificate_arn=core_stack.require_output("certificate-arn"),
-            port=8978,
+            port=4180,
             opts=self._child_opts,
+            health_check={
+                "path": "/ping",
+                "protocol": "HTTP",
+                "interval": 15,
+                "healthy_threshold": 2,
+                "unhealthy_threshold": 10,
+            },
         )
 
         # DNS Records

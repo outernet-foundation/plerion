@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from pulumi import ComponentResource, Config, Input, Output, ResourceOptions, export
+from pulumi import ComponentResource, Config, Input, Output, ResourceOptions
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
 from pulumi_aws.route53 import Record
@@ -9,15 +9,14 @@ from pulumi_awsx.ecs._inputs import TaskDefinitionKeyValuePairArgsDict
 
 from components.load_balancer import LoadBalancer
 from components.log import log_configuration
-from components.repository import Repository
+from components.oauth import Oauth
 from components.role import Role
 from components.roles import ecs_execution_role, ecs_role
-from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
 
 
-class Oauth(ComponentResource):
+class AuthGateway(ComponentResource):
     def __init__(
         self,
         resource_name: str,
@@ -32,46 +31,25 @@ class Oauth(ComponentResource):
         *,
         opts: ResourceOptions | None = None,
     ):
-        super().__init__("custom:Oauth", resource_name, opts=opts)
+        super().__init__("custom:AuthGateway", resource_name, opts=opts)
 
         self._resource_name = resource_name
         self._child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         # Logs groups
-        oauth_log_group = LogGroup(
-            "oauth-log-group", name="/ecs/oauth2-proxy", retention_in_days=7, opts=self._child_opts
+        auth_gateway_log_group = LogGroup(
+            "auth-gateway-log-group", name="/ecs/auth-gateway", retention_in_days=7, opts=self._child_opts
         )
 
-        # Secrets
-        github_client_id_secret = Secret(
-            "oauth-client-id", secret_string=config.require_secret("oauth-client-id"), opts=self._child_opts
-        )
-        github_client_secret_secret = Secret(
-            "oauth-client-secret", secret_string=config.require_secret("oauth-client-secret"), opts=self._child_opts
-        )
-        # python -c 'import os,base64; print(base64.urlsafe_b64encode(os.urandom(32)).decode())'
-        cookie_secret_secret = Secret(
-            "oauth-cookie-secret", secret_string=config.require_secret("oauth-cookie-secret"), opts=self._child_opts
+        self.oauth = Oauth(
+            resource_name="auth-gateway-oauth",
+            config=config,
+            zone_name=zone_name,
+            prepare_deploy_role=prepare_deploy_role,
+            opts=self._child_opts,
         )
 
-        # Image repo
-        oauth_image_repo = Repository(
-            "oauth2-proxy-repo",
-            "quay/oauth2-proxy/oauth2-proxy",
-            opts=ResourceOptions.merge(
-                self._child_opts,
-                ResourceOptions(
-                    retain_on_delete=True
-                    # import_="quay.io/oauth2-proxy/oauth2-proxy",
-                ),
-            ),
-        )
-        prepare_deploy_role.allow_image_repo_actions([oauth_image_repo])
-        export("oauth2-proxy-image-repo-url", oauth_image_repo.url)
-
-        # --------------------
         # Security Groups
-        # --------------------
         oauth_security_group = SecurityGroup(
             "oauth-security-group",
             vpc=vpc,
@@ -122,18 +100,24 @@ class Oauth(ComponentResource):
 
         # Execution role
         execution_role = ecs_execution_role("oauth-execution-role", opts=self._child_opts)
-        execution_role.allow_secret_get([github_client_id_secret, github_client_secret_secret, cookie_secret_secret])
+        execution_role.allow_secret_get([
+            self.oauth.client_id_secret,
+            self.oauth.client_secret_secret,
+            self.oauth.cookie_secret_secret,
+        ])
 
         # Task Role
         task_role = ecs_role("oauth-task-role", opts=self._child_opts)
 
         # Environment
         environment: Sequence[Input[TaskDefinitionKeyValuePairArgsDict]] = [
+            {"name": "OAUTH2_PROXY_HTTP_ADDRESS", "value": "0.0.0.0:4180"},
             {"name": "OAUTH2_PROXY_PROVIDER", "value": "github"},
             {
                 "name": "OAUTH2_PROXY_REDIRECT_URL",
                 "value": domain.apply(lambda domain: f"https://{domain}/oauth2/callback"),
             },
+            {"name": "OAUTH2_PROXY_EMAIL_DOMAINS", "value": "*"},
             {"name": "OAUTH2_PROXY_UPSTREAMS", "value": "static://200"},
             {"name": "OAUTH2_PROXY_COOKIE_SECURE", "value": "true"},
             {"name": "OAUTH2_PROXY_COOKIE_SAMESITE", "value": "lax"},
@@ -170,16 +154,16 @@ class Oauth(ComponentResource):
                 "containers": {
                     "oauth2-proxy": {
                         "name": "oauth2-proxy",
-                        "image": oauth_image_repo.locked_digest(),
-                        "log_configuration": log_configuration(oauth_log_group),
+                        "image": self.oauth.image_repo.locked_digest(),
+                        "log_configuration": log_configuration(auth_gateway_log_group),
                         "port_mappings": [
                             {"container_port": 4180, "host_port": 4180, "target_group": load_balancer.target_group}
                         ],
                         "environment": environment,
                         "secrets": [
-                            {"name": "OAUTH2_PROXY_CLIENT_ID", "value_from": github_client_id_secret.arn},
-                            {"name": "OAUTH2_PROXY_CLIENT_SECRET", "value_from": github_client_secret_secret.arn},
-                            {"name": "OAUTH2_PROXY_COOKIE_SECRET", "value_from": cookie_secret_secret.arn},
+                            {"name": "OAUTH2_PROXY_CLIENT_ID", "value_from": self.oauth.client_id_secret.arn},
+                            {"name": "OAUTH2_PROXY_CLIENT_SECRET", "value_from": self.oauth.client_secret_secret.arn},
+                            {"name": "OAUTH2_PROXY_COOKIE_SECRET", "value_from": self.oauth.cookie_secret_secret.arn},
                         ],
                     }
                 },

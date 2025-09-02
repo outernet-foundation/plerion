@@ -61,7 +61,9 @@ def create_dev_stack(config: Config):
     Api(
         resource_name="api",
         config=config,
-        core_stack=core_stack,
+        zone_id=core_stack.require_output("zone-id"),
+        zone_name=core_stack.require_output("zone-name"),
+        certificate_arn=core_stack.require_output("certificate-arn"),
         cluster=cluster,
         s3_bucket=captures_bucket,
         vpc=vpc,

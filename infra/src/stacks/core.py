@@ -9,7 +9,7 @@ from components.role import Role
 from components.roles import github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc, VpcInfo
-from services.oauth import Oauth
+from services.auth_gateway import AuthGateway
 from services.tailscale_beacon import TailscaleBeacon
 
 
@@ -77,7 +77,7 @@ def create_core_stack(config: Config):
 
     cluster = Cluster("core-tooling-cluster")
 
-    Oauth(
+    AuthGateway(
         resource_name="oauth",
         config=config,
         vpc=vpc,
