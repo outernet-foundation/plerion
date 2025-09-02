@@ -1,5 +1,6 @@
 using UnityEngine;
 
+[RequireComponent(typeof(RectTransform))]
 public class SafeArea : MonoBehaviour
 {
     private RectTransform _rectTransform;
