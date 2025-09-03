@@ -26,7 +26,7 @@ cat > "$CONFIG_DIR/data-sources.json" <<EOF
       "provider": "postgresql",
       "driver": "postgres-jdbc",
       "name": "Plerion",
-      "shared": true,
+      "project": "GlobalConfiguration",
       "save-password": true,
       "configuration": {
         "host": "${POSTGRES_HOST}",
