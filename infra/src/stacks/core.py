@@ -120,7 +120,7 @@ def create_core_stack(config: Config):
             "s3_endpoint_prefix_list_id": vpc.s3_endpoint_prefix_list_id,
         }),
     )
-    export("oauth-image-repo-name", auth_gateway.image_repo_name)
-    export("oauth-client-id-secret-arn", auth_gateway.client_id_secret_arn)
-    export("oauth-client-secret-secret-arn", auth_gateway.client_secret_secret_arn)
-    export("oauth-cookie-secret-secret-arn", auth_gateway.cookie_secret_secret_arn)
+    # export("oauth-image-repo-name", auth_gateway.image_repo_name)
+    # export("oauth-client-id-secret-arn", auth_gateway.client_id_secret_arn)
+    # export("oauth-client-secret-secret-arn", auth_gateway.client_secret_secret_arn)
+    # export("oauth-cookie-secret-secret-arn", auth_gateway.cookie_secret_secret_arn)

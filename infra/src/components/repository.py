@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, TypedDict, cast
 
-from pulumi import ComponentResource, Input, ResourceOptions
+from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_aws import ecr
 from pulumi_aws.ecr import get_repository_output
 
@@ -23,7 +23,7 @@ class Repository(ComponentResource):
     ):
         super().__init__("custom:Repository", resource_name, opts=opts)
 
-        self._resource_name = resource_name
+        self.resource_name = resource_name
         self._child_opts = ResourceOptions.merge(opts, ResourceOptions(parent=self))
 
         if adopt:
@@ -31,19 +31,18 @@ class Repository(ComponentResource):
         else:
             self._repo = ecr.Repository(resource_name, name=name, force_delete=force_delete, opts=self._child_opts)
 
-        self.resource_name = resource_name
-
         self.name = name
         self.arn = self._repo.arn
         self.url = self._repo.repository_url
 
-        self.register_outputs({"arn": self.arn, "url": self.url})
+        self.register_outputs({"name": self.name, "arn": self.arn, "url": self.url})
 
     class RepoEntry(TypedDict, total=False):
         digest: str
         tags: List[str]  # optional metadata; not used for resolution
 
-    def locked_digest(self, lock_path: str = "image-lock.json"):
+    def locked_digest(self, lock_path: str = "image-lock.json") -> Output[str]:
+        # Find the project root (folder containing Pulumi.yaml)
         project_root = Path(os.getcwd())
         while project_root != project_root.parent:
             if (project_root / "Pulumi.yaml").exists():
@@ -51,20 +50,27 @@ class Repository(ComponentResource):
             project_root = project_root.parent
 
         lock_file = project_root / lock_path
-
         if not lock_file.exists():
             raise FileNotFoundError(f"Lock file not found: {lock_file}")
 
+        # Load and prepare the container map once (outside of apply)
         data_raw: object = json.loads(lock_file.read_text())
         data_map: Dict[str, object] = cast(Dict[str, object], data_raw)
         container_raw: object = data_map.get("repositories", data_map)
         container: Dict[str, object] = cast(Dict[str, object], container_raw)
-        entry_raw: object = container.get(self._name)
 
-        if not isinstance(entry_raw, dict):
-            raise ValueError(f"Invalid entry in lock file for {self._name}: {entry_raw}")
+        def build_locked_ref(name: str, repo_url: str) -> str:
+            entry_raw: object = container.get(name)
+            if not isinstance(entry_raw, dict):
+                # use the resolved name in the message; avoid referencing non-existent self._name
+                raise ValueError(f"Invalid or missing entry in lock file for repository '{name}': {entry_raw}")
 
-        entry_map: Dict[str, object] = cast(Dict[str, object], entry_raw)
-        digest: object = entry_map.get("digest")
+            entry_map: Dict[str, object] = cast(Dict[str, object], entry_raw)
+            digest_obj: object = entry_map.get("digest")
+            if not isinstance(digest_obj, str) or not digest_obj:
+                raise ValueError(f"Missing 'digest' for repository '{name}' in lock file.")
 
-        return self._repo.repository_url.apply(lambda url: f"{url}@{digest}")
+            return f"{repo_url}@{digest_obj}"
+
+        # Lift both the repo name and URL to build the final locked reference
+        return Output.all(self.name, self._repo.repository_url).apply(lambda args: build_locked_ref(args[0], args[1]))
