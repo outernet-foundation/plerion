@@ -1,11 +1,11 @@
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions, export
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
-from pulumi_aws.efs import FileSystem, MountTarget
 from pulumi_aws.rds import Instance
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
+from components.efs import EFS
 from components.load_balancer import LoadBalancer
 from components.log import log_configuration
 from components.oauth import Oauth
@@ -75,15 +75,16 @@ class Cloudbeaver(ComponentResource):
         export("cloudbeaver-init-image-repo-url", cloudbeaver_init_image_repo.url)
         export("cloudbeaver-image-repo-url", cloudbeaver_image_repo.url)
 
-        # Security Groups
-        efs_security_group = SecurityGroup("cloudbeaver-efs-security-group", vpc=vpc, opts=self._child_opts)
+        # EFS
+        efs = EFS("cloudbeaver-efs", vpc=vpc, opts=self._child_opts)
 
+        # Security Groups
         cloudbeaver_security_group = SecurityGroup(
             "cloudbeaver-security-group",
             vpc=vpc,
             vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
             rules=[
-                {"to_security_group": efs_security_group, "ports": [2049]},
+                {"to_security_group": efs.security_group, "ports": [2049]},
                 {"to_security_group": postgres_security_group, "ports": [5432]},
             ],
             opts=self._child_opts,
@@ -97,21 +98,6 @@ class Cloudbeaver(ComponentResource):
                 {"to_security_group": cloudbeaver_security_group, "ports": [4180]},
             ],
             opts=self._child_opts,
-        )
-
-        # EFS
-        efs = FileSystem("cloudbeaver-efs", opts=self._child_opts)
-        mount_targets = vpc.private_subnet_ids.apply(
-            lambda subnet_ids: [
-                MountTarget(
-                    f"efs-mount-{subnet_id[-8:]}",
-                    file_system_id=efs.id,
-                    subnet_id=subnet_id,
-                    security_groups=[efs_security_group.id],
-                    opts=self._child_opts,
-                )
-                for subnet_id in subnet_ids
-            ]
         )
 
         # Load balancer
@@ -181,9 +167,7 @@ class Cloudbeaver(ComponentResource):
                         "efs_volume_configuration": {
                             "file_system_id": efs.id,
                             "transit_encryption": "ENABLED",
-                            "root_directory":
-                            # Ensure all mount targets are created before using the EFS
-                            mount_targets.apply(lambda mts: Output.all(*[mt.id for mt in mts]).apply(lambda _: "/")),
+                            "root_directory": "/",
                         },
                     }
                 ],

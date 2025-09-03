@@ -43,15 +43,18 @@ EOF
 echo "📄 data-sources.json written."
 
 # --- 4) Idempotent admin‐seed logic ---
-HASH="$(printf '%s:%s' "$CB_ADMIN_NAME" "$CB_ADMIN_PASSWORD" | sha256sum | awk '{print $1}')"
-CURRENT="$(cat "$MARKER" 2>/dev/null || true)"
-
 if [[ "$HASH" != "$CURRENT" ]]; then
-  echo "🔄 Admin credentials changed (or first run); resetting CloudBeaver setup..."
-  if [[ -f "$RUNTIME" ]]; then
-    # Remove the serverName line to force first-run flow
-    sed -i '/"serverName"[[:space:]]*:/d' "$RUNTIME" || true
-  fi
+  echo "🔄 Admin credentials changed (or first run); FULL reset of CloudBeaver metadata..."
+
+  # Drop CloudBeaver schema if present
+  psql -h "${POSTGRES_HOST}" -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" \
+       -v ON_ERROR_STOP=1 \
+       -c "DROP SCHEMA IF EXISTS ${CLOUDBEAVER_DB_SCHEMA} CASCADE;"
+
+  # Wipe EFS runtime config
+  rm -rf "${WORKSPACE}/.data" "${CONFIG_DIR}"
+  mkdir -p "${CONFIG_DIR}" "${WORKSPACE}/.data"
+
   echo "$HASH" > "$MARKER"
 else
   echo "✅ Admin credentials unchanged; no reset needed."
