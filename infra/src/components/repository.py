@@ -33,6 +33,7 @@ class Repository(ComponentResource):
 
         self.resource_name = resource_name
 
+        self.name = name
         self.arn = self._repo.arn
         self.url = self._repo.repository_url
 

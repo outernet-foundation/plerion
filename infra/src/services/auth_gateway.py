@@ -1,14 +1,10 @@
-from typing import Sequence
-
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
-from pulumi_awsx.ecs._inputs import TaskDefinitionKeyValuePairArgsDict
 
 from components.load_balancer import LoadBalancer
-from components.log import log_configuration
 from components.oauth import Oauth
 from components.role import Role
 from components.roles import ecs_execution_role, ecs_role
@@ -44,7 +40,6 @@ class AuthGateway(ComponentResource):
         self.oauth = Oauth(
             resource_name="auth-gateway-oauth",
             config=config,
-            zone_name=zone_name,
             prepare_deploy_role=prepare_deploy_role,
             opts=self._child_opts,
         )
@@ -109,38 +104,6 @@ class AuthGateway(ComponentResource):
         # Task Role
         task_role = ecs_role("oauth-task-role", opts=self._child_opts)
 
-        # Environment
-        environment: Sequence[Input[TaskDefinitionKeyValuePairArgsDict]] = [
-            {"name": "OAUTH2_PROXY_HTTP_ADDRESS", "value": "0.0.0.0:4180"},
-            {"name": "OAUTH2_PROXY_PROVIDER", "value": "github"},
-            {
-                "name": "OAUTH2_PROXY_REDIRECT_URL",
-                "value": domain.apply(lambda domain: f"https://{domain}/oauth2/callback"),
-            },
-            {"name": "OAUTH2_PROXY_EMAIL_DOMAINS", "value": "*"},
-            {"name": "OAUTH2_PROXY_UPSTREAMS", "value": "static://200"},
-            {"name": "OAUTH2_PROXY_COOKIE_SECURE", "value": "true"},
-            {"name": "OAUTH2_PROXY_COOKIE_SAMESITE", "value": "lax"},
-            {"name": "OAUTH2_PROXY_REVERSE_PROXY", "value": "true"},
-            {"name": "OAUTH2_PROXY_SET_XAUTHREQUEST", "value": "true"},
-            {"name": "OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER", "value": "true"},
-            {"name": "OAUTH2_PROXY_COOKIE_DOMAINS", "value": Output.concat(".", zone_name)},
-            {"name": "OAUTH2_PROXY_WHITELIST_DOMAIN", "value": Output.concat(".", zone_name)},
-        ]
-
-        # Allow-lists
-        allowed_users = config.get("oauth-allowed-users")
-        if allowed_users:
-            environment.append({"name": "OAUTH2_PROXY_GITHUB_USER", "value": allowed_users})
-
-        github_org = config.get("oauth-org")
-        if github_org:
-            environment.append({"name": "OAUTH2_PROXY_GITHUB_ORG", "value": github_org})
-
-        github_team = config.get("oauth-team")
-        if github_team:
-            environment.append({"name": "OAUTH2_PROXY_GITHUB_TEAM", "value": github_team})
-
         # Service
         service = FargateService(
             "oauth-service",
@@ -152,20 +115,13 @@ class AuthGateway(ComponentResource):
                 "execution_role": {"role_arn": execution_role.arn},
                 "task_role": {"role_arn": task_role.arn},
                 "containers": {
-                    "oauth2-proxy": {
-                        "name": "oauth2-proxy",
-                        "image": self.oauth.image_repo.locked_digest(),
-                        "log_configuration": log_configuration(auth_gateway_log_group),
-                        "port_mappings": [
-                            {"container_port": 4180, "host_port": 4180, "target_group": load_balancer.target_group}
-                        ],
-                        "environment": environment,
-                        "secrets": [
-                            {"name": "OAUTH2_PROXY_CLIENT_ID", "value_from": self.oauth.client_id_secret.arn},
-                            {"name": "OAUTH2_PROXY_CLIENT_SECRET", "value_from": self.oauth.client_secret_secret.arn},
-                            {"name": "OAUTH2_PROXY_COOKIE_SECRET", "value_from": self.oauth.cookie_secret_secret.arn},
-                        ],
-                    }
+                    "oauth2-proxy": self.oauth.task_definition(
+                        config=config,
+                        zone_name=zone_name,
+                        log_group=auth_gateway_log_group,
+                        load_balancer=load_balancer,
+                        proxy_upstreams="static://200",
+                    )
                 },
             },
             opts=self._child_opts,
@@ -175,3 +131,15 @@ class AuthGateway(ComponentResource):
         deploy_role.allow_service_deployment(
             "auth-gateway", passroles=[execution_role, task_role], services=[service.service]
         )
+
+        self.image_repo_name = self.oauth.image_repo.name
+        self.client_id_secret_arn = self.oauth.client_id_secret.arn
+        self.client_secret_secret_arn = self.oauth.client_secret_secret.arn
+        self.cookie_secret_secret_arn = self.oauth.cookie_secret_secret.arn
+
+        self.register_outputs({
+            "image_repo_name": self.image_repo_name,
+            "client_id_secret_arn": self.client_id_secret_arn,
+            "client_secret_secret_arn": self.client_secret_secret_arn,
+            "cookie_secret_secret_arn": self.cookie_secret_secret_arn,
+        })

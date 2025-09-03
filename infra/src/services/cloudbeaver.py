@@ -1,4 +1,4 @@
-from pulumi import ComponentResource, Config, Output, ResourceOptions, StackReference, export
+from pulumi import ComponentResource, Config, Input, Output, ResourceOptions, export
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
 from pulumi_aws.efs import FileSystem, MountTarget
@@ -8,6 +8,7 @@ from pulumi_awsx.ecs import FargateService
 
 from components.load_balancer import LoadBalancer
 from components.log import log_configuration
+from components.oauth import Oauth
 from components.repository import Repository
 from components.role import Role
 from components.roles import ecs_execution_role, ecs_role
@@ -21,13 +22,16 @@ class Cloudbeaver(ComponentResource):
         self,
         resource_name: str,
         config: Config,
-        core_stack: StackReference,
+        zone_name: Input[str],
+        zone_id: Input[str],
+        certificate_arn: Input[str],
         vpc: Vpc,
         postgres_security_group: SecurityGroup,
         db: Instance,
         cluster: Cluster,
         prepare_deploy_role: Role,
         deploy_role: Role,
+        oauth: Oauth,
         *,
         opts: ResourceOptions | None = None,
     ):
@@ -116,7 +120,7 @@ class Cloudbeaver(ComponentResource):
             "cloudbeaver",
             vpc=vpc,
             securityGroup=load_balancer_security_group,
-            certificate_arn=core_stack.require_output("certificate-arn"),
+            certificate_arn=certificate_arn,
             port=4180,
             opts=self._child_opts,
             health_check={
@@ -129,10 +133,10 @@ class Cloudbeaver(ComponentResource):
         )
 
         # DNS Records
-        domain = Output.concat("cloudbeaver.", core_stack.require_output("zone-name"))
+        domain = Output.concat("cloudbeaver.", zone_name)
         Record(
             "cloudbeaver-domain-record",
-            zone_id=core_stack.require_output("zone-id"),
+            zone_id=zone_id,
             name=domain,
             type="A",
             aliases=[
@@ -175,6 +179,13 @@ class Cloudbeaver(ComponentResource):
                     }
                 ],
                 "containers": {
+                    "oauth2-proxy": oauth.task_definition(
+                        config=config,
+                        zone_name=zone_name,
+                        log_group=cloudbeaver_log_group,
+                        load_balancer=load_balancer,
+                        proxy_upstreams="http://127.0.0.1:8978/",
+                    ),
                     "cloudbeaver-init": {
                         "name": "cloudbeaver-init",
                         "image": cloudbeaver_init_image_repo.locked_digest(),
@@ -226,52 +237,6 @@ class Cloudbeaver(ComponentResource):
                                 "name": "_CLOUDBEAVER_DB_PASSWORD_VERSION",
                                 "value": cloudbeaver_password_secret.version_id,
                             },
-                        ],
-                    },
-                    "oauth2-proxy": {
-                        "name": "oauth2-proxy",
-                        "image": oauth_image_repo.locked_digest(),
-                        "log_configuration": log_configuration(cloudbeaver_log_group),
-                        "port_mappings": [
-                            {"container_port": 4180, "host_port": 4180, "target_group": load_balancer.target_group}
-                        ],
-                        "environment": [
-                            {"name": "OAUTH2_PROXY_PROVIDER", "value": "github"},
-                            # Central callback on auth.* (single OAuth App for all subdomains)
-                            {
-                                "name": "OAUTH2_PROXY_REDIRECT_URL",
-                                "value": Output.concat(
-                                    "https://", "auth.", core_stack.require_output("zone-name"), "/oauth2/callback"
-                                ),
-                            },
-                            {"name": "OAUTH2_PROXY_UPSTREAMS", "value": "http://127.0.0.1:8978/"},
-                            {"name": "OAUTH2_PROXY_EMAIL_DOMAINS", "value": "*"},
-                            {"name": "OAUTH2_PROXY_COOKIE_SECURE", "value": "true"},
-                            {"name": "OAUTH2_PROXY_COOKIE_SAMESITE", "value": "lax"},
-                            {"name": "OAUTH2_PROXY_REVERSE_PROXY", "value": "true"},
-                            {"name": "OAUTH2_PROXY_SET_XAUTHREQUEST", "value": "true"},
-                            {"name": "OAUTH2_PROXY_PASS_AUTHORIZATION_HEADER", "value": "true"},
-                            {"name": "OAUTH2_PROXY_PASS_HOST_HEADER", "value": "true"},
-                            # Shared cookie scope across subdomains
-                            {
-                                "name": "OAUTH2_PROXY_COOKIE_DOMAINS",
-                                "value": Output.concat(".", core_stack.require_output("zone-name")),
-                            },
-                            {
-                                "name": "OAUTH2_PROXY_WHITELIST_DOMAIN",
-                                "value": Output.concat(".", core_stack.require_output("zone-name")),
-                            },
-                            # IMPORTANT: listen on all interfaces for the ALB target
-                            {"name": "OAUTH2_PROXY_HTTP_ADDRESS", "value": "0.0.0.0:4180"},
-                            # Optional allow-list (reuse what you put on auth.*)
-                            # {"name": "OAUTH2_PROXY_GITHUB_USER", "value": config.get("oauth-allowed-users") or ""},
-                            # {"name": "OAUTH2_PROXY_GITHUB_ORG", "value": config.get("oauth-org") or ""},
-                            # {"name": "OAUTH2_PROXY_GITHUB_TEAM", "value": config.get("oauth-team") or ""},
-                        ],
-                        "secrets": [
-                            {"name": "OAUTH2_PROXY_CLIENT_ID", "value_from": github_client_id_secret.arn},
-                            {"name": "OAUTH2_PROXY_CLIENT_SECRET", "value_from": github_client_secret_secret.arn},
-                            {"name": "OAUTH2_PROXY_COOKIE_SECRET", "value_from": cookie_secret_secret.arn},
                         ],
                     },
                 },

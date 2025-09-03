@@ -1,8 +1,11 @@
 from typing import Sequence, overload
 
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions, export
-from pulumi_awsx.ecs._inputs import TaskDefinitionKeyValuePairArgsDict
+from pulumi_aws.cloudwatch import LogGroup
+from pulumi_awsx.ecs._inputs import TaskDefinitionContainerDefinitionArgsDict, TaskDefinitionKeyValuePairArgsDict
 
+from components.load_balancer import LoadBalancer
+from components.log import log_configuration
 from components.repository import Repository
 from components.role import Role
 from components.secret import Secret
@@ -11,13 +14,7 @@ from components.secret import Secret
 class Oauth(ComponentResource):
     @overload
     def __init__(
-        self,
-        resource_name: str,
-        config: Config,
-        zone_name: Input[str],
-        *,
-        prepare_deploy_role: Role,
-        opts: ResourceOptions | None = None,
+        self, resource_name: str, config: Config, *, prepare_deploy_role: Role, opts: ResourceOptions | None = None
     ) -> None: ...
 
     @overload
@@ -25,7 +22,6 @@ class Oauth(ComponentResource):
         self,
         resource_name: str,
         config: Config,
-        zone_name: Input[str],
         *,
         image_repo_name: Input[str],
         client_id_secret_arn: Input[str],
@@ -38,7 +34,6 @@ class Oauth(ComponentResource):
         self,
         resource_name: str,
         config: Config,
-        zone_name: Input[str],
         *,
         prepare_deploy_role: Role | None = None,
         image_repo_name: Input[str] | None = None,
@@ -97,16 +92,25 @@ class Oauth(ComponentResource):
             )
             self.image_repo = Repository("oauth2-proxy-repo", name=image_repo_name, adopt=True, opts=self._child_opts)
 
+    def task_definition(
+        self,
+        config: Config,
+        zone_name: Input[str],
+        log_group: LogGroup,
+        load_balancer: LoadBalancer,
+        proxy_upstreams: Input[str],
+    ):
         # Environment
-        self.environment: Sequence[Input[TaskDefinitionKeyValuePairArgsDict]] = [
+        environment: Sequence[Input[TaskDefinitionKeyValuePairArgsDict]] = [
             {"name": "OAUTH2_PROXY_HTTP_ADDRESS", "value": "0.0.0.0:4180"},
             {"name": "OAUTH2_PROXY_PROVIDER", "value": "github"},
             {
                 "name": "OAUTH2_PROXY_REDIRECT_URL",
                 "value": Output.concat("https://auth.", zone_name, "/oauth2/callback"),
             },
+            # {"name": "OAUTH2_PROXY_UPSTREAMS", "value": "static://200"},
+            {"name": "OAUTH2_PROXY_UPSTREAMS", "value": proxy_upstreams},
             {"name": "OAUTH2_PROXY_EMAIL_DOMAINS", "value": "*"},
-            {"name": "OAUTH2_PROXY_UPSTREAMS", "value": "static://200"},
             {"name": "OAUTH2_PROXY_COOKIE_SECURE", "value": "true"},
             {"name": "OAUTH2_PROXY_COOKIE_SAMESITE", "value": "lax"},
             {"name": "OAUTH2_PROXY_REVERSE_PROXY", "value": "true"},
@@ -119,12 +123,27 @@ class Oauth(ComponentResource):
         # Allow-lists
         allowed_users = config.get("oauth-allowed-users")
         if allowed_users:
-            self.environment.append({"name": "OAUTH2_PROXY_GITHUB_USER", "value": allowed_users})
+            environment.append({"name": "OAUTH2_PROXY_GITHUB_USER", "value": allowed_users})
 
         github_org = config.get("oauth-org")
         if github_org:
-            self.environment.append({"name": "OAUTH2_PROXY_GITHUB_ORG", "value": github_org})
+            environment.append({"name": "OAUTH2_PROXY_GITHUB_ORG", "value": github_org})
 
         github_team = config.get("oauth-team")
         if github_team:
-            self.environment.append({"name": "OAUTH2_PROXY_GITHUB_TEAM", "value": github_team})
+            environment.append({"name": "OAUTH2_PROXY_GITHUB_TEAM", "value": github_team})
+
+        task_definition: TaskDefinitionContainerDefinitionArgsDict = {
+            "name": "oauth2-proxy",
+            "image": self.image_repo.locked_digest(),
+            "log_configuration": log_configuration(log_group),
+            "port_mappings": [{"container_port": 4180, "host_port": 4180, "target_group": load_balancer.target_group}],
+            "environment": environment,
+            "secrets": [
+                {"name": "OAUTH2_PROXY_CLIENT_ID", "value_from": self.client_id_secret.arn},
+                {"name": "OAUTH2_PROXY_CLIENT_SECRET", "value_from": self.client_secret_secret.arn},
+                {"name": "OAUTH2_PROXY_COOKIE_SECRET", "value_from": self.cookie_secret_secret.arn},
+            ],
+        }
+
+        return task_definition
