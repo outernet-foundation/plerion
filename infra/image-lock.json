@@ -15,9 +15,7 @@
   },
   "dockerhub/dbeaver/cloudbeaver": {
     "digest": "sha256:a904a0c11f92ae4244793fcf5a6f00b9ec1d112a076415f18d4879e54d3f4dfc",
-    "tags": [
-      "latest"
-    ]
+    "tags": ["latest"]
   },
   "features-worker": {
     "digest": "sha256:a758e657e0df27c211c1bbafc0c9ebc63aedaa8233af7f5b95b5d94d727f6cc1",
@@ -28,15 +26,7 @@
   },
   "dockerhub/myoung34/github-runner": {
     "digest": "sha256:61e6bff39fde658a84429b7a38695c9aee7c54a01fee818bdb6dc92aa2b03509",
-    "tags": [
-      "latest"
-    ]
-  },
-  "quay/oauth2-proxy/oauth2-proxy": {
-    "digest": "sha256:786bed0f000c0f8a7b31619244ebab02406a8856a4faf3f5fb1df61fbd6c30ed",
-    "tags": [
-      "latest"
-    ]
+    "tags": ["latest"]
   },
   "reconstruction-worker": {
     "digest": "sha256:a2ef901a013e0c9086ccd98db9af3adb1696f293b180871e056c569cd90d95c8",
