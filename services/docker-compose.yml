@@ -69,16 +69,6 @@ services:
         condition: service_healthy
       cloudbeaver_init:
         condition: service_completed_successfully
-    environment:
-      CB_SERVER_NAME: CloudBeaver
-      CB_SERVER_URL: http://localhost:8978
-      CB_ADMIN_NAME: ${CB_ADMIN_NAME}
-      CB_ADMIN_PASSWORD: ${CB_ADMIN_PASSWORD}
-      CLOUDBEAVER_DB_DRIVER: postgres-jdbc
-      CLOUDBEAVER_DB_URL: jdbc:postgresql://${POSTGRES_HOST}:5432/${POSTGRES_DB}
-      CLOUDBEAVER_DB_USER: ${POSTGRES_USER}
-      CLOUDBEAVER_DB_PASSWORD: ${POSTGRES_PASSWORD}
-      CLOUDBEAVER_DB_SCHEMA: cloudbeaver
     volumes:
       - cloudbeaver_data:/opt/cloudbeaver/workspace
     healthcheck:
