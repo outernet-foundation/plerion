@@ -96,8 +96,6 @@ cat > /etc/caddy/Caddyfile <<EOF
 
         # Proxy to <device>.<TAILNET>.ts.net:<port>
         reverse_proxy {http.regexp.pair.1}.${TAILNET}.ts.net:{up_port} {
-            # Rewrite the Host header to the upstream host (i.e. the tailnet address, otherwise tailnet won't resolve it)
-            header_up Host {upstream_hostport}
             transport http {
                 forward_proxy_url socks5://127.0.0.1:1055
             }
