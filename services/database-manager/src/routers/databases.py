@@ -59,13 +59,13 @@ def create_database(
                 "connection:createConnection(projectId:$pid,config:$cfg){id name}}"
             ),
             "variables": {
-                "pid": settings.cloudbeaver_project_id,
+                "pid": "g_GlobalConfiguration",
                 "cfg": {
                     "configurationType": "MANUAL",
                     "driverId": "postgresql",
                     "name": name,
                     "host": settings.postgres_host,
-                    "port": str(settings.postgres_port),
+                    "port": settings.postgres_port,
                     "databaseName": name,
                     "authModelId": "native",
                     "credentials": {
@@ -90,8 +90,6 @@ def create_database(
 
 @router.delete("/{name}")
 def destroy_database(name: str):
-    settings = get_settings()
-
     # CloudBeaver connection must exist
     cloudbeaver_api_url, opener = cloudbeaver_login()
     connections_list = cloudbeaver_list_connections(opener, cloudbeaver_api_url)
@@ -111,7 +109,7 @@ def destroy_database(name: str):
         {
             "query": "mutation D($pid:ID!,$id:ID!){deleteConnection(projectId:$pid,connectionId:$id)}",
             "variables": {
-                "pid": settings.cloudbeaver_project_id,
+                "pid": "g_GlobalConfiguration",
                 "id": connection_id,
             },
         },
@@ -145,11 +143,11 @@ def destroy_database(name: str):
 def postgres_cursor(database_name: str = "postgres"):
     settings = get_settings()
     with connect(
-        host=settings.postgres_host,
+        host="localhost",
         port=settings.postgres_port,
         dbname=database_name,
-        user=settings.postgres_admin_user,
-        password=settings.postgres_admin_password,
+        user=settings.postgres_user,
+        password=settings.postgres_password,
         connect_timeout=5,
     ) as connection:
         connection.autocommit = True
@@ -189,7 +187,7 @@ def cloudbeaver_list_connections(opener: OpenerDirector, cloudbeaver_api_url: st
         cloudbeaver_api_url,
         {
             "query": "query Q($pid:ID!){project(projectId:$pid){connections{id name projectId}}}",
-            "variables": {"pid": get_settings().cloudbeaver_project_id},
+            "variables": {"pid": "g_GlobalConfiguration"},
         },
     )["project"]["connections"]
 

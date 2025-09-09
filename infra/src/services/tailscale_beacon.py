@@ -142,41 +142,44 @@ class TailscaleBeacon(ComponentResource):
         # Task role
         task_role = ecs_role("tailscale-beacon-task-role", opts=self._child_opts)
 
-        # Service
-        tailscale_service = FargateService(
-            "tailscale-beacon-service",
-            name="tailscale-beacon-service",
-            cluster=cluster.arn,
-            desired_count=1,
-            network_configuration={
-                "subnets": vpc.private_subnet_ids,
-                "security_groups": [tailscale_beacon_security_group.id],
-            },
-            task_definition_args={
-                "execution_role": {"role_arn": execution_role.arn},
-                "task_role": {"role_arn": task_role.arn},
-                "containers": {
-                    "tailscale-beacon": {
-                        "name": "tailscale-beacon",
-                        "image": tailscale_beacon_image_repo.locked_digest(),
-                        "log_configuration": log_configuration(tailscale_beacon_log_group),
-                        "port_mappings": [
-                            {"container_port": 80, "host_port": 80, "target_group": load_balancer.target_group}
-                        ],
-                        "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
-                        "environment": [
-                            {"name": "TAILNET", "value": config.require("tailnet-name")},
-                            {"name": "DOMAIN", "value": domain},
-                            {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
-                            {"name": "_TS_AUTHKEY_VERSION", "value": tailscale_auth_key_secret.version_id},
-                        ],
-                    }
+        if config.require_bool("deploy-tailscale-beacon"):
+            # Service
+            tailscale_service = FargateService(
+                "tailscale-beacon-service",
+                name="tailscale-beacon-service",
+                cluster=cluster.arn,
+                desired_count=1,
+                network_configuration={
+                    "subnets": vpc.private_subnet_ids,
+                    "security_groups": [tailscale_beacon_security_group.id],
                 },
-            },
-            opts=self._child_opts,
-        )
+                task_definition_args={
+                    "execution_role": {"role_arn": execution_role.arn},
+                    "task_role": {"role_arn": task_role.arn},
+                    "containers": {
+                        "tailscale-beacon": {
+                            "name": "tailscale-beacon",
+                            "image": tailscale_beacon_image_repo.locked_digest(),
+                            "log_configuration": log_configuration(tailscale_beacon_log_group),
+                            "port_mappings": [
+                                {"container_port": 80, "host_port": 80, "target_group": load_balancer.target_group}
+                            ],
+                            "secrets": [{"name": "TS_AUTHKEY", "value_from": tailscale_auth_key_secret.arn}],
+                            "environment": [
+                                {"name": "TAILNET", "value": config.require("tailnet-name")},
+                                {"name": "DOMAIN", "value": domain},
+                                {"name": "SERVICES", "value": " ".join(f"{k}:{v}" for k, v in service_map.items())},
+                                {"name": "_TS_AUTHKEY_VERSION", "value": tailscale_auth_key_secret.version_id},
+                            ],
+                        }
+                    },
+                },
+                opts=self._child_opts,
+            )
 
-        # Allow service deployment role to deploy this service
-        deploy_role.allow_service_deployment(
-            "tailscale-beacon", passroles=[execution_role, task_role], services=[tailscale_service.service]
-        )
+            # Allow service deployment role to deploy this service
+            deploy_role.allow_service_deployment(
+                "tailscale-beacon", passroles=[execution_role, task_role], services=[tailscale_service.service]
+            )
+
+        self.register_outputs({})

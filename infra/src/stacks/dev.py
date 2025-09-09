@@ -7,8 +7,6 @@ from components.nat_instance import NatInstance
 from components.role import Role
 from components.s3 import create_storage
 from components.vpc import Vpc, VpcInfo
-from services.api import Api
-from services.github_runner import GithubRunner
 
 
 def create_dev_stack(config: Config):
@@ -36,27 +34,27 @@ def create_dev_stack(config: Config):
 
     cluster = Cluster("main-cluster")
 
-    GithubRunner(
-        resource_name="github-runner",
-        vpc=vpc,
-        config=config,
-        cluster=cluster,
-        postgres_security_group=postgres_security_group,
-        prepare_deploy_role=main_prepare_deploy_role,
-        deploy_role=main_deploy_role,
-    )
+    # GithubRunner(
+    #     resource_name="github-runner",
+    #     vpc=vpc,
+    #     config=config,
+    #     cluster=cluster,
+    #     postgres_security_group=postgres_security_group,
+    #     prepare_deploy_role=main_prepare_deploy_role,
+    #     deploy_role=main_deploy_role,
+    # )
 
-    Api(
-        resource_name="api",
-        config=config,
-        zone_id=zone_id,
-        zone_name=zone_name,
-        certificate_arn=certificate_arn,
-        cluster=cluster,
-        s3_bucket=captures_bucket,
-        vpc=vpc,
-        postgres_security_group=postgres_security_group,
-        postgres_instance=postgres_instance,
-        prepare_deploy_role=main_prepare_deploy_role,
-        deploy_role=main_deploy_role,
-    )
+    # Api(
+    #     resource_name="api",
+    #     config=config,
+    #     zone_id=zone_id,
+    #     zone_name=zone_name,
+    #     certificate_arn=certificate_arn,
+    #     cluster=cluster,
+    #     s3_bucket=captures_bucket,
+    #     vpc=vpc,
+    #     postgres_security_group=postgres_security_group,
+    #     postgres_instance=postgres_instance,
+    #     prepare_deploy_role=main_prepare_deploy_role,
+    #     deploy_role=main_deploy_role,
+    # )

@@ -6,13 +6,14 @@ from pulumi_aws.iam import OpenIdConnectProvider
 from pulumi_aws.route53 import Record, Zone
 
 from components.oauth import Oauth
-from components.rds import create_database
+from components.rds import RDSInstance
 from components.role import Role
 from components.roles import github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc, VpcInfo
 from services.auth_gateway import AuthGateway
 from services.cloudbeaver import Cloudbeaver
+from services.database_manager import DatabaseManager
 from services.tailscale_beacon import TailscaleBeacon
 
 
@@ -78,6 +79,8 @@ def create_core_stack(config: Config):
 
     vpc = Vpc(name="main-vpc")
 
+    rds = RDSInstance("cloudbeaver-rds", config=config, vpc=vpc)
+
     cluster = Cluster("core-tooling-cluster")
 
     auth_gateway = AuthGateway(
@@ -92,8 +95,6 @@ def create_core_stack(config: Config):
         prepare_deploy_role=main_prepare_deploy_role,
     )
 
-    postgres_instance, postgres_security_group = create_database(config, vpc)
-
     oauth = Oauth(
         "cloudbeaver-oauth",
         config=config,
@@ -104,19 +105,29 @@ def create_core_stack(config: Config):
         cookie_secret_secret_arn=auth_gateway.cookie_secret_secret_arn,
     )
 
-    Cloudbeaver(
+    cloudbeaver = Cloudbeaver(
         resource_name="cloudbeaver",
         config=config,
         zone_name=zone.name,
         zone_id=zone.id,
         certificate_arn=certificate.arn,
         vpc=vpc,
-        postgres_security_group=postgres_security_group,
-        db=postgres_instance,
+        rds=rds,
         cluster=cluster,
         prepare_deploy_role=main_prepare_deploy_role,
         deploy_role=main_deploy_role,
         oauth=oauth,
+    )
+
+    DatabaseManager(
+        "database-manager",
+        config=config,
+        zone_name=zone.name,
+        zone_id=zone.id,
+        certificate_arn=certificate.arn,
+        vpc=vpc,
+        rds=rds,
+        cloudbeaver=cloudbeaver,
     )
 
     TailscaleBeacon(

@@ -44,7 +44,6 @@ class GithubRunner(ComponentResource):
         github_runner_image_repo = Repository(
             "github-runner-cache-repo",
             name="dockerhub/myoung34/github-runner",
-            force_delete=config.require_bool("devMode"),
             opts=ResourceOptions.merge(
                 self._child_opts, ResourceOptions(retain_on_delete=True, import_="dockerhub/myoung34/github-runner")
             ),
