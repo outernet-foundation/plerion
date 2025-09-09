@@ -50,6 +50,7 @@ def get_database_settings() -> DatabaseSettings:
 
 @lru_cache()
 def get_api_settings() -> ApiSettings:
+    # During codegen, we don't have access to all env vars, so skip validation.
     if os.environ.get("CODEGEN"):
         return ApiSettings.model_construct()
 

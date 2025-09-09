@@ -63,10 +63,9 @@ def patch_commas(output_dir: Path) -> None:
             print(f"Patched stray comma in {cs_file}")
 
 
-def generate(app: FastAPI, dir: Path):
+def generate(app: FastAPI, dir: Path, output_dir: Path):
     config_path = dir / "config.json"
     spec_path = dir / "openapi.json"
-    output_dir = dir / "unity"
     dump_openapi(app, spec_path)
     generate_client(config_path, spec_path, output_dir)
     patch_commas(output_dir)

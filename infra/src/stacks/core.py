@@ -5,11 +5,14 @@ from pulumi_aws.ecs import Cluster
 from pulumi_aws.iam import OpenIdConnectProvider
 from pulumi_aws.route53 import Record, Zone
 
+from components.oauth import Oauth
+from components.rds import create_database
 from components.role import Role
 from components.roles import github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc, VpcInfo
 from services.auth_gateway import AuthGateway
+from services.cloudbeaver import Cloudbeaver
 from services.tailscale_beacon import TailscaleBeacon
 
 
@@ -89,6 +92,33 @@ def create_core_stack(config: Config):
         prepare_deploy_role=main_prepare_deploy_role,
     )
 
+    postgres_instance, postgres_security_group = create_database(config, vpc)
+
+    oauth = Oauth(
+        "cloudbeaver-oauth",
+        config=config,
+        proxy_image_repo_name=auth_gateway.proxy_image_repo_name,
+        reverse_proxy_image_repo_name=auth_gateway.reverse_proxy_image_repo_name,
+        client_id_secret_arn=auth_gateway.client_id_secret_arn,
+        client_secret_secret_arn=auth_gateway.client_secret_secret_arn,
+        cookie_secret_secret_arn=auth_gateway.cookie_secret_secret_arn,
+    )
+
+    Cloudbeaver(
+        resource_name="cloudbeaver",
+        config=config,
+        zone_name=zone.name,
+        zone_id=zone.id,
+        certificate_arn=certificate.arn,
+        vpc=vpc,
+        postgres_security_group=postgres_security_group,
+        db=postgres_instance,
+        cluster=cluster,
+        prepare_deploy_role=main_prepare_deploy_role,
+        deploy_role=main_deploy_role,
+        oauth=oauth,
+    )
+
     TailscaleBeacon(
         resource_name="tailscale-beacon",
         config=config,
@@ -120,8 +150,3 @@ def create_core_stack(config: Config):
             "s3_endpoint_prefix_list_id": vpc.s3_endpoint_prefix_list_id,
         }),
     )
-    export("oauth2-proxy-image-repo-name", auth_gateway.proxy_image_repo_name)
-    export("oauth2-reverse-proxy-image-repo-name", auth_gateway.reverse_proxy_image_repo_name)
-    export("oauth2-client-id-secret-arn", auth_gateway.client_id_secret_arn)
-    export("oauth2-client-secret-secret-arn", auth_gateway.client_secret_secret_arn)
-    export("oauth2-cookie-secret-secret-arn", auth_gateway.cookie_secret_secret_arn)

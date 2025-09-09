@@ -46,10 +46,10 @@ DATA_SOURCES_JSON=$(cat <<EOF
 {
   "folders": {},
   "connections": {
-    "plerion": {
+    "postgres": {
       "provider": "postgresql",
       "driver": "postgres-jdbc",
-      "name": "Plerion",
+      "name": "postgres",
       "save-password": true,
       "configuration": {
         "host": "${POSTGRES_HOST}",

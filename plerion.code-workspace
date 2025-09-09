@@ -73,11 +73,8 @@
     "emeraldwalk.runonsave": {
       "commands": [
         {
-          // match either src/routers/*.py OR src/db/tables/*.py
           "match": ".*src[/\\\\](routers|db[/\\\\]tables)[/\\\\].*\\.py$",
-          "cmd": "export CODEGEN=1 && uv run -m src.clients.generate",
-          "message": "🔄 Generating C# client…",
-          "messageAfter": "✅ Done generating C# client"
+          "cmd": "uv run -m src.clients.generate"
         }
       ]
     }

@@ -14,16 +14,14 @@ settings = get_api_settings()
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    # Importing the DB connects to the DB, which we don't want to during openapi generation.
-    if os.environ.get("DONT_IMPORT_DB") == "1":
+    # During codegen, we don't want to connect to the database
+    if os.environ.get("CODEGEN") == "1":
         yield
     else:
         # Must import here so connection occurs after event loop is running
         from .db.conf import DB
 
-        print("Starting DB connection pool...")
         await DB.start_connection_pool()
-        print("DB connection pool started.")
         try:
             yield
         finally:
@@ -31,7 +29,7 @@ async def lifespan(_: FastAPI):
 
 
 app = create_fastapi_app(
-    title="Plerion API",
+    title="Plerion",
     lifespan=lifespan,
 )
 
