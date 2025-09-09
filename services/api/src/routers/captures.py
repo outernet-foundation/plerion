@@ -54,10 +54,7 @@ async def create_capture(
     exists = await Capture.objects().get(Capture.id == id)
 
     if exists:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Capture with id {id} already exists",
-        )
+        raise HTTPException(409, f"Capture with id {id} already exists")
 
     row = await Capture.objects().create(id=id, filename=filename)
 

@@ -17,6 +17,10 @@
       "name": "features-worker"
     },
     {
+      "path": "services/database-manager",
+      "name": "database-manager"
+    },
+    {
       "path": "infra"
     },
     {
@@ -62,6 +66,7 @@
     "editor.formatOnSave": true,
     "dotnet.defaultSolution": "capture-app/android_mobile/android_mobile.sln",
     "python.terminal.activateEnvironment": true,
+    "python.useEnvironmentsExtension": true,
     "python.languageServer": "Pylance",
     "python.analysis.languageServerMode": "default",
     "python.analysis.diagnosticMode": "workspace",
