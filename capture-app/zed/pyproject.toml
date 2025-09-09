@@ -16,13 +16,6 @@ dependencies = [
 [dependency-groups]
 dev = ["scipy-stubs"]
 
-[tool.pyright]
-typeCheckingMode = "strict"
-stubPath = "typings"
-
-[tool.ruff.lint]
-extend-select = ["I"]
-
 [tool.uv.sources]
 common = { path = "../../common", editable = true }
 pyzed = { index = "pyzed" }
@@ -32,3 +25,6 @@ name = "pyzed"
 url = "third-party/pyzed"
 format = "flat"
 explicit = true
+
+[tool.ruff]
+extend = "../../ruff.toml"

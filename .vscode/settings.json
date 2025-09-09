@@ -1,0 +1,39 @@
+{
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.meta": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/*.meta": true
+  },
+  "files.associations": {
+    ".github/CODEOWNERS": "plaintext"
+  },
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit"
+    }
+  },
+  "[csharp]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit",
+      "source.sortMembers": "explicit"
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.formatOnSave": true,
+  "dotnet.defaultSolution": "Plerion.sln",
+  "debug.onTaskErrors": "debugAnyway",
+  "python.languageServer": "None",
+  "python.experiments.enabled": false,
+  "python.experiments.optOutFrom": ["All"],
+  "basedpyright.analysis.diagnosticMode": "workspace",
+  "basedpyright.analysis.inlayHints.callArgumentNames": false,
+  "basedpyright.analysis.inlayHints.variableTypes": false,
+  "basedpyright.analysis.inlayHints.functionReturnTypes": false,
+  "basedpyright.analysis.typeCheckingMode": "strict"
+}

@@ -1,0 +1,121 @@
+{
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "strict",
+  "exclude": ["**/.venv/**", "**/clients/**"],
+  "include": [
+    "common",
+    "scripts",
+    "infrastructure",
+    "services/api",
+    "services/automigrator",
+    "services/database-manager",
+    "tasks/run-reconstruction",
+    "tasks/extract-match-features",
+    "capture-app/android_mobile",
+    "capture-app/zed"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "common",
+      "extraPaths": [
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "scripts",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "scripts/.venv/Lib/site-packages",
+        "scripts/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "infrastructure",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "infrastructure/.venv/Lib/site-packages",
+        "infrastructure/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "services/api",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "services/api/.venv/Lib/site-packages",
+        "services/api/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "services/automigrator",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "services/automigrator/.venv/Lib/site-packages",
+        "services/automigrator/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "services/database-manager",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "services/database-manager/.venv/Lib/site-packages",
+        "services/database-manager/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "tasks/delete-database",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "tasks/delete-database/.venv/Lib/site-packages",
+        "tasks/delete-database/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "tasks/run-reconstruction",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "tasks/run-reconstruction/.venv/Lib/site-packages",
+        "tasks/run-reconstruction/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "tasks/extract-match-features",
+      "extraPaths": [
+        "tasks/extract-match-features/.venv/Lib/site-packages",
+        "tasks/extract-match-features/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "capture-app/android_mobile",
+      "extraPaths": [
+        "capture-app/android_mobile/.venv/Lib/site-packages",
+        "capture-app/android_mobile/.venv/lib/python3.13/site-packages"
+      ]
+    },
+    {
+      "root": "capture-app/zed",
+      "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
+        "capture-app/zed/typings",
+        "capture-app/zed/.venv/Lib/site-packages",
+        "capture-app/zed/.venv/lib/python3.13/site-packages"
+      ]
+    }
+  ]
+}

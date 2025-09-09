@@ -15,8 +15,6 @@ from pydantic import BaseModel, ConfigDict
 from ..piccolo_shims import Table
 
 
-# require=true
-# https://github.com/piccolo-orm/piccolo/issues/1132
 class Node(Table):
     id = UUID(primary_key=True)
 

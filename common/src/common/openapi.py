@@ -3,18 +3,35 @@ import re
 import subprocess
 from pathlib import Path
 from re import Pattern
+from shutil import rmtree
 
 from fastapi import FastAPI
 
 
 def dump_openapi(app: FastAPI, spec_path: Path):
-    spec = app.openapi()
-    spec_path.write_text(json.dumps(spec, indent=2), encoding="utf-8")
+    with spec_path.open("r", encoding="utf-8") as f:
+        old_spec = f.read()
+
+    new_spec = json.dumps(app.openapi(), indent=2)
+    if new_spec == old_spec:
+        return False
+
+    spec_path.write_text(new_spec, encoding="utf-8")
     print(f"OpenAPI spec written to {spec_path}")
+
+    return True
 
 
 def generate_client(config_path: Path, spec_uri: Path, out_dir: Path):
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # Remove existing Api, Models, and Client folders
+    config = json.loads(config_path.read_text(encoding="utf-8"))
+    if config["generatorName"] == "csharp":
+        packageName = config["additionalProperties"]["packageName"]
+        for subdir in ["Api", "Model", "Client"]:
+            rmtree(Path(out_dir / "src" / packageName / subdir))
+
     subprocess.run(
         [
             "uv",
@@ -64,10 +81,18 @@ def patch_commas(output_dir: Path) -> None:
 
 
 def generate(app: FastAPI, dir: Path):
-    config_path = dir / "config.json"
     spec_path = dir / "openapi.json"
-    output_dir = dir / "unity"
-    dump_openapi(app, spec_path)
-    generate_client(config_path, spec_path, output_dir)
-    patch_commas(output_dir)
-    print("Client generation complete.")
+    changed = dump_openapi(app, spec_path)
+
+    if not changed:
+        print("OpenAPI spec unchanged, skipping client generation")
+        return
+
+    for config in dir.glob("config_*.json"):
+        client_name = config.stem[len("config_") :]
+        output_dir = dir / client_name
+        print(f"Generating client in {output_dir} using config {config}")
+
+        generate_client(config, spec_path, output_dir)
+        patch_commas(output_dir)
+        print(f"Generated {client_name} client in {output_dir}")

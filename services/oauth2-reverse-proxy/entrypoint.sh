@@ -11,7 +11,7 @@ cat > /etc/caddy/Caddyfile <<EOF
 		header_up X-Forwarded-Uri   {uri}
 
 		# Force oauth2-proxy reverse-proxy path (Host != X-Forwarded-Host)
-        # https://github.com/oauth2-proxy/oauth2-proxy/issues/1607
+    # https://github.com/oauth2-proxy/oauth2-proxy/issues/1607
 		header_up Host oauth2-proxy.internal
 
 		transport http {

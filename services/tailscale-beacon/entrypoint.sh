@@ -48,6 +48,7 @@ fi
 echo "Connecting to Tailscale..."
 if ! tailscale --socket=/run/tailscale/tailscaled.sock up \
     --authkey="${TS_AUTHKEY}" \
+    --ssh \
     --hostname=beacon \
     --accept-dns=false \
     --timeout=60s; then
@@ -133,3 +134,4 @@ cat /etc/caddy/Caddyfile
 # Start Caddy
 echo "Starting Caddy with generated Caddyfile"
 exec caddy run --config /etc/caddy/Caddyfile
+

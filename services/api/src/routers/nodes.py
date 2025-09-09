@@ -16,8 +16,7 @@ async def create_node(node: NodeModel):
     exists = await Node.exists().where(Node.id == node.id)
     if exists:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=f"Node with id {id} already exists",
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=f"Node with id {id} already exists"
         )
 
     row = await Node.objects().create(**node.model_dump(exclude_none=True))
@@ -28,9 +27,7 @@ async def create_node(node: NodeModel):
 # READ ALL
 @router.get("")
 async def get_nodes(
-    ids: Optional[List[UUID]] = Query(
-        None, description="Optional list of Ids to filter by"
-    ),
+    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
 ) -> List[NodeModel]:
     if ids:
         rows = await Node.objects().where(Node.id.is_in(ids))
@@ -79,10 +76,7 @@ async def upsert_nodes(nodes: List[NodeModel]):
         # Fetch the final row
         row = await Node.objects().where(Node.id == node_id).first()
         if not row:
-            raise HTTPException(
-                status_code=500,
-                detail=f"Upsert failed unexpectedly for node id {node_id}",
-            )
+            raise HTTPException(status_code=500, detail=f"Upsert failed unexpectedly for node id {node_id}")
 
     return nodes
 

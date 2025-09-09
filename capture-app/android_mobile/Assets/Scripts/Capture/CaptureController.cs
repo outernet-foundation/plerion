@@ -25,7 +25,7 @@ namespace PlerionClient.Client
         public Canvas canvas;
         [SerializeField][Range(0, 5)] float captureIntervalSeconds = 0.5f;
 
-        private CapturesApi capturesApi;
+        private DefaultApi capturesApi;
         private IControl ui;
         private TaskHandle currentCaptureTask = TaskHandle.Complete;
 
@@ -33,7 +33,7 @@ namespace PlerionClient.Client
 
         void Awake()
         {
-            capturesApi = new CapturesApi(new Configuration { BasePath = App.state.plerionAPIBaseUrl.value });
+            capturesApi = new DefaultApi(new Configuration { BasePath = App.state.plerionAPIBaseUrl.value });
 
             DefaultButtonStyle = StyleButton;
             DefaultScrollbarStyle = StyleScrollBar;

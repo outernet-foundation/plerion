@@ -5,7 +5,10 @@ on:
     branches: [main]
     paths:
       - ".github/workflows/create-deployment-pr.yml"
+      - "scripts/src/build.py"
+      - "images.json"
       - "services/**"
+      - "tasks/**"
       - "common/**"
       - "!services/api/src/db/migrations/**"
 
@@ -22,97 +25,39 @@ env:
   DEPLOY_BRANCH: bot/deploy
 
 jobs:
-  prepare-deployment-branch:
+  prepare:
     runs-on: ubuntu-latest
-
-    outputs:
-      sha_tag: ${{ steps.prepare-deployment-branch.outputs.sha_tag }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
-      - name: Ensure remote deploy branch exists, create git sha tag
-        id: prepare-deployment-branch
+      - name: Ensure remote deploy branch exists
+        id: prepare
         run: |
           set -euo pipefail
           if ! git ls-remote --exit-code --heads origin bot/deploy >/dev/null 2>&1; then
             git checkout -B bot/deploy origin/main
             git push origin bot/deploy
           fi
-          echo "sha_tag=git-$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-  build-and-push-images:
+  plan:
     runs-on: ubuntu-latest
-    needs: prepare-deployment-branch
-
-    strategy:
-      matrix:
-        images:
-          - name: "tailscale-beacon"
-            stack: "core"
-            first_party: true
-            context: "./services/tailscale-beacon"
-            dockerfile: "Dockerfile"
-
-          - name: "oauth2-proxy"
-            stack: "core"
-            first_party: false
-
-          - name: "oauth2-reverse-proxy"
-            stack: "core"
-            first_party: true
-            context: "./services/oauth2-reverse-proxy"
-            dockerfile: "Dockerfile"
-
-          - name: "api"
-            stack: "dev"
-            first_party: true
-            context: "."
-            dockerfile: "services/api/Dockerfile"
-            hash_paths: |
-              services/api
-              common
-
-          - name: "cloudbeaver-init"
-            stack: "dev"
-            first_party: true
-            context: "./services/cloudbeaver-init"
-            dockerfile: "Dockerfile"
-
-          - name: "cloudbeaver"
-            stack: "dev"
-            first_party: false
-
-          - name: "github-runner"
-            stack: "dev"
-            first_party: false
-
-          - name: "reconstruction-worker"
-            stack: "dev"
-            first_party: true
-            context: "."
-            dockerfile: "services/reconstruction-worker/Dockerfile"
-            hash_paths: |
-              services/reconstruction-worker
-              common
-
-          - name: "features-worker"
-            stack: "dev"
-            first_party: true
-            context: "."
-            dockerfile: "services/features-worker/Dockerfile"
-            hash_paths: |
-              services/features-worker
-              common
-
+    outputs:
+      role_arn: ${{ steps.pulumi.outputs.role_arn }}
+      names: ${{ steps.plan.outputs.names }}
+      needs_lock: ${{ steps.plan.outputs.needs_lock }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
         with:
-          fetch-depth: 0
-          ref: ${{ github.ref_name }}
+          enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
 
       - name: Setup Pulumi
         uses: pulumi/setup-pulumi@v2
@@ -124,16 +69,13 @@ jobs:
           requested-token-type: urn:pulumi:token-type:access_token:personal
           scope: user:tyler-s-hatch
 
-      - name: Get Pulumi stack outputs
+      - name: Get AWS role ARN from Pulumi
         id: pulumi
-        working-directory: infra
+        working-directory: infrastructure
         run: |
           set -euo pipefail
-          REPO_URL=$(pulumi stack output --stack ${{ matrix.images.stack }} ${{ matrix.images.name }}-image-repo-url)
-          REPO_NAME="${REPO_URL#*/}"
-          echo "repo_url=$REPO_URL" >> $GITHUB_OUTPUT
-          echo "repo_name=$REPO_NAME" >> $GITHUB_OUTPUT
-          echo "role_arn=$(pulumi stack output --stack core main-prepare-deploy-role-arn)" >> $GITHUB_OUTPUT
+          ROLE_ARN=$(pulumi stack output --stack core main-prepare-deploy-role-arn)
+          echo "role_arn=$ROLE_ARN" >> $GITHUB_OUTPUT
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -144,160 +86,114 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Calculate first party image build context hash
-        if: ${{ matrix.images.first_party }}
-        id: tree-hash
-        shell: bash
+      - name: Create plan
+        id: plan
         run: |
           set -euo pipefail
 
-          PATHS="${{ matrix.images.hash_paths || '' }}"
+          # Create image build plan
+          cd scripts
+          uv run --locked src/build.py plan --all --output plan.json
 
-          IDS=""
-          if [ -n "$PATHS" ]; then
-            # (Optional) sort/uniq if order might vary
-            while IFS= read -r P; do
-              [ -z "$P" ] && continue
-              IDS="$IDS $(git rev-parse HEAD:$P)"
-            done <<< "$PATHS"
+          # Echo plan json for logging
+          echo Plan:
+          jq . plan.json
+
+          # Extract names from plan (or set to __EMPTY__ if no images to build)
+          if [ "$(jq 'keys|length' plan.json)" -eq 0 ]; then
+            echo 'needs_lock=false' >> "$GITHUB_OUTPUT"
+            echo 'names={"name":["__EMPTY__"]}' >> "$GITHUB_OUTPUT"
           else
-            IDS="$(git rev-parse HEAD:${{ matrix.images.context }})"
+            echo 'needs_lock=true' >> "$GITHUB_OUTPUT"
+            echo "names=$(jq -c '{name: keys}' plan.json)" >> "$GITHUB_OUTPUT"
           fi
 
-          # Normalize to 40 chars by hashing the IDs with SHA-1
-          TREE_HASH="$(printf '%s' "$IDS" | sha1sum | cut -d' ' -f1)"
-
-          echo "tree_tag=tree-${TREE_HASH}" >> "$GITHUB_OUTPUT"
-          echo "$TREE_HASH"
-
-      - name: Check for existing first party image by tree tag
-        if: ${{ matrix.images.first_party }}
-        id: check
-        run: |
-          set -euo pipefail
-          REPO="${{ steps.pulumi.outputs.repo_name }}"
-          TREE_TAG="${{ steps.tree-hash.outputs.tree_tag }}"
-
-          if DIGEST=$(aws ecr describe-images \
-              --repository-name "$REPO" \
-              --image-ids imageTag="$TREE_TAG" \
-              --query 'imageDetails[0].imageDigest' \
-              --output text 2>/dev/null); then
-            echo "exists=true"  >> "$GITHUB_OUTPUT"
-            echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
-          else
-            echo "exists=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Build and push first party image
-        if: ${{ matrix.images.first_party && steps.check.outputs.exists == 'false'}}
-        id: build
-        uses: docker/build-push-action@v6
-        env:
-          BUILDKIT_PROGRESS: plain
-        with:
-          context: ${{ matrix.images.context }}
-          file: "${{ matrix.images.context }}/${{ matrix.images.dockerfile }}"
-          push: true
-          tags: |
-            ${{ steps.pulumi.outputs.repo_url }}:${{ needs.prepare-deployment-branch.outputs.sha_tag }}
-            ${{ steps.pulumi.outputs.repo_url }}:${{ steps.tree-hash.outputs.tree_tag }}
-          cache-from: type=gha,scope=${{ matrix.images.name }}
-          cache-to: type=gha,scope=${{ matrix.images.name }},mode=max
-          provenance: false
-
-      - name: Prepare lock fields (first party)
-        if: ${{ matrix.images.first_party }}
-        id: prep_lock_first_party
-        run: |
-          set -euo pipefail
-          KEY="${{ steps.pulumi.outputs.repo_name }}"
-
-          if [ "${{ steps.check.outputs.exists }}" = "true" ]; then
-            DIGEST="${{ steps.check.outputs.digest }}"
-          else
-            DIGEST="${{ steps.build.outputs.digest }}"
-          fi
-
-          SHA_TAG="${{ needs.prepare-deployment-branch.outputs.sha_tag }}"   # e.g., git-<sha>
-          TREE_TAG="${{ steps.tree-hash.outputs.tree_tag }}"                 # e.g., tree-<hash>
-
-          TAGS_JSON=$(jq -cn --arg a "$SHA_TAG" --arg b "$TREE_TAG" '[ $a, $b ]')
-          TAGS_B64=$(printf %s "$TAGS_JSON" | base64 -w0 2>/dev/null || printf %s "$TAGS_JSON" | base64 | tr -d '\n')
-
-          {
-            echo "key=$KEY"
-            echo "digest=$DIGEST"
-            echo "tags_b64=$TAGS_B64"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Prepare lock fields (third party)
-        if: ${{ !matrix.images.first_party }}
-        id: prep_lock_third_party
-        run: |
-          set -euo pipefail
-          LOCK="infra/image-lock.json"
-          KEY="${{ steps.pulumi.outputs.repo_name }}"
-          ECR_URL="${{ steps.pulumi.outputs.repo_url }}"
-
-          if [ -f "$LOCK" ] && jq -e --arg k "$KEY" 'has($k) or (.repositories? and .repositories|has($k))' "$LOCK" >/dev/null 2>&1; then
-            DIGEST="$(jq -r --arg k "$KEY" '
-              if has($k) then .[$k].digest
-              else .repositories[$k].digest
-              end' "$LOCK")"
-            TAGS_JSON="$(jq -c --arg k "$KEY" '
-              if has($k) then .[$k].tags // []
-              else .repositories[$k].tags // []
-              end' "$LOCK")"
-          else
-            echo "Initializing lock for $KEY from ECR tag 'latest'…"
-            docker pull "$ECR_URL:latest"
-
-            # I think there is a timing issue here; upon adding a new third party image,
-            # the image may not be immediately available in ECR after the very first pull;
-            # I had rerun a failed workflow the first time to get it to succeed
-            DETAILS="$(aws ecr describe-images \
-              --repository-name "$KEY" \
-              --image-ids imageTag=latest \
-              --query 'imageDetails[0]' \
-              --output json)"
-
-            DIGEST="$(jq -r '.imageDigest // empty' <<< "$DETAILS")"
-            TAGS_JSON="$(jq -c '.imageTags // []' <<< "$DETAILS")"
-          fi
-
-          TAGS_B64=$(printf %s "$TAGS_JSON" | base64 -w0 2>/dev/null || printf %s "$TAGS_JSON" | base64 | tr -d '\n')
-
-          {
-            echo "key=$KEY"
-            echo "digest=$DIGEST"
-            echo "tags_b64=$TAGS_B64"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Write lock snippet
-        run: |
-          set -euo pipefail
-          NAME="${{ matrix.images.name }}"
-          KEY="${{ steps.prep_lock_first_party.outputs.key || steps.prep_lock_third_party.outputs.key }}"
-          DIGEST="${{ steps.prep_lock_first_party.outputs.digest || steps.prep_lock_third_party.outputs.digest }}"
-          TAGS_B64="${{ steps.prep_lock_first_party.outputs.tags_b64 || steps.prep_lock_third_party.outputs.tags_b64 }}"
-          TAGS_JSON="$(echo "$TAGS_B64" | base64 -d 2>/dev/null || echo "$TAGS_B64" | base64 --decode 2>/dev/null)"
-
-          jq -n --arg k "$KEY" --arg d "$DIGEST" --argjson tags "$TAGS_JSON" \
-            '{($k): {digest:$d, tags:$tags}}' > "lock-${NAME}.json"
-
-      - name: Upload lock snippet
+      - name: Upload plan
         uses: actions/upload-artifact@v4
         with:
-          name: lock-snippet-${{ matrix.images.name }}
-          path: lock-${{ matrix.images.name }}.json
+          name: plan.json
+          path: scripts/plan.json
+
+  lock:
+    runs-on: ubuntu-latest
+    needs: plan
+    if: ${{ needs.plan.outputs.needs_lock == 'true' }}
+
+    strategy:
+      matrix: ${{ fromJson(needs.plan.outputs.names) }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ needs.plan.outputs.role_arn }}
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: plan.json
+
+      - name: Extract image plan
+        run: |
+          set -euo pipefail
+
+          # Extract plan for this image
+          jq -c --arg name '${{ matrix.name }}' '{($name): .[$name]}' plan.json > scripts/image-plan.json
+
+          # Echo plan json for logging
+          echo "Image plan for ${{ matrix.name }}:"
+          jq . scripts/image-plan.json
+
+      # Require for layer caching
+      - name: Setup GitHub Runtime
+        uses: crazy-max/ghaction-github-runtime@v3
+
+      - name: Lock image
+        run: |
+          set -euo pipefail
+
+          # Require for layer caching
+          docker buildx create --use --driver docker-container
+
+          # Lock image
+          cd scripts
+          uv run --locked src/build.py lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
+
+          # Echo lock json for logging
+          echo "Image lock for ${{ matrix.name }}:"
+          jq . ${{ matrix.name }}-image-lock.json
+
+      - name: Upload image lock artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.name }}-image-lock.json
+          path: scripts/${{ matrix.name }}-image-lock.json
 
   generate-migrations-and-create-deploy-pr:
     runs-on: ubuntu-latest
-    needs: build-and-push-images
+    needs: [plan, lock]
+    if: ${{ always() && needs.plan.result == 'success' && (
+      needs.plan.outputs.needs_lock == 'false' ||
+      needs.lock.result == 'success' || needs.lock.result == 'skipped'
+      ) }}
 
     steps:
       - name: Checkout code
@@ -327,21 +223,33 @@ jobs:
         env:
           PICCOLO_CONF: src.db.local_conf
         run: |
-          uv sync --frozen
-          uv run piccolo migrations new all --auto --auto_input=y || true
+          uv run --locked piccolo migrations new all --auto --auto_input=y || true
 
-      - name: Download lock snippets
+      - name: Download image lock artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: lock-snippet-*
+          pattern: "*-image-lock.json"
           merge-multiple: true
-          path: .lock-snippets
+          path: .image-locks
 
-      - name: Build image-lock.json
+      - name: Build images-lock.json
+        shell: bash
         run: |
-          jq -s 'reduce .[] as $i ({}; . * $i)' .lock-snippets/*.json > infra/image-lock.json
-          echo "Final lock file:"
-          cat infra/image-lock.json
+          set -euo pipefail
+          shopt -s nullglob
+
+          echo "Previous images-lock.json:"
+          jq -S . images-lock.json
+
+          # Merge new locks into existing images-lock.json
+          files=(.image-locks/*.json)
+          tmp="$(mktemp)"
+          jq -S -s 'reduce .[1:][] as $p (.[0]; . * $p)' \
+            images-lock.json "${files[@]}" > "$tmp"
+          mv "$tmp" images-lock.json
+
+          echo "New images-lock.json:"
+          jq -S . images-lock.json
 
       - name: Create / update Deploy PR
         uses: peter-evans/create-pull-request@v6
@@ -350,8 +258,8 @@ jobs:
           branch: ${{ env.DEPLOY_BRANCH }}
           base: ${{ github.ref_name }}
           title: "Deploy (bot)"
-          body: "Merging this PR will apply migrations and deploy infra/images."
+          body: "Merging this PR will apply migrations and deploy images."
           commit-message: "chore(deploy): update image-lock.json and migrations"
           add-paths: |
-            infra/image-lock.json
+            images-lock.json
             **/migrations/*.py

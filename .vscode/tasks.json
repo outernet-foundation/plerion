@@ -2,42 +2,31 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Regenerate Solution",
+      "label": "Prelaunch: Debug standalone script",
       "type": "shell",
-      "command": "powershell",
-      "problemMatcher": [],
-      "args": [
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "${workspaceFolder}/generate-sln.ps1"
-      ],
-      "presentation": {
-        "reveal": "never",
-        "focus": false,
-        "panel": "dedicated",
-        "close": true
-      },
-      "runOptions": {
-        "runOn": "folderOpen"
-      }
-    },
+      "command": "uv run --with debugpy -m debugpy --log-to-stderr --listen 127.0.0.1:5678 --wait-for-client ${file} ${input:scriptArgs}",
+      "options": { "cwd": "${workspaceFolder}/scripts" },
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "owner": "debugpy",
+          "fileLocation": ["absolute"],
+          "pattern": { "regexp": ".", "file": 1, "message": 1 },
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*",
+            "endsPattern": "^.*wait_for_client().*"
+          }
+        }
+      ]
+    }
+  ],
+  "inputs": [
     {
-      "label": "uv sync all Python projects",
-      "type": "shell",
-      "command": "python",
-      "args": [
-        "${workspaceFolder}/.vscode/scripts/sync_python_projects.py",
-        "${workspaceFolder}"
-      ],
-      "problemMatcher": [],
-      "runOptions": { "runOn": "folderOpen" },
-      "presentation": {
-        "reveal": "never",
-        "panel": "shared",
-        "revealProblems": "onProblem",
-        "close": true
-      }
+      "id": "scriptArgs",
+      "type": "promptString",
+      "description": "Optional script arguments",
+      "default": ""
     }
   ]
 }

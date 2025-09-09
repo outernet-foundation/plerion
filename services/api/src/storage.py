@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 import boto3
 from botocore.config import Config
@@ -19,27 +19,17 @@ class Storage:
     def __init__(self, s3: S3Client) -> None:
         self._s3 = s3
 
-    def presign_put(
-        self, bucket: str, key: str, content_type: str, expires: int = UPLOAD_EXPIRES
-    ) -> str:
+    def presign_put(self, bucket: str, key: str, content_type: str, expires: int = UPLOAD_EXPIRES) -> str:
         return self._s3.generate_presigned_url(
             "put_object",
-            Params={
-                "Bucket": bucket,
-                "Key": key,
-                "ContentType": content_type,
-            },
+            Params={"Bucket": bucket, "Key": key, "ContentType": content_type},
             ExpiresIn=expires,
             HttpMethod="PUT",
         )
 
-    def presign_get(
-        self, bucket: str, key: str, content_type: str, expires: int = DOWNLOAD_EXPIRES
-    ) -> str:
+    def presign_get(self, bucket: str, key: str, content_type: str, expires: int = DOWNLOAD_EXPIRES) -> str:
         return self._s3.generate_presigned_url(
-            "get_object",
-            Params={"Bucket": bucket, "Key": key, "ContentType": content_type},
-            ExpiresIn=expires,
+            "get_object", Params={"Bucket": bucket, "Key": key, "ContentType": content_type}, ExpiresIn=expires
         )
 
     def delete(self, bucket: str, key: str) -> None:
@@ -64,7 +54,7 @@ def _build_storage() -> Storage:
         )
 
     # See https://github.com/microsoft/pylance-release/issues/2809
-    client: S3Client = boto3.client("s3", **kwargs)  # type: ignore[call-arg]
+    client = cast(S3Client, boto3.client("s3", **kwargs))  # type: ignore[call-arg]
     return Storage(s3=client)
 
 

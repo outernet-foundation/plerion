@@ -52,7 +52,7 @@ jobs:
 
       - name: Get Pulumi stack outputs
         id: pulumi-outputs
-        working-directory: infra
+        working-directory: infrastructure
         shell: bash
         run: |
           set -euo pipefail
@@ -107,7 +107,7 @@ jobs:
 
       - name: Get Pulumi stack outputs
         id: pulumi-outputs
-        working-directory: infra
+        working-directory: infrastructure
         shell: bash
         run: |
           set -euo pipefail
@@ -127,8 +127,8 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
-      - name: Deploy infrastructure changes
-        working-directory: infra
+      - name: Deploy images
+        working-directory: infrastructure
         run: |
           pulumi up --stack core --yes --skip-preview
           pulumi up --stack dev --yes --skip-preview

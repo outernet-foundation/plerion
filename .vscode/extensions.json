@@ -7,9 +7,9 @@
     "esbenp.prettier-vscode",
     "amazonwebservices.aws-toolkit-vscode",
     "matthewpi.caddyfile-support",
-    "emeraldwalk.runonsave",
     "visualstudiotoolsforunity.vstuc",
     "github.vscode-github-actions",
-    "augustocdias.tasks-shell-input"
+    "augustocdias.tasks-shell-input",
+    "detachhead.basedpyright",
   ]
 }
