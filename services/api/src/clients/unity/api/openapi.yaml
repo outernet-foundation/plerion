@@ -229,14 +229,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/Body_create_node"
+              $ref: "#/components/schemas/NodeModel"
         required: true
       responses:
         "200":
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/NodeModel"
+              schema: {}
           description: Successful Response
         "422":
           content:
@@ -248,6 +247,33 @@ paths:
       tags:
       - nodes
   /nodes/{id}:
+    delete:
+      operationId: delete_node
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Node
+      tags:
+      - nodes
     get:
       operationId: get_node
       parameters:
@@ -264,8 +290,7 @@ paths:
         "200":
           content:
             application/json:
-              schema:
-                $ref: "#/components/schemas/NodeModel"
+              schema: {}
           description: Successful Response
         "422":
           content:
@@ -276,6 +301,329 @@ paths:
       summary: Get Node
       tags:
       - nodes
+    put:
+      operationId: update_node
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NodeModel"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update Node
+      tags:
+      - nodes
+  /groups:
+    get:
+      operationId: get_groups
+      parameters:
+      - description: Optional list of Ids to filter by
+        explode: true
+        in: query
+        name: ids
+        required: false
+        schema:
+          items:
+            format: uuid
+            type: string
+          nullable: true
+          type: array
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/GroupModel"
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Groups
+      tags:
+      - groups
+    post:
+      operationId: create_group
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupModel"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Create Group
+      tags:
+      - groups
+  /groups/{id}:
+    delete:
+      operationId: delete_group
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Group
+      tags:
+      - groups
+    get:
+      operationId: get_group
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Group
+      tags:
+      - groups
+    put:
+      operationId: update_group
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GroupModel"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update Group
+      tags:
+      - groups
+  /layers:
+    get:
+      operationId: get_layers
+      parameters:
+      - description: Optional list of Ids to filter by
+        explode: true
+        in: query
+        name: ids
+        required: false
+        schema:
+          items:
+            format: uuid
+            type: string
+          nullable: true
+          type: array
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/LayerModel"
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Layers
+      tags:
+      - layers
+    post:
+      operationId: create_layer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LayerModel"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Create Layer
+      tags:
+      - layers
+  /layers/{id}:
+    delete:
+      operationId: delete_layer
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Layer
+      tags:
+      - layers
+    get:
+      operationId: get_layer
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Layer
+      tags:
+      - layers
+    put:
+      operationId: update_layer
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LayerModel"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update Layer
+      tags:
+      - layers
 components:
   schemas:
     Body_create_capture:
@@ -291,19 +639,6 @@ components:
       - filename
       - id
       title: Body_create_capture
-    Body_create_node:
-      properties:
-        id:
-          format: uuid
-          title: Id
-          type: string
-        filename:
-          title: Filename
-          type: string
-      required:
-      - filename
-      - id
-      title: Body_create_node
     CaptureModel:
       example:
         filename: filename
@@ -345,6 +680,37 @@ components:
       - id
       title: CaptureModel
       extra: {}
+    GroupModel:
+      example:
+        parent: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        name: name
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        name:
+          maxLength: 255
+          title: Name
+          type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: true
+        parent:
+          format: uuid
+          nullable: true
+          type: string
+      required:
+      - id
+      - name
+      title: GroupModel
+      extra: {}
     HTTPValidationError:
       example:
         detail:
@@ -364,11 +730,9 @@ components:
             $ref: "#/components/schemas/ValidationError"
           type: array
       title: HTTPValidationError
-    NodeModel:
+    LayerModel:
       example:
-        filename: filename
-        uploaded_at: 2000-01-23T04:56:07.000+00:00
-        created_at: 2000-01-23T04:56:07.000+00:00
+        name: name
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         id:
@@ -379,9 +743,54 @@ components:
             nullable: false
             secret: false
             unique: false
-        filename:
+        name:
           maxLength: 255
-          title: Filename
+          title: Name
+          type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: true
+      required:
+      - id
+      - name
+      title: LayerModel
+      extra: {}
+    NodeModel:
+      example:
+        parent: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        labelType: 9
+        link: link
+        created_at: 2000-01-23T04:56:07.000+00:00
+        active: true
+        labelWidth: 4.145608029883936
+        label: label
+        labelScale: 2.027123023002322
+        labelHeight: 7.386281948385884
+        layer: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        something: 1.2315135367772556
+        positionX: 0.8008281904610115
+        positionY: 6.027456183070403
+        positionZ: 1.4658129805029452
+        rotationW: 7.061401241503109
+        rotationX: 5.962133916683182
+        rotationY: 5.637376656633329
+        rotationZ: 2.3021358869347655
+        name: name
+        linkType: 3
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        name:
+          maxLength: 255
+          title: Name
           type: string
           extra:
             nullable: false
@@ -389,20 +798,109 @@ components:
             unique: true
         created_at:
           format: date-time
-          title: Created At
+          nullable: true
           type: string
+        active:
+          title: Active
+          type: boolean
           extra:
             nullable: false
             secret: false
             unique: false
-        uploaded_at:
-          format: date-time
+        positionX:
+          title: Positionx
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        positionY:
+          title: Positiony
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        positionZ:
+          title: Positionz
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationX:
+          title: Rotationx
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationY:
+          title: Rotationy
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationZ:
+          title: Rotationz
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationW:
+          title: Rotationw
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        labelType:
+          nullable: true
+          type: integer
+        label:
+          maxLength: 255
           nullable: true
           type: string
+        linkType:
+          nullable: true
+          type: integer
+        link:
+          maxLength: 255
+          nullable: true
+          type: string
+        labelScale:
+          nullable: true
+          type: number
+        labelWidth:
+          nullable: true
+          type: number
+        labelHeight:
+          nullable: true
+          type: number
+        parent:
+          format: uuid
+          nullable: true
+          type: string
+        layer:
+          format: uuid
+          nullable: true
+          type: string
+        something:
+          nullable: true
+          type: number
       required:
-      - created_at
-      - filename
+      - active
       - id
+      - name
+      - positionX
+      - positionY
+      - positionZ
+      - rotationW
+      - rotationX
+      - rotationY
+      - rotationZ
       title: NodeModel
       extra: {}
     ValidationError:

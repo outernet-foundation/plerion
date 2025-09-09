@@ -130,9 +130,21 @@ Class | Method | HTTP request | Description
 *CapturesApi* | [**GetCapture**](docs/CapturesApi.md#getcapture) | **GET** /captures/{id} | Get Capture
 *CapturesApi* | [**GetCaptures**](docs/CapturesApi.md#getcaptures) | **GET** /captures | Get Captures
 *CapturesApi* | [**UploadCaptureTar**](docs/CapturesApi.md#uploadcapturetar) | **PUT** /captures/{id}/tar | Upload Capture Tar
+*GroupsApi* | [**CreateGroup**](docs/GroupsApi.md#creategroup) | **POST** /groups | Create Group
+*GroupsApi* | [**DeleteGroup**](docs/GroupsApi.md#deletegroup) | **DELETE** /groups/{id} | Delete Group
+*GroupsApi* | [**GetGroup**](docs/GroupsApi.md#getgroup) | **GET** /groups/{id} | Get Group
+*GroupsApi* | [**GetGroups**](docs/GroupsApi.md#getgroups) | **GET** /groups | Get Groups
+*GroupsApi* | [**UpdateGroup**](docs/GroupsApi.md#updategroup) | **PUT** /groups/{id} | Update Group
+*LayersApi* | [**CreateLayer**](docs/LayersApi.md#createlayer) | **POST** /layers | Create Layer
+*LayersApi* | [**DeleteLayer**](docs/LayersApi.md#deletelayer) | **DELETE** /layers/{id} | Delete Layer
+*LayersApi* | [**GetLayer**](docs/LayersApi.md#getlayer) | **GET** /layers/{id} | Get Layer
+*LayersApi* | [**GetLayers**](docs/LayersApi.md#getlayers) | **GET** /layers | Get Layers
+*LayersApi* | [**UpdateLayer**](docs/LayersApi.md#updatelayer) | **PUT** /layers/{id} | Update Layer
 *NodesApi* | [**CreateNode**](docs/NodesApi.md#createnode) | **POST** /nodes | Create Node
+*NodesApi* | [**DeleteNode**](docs/NodesApi.md#deletenode) | **DELETE** /nodes/{id} | Delete Node
 *NodesApi* | [**GetNode**](docs/NodesApi.md#getnode) | **GET** /nodes/{id} | Get Node
 *NodesApi* | [**GetNodes**](docs/NodesApi.md#getnodes) | **GET** /nodes | Get Nodes
+*NodesApi* | [**UpdateNode**](docs/NodesApi.md#updatenode) | **PUT** /nodes/{id} | Update Node
 *ReconstructionsApi* | [**CreateReconstruction**](docs/ReconstructionsApi.md#createreconstruction) | **POST** /reconstructions | Create Reconstruction
 
 
@@ -140,9 +152,10 @@ Class | Method | HTTP request | Description
 ## Documentation for Models
 
  - [Model.BodyCreateCapture](docs/BodyCreateCapture.md)
- - [Model.BodyCreateNode](docs/BodyCreateNode.md)
  - [Model.CaptureModel](docs/CaptureModel.md)
+ - [Model.GroupModel](docs/GroupModel.md)
  - [Model.HTTPValidationError](docs/HTTPValidationError.md)
+ - [Model.LayerModel](docs/LayerModel.md)
  - [Model.NodeModel](docs/NodeModel.md)
  - [Model.ValidationError](docs/ValidationError.md)
  - [Model.ValidationErrorLocInner](docs/ValidationErrorLocInner.md)
