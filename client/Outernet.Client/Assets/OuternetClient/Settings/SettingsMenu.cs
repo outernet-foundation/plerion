@@ -423,7 +423,7 @@ namespace Outernet.Client
                 elapsedTime = 0.0f;
             }
 
-            loadedMaps.SetText(string.Join("\n", MapManager.Maps.Select(map => $"{map.name} [{MapManager.maps[map.id].status}]")));
+            loadedMaps.SetText(string.Join("\n", MapManager.Maps.Select(map => $"{map.Name} [{MapManager.maps[map.Id].status}]")));
             // localizationRate.SetText(string.Format("{0:0.00}", Localizer.Status.localizationCount));
             // successRate.SetText(string.Format("{0:0.00}", Localizer.Status.successCount));
             confidenceHistory.SetText(string.Format("{0:0.00}", string.Join(", ", Localizer.Status.confidenceHistory.Reverse<float>().Take(8).Reverse())));

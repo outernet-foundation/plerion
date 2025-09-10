@@ -157,10 +157,7 @@ namespace Outernet.Client
 
     public class MapState : ObservableObject, IKeyedObservableNode<Guid>
     {
-        public Guid uuid { get; private set; }
-
-        [HideInInspectorUI]
-        public ObservablePrimitive<int> id { get; private set; }
+        public Guid id { get; private set; }
         public ObservablePrimitive<string> name { get; private set; }
         public ObservablePrimitive<Shared.Lighting> lighting { get; private set; }
         public ObservablePrimitive<long> color { get; private set; }
@@ -169,7 +166,7 @@ namespace Outernet.Client
         public ObservablePrimitiveArray<double3> localInputImagePositions { get; private set; }
 
         void IKeyedObservableNode<Guid>.AssignKey(Guid key)
-            => uuid = key;
+            => id = key;
 
         private ClientState _clientState => root as ClientState;
 
@@ -189,7 +186,7 @@ namespace Outernet.Client
 
         private void AwaitTransform(NodeChangeEventArgs args)
         {
-            if (!_clientState.transforms.TryGetValue(uuid, out var transform))
+            if (!_clientState.transforms.TryGetValue(id, out var transform))
                 return;
 
             context.DeregisterObserver(AwaitTransform);

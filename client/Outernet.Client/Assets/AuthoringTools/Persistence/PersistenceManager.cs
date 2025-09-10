@@ -9,6 +9,7 @@ using FofX.Stateful;
 
 using Cysharp.Threading.Tasks;
 using UnityEditor;
+using PlerionClient.Model;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -222,24 +223,24 @@ namespace Outernet.Client.AuthoringTools
             {
                 upsertedNodes = _nodePersistenceHelper.inserts.Concat(_nodePersistenceHelper.updates)
                     .Select(Utility.ToNodeModel)
-                    .ToArray(),
+                    .ToList(),
 
                 upsertedGroups = _nodeGroupPersistenceHelper.inserts.Concat(_nodeGroupPersistenceHelper.updates)
                     .Select(Utility.ToGroupModel)
-                    .ToArray(),
+                    .ToList(),
 
                 upsertedMaps = _mapPersistenceHelper.inserts.Concat(_mapPersistenceHelper.updates)
                     .Select(Utility.ToMapRecord)
-                    .ToArray(),
+                    .ToList(),
 
                 upsertedLayers = _layerPersistenceHelper.inserts.Concat(_layerPersistenceHelper.updates)
                     .Select(Utility.ToLayerModel)
-                    .ToArray(),
+                    .ToList(),
 
-                deletedNodes = _nodePersistenceHelper.deletes.ToArray(),
-                deletedGroups = _nodeGroupPersistenceHelper.deletes.ToArray(),
-                deletedMaps = _mapPersistenceHelper.deletes.ToArray(),
-                deletedLayers = _layerPersistenceHelper.deletes.ToArray()
+                deletedNodes = _nodePersistenceHelper.deletes.ToList(),
+                deletedGroups = _nodeGroupPersistenceHelper.deletes.ToList(),
+                deletedMaps = _mapPersistenceHelper.deletes.ToList(),
+                deletedLayers = _layerPersistenceHelper.deletes.ToList()
             });
 
             _nodePersistenceHelper.ClearChanges();
@@ -258,14 +259,14 @@ namespace Outernet.Client.AuthoringTools
             while (_pendingPersists.TryDequeue(out var toPersist))
             {
                 await UniTask.WhenAll(
-                    PlerionAPI.DeleteMaps(toPersist.deletedMaps),
-                    PlerionAPI.DeleteNodes(toPersist.deletedNodes),
-                    PlerionAPI.DeleteNodeGroups(toPersist.deletedGroups),
-                    PlerionAPI.DeleteLayers(toPersist.deletedLayers),
-                    PlerionAPI.UpsertMaps(toPersist.upsertedMaps),
-                    PlerionAPI.UpsertLayers(toPersist.upsertedLayers)
-                        .ContinueWith(_ => PlerionAPI.UpsertNodeGroups(toPersist.upsertedGroups))
-                        .ContinueWith(_ => PlerionAPI.UpsertNodes(toPersist.upsertedNodes))
+                    PlerionAPI.LocalizationMaps.DeleteLocalizationMapsAsync(toPersist.deletedMaps).AsUniTask(),
+                    PlerionAPI.Nodes.DeleteNodesAsync(toPersist.deletedNodes).AsUniTask(),
+                    PlerionAPI.Groups.DeleteGroupsAsync(toPersist.deletedGroups).AsUniTask(),
+                    PlerionAPI.Layers.DeleteLayersAsync(toPersist.deletedLayers).AsUniTask(),
+                    PlerionAPI.LocalizationMaps.UpsertLocalizationMapsAsync(toPersist.upsertedMaps).AsUniTask(),
+                    PlerionAPI.Layers.UpsertLayersAsync(toPersist.upsertedLayers).AsUniTask()
+                        .ContinueWith(_ => PlerionAPI.Groups.UpsertGroupsAsync(toPersist.upsertedGroups))
+                        .ContinueWith(_ => PlerionAPI.Nodes.UpsertNodesAsync(toPersist.upsertedNodes))
                 );
             }
 
@@ -291,15 +292,15 @@ namespace Outernet.Client.AuthoringTools
 
         private class PersistenceData
         {
-            public NodeRecord[] upsertedNodes;
-            public NodeGroupRecord[] upsertedGroups;
-            public LocalizationMapRecord[] upsertedMaps;
-            public LayerRecord[] upsertedLayers;
+            public List<NodeModel> upsertedNodes;
+            public List<GroupModel> upsertedGroups;
+            public List<LocalizationMapModel> upsertedMaps;
+            public List<LayerModel> upsertedLayers;
 
-            public Guid[] deletedNodes;
-            public Guid[] deletedGroups;
-            public Guid[] deletedMaps;
-            public Guid[] deletedLayers;
+            public List<Guid> deletedNodes;
+            public List<Guid> deletedGroups;
+            public List<Guid> deletedMaps;
+            public List<Guid> deletedLayers;
         }
     }
 }

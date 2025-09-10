@@ -22,20 +22,20 @@ namespace Outernet.Client.AuthoringTools
             public ObservablePrimitive<Vector3> position { get; private set; }
             public ObservablePrimitive<Quaternion> rotation { get; private set; }
             public ObservablePrimitive<Bounds> bounds { get; private set; }
-            public ObservablePrimitive<int> mapID { get; private set; }
+            public ObservablePrimitive<Guid> mapID { get; private set; }
             public ObservablePrimitive<long> color { get; private set; }
             public ObservablePrimitiveArray<Vector3> localInputImagePositions { get; private set; }
 
             public Props() : base() { }
 
-            public Props(Guid sceneObjectID = default, string name = default, Vector3 position = default, Quaternion? rotation = default, Bounds bounds = default, int mapID = default, long color = default, params Vector3[] localInputImagePositions)
+            public Props(Guid sceneObjectID = default, string name = default, Vector3 position = default, Quaternion? rotation = default, Bounds bounds = default, Guid mapID = default, long color = default, params Vector3[] localInputImagePositions)
             {
                 this.sceneObjectID = new ObservablePrimitive<Guid>(sceneObjectID);
                 this.name = new ObservablePrimitive<string>(name);
                 this.position = new ObservablePrimitive<Vector3>(position);
                 this.rotation = new ObservablePrimitive<Quaternion>(rotation ?? Quaternion.identity);
                 this.bounds = new ObservablePrimitive<Bounds>(bounds);
-                this.mapID = new ObservablePrimitive<int>(mapID);
+                this.mapID = new ObservablePrimitive<Guid>(mapID);
                 this.color = new ObservablePrimitive<long>(color);
                 this.localInputImagePositions = new ObservablePrimitiveArray<Vector3>(localInputImagePositions);
             }
@@ -70,7 +70,7 @@ namespace Outernet.Client.AuthoringTools
         public override void Setup()
             => InitializeAndBind(new Props());
 
-        public void Setup(Guid sceneObjectID = default, string name = default, Vector3 position = default, Quaternion? rotation = default, Bounds bounds = default, int mapID = default, long color = default, params Vector3[] localInputImagePositions)
+        public void Setup(Guid sceneObjectID = default, string name = default, Vector3 position = default, Quaternion? rotation = default, Bounds bounds = default, Guid mapID = default, long color = default, params Vector3[] localInputImagePositions)
             => InitializeAndBind(new Props(sceneObjectID, name, position, rotation, bounds, mapID, color, localInputImagePositions));
 
         protected override void Bind()
@@ -80,7 +80,7 @@ namespace Outernet.Client.AuthoringTools
                 props.rotation.OnChange(x => transform.rotation = x),
                 props.mapID.OnChange(x =>
                 {
-                    if (x != 0)
+                    if (x != Guid.Empty)
                         _mapRenderer.Load(x, props.name.value).Forget();
                 }),
                 props.color.OnChange(x =>

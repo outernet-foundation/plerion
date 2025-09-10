@@ -99,7 +99,7 @@ namespace Outernet.Client.Location
                 Log.Info(
                     LogGroup.Localizer,
                     "Localized to map {Map} with confidence {Confidence}",
-                    localization.Value.map.metadata.name,
+                    localization.Value.map.metadata.Name,
                     localization.Value.confidence);
 
                 LocalizedReferenceFrame.ApplyEstimate(localization.Value);

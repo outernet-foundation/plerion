@@ -59,8 +59,7 @@ namespace PlerionClient.Model
         /// <param name="labelHeight">labelHeight.</param>
         /// <param name="parent">parent.</param>
         /// <param name="layer">layer.</param>
-        /// <param name="something">something.</param>
-        public NodeModel(Guid id = default, string name = default, DateTime? createdAt = default, bool active = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, int? labelType = default, string label = default, int? linkType = default, string link = default, double? labelScale = default, double? labelWidth = default, double? labelHeight = default, Guid? parent = default, Guid? layer = default, double? something = default)
+        public NodeModel(Guid id = default, string name = default, DateTime? createdAt = default, bool active = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, int? labelType = default, string label = default, int? linkType = default, string link = default, double? labelScale = default, double? labelWidth = default, double? labelHeight = default, Guid? parent = default, Guid? layer = default)
         {
             this.Id = id;
             // to ensure "name" is required (not null)
@@ -87,7 +86,6 @@ namespace PlerionClient.Model
             this.LabelHeight = labelHeight;
             this.Parent = parent;
             this.Layer = layer;
-            this.Something = something;
         }
 
         /// <summary>
@@ -211,12 +209,6 @@ namespace PlerionClient.Model
         public Guid? Layer { get; set; }
 
         /// <summary>
-        /// Gets or Sets Something
-        /// </summary>
-        [DataMember(Name = "something", EmitDefaultValue = true)]
-        public double? Something { get; set; }
-
-        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -244,7 +236,6 @@ namespace PlerionClient.Model
             sb.Append("  LabelHeight: ").Append(LabelHeight).Append("\n");
             sb.Append("  Parent: ").Append(Parent).Append("\n");
             sb.Append("  Layer: ").Append(Layer).Append("\n");
-            sb.Append("  Something: ").Append(Something).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

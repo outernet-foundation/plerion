@@ -78,7 +78,7 @@ namespace Outernet.Client.AuthoringTools
         private bool TryGetCurrentCommand(out KeyCommand command)
         {
             var needsCommandKey = Utility.KeyboardIsFocused();
-            var pressedKeys = Keyboard.current.allKeys.Where(x => x.isPressed).Select(x => x.keyCode).ToArray();
+            var pressedKeys = Keyboard.current.allKeys.Where(x => x != null && x.isPressed).Select(x => x.keyCode).ToArray();
 
             foreach (var keyCommand in _keyCommands)
             {

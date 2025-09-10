@@ -46,5 +46,3 @@ class Node(Table):
     parent = UUID(null=True, required=False)
 
     layer = UUID(null=True, required=False)
-
-    something = Float(null=True, required=False)

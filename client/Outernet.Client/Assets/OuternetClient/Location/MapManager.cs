@@ -4,6 +4,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Outernet.Shared;
+using PlerionClient.Model;
 using R3;
 using Unity.Mathematics;
 using UnityEngine;
@@ -31,8 +32,8 @@ namespace Outernet.Client.Location
         static public double Height { get; private set; }
         static public float Accuracy { get; private set; }
 
-        static public Dictionary<int, Map> maps = new Dictionary<int, Map>();
-        static private Dictionary<int, int> nativeHandles = new Dictionary<int, int>();
+        static public Dictionary<Guid, Map> maps = new Dictionary<Guid, Map>();
+        static private Dictionary<int, Guid> nativeHandles = new Dictionary<int, Guid>();
 
         static public Map GetMapFromNativeHandle(int nativeHandle) => maps[nativeHandles[nativeHandle]];
         static public bool HasNativeHandle(int nativeHandle) => nativeHandles.ContainsKey(nativeHandle);
@@ -137,13 +138,13 @@ namespace Outernet.Client.Location
 
         static bool localizerStarted = false;
 
-        static public List<LocalizationMapRecord> Maps
+        static public List<LocalizationMapModel> Maps
         {
             get => maps.Values.Select(map => map.metadata).ToList();
             set
             {
                 var newMaps = value
-                    .Where(map => !maps.ContainsKey(map.id))
+                    .Where(map => !maps.ContainsKey(map.Id))
                     .ToList();
 
                 // var recentlyLocalizedMaps = localizationHistory
@@ -152,27 +153,26 @@ namespace Outernet.Client.Location
                 //     .Distinct();
 
                 var removedMaps = maps.Keys
-                    .Where(id => !value.Select(map => map.id).Contains(id))
+                    .Where(id => !value.Select(map => map.Id).Contains(id))
                     // Don't remove any maps that are in the most recent 8 localizationHistory localizations
                     // .Where(id => !recentlyLocalizedMaps.Any(localization => localization.mapId == id))
                     .ToList();
 
                 foreach (var newMap in newMaps)
                 {
-                    Log.Info(LogGroup.Localizer, "Loading map {Name}", newMap.name);
+                    Log.Info(LogGroup.Localizer, "Loading map {Name}", newMap.Name);
 
-                    var map = new GameObject(newMap.name).AddComponent<Map>();
-                    maps.Add(newMap.id, map);
-                    map
-                        .Load(newMap)
+                    var map = new GameObject(newMap.Name).AddComponent<Map>();
+                    maps.Add(newMap.Id, map);
+                    map.Load(newMap)
                         .ContinueWith(() =>
                         {
-                            Log.Info(LogGroup.Localizer, "Map {Name} loaded", newMap.name);
+                            Log.Info(LogGroup.Localizer, "Map {Name} loaded", newMap.Name);
 
-                            ASSERT(maps.ContainsKey(newMap.id), $"Loaded map {newMap.id} is not in maps");
+                            ASSERT(maps.ContainsKey(newMap.Id), $"Loaded map {newMap.Id} is not in maps");
 
                             bool firstMap = nativeHandles.Count == 0;
-                            nativeHandles.Add(map.NativeHandle, newMap.id);
+                            nativeHandles.Add(map.NativeHandle, newMap.Id);
 
                             if (!localizerStarted)
                             {

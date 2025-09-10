@@ -49,14 +49,22 @@ namespace Outernet.Client
             var defaultRaycaster = camera.gameObject.AddComponent<AuthoringTools.DefaultRaycaster>();
 #endif
 
+            string plerionAPIBaseUrl = "https://api.outernetfoundation.org";
+
 #if UNITY_EDITOR
             var editorSettings = EditorSettings.GetOrCreateInstance();
             App.environmentURL = editorSettings.environmentURL;
             App.environmentSchema = editorSettings.environmentSchema;
+
+            if (editorSettings.overridePlerionBaseUrl)
+                plerionAPIBaseUrl = editorSettings.plerionAPIBaseUrl;
 #else
             App.environmentURL = "http://52.200.81.198";
             App.environmentSchema = "dev2";
 #endif
+
+            PlerionAPI.Initialize(plerionAPIBaseUrl);
+
             Instantiate(prefabSystem, transform);
 
             gameObject.AddComponent<App>();
@@ -98,8 +106,19 @@ namespace Outernet.Client
             var runtimeHandles = new GameObject("RuntimeHandles", typeof(AuthoringTools.RuntimeHandles));
             runtimeHandles.transform.SetParent(sceneViewRoot.transform);
 #endif
-            PlerionAPI.GetAllLayers().ContinueWith(x => App.ExecuteAction(new SetLayersAction(x)));
+            GetLayersAndPopulate();
             Destroy(this);
+        }
+
+        private async void GetLayersAndPopulate()
+        {
+            var layers = await PlerionAPI.Layers.GetLayersAsync();
+            await UniTask.SwitchToMainThread();
+
+            if (layers == null)
+                return;
+
+            App.ExecuteActionOrDelay(new SetLayersAction(layers.ToArray()));
         }
 
         private void AddCustomSerializers()

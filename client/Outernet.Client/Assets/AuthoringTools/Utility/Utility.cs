@@ -168,29 +168,33 @@ namespace Outernet.Client.AuthoringTools
             );
         }
 
-        public static LocalizationMapRecord ToMapRecord(Guid sceneObjectID)
+        public static LocalizationMapModel ToMapRecord(Guid sceneObjectID)
         {
             var map = App.state.maps[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];
 
-            var toEcefMatrix = Double4x4.FromTranslationRotation(transform.position.value, transform.rotation.value);
+            return new LocalizationMapModel(
+                id: map.id,
+                name: map.name.value,
+                lighting: (int)map.lighting.value,
+                color: (int)map.color.value,
+                active: true,
+                positionX: transform.position.value.x,
+                positionY: transform.position.value.y,
+                positionZ: transform.position.value.z,
+                rotationX: transform.rotation.value.x,
+                rotationY: transform.rotation.value.y,
+                rotationZ: transform.rotation.value.z,
+                rotationW: transform.rotation.value.w,
+                points: map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
+            );
+        }
 
-            return new LocalizationMapRecord()
-            {
-                uuid = map.uuid,
-                id = map.id.value,
-                name = map.name.value,
-                lighting = map.lighting.value,
-                color = map.color.value,
-                active = true,
-                position_x = transform.position.value.x,
-                position_y = transform.position.value.y,
-                position_z = transform.position.value.z,
-                rotation_x = transform.rotation.value.x,
-                rotation_y = transform.rotation.value.y,
-                rotation_z = transform.rotation.value.z,
-                rotation_w = transform.rotation.value.w
-            };
+        public static IEnumerable<double> EnumerateComponents(double3 value)
+        {
+            yield return value.x;
+            yield return value.y;
+            yield return value.z;
         }
 
         public static NodeModel ToNodeModel(Guid sceneObjectID)

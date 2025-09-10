@@ -46,41 +46,23 @@ namespace PlerionClient.Api
         /// <returns>ApiResponse of Object</returns>
         ApiResponse<Object> CreateGroupWithHttpInfo(GroupModel groupModel);
         /// <summary>
-        /// Delete Group
+        /// Delete Groups
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        Object DeleteGroup(Guid id);
+        /// <param name="requestBody"></param>
+        /// <returns>List&lt;Guid&gt;</returns>
+        List<Guid> DeleteGroups(List<Guid> requestBody);
 
         /// <summary>
-        /// Delete Group
+        /// Delete Groups
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        ApiResponse<Object> DeleteGroupWithHttpInfo(Guid id);
-        /// <summary>
-        /// Get Group
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        Object GetGroup(Guid id);
-
-        /// <summary>
-        /// Get Group
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        ApiResponse<Object> GetGroupWithHttpInfo(Guid id);
+        /// <param name="requestBody"></param>
+        /// <returns>ApiResponse of List&lt;Guid&gt;</returns>
+        ApiResponse<List<Guid>> DeleteGroupsWithHttpInfo(List<Guid> requestBody);
         /// <summary>
         /// Get Groups
         /// </summary>
@@ -119,6 +101,27 @@ namespace PlerionClient.Api
         /// <param name="groupModel"></param>
         /// <returns>ApiResponse of Object</returns>
         ApiResponse<Object> UpdateGroupWithHttpInfo(Guid id, GroupModel groupModel);
+        /// <summary>
+        /// Upsert Groups
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <returns>Object</returns>
+        Object UpsertGroups(List<GroupModel> groupModel);
+
+        /// <summary>
+        /// Upsert Groups
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <returns>ApiResponse of Object</returns>
+        ApiResponse<Object> UpsertGroupsWithHttpInfo(List<GroupModel> groupModel);
         #endregion Synchronous Operations
     }
 
@@ -152,51 +155,28 @@ namespace PlerionClient.Api
         /// <returns>Task of ApiResponse (Object)</returns>
         System.Threading.Tasks.Task<ApiResponse<Object>> CreateGroupWithHttpInfoAsync(GroupModel groupModel, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
-        /// Delete Group
+        /// Delete Groups
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        System.Threading.Tasks.Task<Object> DeleteGroupAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of List&lt;Guid&gt;</returns>
+        System.Threading.Tasks.Task<List<Guid>> DeleteGroupsAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Delete Group
+        /// Delete Groups
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> DeleteGroupWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-        /// <summary>
-        /// Get Group
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        System.Threading.Tasks.Task<Object> GetGroupAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Get Group
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> GetGroupWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of ApiResponse (List&lt;Guid&gt;)</returns>
+        System.Threading.Tasks.Task<ApiResponse<List<Guid>>> DeleteGroupsWithHttpInfoAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Groups
         /// </summary>
@@ -245,6 +225,29 @@ namespace PlerionClient.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (Object)</returns>
         System.Threading.Tasks.Task<ApiResponse<Object>> UpdateGroupWithHttpInfoAsync(Guid id, GroupModel groupModel, System.Threading.CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Upsert Groups
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        System.Threading.Tasks.Task<Object> UpsertGroupsAsync(List<GroupModel> groupModel, System.Threading.CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Upsert Groups
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        System.Threading.Tasks.Task<ApiResponse<Object>> UpsertGroupsWithHttpInfoAsync(List<GroupModel> groupModel, System.Threading.CancellationToken cancellationToken = default);
         #endregion Asynchronous Operations
     }
 
@@ -576,28 +579,33 @@ namespace PlerionClient.Api
         }
 
         /// <summary>
-        /// Delete Group 
+        /// Delete Groups 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        public Object DeleteGroup(Guid id)
+        /// <param name="requestBody"></param>
+        /// <returns>List&lt;Guid&gt;</returns>
+        public List<Guid> DeleteGroups(List<Guid> requestBody)
         {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = DeleteGroupWithHttpInfo(id);
+            PlerionClient.Client.ApiResponse<List<Guid>> localVarResponse = DeleteGroupsWithHttpInfo(requestBody);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Delete Group 
+        /// Delete Groups 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        public PlerionClient.Client.ApiResponse<Object> DeleteGroupWithHttpInfo(Guid id)
+        /// <param name="requestBody"></param>
+        /// <returns>ApiResponse of List&lt;Guid&gt;</returns>
+        public PlerionClient.Client.ApiResponse<List<Guid>> DeleteGroupsWithHttpInfo(List<Guid> requestBody)
         {
+            // verify the required parameter 'requestBody' is set
+            if (requestBody == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'requestBody' when calling GroupsApi->DeleteGroups");
+
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
+                "application/json"
             };
 
             // to determine the Accept header
@@ -611,15 +619,15 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            localVarRequestOptions.Data = requestBody;
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Delete<Object>("/groups/{id}", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Delete<List<Guid>>("/groups/", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("DeleteGroup", localVarResponse);
+                Exception _exception = this.ExceptionFactory("DeleteGroups", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -627,31 +635,36 @@ namespace PlerionClient.Api
         }
 
         /// <summary>
-        /// Delete Group 
+        /// Delete Groups 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        public async System.Threading.Tasks.Task<Object> DeleteGroupAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of List&lt;Guid&gt;</returns>
+        public async System.Threading.Tasks.Task<List<Guid>> DeleteGroupsAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = await DeleteGroupWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<Guid>> localVarResponse = await DeleteGroupsWithHttpInfoAsync(requestBody, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Delete Group 
+        /// Delete Groups 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> DeleteGroupWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of ApiResponse (List&lt;Guid&gt;)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<Guid>>> DeleteGroupsWithHttpInfoAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default)
         {
+            // verify the required parameter 'requestBody' is set
+            if (requestBody == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'requestBody' when calling GroupsApi->DeleteGroups");
+
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
+                "application/json"
             };
 
             // to determine the Accept header
@@ -666,123 +679,16 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            localVarRequestOptions.Data = requestBody;
 
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.DeleteAsync<Object>("/groups/{id}", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.DeleteAsync<List<Guid>>("/groups/", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("DeleteGroup", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Group 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        public Object GetGroup(Guid id)
-        {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = GetGroupWithHttpInfo(id);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Group 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        public PlerionClient.Client.ApiResponse<Object> GetGroupWithHttpInfo(Guid id)
-        {
-            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Get<Object>("/groups/{id}", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetGroup", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Group 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        public async System.Threading.Tasks.Task<Object> GetGroupAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = await GetGroupWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Group 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> GetGroupWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-
-            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.GetAsync<Object>("/groups/{id}", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetGroup", localVarResponse);
+                Exception _exception = this.ExceptionFactory("DeleteGroups", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -1019,6 +925,123 @@ namespace PlerionClient.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("UpdateGroup", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Upsert Groups Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <returns>Object</returns>
+        public Object UpsertGroups(List<GroupModel> groupModel)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = UpsertGroupsWithHttpInfo(groupModel);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Upsert Groups Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <returns>ApiResponse of Object</returns>
+        public PlerionClient.Client.ApiResponse<Object> UpsertGroupsWithHttpInfo(List<GroupModel> groupModel)
+        {
+            // verify the required parameter 'groupModel' is set
+            if (groupModel == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'groupModel' when calling GroupsApi->UpsertGroups");
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = groupModel;
+
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Put<Object>("/groups/upsert", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpsertGroups", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Upsert Groups Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        public async System.Threading.Tasks.Task<Object> UpsertGroupsAsync(List<GroupModel> groupModel, System.Threading.CancellationToken cancellationToken = default)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = await UpsertGroupsWithHttpInfoAsync(groupModel, cancellationToken).ConfigureAwait(false);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Upsert Groups Bulk upsert groups. - If a group has an id and exists → update it. - If a group has an id but doesn&#39;t exist → insert it. - If a group has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="groupModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> UpsertGroupsWithHttpInfoAsync(List<GroupModel> groupModel, System.Threading.CancellationToken cancellationToken = default)
+        {
+            // verify the required parameter 'groupModel' is set
+            if (groupModel == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'groupModel' when calling GroupsApi->UpsertGroups");
+
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = groupModel;
+
+
+            // make the HTTP request
+
+            var localVarResponse = await this.AsynchronousClient.PutAsync<Object>("/groups/upsert", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpsertGroups", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

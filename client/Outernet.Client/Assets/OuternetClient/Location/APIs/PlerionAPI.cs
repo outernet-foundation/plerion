@@ -5,44 +5,14 @@ using System.Linq;
 using CesiumForUnity;
 using Cysharp.Threading.Tasks;
 using Outernet.Shared;
+using PlerionClient.Api;
+using PlerionClient.Client;
+using PlerionClient.Model;
 using Unity.Mathematics;
 using UnityEngine;
 
 namespace Outernet.Client
 {
-    public class LocalizationMapRecord
-    {
-        public int id { get; set; }
-        public Guid uuid { get; set; }
-        public string name { get; set; }
-        public Lighting lighting { get; set; }
-        public long color { get; set; }
-        public bool active { get; set; }
-        public double position_x { get; set; }
-        public double position_y { get; set; }
-        public double position_z { get; set; }
-        public double rotation_x { get; set; }
-        public double rotation_y { get; set; }
-        public double rotation_z { get; set; }
-        public double rotation_w { get; set; }
-        public PoseDataRaw input_image_positions { get; set; }
-        public PoseDataRaw input_image_positions_ecef { get; set; }
-        public Point position { get; set; }
-    }
-
-    public class PoseDataRaw
-    {
-        public string type { get; set; }
-        public double[][] coordinates { get; set; }
-    }
-
-    [Serializable]
-    public struct Point
-    {
-        public string type { get; set; }
-        public double[] coordinates { get; set; }
-    }
-
     [Serializable]
     public class WifiGeolocationRecord
     {
@@ -51,8 +21,20 @@ namespace Outernet.Client
         public double longitude { get; set; }
     }
 
+    public struct NodesWithRadiusOfAnyUserRequest
+    {
+        public double[][] user_positions { get; set; }
+        public double radius { get; set; }
+        public int limit_count { get; set; }
+    }
+
     static public class PlerionAPI
     {
+        public static LocalizationMapsApi LocalizationMaps { get; private set; }
+        public static NodesApi Nodes { get; private set; }
+        public static GroupsApi Groups { get; private set; }
+        public static LayersApi Layers { get; private set; }
+
         private static readonly string SUPABASE_URL = "https://ysugcfsqhmladpfnqgvs.supabase.co";
         private static readonly string SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzdWdjZnNxaG1sYWRwZm5xZ3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjcyNzU2MzksImV4cCI6MjA0Mjg1MTYzOX0.cIdcZuyN28iFbiUChId4fc-6YjleIkAUeAQs7UQ6gRE";
 
@@ -99,6 +81,14 @@ namespace Outernet.Client
             };
         }
 
+        public static void Initialize(string apiBaseUrl)
+        {
+            LocalizationMaps = new LocalizationMapsApi(apiBaseUrl);
+            Nodes = new NodesApi(apiBaseUrl);
+            Groups = new GroupsApi(apiBaseUrl);
+            Layers = new LayersApi(apiBaseUrl);
+        }
+
         private static async UniTask<T> Get<T>(string url)
         {
             return await RestClient.Get<T>(url, AddSchemaHeaders(SUPABASE_HEADERS));
@@ -109,28 +99,45 @@ namespace Outernet.Client
             return await RestClient.Post<U, T>(url, content, AddSchemaHeaders(SUPABASE_HEADERS));
         }
 
-        public static async UniTask<LocalizationMapRecord> GetMapMetadata(Guid id)
+        public static async UniTask<List<NodeModel>> GetNodes(IEnumerable<double3> userPositions, double radius, int limit_count)
         {
-            var response = await Get<List<LocalizationMapRecord>>($"{SUPABASE_URL}/rest/v1/localization_maps?select=*&id=eq.{id}");
-
-            return response.FirstOrDefault();
+            return await Nodes.GetNodesAsync();
+            // try
+            // {
+            //     return await Post<List<NodeRecord>, NodesWithRadiusOfAnyUserRequest>(
+            //         $"{SUPABASE_URL}/rest/v1/rpc/get_nodes_within_radius_of_any_user",
+            //         new NodesWithRadiusOfAnyUserRequest
+            //         {
+            //             user_positions = userPositions
+            //                 .Select(position => new double[] { position.x, position.y, position.z })
+            //                 .ToArray(),
+            //             radius = radius,
+            //             limit_count = limit_count
+            //         }
+            //     );
+            // }
+            // catch (Exception exc)
+            // {
+            //     throw exc;
+            // }
         }
 
-        public static async UniTask<List<LocalizationMapRecord>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting)
+        public static async UniTask<List<LocalizationMapModel>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting)
         {
+            return new List<LocalizationMapModel>();
             try
             {
                 var ecefPosition = CesiumWgs84Ellipsoid.LongitudeLatitudeHeightToEarthCenteredEarthFixed(new double3(longitude, latitude, height));
 
-                var maps = await Get<List<LocalizationMapRecord>>(
+                var maps = await Get<List<LocalizationMapModel>>(
                     $"{SUPABASE_URL}/rest/v1/rpc/get_maps_within_radius?ecef_x={ecefPosition.x}&ecef_y={ecefPosition.y}&ecef_z={ecefPosition.z}&radius={radius}");
 
                 maps = maps
-                    .Where(map => map.lighting == lighting)
-                    .Where(map => map.active)
+                    .Where(map => map.Lighting == (int)lighting)
+                    .Where(map => map.Active)
                     .ToList();
 
-                Log.Info(LogGroup.Localizer, "Plerion API nearby maps response: {Maps}", string.Join(", ", maps.Select(map => map.name)));
+                Log.Info(LogGroup.Localizer, "Plerion API nearby maps response: {Maps}", string.Join(", ", maps.Select(map => map.Name)));
 
                 return maps;
             }
@@ -141,8 +148,9 @@ namespace Outernet.Client
             }
         }
 
-        public static async UniTask<byte[]> DownloadMapBytes(int id, string name, bool skipCache = false)
+        public static async UniTask<byte[]> DownloadMapBytes(Guid id, string name, bool skipCache = false)
         {
+            throw new NotImplementedException();
             string cachePath = Path.Combine(Application.persistentDataPath, "cache");
 
             if (!Directory.Exists(cachePath))

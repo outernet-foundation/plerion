@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from .routers.captures import router as captures_router
 from .routers.groups import router as groups_router
 from .routers.layers import router as layers_router
+from .routers.localizationMap import router as localizationMap_router
 from .routers.nodes import router as nodes_router
 from .routers.reconstructions import router as reconstructions_router
 from .settings import get_api_settings
@@ -42,3 +43,4 @@ app.include_router(reconstructions_router)
 app.include_router(nodes_router)
 app.include_router(groups_router)
 app.include_router(layers_router)
+app.include_router(localizationMap_router)

@@ -13,6 +13,9 @@ using FofX.Stateful;
 
 using Outernet.Client.Location;
 using CesiumForUnity;
+using PlerionClient.Model;
+using PlerionClient.Api;
+using PlerionClient.Client;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -154,13 +157,14 @@ namespace Outernet.Client.AuthoringTools
                 smoothTransition: false
             );
 
-            List<LocalizationMapRecord> maps = null;
-            List<NodeRecord> nodes = null;
-            List<NodeGroupRecord> nodeGroups = null;
+            List<LocalizationMapModel> maps = null;
+            List<NodeModel> nodes = null;
+            List<GroupModel> nodeGroups = null;
 
             await UniTask.WhenAll(
                 PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
                     .ContinueWith(x => maps = x),
+
                 PlerionAPI.GetNodes(new double3[] { ecefCoordinates }, radius, 9999)
                     .ContinueWith(x =>
                     {
@@ -183,28 +187,28 @@ namespace Outernet.Client.AuthoringTools
             App.ExecuteActionOrDelay(new SetLocationContentLoadedAction(true));
         }
 
-        private async UniTask<List<NodeGroupRecord>> GetNodeGroupsRecursive(List<NodeRecord> nodes, CancellationToken cancellationToken = default)
+        private async UniTask<List<GroupModel>> GetNodeGroupsRecursive(List<NodeModel> nodes, CancellationToken cancellationToken = default)
         {
-            var groups = new List<NodeGroupRecord>();
+            var groups = new List<GroupModel>();
 
-            var directGroups = await PlerionAPI.GetNodeGroups(
-                nodes.Where(x => x.group_uuid.HasValue)
-                    .Select(x => x.group_uuid.Value)
+            var directGroups = await PlerionAPI.Groups.GetGroupsAsync(
+                nodes.Where(x => x.Parent.HasValue)
+                    .Select(x => x.Parent.Value)
                     .Distinct()
-                    .ToArray()
+                    .ToList()
             );
 
             groups.AddRange(directGroups);
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            while (groups.Any(x => x.parent_uuid.HasValue && !groups.Any(y => y.uuid == x.parent_uuid)))
+            while (groups.Any(x => x.Parent.HasValue && !groups.Any(y => y.Id == x.Parent)))
             {
-                var recursiveGroups = await PlerionAPI.GetNodeGroups(
-                    groups.Where(x => x.parent_uuid.HasValue && !groups.Any(y => y.uuid == x.parent_uuid))
-                        .Select(x => x.parent_uuid.Value)
+                var recursiveGroups = await PlerionAPI.Groups.GetGroupsAsync(
+                    groups.Where(x => x.Parent.HasValue && !groups.Any(y => y.Id == x.Parent))
+                        .Select(x => x.Parent.Value)
                         .Distinct()
-                        .ToArray()
+                        .ToList()
                 );
 
                 groups.AddRange(recursiveGroups);

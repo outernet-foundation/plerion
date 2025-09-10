@@ -39,15 +39,14 @@ namespace Outernet.Client.AuthoringTools
 
         private IDisposable SetupMap(MapState map)
         {
-            var transform = App.state.transforms[map.uuid];
+            var transform = App.state.transforms[map.id];
 
             var view = Instantiate(AuthoringToolsPrefabs.SceneMap, sceneRoot);
-            view.Setup(sceneObjectID: map.uuid);
+            view.Setup(sceneObjectID: map.id, mapID: map.id);
             view.AddBinding(
                 Bindings.BindECEFTransform(transform.position, transform.rotation, view.props.position, view.props.rotation),
                 view.props.name.From(map.name),
                 view.props.bounds.From(transform.bounds),
-                view.props.mapID.From(map.id),
                 view.props.color.From(map.color),
                 view.props.localInputImagePositions.Derive(
                     _ => view.props.localInputImagePositions.SetValue(
@@ -59,10 +58,10 @@ namespace Outernet.Client.AuthoringTools
                     ObservationScope.All,
                     map.localInputImagePositions
                 ),
-                Bindings.OnRelease(() => _maps.Remove(map.uuid))
+                Bindings.OnRelease(() => _maps.Remove(map.id))
             );
 
-            _maps.Add(map.uuid, view);
+            _maps.Add(map.id, view);
             return view;
         }
 

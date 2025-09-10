@@ -247,60 +247,6 @@ paths:
       tags:
       - nodes
   /nodes/{id}:
-    delete:
-      operationId: delete_node
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Delete Node
-      tags:
-      - nodes
-    get:
-      operationId: get_node
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Node
-      tags:
-      - nodes
     put:
       operationId: update_node
       parameters:
@@ -332,6 +278,68 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Update Node
+      tags:
+      - nodes
+  /nodes/upsert:
+    put:
+      description: |-
+        Bulk upsert nodes.
+        - If a node has an id and exists → update it.
+        - If a node has an id but doesn't exist → insert it.
+        - If a node has no id → generate a new UUID and insert it.
+      operationId: upsert_nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/NodeModel"
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Upsert Nodes
+      tags:
+      - nodes
+  /nodes/:
+    delete:
+      operationId: delete_nodes
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                format: uuid
+                type: string
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  format: uuid
+                  type: string
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Nodes
       tags:
       - nodes
   /groups:
@@ -392,60 +400,6 @@ paths:
       tags:
       - groups
   /groups/{id}:
-    delete:
-      operationId: delete_group
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Delete Group
-      tags:
-      - groups
-    get:
-      operationId: get_group
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Group
-      tags:
-      - groups
     put:
       operationId: update_group
       parameters:
@@ -477,6 +431,68 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Update Group
+      tags:
+      - groups
+  /groups/upsert:
+    put:
+      description: |-
+        Bulk upsert groups.
+        - If a group has an id and exists → update it.
+        - If a group has an id but doesn't exist → insert it.
+        - If a group has no id → generate a new UUID and insert it.
+      operationId: upsert_groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/GroupModel"
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Upsert Groups
+      tags:
+      - groups
+  /groups/:
+    delete:
+      operationId: delete_groups
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                format: uuid
+                type: string
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  format: uuid
+                  type: string
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Groups
       tags:
       - groups
   /layers:
@@ -537,60 +553,6 @@ paths:
       tags:
       - layers
   /layers/{id}:
-    delete:
-      operationId: delete_layer
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Delete Layer
-      tags:
-      - layers
-    get:
-      operationId: get_layer
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Layer
-      tags:
-      - layers
     put:
       operationId: update_layer
       parameters:
@@ -624,6 +586,221 @@ paths:
       summary: Update Layer
       tags:
       - layers
+  /layers/upsert:
+    put:
+      description: |-
+        Bulk upsert layers.
+        - If a layer has an id and exists → update it.
+        - If a layer has an id but doesn't exist → insert it.
+        - If a layer has no id → generate a new UUID and insert it.
+      operationId: upsert_layers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/LayerModel"
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Upsert Layers
+      tags:
+      - layers
+  /layers/:
+    delete:
+      operationId: delete_layers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                format: uuid
+                type: string
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  format: uuid
+                  type: string
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Layers
+      tags:
+      - layers
+  /localizationMaps:
+    get:
+      operationId: get_localizationMaps
+      parameters:
+      - description: Optional list of Ids to filter by
+        explode: true
+        in: query
+        name: ids
+        required: false
+        schema:
+          items:
+            format: uuid
+            type: string
+          nullable: true
+          type: array
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/LocalizationMapModel"
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Localizationmaps
+      tags:
+      - localizationMaps
+    post:
+      operationId: create_localizationMap
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalizationMapModel"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Create Localizationmap
+      tags:
+      - localizationMaps
+  /localizationMaps/{id}:
+    put:
+      operationId: update_localizationMap
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalizationMapModel"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update Localizationmap
+      tags:
+      - localizationMaps
+  /localizationMaps/upsert:
+    put:
+      description: |-
+        Bulk upsert localizationMaps.
+        - If a localizationMap has an id and exists → update it.
+        - If a localizationMap has an id but doesn't exist → insert it.
+        - If a localizationMap has no id → generate a new UUID and insert it.
+      operationId: upsert_localizationMaps
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/LocalizationMapModel"
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Upsert Localizationmaps
+      tags:
+      - localizationMaps
+  /localizationMaps/:
+    delete:
+      operationId: delete_localizationMaps
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                format: uuid
+                type: string
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  format: uuid
+                  type: string
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Delete Localizationmaps
+      tags:
+      - localizationMaps
 components:
   schemas:
     Body_create_capture:
@@ -756,6 +933,130 @@ components:
       - name
       title: LayerModel
       extra: {}
+    LocalizationMapModel:
+      example:
+        color: 6
+        active: true
+        lighting: 0
+        positionX: 1.4658129805029452
+        points:
+        - 2.027123023002322
+        - 2.027123023002322
+        positionY: 5.962133916683182
+        positionZ: 5.637376656633329
+        rotationW: 3.616076749251911
+        rotationX: 2.3021358869347655
+        rotationY: 7.061401241503109
+        rotationZ: 9.301444243932576
+        name: name
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        name:
+          maxLength: 255
+          title: Name
+          type: string
+          extra:
+            nullable: false
+            secret: false
+            unique: true
+        active:
+          title: Active
+          type: boolean
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        lighting:
+          title: Lighting
+          type: integer
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        color:
+          title: Color
+          type: integer
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        positionX:
+          title: Positionx
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        positionY:
+          title: Positiony
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        positionZ:
+          title: Positionz
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationX:
+          title: Rotationx
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationY:
+          title: Rotationy
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationZ:
+          title: Rotationz
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        rotationW:
+          title: Rotationw
+          type: number
+          extra:
+            nullable: false
+            secret: false
+            unique: false
+        points:
+          items:
+            type: number
+          nullable: true
+          type: array
+      required:
+      - active
+      - color
+      - id
+      - lighting
+      - name
+      - positionX
+      - positionY
+      - positionZ
+      - rotationW
+      - rotationX
+      - rotationY
+      - rotationZ
+      title: LocalizationMapModel
+      extra: {}
     NodeModel:
       example:
         parent: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -768,7 +1069,6 @@ components:
         labelScale: 2.027123023002322
         labelHeight: 7.386281948385884
         layer: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        something: 1.2315135367772556
         positionX: 0.8008281904610115
         positionY: 6.027456183070403
         positionZ: 1.4658129805029452
@@ -887,9 +1187,6 @@ components:
           format: uuid
           nullable: true
           type: string
-        something:
-          nullable: true
-          type: number
       required:
       - active
       - id

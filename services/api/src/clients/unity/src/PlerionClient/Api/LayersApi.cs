@@ -46,41 +46,23 @@ namespace PlerionClient.Api
         /// <returns>ApiResponse of Object</returns>
         ApiResponse<Object> CreateLayerWithHttpInfo(LayerModel layerModel);
         /// <summary>
-        /// Delete Layer
+        /// Delete Layers
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        Object DeleteLayer(Guid id);
+        /// <param name="requestBody"></param>
+        /// <returns>List&lt;Guid&gt;</returns>
+        List<Guid> DeleteLayers(List<Guid> requestBody);
 
         /// <summary>
-        /// Delete Layer
+        /// Delete Layers
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        ApiResponse<Object> DeleteLayerWithHttpInfo(Guid id);
-        /// <summary>
-        /// Get Layer
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        Object GetLayer(Guid id);
-
-        /// <summary>
-        /// Get Layer
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        ApiResponse<Object> GetLayerWithHttpInfo(Guid id);
+        /// <param name="requestBody"></param>
+        /// <returns>ApiResponse of List&lt;Guid&gt;</returns>
+        ApiResponse<List<Guid>> DeleteLayersWithHttpInfo(List<Guid> requestBody);
         /// <summary>
         /// Get Layers
         /// </summary>
@@ -119,6 +101,27 @@ namespace PlerionClient.Api
         /// <param name="layerModel"></param>
         /// <returns>ApiResponse of Object</returns>
         ApiResponse<Object> UpdateLayerWithHttpInfo(Guid id, LayerModel layerModel);
+        /// <summary>
+        /// Upsert Layers
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <returns>Object</returns>
+        Object UpsertLayers(List<LayerModel> layerModel);
+
+        /// <summary>
+        /// Upsert Layers
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <returns>ApiResponse of Object</returns>
+        ApiResponse<Object> UpsertLayersWithHttpInfo(List<LayerModel> layerModel);
         #endregion Synchronous Operations
     }
 
@@ -152,51 +155,28 @@ namespace PlerionClient.Api
         /// <returns>Task of ApiResponse (Object)</returns>
         System.Threading.Tasks.Task<ApiResponse<Object>> CreateLayerWithHttpInfoAsync(LayerModel layerModel, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
-        /// Delete Layer
+        /// Delete Layers
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        System.Threading.Tasks.Task<Object> DeleteLayerAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of List&lt;Guid&gt;</returns>
+        System.Threading.Tasks.Task<List<Guid>> DeleteLayersAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Delete Layer
+        /// Delete Layers
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> DeleteLayerWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-        /// <summary>
-        /// Get Layer
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        System.Threading.Tasks.Task<Object> GetLayerAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Get Layer
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> GetLayerWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of ApiResponse (List&lt;Guid&gt;)</returns>
+        System.Threading.Tasks.Task<ApiResponse<List<Guid>>> DeleteLayersWithHttpInfoAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Layers
         /// </summary>
@@ -245,6 +225,29 @@ namespace PlerionClient.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (Object)</returns>
         System.Threading.Tasks.Task<ApiResponse<Object>> UpdateLayerWithHttpInfoAsync(Guid id, LayerModel layerModel, System.Threading.CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Upsert Layers
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        System.Threading.Tasks.Task<Object> UpsertLayersAsync(List<LayerModel> layerModel, System.Threading.CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Upsert Layers
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        System.Threading.Tasks.Task<ApiResponse<Object>> UpsertLayersWithHttpInfoAsync(List<LayerModel> layerModel, System.Threading.CancellationToken cancellationToken = default);
         #endregion Asynchronous Operations
     }
 
@@ -576,28 +579,33 @@ namespace PlerionClient.Api
         }
 
         /// <summary>
-        /// Delete Layer 
+        /// Delete Layers 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        public Object DeleteLayer(Guid id)
+        /// <param name="requestBody"></param>
+        /// <returns>List&lt;Guid&gt;</returns>
+        public List<Guid> DeleteLayers(List<Guid> requestBody)
         {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = DeleteLayerWithHttpInfo(id);
+            PlerionClient.Client.ApiResponse<List<Guid>> localVarResponse = DeleteLayersWithHttpInfo(requestBody);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Delete Layer 
+        /// Delete Layers 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        public PlerionClient.Client.ApiResponse<Object> DeleteLayerWithHttpInfo(Guid id)
+        /// <param name="requestBody"></param>
+        /// <returns>ApiResponse of List&lt;Guid&gt;</returns>
+        public PlerionClient.Client.ApiResponse<List<Guid>> DeleteLayersWithHttpInfo(List<Guid> requestBody)
         {
+            // verify the required parameter 'requestBody' is set
+            if (requestBody == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'requestBody' when calling LayersApi->DeleteLayers");
+
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
+                "application/json"
             };
 
             // to determine the Accept header
@@ -611,15 +619,15 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            localVarRequestOptions.Data = requestBody;
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Delete<Object>("/layers/{id}", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Delete<List<Guid>>("/layers/", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("DeleteLayer", localVarResponse);
+                Exception _exception = this.ExceptionFactory("DeleteLayers", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -627,31 +635,36 @@ namespace PlerionClient.Api
         }
 
         /// <summary>
-        /// Delete Layer 
+        /// Delete Layers 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        public async System.Threading.Tasks.Task<Object> DeleteLayerAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of List&lt;Guid&gt;</returns>
+        public async System.Threading.Tasks.Task<List<Guid>> DeleteLayersAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = await DeleteLayerWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<Guid>> localVarResponse = await DeleteLayersWithHttpInfoAsync(requestBody, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Delete Layer 
+        /// Delete Layers 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> DeleteLayerWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of ApiResponse (List&lt;Guid&gt;)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<Guid>>> DeleteLayersWithHttpInfoAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default)
         {
+            // verify the required parameter 'requestBody' is set
+            if (requestBody == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'requestBody' when calling LayersApi->DeleteLayers");
+
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
+                "application/json"
             };
 
             // to determine the Accept header
@@ -666,123 +679,16 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            localVarRequestOptions.Data = requestBody;
 
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.DeleteAsync<Object>("/layers/{id}", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.DeleteAsync<List<Guid>>("/layers/", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("DeleteLayer", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Layer 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        public Object GetLayer(Guid id)
-        {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = GetLayerWithHttpInfo(id);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Layer 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        public PlerionClient.Client.ApiResponse<Object> GetLayerWithHttpInfo(Guid id)
-        {
-            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Get<Object>("/layers/{id}", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetLayer", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Layer 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        public async System.Threading.Tasks.Task<Object> GetLayerAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = await GetLayerWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Layer 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> GetLayerWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-
-            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.GetAsync<Object>("/layers/{id}", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetLayer", localVarResponse);
+                Exception _exception = this.ExceptionFactory("DeleteLayers", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -1019,6 +925,123 @@ namespace PlerionClient.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("UpdateLayer", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Upsert Layers Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <returns>Object</returns>
+        public Object UpsertLayers(List<LayerModel> layerModel)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = UpsertLayersWithHttpInfo(layerModel);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Upsert Layers Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <returns>ApiResponse of Object</returns>
+        public PlerionClient.Client.ApiResponse<Object> UpsertLayersWithHttpInfo(List<LayerModel> layerModel)
+        {
+            // verify the required parameter 'layerModel' is set
+            if (layerModel == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'layerModel' when calling LayersApi->UpsertLayers");
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = layerModel;
+
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Put<Object>("/layers/upsert", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpsertLayers", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Upsert Layers Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        public async System.Threading.Tasks.Task<Object> UpsertLayersAsync(List<LayerModel> layerModel, System.Threading.CancellationToken cancellationToken = default)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = await UpsertLayersWithHttpInfoAsync(layerModel, cancellationToken).ConfigureAwait(false);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Upsert Layers Bulk upsert layers. - If a layer has an id and exists → update it. - If a layer has an id but doesn&#39;t exist → insert it. - If a layer has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="layerModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> UpsertLayersWithHttpInfoAsync(List<LayerModel> layerModel, System.Threading.CancellationToken cancellationToken = default)
+        {
+            // verify the required parameter 'layerModel' is set
+            if (layerModel == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'layerModel' when calling LayersApi->UpsertLayers");
+
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = layerModel;
+
+
+            // make the HTTP request
+
+            var localVarResponse = await this.AsynchronousClient.PutAsync<Object>("/layers/upsert", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpsertLayers", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

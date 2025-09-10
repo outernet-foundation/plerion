@@ -41,9 +41,9 @@ namespace PlerionClient.Model
         /// </summary>
         /// <param name="id">id (required).</param>
         /// <param name="name">name (required).</param>
+        /// <param name="active">active (required).</param>
         /// <param name="lighting">lighting (required).</param>
         /// <param name="color">color (required).</param>
-        /// <param name="active">active (required).</param>
         /// <param name="positionX">positionX (required).</param>
         /// <param name="positionY">positionY (required).</param>
         /// <param name="positionZ">positionZ (required).</param>
@@ -51,7 +51,8 @@ namespace PlerionClient.Model
         /// <param name="rotationY">rotationY (required).</param>
         /// <param name="rotationZ">rotationZ (required).</param>
         /// <param name="rotationW">rotationW (required).</param>
-        public LocalizationMapModel(Guid id = default, string name = default, int lighting = default, int color = default, bool active = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default)
+        /// <param name="points">points.</param>
+        public LocalizationMapModel(Guid id = default, string name = default, bool active = default, int lighting = default, int color = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, List<double> points = default)
         {
             this.Id = id;
             // to ensure "name" is required (not null)
@@ -60,9 +61,9 @@ namespace PlerionClient.Model
                 throw new ArgumentNullException("name is a required property for LocalizationMapModel and cannot be null");
             }
             this.Name = name;
+            this.Active = active;
             this.Lighting = lighting;
             this.Color = color;
-            this.Active = active;
             this.PositionX = positionX;
             this.PositionY = positionY;
             this.PositionZ = positionZ;
@@ -70,6 +71,7 @@ namespace PlerionClient.Model
             this.RotationY = rotationY;
             this.RotationZ = rotationZ;
             this.RotationW = rotationW;
+            this.Points = points;
         }
 
         /// <summary>
@@ -85,6 +87,12 @@ namespace PlerionClient.Model
         public string Name { get; set; }
 
         /// <summary>
+        /// Gets or Sets Active
+        /// </summary>
+        [DataMember(Name = "active", IsRequired = true, EmitDefaultValue = true)]
+        public bool Active { get; set; }
+
+        /// <summary>
         /// Gets or Sets Lighting
         /// </summary>
         [DataMember(Name = "lighting", IsRequired = true, EmitDefaultValue = true)]
@@ -95,12 +103,6 @@ namespace PlerionClient.Model
         /// </summary>
         [DataMember(Name = "color", IsRequired = true, EmitDefaultValue = true)]
         public int Color { get; set; }
-
-        /// <summary>
-        /// Gets or Sets Active
-        /// </summary>
-        [DataMember(Name = "active", IsRequired = true, EmitDefaultValue = true)]
-        public bool Active { get; set; }
 
         /// <summary>
         /// Gets or Sets PositionX
@@ -145,6 +147,12 @@ namespace PlerionClient.Model
         public double RotationW { get; set; }
 
         /// <summary>
+        /// Gets or Sets Points
+        /// </summary>
+        [DataMember(Name = "points", EmitDefaultValue = true)]
+        public List<double> Points { get; set; }
+
+        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -154,9 +162,9 @@ namespace PlerionClient.Model
             sb.Append("class LocalizationMapModel {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
+            sb.Append("  Active: ").Append(Active).Append("\n");
             sb.Append("  Lighting: ").Append(Lighting).Append("\n");
             sb.Append("  Color: ").Append(Color).Append("\n");
-            sb.Append("  Active: ").Append(Active).Append("\n");
             sb.Append("  PositionX: ").Append(PositionX).Append("\n");
             sb.Append("  PositionY: ").Append(PositionY).Append("\n");
             sb.Append("  PositionZ: ").Append(PositionZ).Append("\n");
@@ -164,6 +172,7 @@ namespace PlerionClient.Model
             sb.Append("  RotationY: ").Append(RotationY).Append("\n");
             sb.Append("  RotationZ: ").Append(RotationZ).Append("\n");
             sb.Append("  RotationW: ").Append(RotationW).Append("\n");
+            sb.Append("  Points: ").Append(Points).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

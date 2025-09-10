@@ -46,41 +46,23 @@ namespace PlerionClient.Api
         /// <returns>ApiResponse of Object</returns>
         ApiResponse<Object> CreateNodeWithHttpInfo(NodeModel nodeModel);
         /// <summary>
-        /// Delete Node
+        /// Delete Nodes
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        Object DeleteNode(Guid id);
+        /// <param name="requestBody"></param>
+        /// <returns>List&lt;Guid&gt;</returns>
+        List<Guid> DeleteNodes(List<Guid> requestBody);
 
         /// <summary>
-        /// Delete Node
+        /// Delete Nodes
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        ApiResponse<Object> DeleteNodeWithHttpInfo(Guid id);
-        /// <summary>
-        /// Get Node
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        Object GetNode(Guid id);
-
-        /// <summary>
-        /// Get Node
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        ApiResponse<Object> GetNodeWithHttpInfo(Guid id);
+        /// <param name="requestBody"></param>
+        /// <returns>ApiResponse of List&lt;Guid&gt;</returns>
+        ApiResponse<List<Guid>> DeleteNodesWithHttpInfo(List<Guid> requestBody);
         /// <summary>
         /// Get Nodes
         /// </summary>
@@ -119,6 +101,27 @@ namespace PlerionClient.Api
         /// <param name="nodeModel"></param>
         /// <returns>ApiResponse of Object</returns>
         ApiResponse<Object> UpdateNodeWithHttpInfo(Guid id, NodeModel nodeModel);
+        /// <summary>
+        /// Upsert Nodes
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <returns>Object</returns>
+        Object UpsertNodes(List<NodeModel> nodeModel);
+
+        /// <summary>
+        /// Upsert Nodes
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <returns>ApiResponse of Object</returns>
+        ApiResponse<Object> UpsertNodesWithHttpInfo(List<NodeModel> nodeModel);
         #endregion Synchronous Operations
     }
 
@@ -152,51 +155,28 @@ namespace PlerionClient.Api
         /// <returns>Task of ApiResponse (Object)</returns>
         System.Threading.Tasks.Task<ApiResponse<Object>> CreateNodeWithHttpInfoAsync(NodeModel nodeModel, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
-        /// Delete Node
+        /// Delete Nodes
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        System.Threading.Tasks.Task<Object> DeleteNodeAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of List&lt;Guid&gt;</returns>
+        System.Threading.Tasks.Task<List<Guid>> DeleteNodesAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Delete Node
+        /// Delete Nodes
         /// </summary>
         /// <remarks>
         /// 
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> DeleteNodeWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-        /// <summary>
-        /// Get Node
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        System.Threading.Tasks.Task<Object> GetNodeAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Get Node
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> GetNodeWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of ApiResponse (List&lt;Guid&gt;)</returns>
+        System.Threading.Tasks.Task<ApiResponse<List<Guid>>> DeleteNodesWithHttpInfoAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Nodes
         /// </summary>
@@ -245,6 +225,29 @@ namespace PlerionClient.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (Object)</returns>
         System.Threading.Tasks.Task<ApiResponse<Object>> UpdateNodeWithHttpInfoAsync(Guid id, NodeModel nodeModel, System.Threading.CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Upsert Nodes
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        System.Threading.Tasks.Task<Object> UpsertNodesAsync(List<NodeModel> nodeModel, System.Threading.CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Upsert Nodes
+        /// </summary>
+        /// <remarks>
+        /// Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        System.Threading.Tasks.Task<ApiResponse<Object>> UpsertNodesWithHttpInfoAsync(List<NodeModel> nodeModel, System.Threading.CancellationToken cancellationToken = default);
         #endregion Asynchronous Operations
     }
 
@@ -576,28 +579,33 @@ namespace PlerionClient.Api
         }
 
         /// <summary>
-        /// Delete Node 
+        /// Delete Nodes 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        public Object DeleteNode(Guid id)
+        /// <param name="requestBody"></param>
+        /// <returns>List&lt;Guid&gt;</returns>
+        public List<Guid> DeleteNodes(List<Guid> requestBody)
         {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = DeleteNodeWithHttpInfo(id);
+            PlerionClient.Client.ApiResponse<List<Guid>> localVarResponse = DeleteNodesWithHttpInfo(requestBody);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Delete Node 
+        /// Delete Nodes 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        public PlerionClient.Client.ApiResponse<Object> DeleteNodeWithHttpInfo(Guid id)
+        /// <param name="requestBody"></param>
+        /// <returns>ApiResponse of List&lt;Guid&gt;</returns>
+        public PlerionClient.Client.ApiResponse<List<Guid>> DeleteNodesWithHttpInfo(List<Guid> requestBody)
         {
+            // verify the required parameter 'requestBody' is set
+            if (requestBody == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'requestBody' when calling NodesApi->DeleteNodes");
+
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
+                "application/json"
             };
 
             // to determine the Accept header
@@ -611,15 +619,15 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            localVarRequestOptions.Data = requestBody;
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Delete<Object>("/nodes/{id}", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Delete<List<Guid>>("/nodes/", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("DeleteNode", localVarResponse);
+                Exception _exception = this.ExceptionFactory("DeleteNodes", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -627,31 +635,36 @@ namespace PlerionClient.Api
         }
 
         /// <summary>
-        /// Delete Node 
+        /// Delete Nodes 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        public async System.Threading.Tasks.Task<Object> DeleteNodeAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of List&lt;Guid&gt;</returns>
+        public async System.Threading.Tasks.Task<List<Guid>> DeleteNodesAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = await DeleteNodeWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<Guid>> localVarResponse = await DeleteNodesWithHttpInfoAsync(requestBody, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Delete Node 
+        /// Delete Nodes 
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
+        /// <param name="requestBody"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> DeleteNodeWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of ApiResponse (List&lt;Guid&gt;)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<Guid>>> DeleteNodesWithHttpInfoAsync(List<Guid> requestBody, System.Threading.CancellationToken cancellationToken = default)
         {
+            // verify the required parameter 'requestBody' is set
+            if (requestBody == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'requestBody' when calling NodesApi->DeleteNodes");
+
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
+                "application/json"
             };
 
             // to determine the Accept header
@@ -666,123 +679,16 @@ namespace PlerionClient.Api
             var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            localVarRequestOptions.Data = requestBody;
 
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.DeleteAsync<Object>("/nodes/{id}", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.DeleteAsync<List<Guid>>("/nodes/", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("DeleteNode", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Node 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>Object</returns>
-        public Object GetNode(Guid id)
-        {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = GetNodeWithHttpInfo(id);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Node 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of Object</returns>
-        public PlerionClient.Client.ApiResponse<Object> GetNodeWithHttpInfo(Guid id)
-        {
-            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Get<Object>("/nodes/{id}", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetNode", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Node 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Object</returns>
-        public async System.Threading.Tasks.Task<Object> GetNodeAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-            PlerionClient.Client.ApiResponse<Object> localVarResponse = await GetNodeWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Node 
-        /// </summary>
-        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Object)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> GetNodeWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-
-            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.GetAsync<Object>("/nodes/{id}", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetNode", localVarResponse);
+                Exception _exception = this.ExceptionFactory("DeleteNodes", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -1019,6 +925,123 @@ namespace PlerionClient.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("UpdateNode", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Upsert Nodes Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <returns>Object</returns>
+        public Object UpsertNodes(List<NodeModel> nodeModel)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = UpsertNodesWithHttpInfo(nodeModel);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Upsert Nodes Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <returns>ApiResponse of Object</returns>
+        public PlerionClient.Client.ApiResponse<Object> UpsertNodesWithHttpInfo(List<NodeModel> nodeModel)
+        {
+            // verify the required parameter 'nodeModel' is set
+            if (nodeModel == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'nodeModel' when calling NodesApi->UpsertNodes");
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = nodeModel;
+
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Put<Object>("/nodes/upsert", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpsertNodes", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Upsert Nodes Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        public async System.Threading.Tasks.Task<Object> UpsertNodesAsync(List<NodeModel> nodeModel, System.Threading.CancellationToken cancellationToken = default)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = await UpsertNodesWithHttpInfoAsync(nodeModel, cancellationToken).ConfigureAwait(false);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Upsert Nodes Bulk upsert nodes. - If a node has an id and exists → update it. - If a node has an id but doesn&#39;t exist → insert it. - If a node has no id → generate a new UUID and insert it.
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="nodeModel"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> UpsertNodesWithHttpInfoAsync(List<NodeModel> nodeModel, System.Threading.CancellationToken cancellationToken = default)
+        {
+            // verify the required parameter 'nodeModel' is set
+            if (nodeModel == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'nodeModel' when calling NodesApi->UpsertNodes");
+
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.Data = nodeModel;
+
+
+            // make the HTTP request
+
+            var localVarResponse = await this.AsynchronousClient.PutAsync<Object>("/nodes/upsert", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("UpsertNodes", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

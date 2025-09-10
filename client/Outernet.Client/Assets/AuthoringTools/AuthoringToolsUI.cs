@@ -336,7 +336,7 @@ namespace Outernet.Client.AuthoringTools
 
             view.AddBinding(
                 BindHierarchyElement(
-                    mapState.uuid,
+                    mapState.id,
                     view.gameObject,
                     toHighlight,
                     AuthoringToolsPrefabs.SelectedColor,
@@ -560,7 +560,7 @@ namespace Outernet.Client.AuthoringTools
             );
 
             App.ExecuteAction(new AddOrUpdateNodeAction(
-                uuid: Guid.NewGuid(),
+                id: Guid.NewGuid(),
                 name: "Node",
                 position: newNodeTransform.position,
                 rotation: newNodeTransform.rotation,

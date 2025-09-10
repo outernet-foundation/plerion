@@ -23,7 +23,7 @@ namespace Outernet.Client.Location
 
         public static float pointSize = 0.01f;
 
-        public int mapID { get; private set; }
+        public Guid mapID { get; private set; }
         public string mapName { get; private set; }
 
         private Mesh mesh;
@@ -63,7 +63,7 @@ namespace Outernet.Client.Location
         public void SetColor(Color color)
             => meshRenderer.material.SetColor("_PointColor", color);
 
-        public UniTask Load(int mapID, string mapName, Action<string> progressCallback = null)
+        public UniTask Load(Guid mapID, string mapName, Action<string> progressCallback = null)
         {
             _loadTask.Cancel();
             Unload(mesh, this.mapName, nativeHandle).Forget();
@@ -81,7 +81,7 @@ namespace Outernet.Client.Location
             return _loadTask.completionTask;
         }
 
-        private async UniTask Load(int mapID, string mapName, IProgress<string> progress, CancellationToken cancellationToken = default)
+        private async UniTask Load(Guid mapID, string mapName, IProgress<string> progress, CancellationToken cancellationToken = default)
         {
             cancellationToken.Register(() =>
             {

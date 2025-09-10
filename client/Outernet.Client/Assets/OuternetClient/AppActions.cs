@@ -6,6 +6,8 @@ using FofX.Stateful;
 
 using Unity.Mathematics;
 using PlerionClient.Model;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Outernet.Client
 {
@@ -103,16 +105,16 @@ namespace Outernet.Client
 
     public class SetMapsAction : ObservableNodeAction<ClientState>
     {
-        private LocalizationMapRecord[] _maps;
+        private LocalizationMapModel[] _maps;
 
-        public SetMapsAction(LocalizationMapRecord[] maps)
+        public SetMapsAction(LocalizationMapModel[] maps)
         {
             _maps = maps;
         }
 
         public override void Execute(ClientState target)
         {
-            var newMapsByID = _maps.ToDictionary(x => x.uuid);
+            var newMapsByID = _maps.ToDictionary(x => x.Id);
             var oldMapsByID = target.maps.ToDictionary(x => x.key, x => x.value);
 
             foreach (var toRemove in oldMapsByID.Where(x => !newMapsByID.ContainsKey(x.Key)))
@@ -121,23 +123,30 @@ namespace Outernet.Client
             foreach (var toUpdate in newMapsByID.Select(x => x.Value))
             {
                 new AddOrUpdateMapAction(
-                    uuid: toUpdate.uuid,
-                    id: toUpdate.id,
-                    name: toUpdate.name,
-                    position: new double3() { x = toUpdate.position_x, y = toUpdate.position_y, z = toUpdate.position_z },
-                    rotation: new Quaternion((float)toUpdate.rotation_x, (float)toUpdate.rotation_y, (float)toUpdate.rotation_z, (float)toUpdate.rotation_w),
-                    lighting: toUpdate.lighting,
-                    color: toUpdate.color,
-                    localInputImagePositions: toUpdate.input_image_positions.coordinates.Select(x => new double3(x[0], x[1], x[2])).ToArray()
+                    id: toUpdate.Id,
+                    name: toUpdate.Name,
+                    position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
+                    rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW),
+                    lighting: (Shared.Lighting)toUpdate.Lighting,
+                    color: toUpdate.Color,
+                    localInputImagePositions: ParsePoints(toUpdate.Points)
                 ).Execute(target);
             }
+        }
+
+        private double3[] ParsePoints(List<double> flatPoints)
+        {
+            var result = new double3[flatPoints.Count / 3];
+            for (int i = 0; i < flatPoints.Count; i += 3)
+                result[i / 3] = new double3(flatPoints[i], flatPoints[i + 1], flatPoints[i + 2]);
+
+            return result;
         }
     }
 
     public class AddOrUpdateMapAction : ObservableNodeAction<ClientState>
     {
-        private Guid _uuid;
-        private int _id;
+        private Guid _id;
         private string _name;
         private double3 _position;
         private Quaternion _rotation;
@@ -146,8 +155,7 @@ namespace Outernet.Client
         private double3[] _localInputImagePositions;
 
         public AddOrUpdateMapAction(
-            Guid uuid,
-            int id = default,
+            Guid id,
             string name = default,
             double3 position = default,
             Quaternion rotation = default,
@@ -155,7 +163,6 @@ namespace Outernet.Client
             long color = default,
             double3[] localInputImagePositions = default)
         {
-            _uuid = uuid;
             _id = id;
             _name = name;
             _position = position;
@@ -167,10 +174,9 @@ namespace Outernet.Client
 
         public override void Execute(ClientState target)
         {
-            var map = target.maps.GetOrAdd(_uuid);
-            var transform = target.transforms.GetOrAdd(_uuid);
+            var map = target.maps.GetOrAdd(_id);
+            var transform = target.transforms.GetOrAdd(_id);
 
-            map.id.value = _id;
             map.name.value = _name;
             map.lighting.value = _lighting;
             map.color.value = _color;

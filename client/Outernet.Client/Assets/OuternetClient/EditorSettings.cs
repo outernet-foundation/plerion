@@ -24,6 +24,11 @@ namespace Outernet.Client
         public LogLevel logLevel = LogLevel.Info;
         public LogLevel stackTraceLevel = LogLevel.Warn;
 
+        public bool overridePlerionBaseUrl = false;
+
+        [ConditionalProperty(nameof(overridePlerionBaseUrl), true)]
+        public string plerionAPIBaseUrl;
+
         public static EditorSettings GetOrCreateInstance()
         {
             if (_instance != null)

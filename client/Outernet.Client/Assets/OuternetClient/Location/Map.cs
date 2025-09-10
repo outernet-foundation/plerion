@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
 using Outernet.Shared;
+using PlerionClient.Model;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -15,7 +16,7 @@ namespace Outernet.Client.Location
         private MapRenderer mapRenderer;
         private Anchor anchor;
         public MapRenderer.Status status => mapRenderer.status;
-        public LocalizationMapRecord metadata { get; private set; }
+        public LocalizationMapModel metadata { get; private set; }
 
         public int NativeHandle => mapRenderer.nativeHandle;
 
@@ -37,21 +38,21 @@ namespace Outernet.Client.Location
             anchor = GetComponent<Anchor>();
         }
 
-        public async UniTask Load(LocalizationMapRecord record)
+        public async UniTask Load(LocalizationMapModel record)
         {
             this.metadata = record;
 
-            var color = ColorExtensions.ToColor(record.color);
+            var color = ColorExtensions.ToColor(record.Color);
             color.a = 1f;
             mapRenderer.SetColor(color);
 
-            ecefPosition = new double3(record.position_x, record.position_y, record.position_z);
-            ecefRotation = new quaternion((float)record.rotation_x, (float)record.rotation_y, (float)record.rotation_z, (float)record.rotation_w);
+            ecefPosition = new double3(record.PositionX, record.PositionY, record.PositionZ);
+            ecefRotation = new quaternion((float)record.RotationX, (float)record.RotationY, (float)record.RotationZ, (float)record.RotationW);
 
             LocalizedReferenceFrame.AddAnchor(anchor);
             anchor.SetEcefTransform(EcefPosition, EcefRotation);
 
-            await mapRenderer.Load(record.id, record.name, Toast.ShowToast);
+            await mapRenderer.Load(record.Id, record.Name, Toast.ShowToast);
         }
     }
 }
