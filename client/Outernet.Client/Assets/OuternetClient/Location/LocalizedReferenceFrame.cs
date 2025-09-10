@@ -80,7 +80,7 @@ namespace Outernet.Client.Location
             var georeference = GameObject.FindFirstObjectByType<CesiumGeoreference>();
             if (georeference != null)
             {
-                var ecefTransform = LocalToEcef(new Vector3(0, 0, 0), Quaternion.identity);
+                var ecefTransform = Utility.LocalToEcef(targetLocalToEcefTransform.Value, new Vector3(0, 0, 0), Quaternion.identity);
                 georeference.SetOriginEarthCenteredEarthFixed(
                     ecefTransform.position.x,
                     ecefTransform.position.y,
@@ -278,7 +278,7 @@ namespace Outernet.Client.Location
                         Log.Info(LogGroup.Localizer, "Angle threshold exceeded: {Angle}", angle);
                     }
 
-                    targetLocalToEcefTransform = newTargetLocalToEcefTransform;
+                    SetTargetLocalToEcefTransform(newTargetLocalToEcefTransform.Value);
                 }
             }
             catch (Exception exception)

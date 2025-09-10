@@ -47,6 +47,11 @@ namespace Outernet.Shared
             }
         }
 
+        public HashSet<T> GetItems()
+        {
+            return new HashSet<T>(set);
+        }
+
         private void UpdateDeltaForAdd(T item)
         {
             UpdateDeltaForAddBase(item);

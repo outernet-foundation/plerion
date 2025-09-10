@@ -25,13 +25,11 @@ namespace Outernet.Client.Location
             public List<double> heights;
         }
 
-        static readonly string heightUrl = $"http://34.206.6.20:5001";
-
         public static async UniTask<List<double>> GetHeights(List<(double latitude, double longitude)> coordinates)
         {
             try
             {
-                var heightResponse = await RestClient.Post<HeightRequest, HeightResponse>($"{heightUrl}/height",
+                var heightResponse = await RestClient.Post<HeightRequest, HeightResponse>("http://52.200.81.198:5001/height",
                     new HeightRequest
                     {
                         coordinates = coordinates.ConvertAll(c => new HeightRequest.Coordinate { latitude = c.latitude, longitude = c.longitude })

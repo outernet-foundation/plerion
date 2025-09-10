@@ -8,11 +8,10 @@ namespace Outernet.Client
     {
         private static EditorSettings _instance;
 
-        // Development: http://52.21.202.250;
-        // Development2: http://13.219.25.192;
-        // Production: http://34.206.6.20;
-        // Beta: http://52.200.81.198;
-        public string environmentURL = "http://52.200.81.198";
+        // beta: http://52.200.81.198;
+        // dev: http://34.196.34.28;
+
+        public string environmentURL = "http://34.196.34.28";
 
         // Development: public
         // Production: public

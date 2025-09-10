@@ -24,6 +24,8 @@ namespace Outernet.Server
         public override bool Deserializing { get; protected set; } = false;
         public override uint Tick { get; protected set; }
 
+        public static Dictionary<string, RoomRecord.InitializationData> roomSettings { get; } = new();
+
         public SyncedStateService()
         {
             singleton = this;
@@ -96,7 +98,17 @@ namespace Outernet.Server
                     if (!singleton.rooms.ContainsKey(roomID))
                     {
                         singleton.rooms.Add(roomID, new Room(singleton, roomID));
-                        singleton.rooms[roomID].roomState.Initialize(new RoomRecord.InitializationData());
+                        roomSettings.TryGetValue(roomID, out RoomRecord.InitializationData? value);
+                        Log.Info("dafuq");
+                        if (value != null)
+                        {
+                            Log.Info($"Room \"{roomID}\" initialized with existing settings");
+                        }
+                        else
+                        {
+                            Log.Info($"Room \"{roomID}\" created with default settings");
+                        }
+                        singleton.rooms[roomID].roomState.Initialize(value ?? new RoomRecord.InitializationData());
                         Log.Info($"Room \"{roomID}\" created");
                     }
 
@@ -147,6 +159,8 @@ namespace Outernet.Server
                     {
                         lock (singleton.rooms)
                         {
+                            roomSettings[roomID] = singleton.rooms[roomID].roomState.GetInitializationData();
+
                             Log.Info($"Room \"{roomID}\" empty, removing");
                             singleton.rooms.Remove(roomID);
                         }

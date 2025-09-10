@@ -59,7 +59,7 @@ namespace Outernet.Client
             if (editorSettings.overridePlerionBaseUrl)
                 plerionAPIBaseUrl = editorSettings.plerionAPIBaseUrl;
 #else
-            App.environmentURL = "http://52.200.81.198";
+            App.environmentURL = "http://34.196.34.28";
             App.environmentSchema = "dev2";
 #endif
 

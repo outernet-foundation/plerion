@@ -315,13 +315,16 @@ namespace Outernet.Client
             // showPointCloud.transform.parent.parent.gameObject.SetActive(false);
             // animateIndicators.transform.parent.parent.gameObject.SetActive(false);
             // confidenceHistory.transform.parent.gameObject.SetActive(false);
-            // preciseLatitude.transform.parent.gameObject.SetActive(false);
-            // preciseLongitude.transform.parent.gameObject.SetActive(false);
+            preciseLatitude.transform.parent.gameObject.SetActive(false);
+            preciseLongitude.transform.parent.gameObject.SetActive(false);
+            preciseHeading.transform.parent.gameObject.SetActive(false);
+            showEyeDebug.transform.parent.parent.gameObject.SetActive(false);
+            dynamicFocusDistance.transform.parent.parent.gameObject.SetActive(false);
             // OSMTilesetMode.transform.parent.parent.gameObject.SetActive(false);
-            // nycTilesetMode.transform.parent.parent.gameObject.SetActive(false);
+            nycTilesetMode.transform.parent.parent.gameObject.SetActive(false);
             // loadedMaps.transform.parent.gameObject.SetActive(false);
-            // roomConnectionStatus.transform.parent.gameObject.SetActive(false);
-            // hubConnectionStatus.transform.parent.gameObject.SetActive(false);
+            roomConnectionStatus.transform.parent.gameObject.SetActive(false);
+            hubConnectionStatus.transform.parent.gameObject.SetActive(false);
             // roomName.transform.parent.gameObject.SetActive(false);
             // nodeFetchRadius.transform.parent.parent.parent.gameObject.SetActive(false);
 

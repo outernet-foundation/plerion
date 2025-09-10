@@ -71,6 +71,39 @@ namespace Outernet.Shared
             }
         }
 
+        public InitializationData GetInitializationData()
+        {
+            var initializationData = new InitializationData();
+            initializationData.settingsShowPointCloud = settingsShowPointCloud.Value;
+            initializationData.settingsAnimateNodeIndicators = settingsAnimateNodeIndicators.Value;
+            initializationData.settingsLocalizationReducer = settingsLocalizationReducer.Value;
+            initializationData.settingsEnableLocalizationThreshold = settingsEnableLocalizationThreshold.Value;
+            initializationData.settingsFallbackToMostRecent = settingsFallbackToMostRecent.Value;
+            initializationData.settingsPositionThreshold = settingsPositionThreshold.Value;
+            initializationData.settingsRotationThreshold = settingsRotationThreshold.Value;
+            initializationData.settingsPositionInlierThreshold = settingsPositionInlierThreshold.Value;
+            initializationData.settingsRotationInlierThreshold = settingsRotationInlierThreshold.Value;
+            initializationData.settingsDiscardBottomHalf = settingsDiscardBottomHalf.Value;
+            initializationData.settingsConfidenceFactor = settingsConfidenceFactor.Value;
+            initializationData.settingsRansacHistorySize = settingsRansacHistorySize.Value;
+            initializationData.settingsFavHistorySize = settingsFavHistorySize.Value;
+            initializationData.settingsFavThreshold = settingsFavThreshold.Value;
+            initializationData.settingsUseFloorPlaneDetection = settingsUseFloorPlaneDetection.Value;
+            initializationData.settingsNodeFetchRadius = settingsNodeFetchRadius.Value;
+            initializationData.settingsNodeFetchLimit = settingsNodeFetchLimit.Value;
+            initializationData.settingsTerrainTilesetMode = settingsTerrainTilesetMode.Value;
+            initializationData.settingsOSMTilesetMode = settingsOSMTilesetMode.Value;
+            initializationData.settingsNYCTilesetMode = settingsNYCTilesetMode.Value;
+            initializationData.settingsGoogleTilesetMode = settingsGoogleTilesetMode.Value;
+            initializationData.settingsDynamicFocusDistance = settingsDynamicFocusDistance.Value;
+            initializationData.settingsShowEyeDebug = settingsShowEyeDebug.Value;
+            initializationData.settingsLocalize = settingsLocalize.Value;
+            initializationData.settingsAnimateUserIndicators = settingsAnimateUserIndicators.Value;
+            initializationData.settingsVisibleLayers = new HashSet<Guid>(settingsVisibleLayers.GetItems());
+
+            return initializationData;
+        }
+
         public RoomRecord(SyncedStateSystem syncedStateSystem) : base(syncedStateSystem)
         {
             users = new SyncedDictionary<Guid, UserRecord, UserRecord.InitializationData>(syncedStateSystem, (syncedStateSystem) => new UserRecord(syncedStateSystem));
