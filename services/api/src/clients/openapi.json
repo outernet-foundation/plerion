@@ -7,9 +7,6 @@
   "paths": {
     "/captures": {
       "get": {
-        "tags": [
-          "captures"
-        ],
         "summary": "Get Captures",
         "operationId": "get_captures",
         "parameters": [
@@ -64,9 +61,6 @@
         }
       },
       "post": {
-        "tags": [
-          "captures"
-        ],
         "summary": "Create Capture",
         "operationId": "create_capture",
         "requestBody": {
@@ -105,9 +99,6 @@
     },
     "/captures/{id}": {
       "get": {
-        "tags": [
-          "captures"
-        ],
         "summary": "Get Capture",
         "operationId": "get_capture",
         "parameters": [
@@ -148,9 +139,6 @@
     },
     "/captures/{id}/tar": {
       "put": {
-        "tags": [
-          "captures"
-        ],
         "summary": "Upload Capture Tar",
         "operationId": "upload_capture_tar",
         "parameters": [
@@ -198,9 +186,6 @@
         }
       },
       "get": {
-        "tags": [
-          "captures"
-        ],
         "summary": "Download Capture Tar",
         "operationId": "download_capture_tar",
         "parameters": [
@@ -250,9 +235,6 @@
     },
     "/reconstructions": {
       "post": {
-        "tags": [
-          "reconstructions"
-        ],
         "summary": "Create Reconstruction",
         "operationId": "create_reconstruction",
         "parameters": [
@@ -291,9 +273,6 @@
     },
     "/nodes": {
       "get": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Get Nodes",
         "operationId": "get_nodes",
         "parameters": [
@@ -348,9 +327,6 @@
         }
       },
       "post": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Create Node",
         "operationId": "create_node",
         "requestBody": {
@@ -389,9 +365,6 @@
     },
     "/nodes/{id}": {
       "get": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Get Node",
         "operationId": "get_node",
         "parameters": [

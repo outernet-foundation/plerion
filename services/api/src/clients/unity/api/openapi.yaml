@@ -37,8 +37,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Captures
-      tags:
-      - captures
     post:
       operationId: create_capture
       requestBody:
@@ -61,8 +59,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Capture
-      tags:
-      - captures
   /captures/{id}:
     get:
       operationId: get_capture
@@ -90,8 +86,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Capture
-      tags:
-      - captures
   /captures/{id}/tar:
     get:
       operationId: download_capture_tar
@@ -125,8 +119,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Download Capture Tar
-      tags:
-      - captures
     put:
       operationId: upload_capture_tar
       parameters:
@@ -159,8 +151,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Upload Capture Tar
-      tags:
-      - captures
   /reconstructions:
     post:
       operationId: create_reconstruction
@@ -187,8 +177,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Reconstruction
-      tags:
-      - reconstructions
   /nodes:
     get:
       operationId: get_nodes
@@ -221,8 +209,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Nodes
-      tags:
-      - nodes
     post:
       operationId: create_node
       requestBody:
@@ -245,8 +231,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Node
-      tags:
-      - nodes
   /nodes/{id}:
     get:
       operationId: get_node
@@ -274,8 +258,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Node
-      tags:
-      - nodes
 components:
   schemas:
     Body_create_capture:

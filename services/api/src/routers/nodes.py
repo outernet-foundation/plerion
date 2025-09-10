@@ -7,7 +7,7 @@ from pydantic import ConfigDict
 from ..db.piccolo_shims import create_pydantic_model
 from ..db.tables.nodes import Node
 
-router = APIRouter(prefix="/nodes", tags=["nodes"])
+router = APIRouter(prefix="/nodes")
 
 
 class NodeModel(create_pydantic_model(Node)):

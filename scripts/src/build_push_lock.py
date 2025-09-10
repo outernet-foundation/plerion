@@ -171,6 +171,8 @@ def build_push_lock(image_name: str):
         if digest is None:
             raise RuntimeError("Failed to get digest of the pushed image")
 
+        print(f"Successfully built and pushed image '{image_name}'")
+
     # Load the lock file or initialize an empty one
     lock_path = infra_dir / "image-lock.json"
     if lock_path.is_file():
@@ -186,6 +188,8 @@ def build_push_lock(image_name: str):
     with lock_path.open("w", encoding="utf-8") as file:
         json.dump(lock_data, file, indent=2)
 
+    print(f"Updated lock file at {lock_path}")
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -196,6 +200,5 @@ if __name__ == "__main__":
 
     try:
         build_push_lock(image_name)
-        print(f"Successfully built and pushed image '{image_name}'")
     except Exception as e:
         print(f"Error: {e}")

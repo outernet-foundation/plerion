@@ -97,7 +97,7 @@ namespace Example
             // create instances of HttpClient, HttpClientHandler to be reused later with different Api classes
             HttpClient httpClient = new HttpClient();
             HttpClientHandler httpClientHandler = new HttpClientHandler();
-            var apiInstance = new CapturesApi(httpClient, config, httpClientHandler);
+            var apiInstance = new DefaultApi(httpClient, config, httpClientHandler);
             var bodyCreateCapture = new BodyCreateCapture(); // BodyCreateCapture | 
 
             try
@@ -108,7 +108,7 @@ namespace Example
             }
             catch (ApiException e)
             {
-                Debug.Print("Exception when calling CapturesApi.CreateCapture: " + e.Message );
+                Debug.Print("Exception when calling DefaultApi.CreateCapture: " + e.Message );
                 Debug.Print("Status Code: "+ e.ErrorCode);
                 Debug.Print(e.StackTrace);
             }
@@ -125,15 +125,15 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*CapturesApi* | [**CreateCapture**](docs/CapturesApi.md#createcapture) | **POST** /captures | Create Capture
-*CapturesApi* | [**DownloadCaptureTar**](docs/CapturesApi.md#downloadcapturetar) | **GET** /captures/{id}/tar | Download Capture Tar
-*CapturesApi* | [**GetCapture**](docs/CapturesApi.md#getcapture) | **GET** /captures/{id} | Get Capture
-*CapturesApi* | [**GetCaptures**](docs/CapturesApi.md#getcaptures) | **GET** /captures | Get Captures
-*CapturesApi* | [**UploadCaptureTar**](docs/CapturesApi.md#uploadcapturetar) | **PUT** /captures/{id}/tar | Upload Capture Tar
-*NodesApi* | [**CreateNode**](docs/NodesApi.md#createnode) | **POST** /nodes | Create Node
-*NodesApi* | [**GetNode**](docs/NodesApi.md#getnode) | **GET** /nodes/{id} | Get Node
-*NodesApi* | [**GetNodes**](docs/NodesApi.md#getnodes) | **GET** /nodes | Get Nodes
-*ReconstructionsApi* | [**CreateReconstruction**](docs/ReconstructionsApi.md#createreconstruction) | **POST** /reconstructions | Create Reconstruction
+*DefaultApi* | [**CreateCapture**](docs/DefaultApi.md#createcapture) | **POST** /captures | Create Capture
+*DefaultApi* | [**CreateNode**](docs/DefaultApi.md#createnode) | **POST** /nodes | Create Node
+*DefaultApi* | [**CreateReconstruction**](docs/DefaultApi.md#createreconstruction) | **POST** /reconstructions | Create Reconstruction
+*DefaultApi* | [**DownloadCaptureTar**](docs/DefaultApi.md#downloadcapturetar) | **GET** /captures/{id}/tar | Download Capture Tar
+*DefaultApi* | [**GetCapture**](docs/DefaultApi.md#getcapture) | **GET** /captures/{id} | Get Capture
+*DefaultApi* | [**GetCaptures**](docs/DefaultApi.md#getcaptures) | **GET** /captures | Get Captures
+*DefaultApi* | [**GetNode**](docs/DefaultApi.md#getnode) | **GET** /nodes/{id} | Get Node
+*DefaultApi* | [**GetNodes**](docs/DefaultApi.md#getnodes) | **GET** /nodes | Get Nodes
+*DefaultApi* | [**UploadCaptureTar**](docs/DefaultApi.md#uploadcapturetar) | **PUT** /captures/{id}/tar | Upload Capture Tar
 
 
 <a id="documentation-for-models"></a>

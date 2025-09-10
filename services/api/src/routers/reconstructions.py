@@ -6,11 +6,12 @@ from fastapi import APIRouter, HTTPException, status
 from ..db.tables.captures import Capture
 from ..settings import get_api_settings
 
-router = APIRouter(prefix="/reconstructions", tags=["reconstructions"])
+router = APIRouter(prefix="/reconstructions")
 
 settings = get_api_settings()
 
 
+#
 @router.post("")
 async def create_reconstruction(capture_id: UUID):
     # Validate capture id exists

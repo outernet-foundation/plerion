@@ -12,7 +12,7 @@ from ..storage import Storage, get_storage
 
 BUCKET = "dev-captures"
 
-router = APIRouter(prefix="/captures", tags=["captures"])
+router = APIRouter(prefix="/captures")
 
 
 class CaptureModel(create_pydantic_model(Capture)):
