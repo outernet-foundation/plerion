@@ -302,7 +302,7 @@ wheels = [
 ]
 
 [[package]]
-name = "run-reconstruction"
+name = "reconstruction-task"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

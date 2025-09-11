@@ -19,8 +19,7 @@ dependencies = [
 dev = [
     "boto3-stubs[secretsmanager]>=1.40.27",
     "debugpy>=1.8.16",
-    "openapi-generator-cli>=7.14.0",
-    "ruff>=0.12.3",
+    "openapi-generator-cli>=7.14.0"
 ]
 
 [tool.pyright]

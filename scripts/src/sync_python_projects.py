@@ -10,10 +10,7 @@ from typing import Iterable, Set
 MAX_DEPTH: int = 3
 
 
-def discover_projects(root: Path, max_depth: int = MAX_DEPTH) -> Set[Path]:
-    """
-    Walk `root` to a limited depth and return directories that contain a pyproject.toml.
-    """
+def discover_projects(root: Path, max_depth: int = MAX_DEPTH):
     dirs: Set[Path] = set()
     for dirpath, _dirnames, files in os.walk(str(root)):
         # compute depth relative to root
@@ -24,18 +21,13 @@ def discover_projects(root: Path, max_depth: int = MAX_DEPTH) -> Set[Path]:
     return dirs
 
 
-def sync_dirs(dirs: Iterable[Path]) -> None:
-    """Run `uv sync` in each directory."""
+def sync_dirs(dirs: Iterable[Path]):
     for d in sorted(dirs):
-        print(f"🔧 syncing {d}")
+        print(f"syncing {d}")
         subprocess.run(["uv", "sync"], cwd=str(d), check=True)
 
 
-def main(argv: list[str]) -> None:
-    root_arg = argv[1] if len(argv) > 1 else "."
+if __name__ == "__main__":
+    root_arg = sys.argv[1] if len(sys.argv) > 1 else "."
     root = Path(root_arg)
     sync_dirs(discover_projects(root))
-
-
-if __name__ == "__main__":
-    main(sys.argv)

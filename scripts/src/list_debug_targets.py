@@ -7,19 +7,13 @@ import sys
 from typing import Dict, List, Mapping, Optional, TypedDict, cast
 
 
-def run(*args: str) -> str:
-    """Run a subprocess and return its stdout as text."""
+def run(*args: str):
     return subprocess.check_output(args, text=True)
 
 
-def all_container_ids() -> List[str]:
-    """Return running container IDs (docker ps)."""
+def all_container_ids():
     out = run("docker", "ps", "--format", "{{json .ID}}")
-    # Each line is a JSON string like: "abcd1234..."
     return [cast(str, json.loads(line)) for line in out.splitlines() if line.strip()]
-
-
-# --- Typed views of the tiny subset of `docker inspect` we actually use ---
 
 
 class PortBinding(TypedDict, total=False):
@@ -27,7 +21,6 @@ class PortBinding(TypedDict, total=False):
     HostPort: str
 
 
-# map like {"5678/tcp": [{"HostIp": "0.0.0.0", "HostPort": "49157"}]}
 PortsMapping = Mapping[str, Optional[List[PortBinding]]]
 
 
@@ -45,16 +38,14 @@ class ContainerInfo(TypedDict, total=False):
     Name: Optional[str]
 
 
-def inspect_one(container_id: str) -> ContainerInfo:
-    """Return a typed subset of `docker inspect <id>`."""
+def inspect_one(container_id: str):
     raw = json.loads(run("docker", "inspect", container_id))
     if not isinstance(raw, list) or not raw or not isinstance(raw[0], dict):
         raise RuntimeError(f"Unexpected docker inspect payload for {container_id!r}")
     return cast(ContainerInfo, raw[0])
 
 
-def host_port_5678(info: ContainerInfo) -> Optional[str]:
-    """Extract the published host port bound to container port 5678/tcp, if any."""
+def host_port_5678(info: ContainerInfo):
     net = info.get("NetworkSettings")
     if not net:
         return None
@@ -69,7 +60,7 @@ def host_port_5678(info: ContainerInfo) -> Optional[str]:
     return host_port if host_port else None
 
 
-def main() -> None:
+if __name__ == "__main__":
     found = 0
     for container_id in all_container_ids():
         info = inspect_one(container_id)
@@ -99,7 +90,3 @@ def main() -> None:
             "Ensure containers have a 'service' label and publish 5678/tcp.",
             file=sys.stderr,
         )
-
-
-if __name__ == "__main__":
-    main()

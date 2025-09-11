@@ -19,7 +19,6 @@ dev = [
     "botocore-stubs>=1.38.46",
     "debugpy>=1.8.16",
     "openapi-generator-cli>=7.14.0",
-    "ruff>=0.12.3",
     "watchdog>=6.0.0",
 ]
 
