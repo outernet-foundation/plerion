@@ -60,13 +60,13 @@ services:
       POSTGRES_USER: ${POSTGRES_ADMIN_USER}
       POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -q -h localhost -p 5432 -U $${POSTGRES_ADMIN_USER} -d postgres" ]
+      test: [ "CMD-SHELL", "pg_isready -q -h localhost -p 5432 -U $${POSTGRES_USER} -d postgres" ]
       interval: 1s
       timeout: 1s
       retries: 30
 
   initialize-cloudbeaver:
-    build: services/cloudbeaver-init/Dockerfile
+    build: tasks/initialize-cloudbeaver
     restart: "no"
     depends_on:
       postgres:
@@ -83,9 +83,7 @@ services:
   cloudbeaver:
     image: docker.io/dbeaver/cloudbeaver:latest
     depends_on:
-      postgres:
-        condition: service_healthy
-      cloudbeaver_init:
+      initialize-cloudbeaver:
         condition: service_completed_successfully
     ports:
       - "8978:8978"
@@ -111,14 +109,15 @@ services:
       - POSTGRES_ADMIN_USER=${POSTGRES_ADMIN_USER}
       - POSTGRES_ADMIN_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
       - CLOUDBEAVER_URL=localhost:8978
-      - CLOUDBEAVER_ADMIN_USER=${CB_ADMIN_NAME}
-      - CLOUDBEAVER_ADMIN_PASSWORD=${CB_ADMIN_PASSWORD}
+      - CLOUDBEAVER_ADMIN_USER=${CLOUDBEAVER_ADMIN_USER}
+      - CLOUDBEAVER_ADMIN_PASSWORD=${CLOUDBEAVER_ADMIN_PASSWORD}
       - DATABASE_NAME=${API_DATABASE_NAME}
       - DATABASE_PASSWORD=${API_DATABASE_PASSWORD}
 
-  automigrate:
+  automigrator:
     build:
-      dockerfile: services/automigrate/Dockerfile
+      context: .
+      dockerfile: services/automigrator/Dockerfile
     depends_on:
       create-database:
         condition: service_completed_successfully
@@ -134,7 +133,7 @@ services:
     build:
       dockerfile: services/api/Dockerfile
     depends_on:
-      minio_init:
+      initialize-minio:
         condition: service_completed_successfully
       create-database:
         condition: service_completed_successfully

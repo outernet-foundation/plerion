@@ -16,10 +16,10 @@ ENV PICCOLO_CONF="src.db.conf"
 WORKDIR /workspace
 
 # Copy the api directory to the workspace
-COPY api/ /workspace/
+COPY services/api/ /workspace/
 
 # Copy and make entrypoint executable
-COPY automigrate/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY services/automigrator/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Ensure entrypoint script is in Unix format
