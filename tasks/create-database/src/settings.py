@@ -8,7 +8,6 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
     postgres_host: str = Field()
-    postgres_port: int = Field()
     postgres_admin_user: str = Field()
     postgres_admin_password: str = Field()
 

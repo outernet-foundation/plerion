@@ -1,79 +1,14 @@
 name: plerion
 
 volumes:
-  postgres_data:
   minio_data:
+  postgres_data:
+  cloudbeaver_data:
+  uv_cache:
   api_venv:
   common_venv:
-  uv_cache:
-  cloudbeaver_data:
-
 
 services:
-  postgres:
-    image: docker.io/library/postgres:16-alpine
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -q -h localhost -p 5432 -U $${POSTGRES_USER} -d $${POSTGRES_DB}" ]
-      interval: 1s
-      timeout: 1s
-      retries: 30
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  automigrate:
-    build:
-      dockerfile: services/automigrate/Dockerfile
-    volumes:
-      - ./api:/workspace
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      PYTHONPATH: /workspace
-    depends_on:
-      postgres:
-        condition: service_healthy
-
-  cloudbeaver_init:
-    build: services/cloudbeaver-init/Dockerfile
-    volumes:
-      - cloudbeaver_data:/opt/cloudbeaver/workspace
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_HOST: ${POSTGRES_HOST}
-      POSTGRES_PORT: 5432
-      POSTGRES_DB: ${POSTGRES_DB}
-      CB_ADMIN_NAME: ${CB_ADMIN_NAME}
-      CB_ADMIN_PASSWORD: ${CB_ADMIN_PASSWORD}
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: "no"
-
-  cloudbeaver:
-    image: docker.io/dbeaver/cloudbeaver:latest
-    ports:
-      - "8978:8978"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      cloudbeaver_init:
-        condition: service_completed_successfully
-    volumes:
-      - cloudbeaver_data:/opt/cloudbeaver/workspace
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8978" ]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
   minio:
     image: docker.io/minio/minio:latest
     command: server /data --console-address ":9001"
@@ -91,17 +26,18 @@ services:
 
   minio-reverse-proxy:
     build: services/minio-reverse-proxy
+    depends_on:
+      - minio
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
       DEVICE_NAME: "${DEVICE_NAME}"
       DOMAIN: "${DOMAIN}"
-    depends_on:
-      - minio
 
-  minio_init:
+  initialize-minio:
     image: docker.io/minio/mc:latest
+    restart: "no"
     depends_on:
       minio:
         condition: service_healthy
@@ -113,21 +49,109 @@ services:
     environment:
       S3_ACCESS_KEY: "${S3_ACCESS_KEY}"
       S3_SECRET_KEY: "${S3_SECRET_KEY}"
+
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -q -h localhost -p 5432 -U $${POSTGRES_ADMIN_USER} -d postgres" ]
+      interval: 1s
+      timeout: 1s
+      retries: 30
+
+  initialize-cloudbeaver:
+    build: services/cloudbeaver-init/Dockerfile
     restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_ADMIN_USER: ${POSTGRES_ADMIN_USER}
+      POSTGRES_ADMIN_PASSWORD: ${POSTGRES_ADMIN_PASSWORD}
+      CB_ADMIN_NAME: ${CLOUDBEAVER_ADMIN_USER}
+      CB_ADMIN_PASSWORD: ${CLOUDBEAVER_ADMIN_PASSWORD}
+
+  cloudbeaver:
+    image: docker.io/dbeaver/cloudbeaver:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cloudbeaver_init:
+        condition: service_completed_successfully
+    ports:
+      - "8978:8978"
+    volumes:
+      - cloudbeaver_data:/opt/cloudbeaver/workspace
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8978" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  create-database:
+    build:
+      dockerfile: tasks/create-database/Dockerfile
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      cloudbeaver:
+        condition: service_healthy
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+      - POSTGRES_ADMIN_USER=${POSTGRES_ADMIN_USER}
+      - POSTGRES_ADMIN_PASSWORD=${POSTGRES_ADMIN_PASSWORD}
+      - CLOUDBEAVER_URL=localhost:8978
+      - CLOUDBEAVER_ADMIN_USER=${CB_ADMIN_NAME}
+      - CLOUDBEAVER_ADMIN_PASSWORD=${CB_ADMIN_PASSWORD}
+      - DATABASE_NAME=${API_DATABASE_NAME}
+      - DATABASE_PASSWORD=${API_DATABASE_PASSWORD}
+
+  automigrate:
+    build:
+      dockerfile: services/automigrate/Dockerfile
+    depends_on:
+      create-database:
+        condition: service_completed_successfully
+    volumes:
+      - ./api:/workspace
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      DATABASE_NAME: ${API_DATABASE_NAME}
+      DATABASE_PASSWORD: ${API_DATABASE_PASSWORD}
+      PYTHONPATH: /workspace
 
   api:
     build:
       dockerfile: services/api/Dockerfile
-    working_dir: /app
+    depends_on:
+      minio_init:
+        condition: service_completed_successfully
+      create-database:
+        condition: service_completed_successfully
     ports:
       - "8000:8000"
       - "5678:5678"
+    volumes:
+      - ./api:/app/services/api
+      - ../common:/app/common
+      - uv_cache:/root/.cache/uv
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
       BACKEND: docker
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_HOST: ${POSTGRES_HOST}
+      DATABASE_NAME: ${API_DATABASE_NAME}
+      DATABASE_PASSWORD: ${API_DATABASE_PASSWORD}
       S3_ENDPOINT_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
@@ -141,23 +165,6 @@ services:
       DEBUG_WAIT_RECONSTRUCTION: ${DEBUG_WAIT_RECONSTRUCTION}
       DEBUG_FEATURES: ${DEBUG_FEATURES}
       DEBUG_WAIT_FEATURES: ${DEBUG_WAIT_FEATURES}
-    depends_on:
-      postgres:
-        condition: service_healthy
-      minio:
-        condition: service_started
-      minio_init:
-        condition: service_completed_successfully
-    volumes:
-      - ./api:/app/services/api
-      - ../common:/app/common
-      - uv_cache:/root/.cache/uv
-      - /var/run/docker.sock:/var/run/docker.sock
-
-  create-database:
-    profiles: [ "tasks" ]
-    build:
-      dockerfile: tasks/create-database/Dockerfile
 
   delete-database:
     profiles: [ "tasks" ]

@@ -7,7 +7,7 @@ settings = get_database_settings()
 
 DB = PostgresEngine(
     config={
-        "dsn": f"postgresql://{settings.postgres_user}:{settings.postgres_password}@{settings.postgres_host}:5432/postgres"
+        "dsn": f"postgresql://{settings.database_name}:{settings.database_password}@{settings.postgres_host}:5432/{settings.database_name}"
     },
     extensions=("uuid-ossp",),
 )

@@ -1,4 +1,7 @@
 {
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "strict",
+  "exclude": ["**/.venv/**", "**/__pycache__/**", "**/node_modules/**"],
   "include": [
     "common",
     "scripts",
@@ -6,12 +9,11 @@
     "services/api",
     "tasks/run-reconstruction",
     "tasks/extract-match-features",
+    "tasks/create-database",
+    "tasks/delete-database",
     "capture-app/android_mobile",
     "capture-app/zed"
   ],
-  "exclude": ["**/.venv/**", "**/__pycache__/**", "**/node_modules/**"],
-  "typeCheckingMode": "strict",
-  "pythonVersion": "3.13",
   "executionEnvironments": [
     {
       "root": "common",

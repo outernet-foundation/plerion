@@ -23,10 +23,7 @@ if __name__ == "__main__":
 
     try:
         with postgres_cursor(
-            host=settings.postgres_host,
-            port=settings.postgres_port,
-            user=settings.postgres_admin_user,
-            password=settings.postgres_admin_password,
+            host=settings.postgres_host, user=settings.postgres_admin_user, password=settings.postgres_admin_password
         ) as cursor:
             # Database must not exist
             cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (settings.database_name,))
@@ -69,7 +66,7 @@ if __name__ == "__main__":
                         "driverId": "postgresql",
                         "name": settings.database_name,
                         "host": settings.postgres_host,
-                        "port": settings.postgres_port,
+                        "port": 5432,
                         "databaseName": settings.database_name,
                         "authModelId": "native",
                         "credentials": {"userName": settings.database_name, "userPassword": settings.database_password},

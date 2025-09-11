@@ -36,10 +36,7 @@ if __name__ == "__main__":
         )
 
         with postgres_cursor(
-            host=settings.postgres_host,
-            port=settings.postgres_port,
-            user=settings.postgres_admin_user,
-            password=settings.postgres_admin_password,
+            host=settings.postgres_host, user=settings.postgres_admin_user, password=settings.postgres_admin_password
         ) as cursor:
             # Database must exist (it's an invariant violation if not)
             cursor.execute("SELECT 1 FROM pg_database WHERE datname = %s", (settings.database_name,))

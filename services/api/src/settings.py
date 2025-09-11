@@ -3,15 +3,13 @@ from functools import lru_cache
 from typing import Literal
 
 from pydantic import AnyHttpUrl, Field, model_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings
 
 
 class DatabaseSettings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
-
-    postgres_user: str | None = None
-    postgres_password: str | None = None
     postgres_host: str | None = None
+    database_name: str | None = None
+    database_password: str | None = None
 
 
 class ApiSettings(DatabaseSettings):

@@ -2,12 +2,10 @@
 set -euo pipefail
 
 : "${POSTGRES_HOST}"
-: "${POSTGRES_DB}"
-: "${POSTGRES_USER}"
-: "${POSTGRES_PASSWORD}"
+: "${POSTGRES_ADMIN_USER}"
+: "${POSTGRES_ADMIN_PASSWORD}"
 : "${CB_ADMIN_NAME}"
 : "${CB_ADMIN_PASSWORD}"
-: "${POSTGRES_PORT:=5432}"
 : "${CLOUDBEAVER_DB_SCHEMA:=cloudbeaver}"
 
 WORKSPACE="/opt/cloudbeaver/workspace"
@@ -53,11 +51,11 @@ DATA_SOURCES_JSON=$(cat <<EOF
       "save-password": true,
       "configuration": {
         "host": "${POSTGRES_HOST}",
-        "port": "${POSTGRES_PORT}",
-        "database": "${POSTGRES_DB}",
-        "user": "${POSTGRES_USER}",
-        "password": "${POSTGRES_PASSWORD}",
-        "url": "jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}"
+        "port": 5432,
+        "database": postgres,
+        "user": "${POSTGRES_ADMIN_USER}",
+        "password": "${POSTGRES_ADMIN_PASSWORD}",
+        "url": "jdbc:postgresql://${POSTGRES_HOST}:5432/postgres"
       }
     }
   }
@@ -71,10 +69,10 @@ CLOUDBEAVER_RUNTIME_CONF_JSON=$(cat <<EOF
     "serverName": "CloudBeaver",
     "database": {
       "driver": "postgres-jdbc",
-      "url": "jdbc:postgresql://${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}",
+      "url": "jdbc:postgresql://${POSTGRES_HOST}:5432/postgres",
       "schema": "${CLOUDBEAVER_DB_SCHEMA}",
-      "user": "${POSTGRES_USER}",
-      "password": "${POSTGRES_PASSWORD}",
+      "user": "${POSTGRES_ADMIN_USER}",
+      "password": "${POSTGRES_ADMIN_PASSWORD}",
       "initialDataConfiguration": "${INITIAL_DATA_CONF}"
     }
   }
@@ -99,8 +97,8 @@ if [[ "${NEW_HASH}" != "${CURRENT_HASH}" ]]; then
 
   # Drop CloudBeaver's server schema to keep the service stateless
   echo "Dropping CloudBeaver schema (if it exists)"
-  export PGPASSWORD="${POSTGRES_PASSWORD}"
-  psql -h "${POSTGRES_HOST}" -p "${POSTGRES_PORT}" -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" \
+  export PGPASSWORD="${POSTGRES_ADMIN_PASSWORD}"
+  psql -h "${POSTGRES_HOST}" -p 5432 -U "${POSTGRES_ADMIN_USER}" -d postgres \
     -v ON_ERROR_STOP=1 \
     -c "DROP SCHEMA IF EXISTS ${CLOUDBEAVER_DB_SCHEMA} CASCADE;"
 
