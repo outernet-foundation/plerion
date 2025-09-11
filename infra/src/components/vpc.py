@@ -25,10 +25,20 @@ class Vpc(ComponentResource):
     @overload
     def __init__(self, name: str, *, opts: ResourceOptions | None = None) -> None: ...
     @overload
-    def __init__(self, name: str, *, vpc_info: Input[VpcInfo], opts: ResourceOptions | None = None) -> None: ...
+    def __init__(
+        self,
+        name: str,
+        *,
+        vpc_info: Input[VpcInfo],
+        opts: ResourceOptions | None = None,
+    ) -> None: ...
 
     def __init__(
-        self, name: str, *, vpc_info: Input[VpcInfo] | None = None, opts: pulumi.ResourceOptions | None = None
+        self,
+        name: str,
+        *,
+        vpc_info: Input[VpcInfo] | None = None,
+        opts: pulumi.ResourceOptions | None = None,
     ):
         super().__init__("custom:Vpc", name, opts=opts)
 
@@ -43,11 +53,17 @@ class Vpc(ComponentResource):
         if vpc_info_out is not None:
             self.id = vpc_info_out.apply(lambda info: info["id"])
             self.cidr_block = vpc_info_out.apply(lambda info: info["cidr_block"])
-            self.private_subnet_ids = vpc_info_out.apply(lambda info: info["private_subnet_ids"])
-            self.public_subnet_ids = vpc_info_out.apply(lambda info: info["public_subnet_ids"])
-            self.s3_endpoint_prefix_list_id = vpc_info_out.apply(lambda info: info["s3_endpoint_prefix_list_id"])
+            self.private_subnet_ids = vpc_info_out.apply(
+                lambda info: info["private_subnet_ids"]
+            )
+            self.public_subnet_ids = vpc_info_out.apply(
+                lambda info: info["public_subnet_ids"]
+            )
+            self.s3_endpoint_prefix_list_id = vpc_info_out.apply(
+                lambda info: info["s3_endpoint_prefix_list_id"]
+            )
         else:
-            self._vpc: pulumi_awsx.ec2.Vpc | None = pulumi_awsx.ec2.Vpc(
+            self._vpc = pulumi_awsx.ec2.Vpc(
                 f"{name}-vpc",
                 number_of_availability_zones=2,  # Minimum of 2 AZs required for RDS and ECS
                 # Let AWS assign DNS hostnames within the VPC (needed so tasks, ENIs, and private‑DNS endpoints resolve correctly)
@@ -86,16 +102,22 @@ class Vpc(ComponentResource):
                     security_group_name,
                     vpc=self,
                     security_group_id=vpc_info_out.apply(
-                        lambda info, svc=service_name: info["interface_security_group_ids"][svc]
+                        lambda info, svc=service_name: info[
+                            "interface_security_group_ids"
+                        ][svc]
                     ),
                     opts=self._child_opts,
                 )
             elif self._vpc is not None:
-                security_group = SecurityGroup(security_group_name, vpc=self, opts=self._child_opts)
+                security_group = SecurityGroup(
+                    security_group_name, vpc=self, opts=self._child_opts
+                )
                 VpcEndpoint(
                     f"{sanitized_name}-endpoint",
                     vpc_id=self._vpc.vpc_id,
-                    service_name=pulumi.Output.concat("com.amazonaws.", get_region_output().region, ".", service_name),
+                    service_name=pulumi.Output.concat(
+                        "com.amazonaws.", get_region_output().region, ".", service_name
+                    ),
                     vpc_endpoint_type="Interface",
                     subnet_ids=self._vpc.private_subnet_ids.apply(
                         lambda ids: [ids[0]]
@@ -113,10 +135,15 @@ class Vpc(ComponentResource):
             s3_endpoint = VpcEndpoint(
                 "s3-gateway-endpoint",
                 vpc_id=self._vpc.vpc_id,
-                service_name=pulumi.Output.concat("com.amazonaws.", get_region_output().region, ".s3"),
+                service_name=pulumi.Output.concat(
+                    "com.amazonaws.", get_region_output().region, ".s3"
+                ),
                 vpc_endpoint_type="Gateway",
                 route_table_ids=self._vpc.private_subnet_ids.apply(
-                    lambda ids: [get_route_table_output(subnet_id=subnet_id).id for subnet_id in ids]
+                    lambda ids: [
+                        get_route_table_output(subnet_id=subnet_id).id
+                        for subnet_id in ids
+                    ]
                 ),
                 opts=self._child_opts,
             )
@@ -126,23 +153,31 @@ class Vpc(ComponentResource):
         if vpc_info_out is None:
             export(
                 "vpc-info",
-                VpcInfo({
-                    "id": self.id,
-                    "cidr_block": self.cidr_block,
-                    "private_subnet_ids": self.private_subnet_ids,
-                    "public_subnet_ids": self.public_subnet_ids,
-                    "interface_security_group_ids": {
-                        service: sg.id for service, sg in self.interface_security_groups.items()
-                    },
-                    "s3_endpoint_prefix_list_id": self.s3_endpoint_prefix_list_id,
-                }),
+                VpcInfo(
+                    {
+                        "id": self.id,
+                        "cidr_block": self.cidr_block,
+                        "private_subnet_ids": self.private_subnet_ids,
+                        "public_subnet_ids": self.public_subnet_ids,
+                        "interface_security_group_ids": {
+                            service: sg.id
+                            for service, sg in self.interface_security_groups.items()
+                        },
+                        "s3_endpoint_prefix_list_id": self.s3_endpoint_prefix_list_id,
+                    }
+                ),
             )
 
-        self.register_outputs({
-            "vpc_id": self.id,
-            "cidr_block": self.cidr_block,
-            "private_subnet_ids": self.private_subnet_ids,
-            "public_subnet_ids": self.public_subnet_ids,
-            "s3_endpoint_prefix_list_id": self.s3_endpoint_prefix_list_id,
-            "interface_security_group_ids": {service: sg.id for service, sg in self.interface_security_groups.items()},
-        })
+        self.register_outputs(
+            {
+                "vpc_id": self.id,
+                "cidr_block": self.cidr_block,
+                "private_subnet_ids": self.private_subnet_ids,
+                "public_subnet_ids": self.public_subnet_ids,
+                "s3_endpoint_prefix_list_id": self.s3_endpoint_prefix_list_id,
+                "interface_security_group_ids": {
+                    service: sg.id
+                    for service, sg in self.interface_security_groups.items()
+                },
+            }
+        )

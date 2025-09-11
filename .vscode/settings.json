@@ -1,0 +1,43 @@
+{
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.meta": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/*.meta": true
+  },
+  "files.associations": {
+    ".github/CODEOWNERS": "plaintext"
+  },
+  "[python]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit"
+    }
+  },
+  "[csharp]": {
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit",
+      "source.sortMembers": "explicit"
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "editor.formatOnSave": true,
+  "dotnet.defaultSolution": "capture-app/android_mobile/android_mobile.sln",
+  "debug.onTaskErrors": "debugAnyway",
+  "python.languageServer": "None",
+  "python.experiments.enabled": false,
+  "python.experiments.optOutFrom": ["All"],
+  "basedpyright.analysis.diagnosticMode": "workspace",
+  "emeraldwalk.runonsave": {
+    "commands": [
+      {
+        "match": ".*src[/\\\\](routers|db[/\\\\]tables)[/\\\\].*\\.py$",
+        "cmd": "uv run -m src.clients.generate"
+      }
+    ]
+  }
+}

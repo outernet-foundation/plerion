@@ -66,7 +66,10 @@ class DatabaseManager(ComponentResource):
             rules=[
                 {"to_security_group": load_balancer.security_group, "ports": [443]},
                 {"to_security_group": rds.security_group, "ports": [5432]},
-                {"to_security_group": cloudbeaver.load_balancer.security_group, "ports": [443]},
+                {
+                    "to_security_group": cloudbeaver.load_balancer.security_group,
+                    "ports": [443],
+                },
             ],
             opts=self._child_opts,
         )
@@ -85,7 +88,10 @@ class DatabaseManager(ComponentResource):
                 architectures=["x86_64"],  # hardcoded
                 memory_size=1024,  # hardcoded
                 timeout=60,  # hardcoded
-                vpc_config={"subnet_ids": vpc.private_subnet_ids, "security_group_ids": [security_group.id]},
+                vpc_config={
+                    "subnet_ids": vpc.private_subnet_ids,
+                    "security_group_ids": [security_group.id],
+                },
                 environment={
                     "variables": {
                         "POSTGRES_HOST": rds.address,

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import boto3
 from pydantic import AnyHttpUrl, Field, model_validator
@@ -47,7 +47,7 @@ class Settings(BaseSettings):
             assert self.postgres_password_arn is not None
             assert self.cloudbeaver_admin_password_arn is not None
 
-            client: SecretsManagerClient = boto3.client("secretsmanager")  # type: ignore[call-arg]
+            client = cast(SecretsManagerClient, boto3.client("secretsmanager"))  # type: ignore[call-arg]
             self.postgres_password = client.get_secret_value(
                 SecretId=self.postgres_password_arn
             )["SecretString"]

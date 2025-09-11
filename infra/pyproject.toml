@@ -20,19 +20,17 @@ dependencies = [
 dev = [
     "boto3-stubs[ce]>=1.39.7",
     "botocore-stubs>=1.38.46",
-    "networkx>=3.5",
-    "matplotlib>=3.10.3",
 ]
 
-[tool.pyright]
-typeCheckingMode = "strict"
+# [tool.pyright]
+# typeCheckingMode = "strict"
 
-[tool.ruff.lint]
-extend-select = ["I"]
+# [tool.ruff.lint]
+# extend-select = ["I"]
 
-[tool.ruff]
-line-length = 120
-preview = true
+# [tool.ruff]
+# line-length = 120
+# preview = true
 
-[tool.ruff.format]
-skip-magic-trailing-comma = true
+# [tool.ruff.format]
+# skip-magic-trailing-comma = true

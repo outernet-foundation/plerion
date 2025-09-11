@@ -1,5 +1,5 @@
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, Dict
+from typing import TYPE_CHECKING, Any, Dict, cast
 
 import boto3
 from botocore.config import Config
@@ -64,7 +64,7 @@ def _build_storage() -> Storage:
         )
 
     # See https://github.com/microsoft/pylance-release/issues/2809
-    client: S3Client = boto3.client("s3", **kwargs)  # type: ignore[call-arg]
+    client = cast(S3Client, boto3.client("s3", **kwargs))  # type: ignore[call-arg]
     return Storage(s3=client)
 
 

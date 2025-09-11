@@ -11,7 +11,10 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = ["boto3-stubs[batch]>=1.39.7"]
+dev = [
+    "boto3-stubs[batch]>=1.39.7",
+    "types-docker>=7.1.0.20250907",
+]
 
 [tool.pyright]
 typeCheckingMode = "strict"

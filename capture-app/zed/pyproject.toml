@@ -16,10 +16,6 @@ dependencies = [
 [dependency-groups]
 dev = ["scipy-stubs"]
 
-[tool.pyright]
-typeCheckingMode = "strict"
-stubPath = "typings"
-
 [tool.ruff.lint]
 extend-select = ["I"]
 
