@@ -2,7 +2,7 @@
   "tailscale-beacon": {
     "stack": "core",
     "first_party": true,
-    "context": "./services/tailscale-beacon",
+    "context": "services/tailscale-beacon",
     "dockerfile": "Dockerfile"
   },
   "oauth2-proxy": {
@@ -12,13 +12,13 @@
   "oauth2-reverse-proxy": {
     "stack": "core",
     "first_party": true,
-    "context": "./services/oauth2-reverse-proxy",
+    "context": "services/oauth2-reverse-proxy",
     "dockerfile": "Dockerfile"
   },
   "cloudbeaver-init": {
     "stack": "core",
     "first_party": true,
-    "context": "./services/cloudbeaver-init",
+    "context": "services/cloudbeaver-init",
     "dockerfile": "Dockerfile",
     "hash_paths": ["services/cloudbeaver", "common"]
   },
@@ -44,18 +44,18 @@
     "dockerfile": "services/api/Dockerfile",
     "hash_paths": ["services/api", "common"]
   },
-  "reconstruction-worker": {
+  "run-reconstruction": {
     "stack": "dev",
     "first_party": true,
     "context": ".",
-    "dockerfile": "services/reconstruction-worker/Dockerfile",
-    "hash_paths": ["services/reconstruction-worker", "common"]
+    "dockerfile": "tasks/run-reconstruction/Dockerfile",
+    "hash_paths": ["tasks/run-reconstruction", "common"]
   },
-  "features-worker": {
+  "extract-match-features": {
     "stack": "dev",
     "first_party": true,
     "context": ".",
-    "dockerfile": "services/features-worker/Dockerfile",
-    "hash_paths": ["services/features-worker", "common"]
+    "dockerfile": "tasks/extract-match-features/Dockerfile",
+    "hash_paths": ["tasks/extract-match-features", "common"]
   }
 }

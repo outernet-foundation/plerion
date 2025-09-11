@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd /app/services/reconstruction-worker
+cd /app/tasks/extract-match-features
 
 if [[ "${DEBUG:-}" == "true" ]]; then
   echo "Debug mode enabled"

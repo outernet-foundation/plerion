@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-cd /app/services/features-worker
+cd /app/tasks/run-reconstruction
 
 if [[ "${DEBUG:-}" == "true" ]]; then
   echo "Debug mode enabled"

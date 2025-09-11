@@ -95,7 +95,7 @@ def main() -> None:
 
     if found == 0:
         print(
-            "[list_debug_targets] No attachable worker containers found. "
+            "[list_debug_targets] No attachable task containers found. "
             "Ensure containers have a 'service' label and publish 5678/tcp.",
             file=sys.stderr,
         )

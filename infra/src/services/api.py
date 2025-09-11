@@ -60,36 +60,36 @@ class Api(ComponentResource):
                 ),
             ),
         )
-        reconstruction_worker_image_repo = Repository(
-            "reconstruction-worker-repo",
-            "reconstruction-worker",
+        reconstruction_task_image_repo = Repository(
+            "run-reconstruction-repo",
+            "run-reconstruction",
             opts=ResourceOptions.merge(
                 self._child_opts,
                 ResourceOptions(
                     retain_on_delete=True
-                    # import_="reconstruction-worker"
+                    # import_="run-reconstruction"
                 ),
             ),
         )
-        features_worker_image_repo = Repository(
-            "features-worker-repo",
-            "features-worker",
+        features_task_image_repo = Repository(
+            "extract-match-features-repo",
+            "extract-match-features",
             opts=ResourceOptions.merge(
                 self._child_opts,
                 ResourceOptions(
                     retain_on_delete=True
-                    # import_="features-worker"
+                    # import_="extract-match-features"
                 ),
             ),
         )
         prepare_deploy_role.allow_image_repo_actions([
             api_image_repo,
-            reconstruction_worker_image_repo,
-            features_worker_image_repo,
+            reconstruction_task_image_repo,
+            features_task_image_repo,
         ])
         export("api-image-repo-url", api_image_repo.url)
-        export("reconstruction-worker-image-repo-url", reconstruction_worker_image_repo.url)
-        export("features-worker-image-repo-url", features_worker_image_repo.url)
+        export("run-reconstruction-image-repo-url", reconstruction_task_image_repo.url)
+        export("extract-match-features-image-repo-url", features_task_image_repo.url)
 
         # Load balancer
         load_balancer = LoadBalancer(
@@ -138,12 +138,12 @@ class Api(ComponentResource):
         batch_job_environment = BatchJobEnvironment("api-batch-job-environment", vpc=vpc, opts=self._child_opts)
 
         features_batch_job_definition = BatchJobDefinition(
-            "features-worker", image_repo=features_worker_image_repo, require_gpu=True, opts=self._child_opts
+            "extract-match-features", image_repo=features_task_image_repo, require_gpu=True, opts=self._child_opts
         )
         features_batch_job_definition.job_role.allow_s3(s3_bucket)
 
         reconstruction_batch_job_definition = BatchJobDefinition(
-            "reconstruction-worker", image_repo=reconstruction_worker_image_repo, opts=self._child_opts
+            "run-reconstruction", image_repo=reconstruction_task_image_repo, opts=self._child_opts
         )
         reconstruction_batch_job_definition.job_role.allow_s3(s3_bucket)
         reconstruction_batch_job_definition.job_role.allow_batch_job_submission(

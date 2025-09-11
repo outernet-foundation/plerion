@@ -12,10 +12,10 @@
       ]
     },
     {
-      "name": "Attach to worker",
+      "name": "Attach to task",
       "type": "debugpy",
       "request": "attach",
-      "connect": { "host": "127.0.0.1", "port": "${input:dockerWorkerPort}" },
+      "connect": { "host": "127.0.0.1", "port": "${input:dockerTaskPort}" },
       "justMyCode": false,
       "pathMappings": [
         { "localRoot": "${workspaceFolder}", "remoteRoot": "/app" }
@@ -32,13 +32,13 @@
   ],
   "inputs": [
     {
-      "id": "dockerWorkerPort",
+      "id": "dockerTaskPort",
       "type": "command",
       "command": "shellCommand.execute",
       "args": {
         "command": "uv run src/list_debug_targets.py",
         "cwd": "${workspaceFolder}/scripts",
-        "description": "Select worker container",
+        "description": "Select task container",
         "fieldSeparator": "|",
         "useSingleResult": true,
         "filterEmptyResults": true,

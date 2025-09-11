@@ -22,12 +22,12 @@
       "name": "database-manager"
     },
     {
-      "path": "services/reconstruction-worker",
-      "name": "reconstruction-worker"
+      "path": "tasks/run-reconstruction",
+      "name": "run-reconstruction"
     },
     {
-      "path": "services/features-worker",
-      "name": "features-worker"
+      "path": "tasks/extract-match-features",
+      "name": "extract-match-features"
     },
     {
       "path": "capture-app/android_mobile",
