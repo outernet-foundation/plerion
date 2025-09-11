@@ -1,5 +1,5 @@
 from typing import List, Optional, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import ConfigDict
@@ -14,7 +14,7 @@ class LayerModel(create_pydantic_model(Layer)):
 
 # ----------- Router -----------
 
-router = APIRouter(prefix="/layers", tags=["layers"])
+router = APIRouter(prefix="/layers")
 
 
 # CREATE
@@ -28,7 +28,7 @@ async def create_layer(layer: LayerModel):
             detail=f"Layer with id {id} already exists",
         )
 
-    row = await Layer.objects().create(**layer.model_dump())
+    row = await Layer.objects().create(**layer.model_dump(exclude_none=True))
 
     return LayerModel.model_validate(row)
 
@@ -48,7 +48,7 @@ async def get_layers(
 
 
 # UPDATE
-@router.put("/{id}")
+@router.put("/{id:uuid}")
 async def update_layer(id: UUID, layer: LayerModel):
     exists = await Layer.exists().where(Layer.id == id)
     if not exists:
@@ -71,12 +71,12 @@ async def upsert_layers(layers: List[LayerModel]):
         return
 
     for layer in layers:
-        data = layer.model_dump()
+        data = layer.model_dump(exclude_none=True)
 
         # Generate an id if missing
         layer_id = data.get("id")
         if not layer_id:
-            layer_id = UUID()
+            layer_id = uuid4()
             data["id"] = layer_id
 
         # Update or insert
@@ -85,8 +85,7 @@ async def upsert_layers(layers: List[LayerModel]):
         if exists:
             await Layer.update(data).where(Layer.id == layer_id)  # type: ignore
         else:
-            new_layer = Layer(**data)
-            await new_layer.save()  # type: ignore
+            await Layer.objects().create(**data)
 
         # Fetch the final row
         row = cast(dict, await Layer.objects().where(Layer.id == layer_id).first())  # type: ignore

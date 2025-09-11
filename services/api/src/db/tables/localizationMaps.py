@@ -8,7 +8,7 @@ from ..piccolo_shims import Table
 class LocalizationMap(Table):
     id = UUID(primary_key=True, required=True)
 
-    name = Varchar(length=255, unique=True, required=True)
+    name = Varchar(length=255, unique=False, required=True)
 
     active = Boolean(True, null=False, required=True)
 

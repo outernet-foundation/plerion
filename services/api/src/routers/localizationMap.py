@@ -1,5 +1,5 @@
 from typing import List, Optional, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import ConfigDict
@@ -14,7 +14,7 @@ class LocalizationMapModel(create_pydantic_model(LocalizationMap)):
 
 # ----------- Router -----------
 
-router = APIRouter(prefix="/localizationMaps", tags=["localizationMaps"])
+router = APIRouter(prefix="/localizationMaps")
 
 
 # CREATE
@@ -30,7 +30,9 @@ async def create_localizationMap(localizationMap: LocalizationMapModel):
             detail=f"LocalizationMap with id {id} already exists",
         )
 
-    row = await LocalizationMap.objects().create(**localizationMap.model_dump())
+    row = await LocalizationMap.objects().create(
+        **localizationMap.model_dump(exclude_none=True)
+    )
 
     return LocalizationMapModel.model_validate(row)
 
@@ -50,7 +52,7 @@ async def get_localizationMaps(
 
 
 # UPDATE
-@router.put("/{id}")
+@router.put("/{id:uuid}")
 async def update_localizationMap(id: UUID, localizationMap: LocalizationMapModel):
     exists = await LocalizationMap.exists().where(LocalizationMap.id == id)
     if not exists:
@@ -72,12 +74,12 @@ async def upsert_localizationMaps(localizationMaps: List[LocalizationMapModel]):
     """
 
     for localizationMap in localizationMaps:
-        data = localizationMap.model_dump()
+        data = localizationMap.model_dump(exclude_none=True)
 
         # Generate an id if missing
         localizationMap_id = data.get("id")
         if not localizationMap_id:
-            localizationMap_id = UUID()
+            localizationMap_id = uuid4()
             data["id"] = localizationMap_id
 
         # Update or insert
@@ -90,8 +92,7 @@ async def upsert_localizationMaps(localizationMaps: List[LocalizationMapModel]):
                 LocalizationMap.id == localizationMap_id
             )
         else:
-            new_localizationMap = LocalizationMap(**data)
-            await new_localizationMap.save()  # type: ignore
+            await LocalizationMap.objects().create(**data)
 
         # Fetch the final row
         row = cast(  # type: ignore

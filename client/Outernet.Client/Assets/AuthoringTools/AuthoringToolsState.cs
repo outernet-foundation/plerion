@@ -201,12 +201,19 @@ namespace Outernet.Client.AuthoringTools
                         if (childVisible == null)
                             throw new Exception($"{child} is not present in the group or node collections.");
 
-                        return Bindings.Compose(
-                            childVisible.OnChange(
-                                isDerived: true,
-                                onChange: childVisible => visible.value = childVisible ? true : IsVisible()
-                            ),
-                            Bindings.OnRelease(() => visible.value = IsVisible())
+                        return Bindings.Observe(
+                            childVisible,
+                            new ObserverParameters() { isDerived = true },
+                            args =>
+                            {
+                                if (childVisible.disposed)
+                                {
+                                    visible.value = IsVisible();
+                                    return;
+                                }
+
+                                visible.value = childVisible.value ? true : IsVisible();
+                            }
                         );
                     }
                 )

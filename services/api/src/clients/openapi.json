@@ -291,9 +291,6 @@
     },
     "/nodes": {
       "post": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Create Node",
         "operationId": "create_node",
         "requestBody": {
@@ -328,9 +325,6 @@
         }
       },
       "get": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Get Nodes",
         "operationId": "get_nodes",
         "parameters": [
@@ -387,9 +381,6 @@
     },
     "/nodes/{id}": {
       "put": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Update Node",
         "operationId": "update_node",
         "parameters": [
@@ -438,9 +429,6 @@
     },
     "/nodes/upsert": {
       "put": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Upsert Nodes",
         "description": "Bulk upsert nodes.\n- If a node has an id and exists \u2192 update it.\n- If a node has an id but doesn't exist \u2192 insert it.\n- If a node has no id \u2192 generate a new UUID and insert it.",
         "operationId": "upsert_nodes",
@@ -482,9 +470,6 @@
     },
     "/nodes/": {
       "delete": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Delete Nodes",
         "operationId": "delete_nodes",
         "requestBody": {
@@ -533,9 +518,6 @@
     },
     "/groups": {
       "post": {
-        "tags": [
-          "groups"
-        ],
         "summary": "Create Group",
         "operationId": "create_group",
         "requestBody": {
@@ -570,9 +552,6 @@
         }
       },
       "get": {
-        "tags": [
-          "groups"
-        ],
         "summary": "Get Groups",
         "operationId": "get_groups",
         "parameters": [
@@ -629,9 +608,6 @@
     },
     "/groups/{id}": {
       "put": {
-        "tags": [
-          "groups"
-        ],
         "summary": "Update Group",
         "operationId": "update_group",
         "parameters": [
@@ -680,9 +656,6 @@
     },
     "/groups/upsert": {
       "put": {
-        "tags": [
-          "groups"
-        ],
         "summary": "Upsert Groups",
         "description": "Bulk upsert groups.\n- If a group has an id and exists \u2192 update it.\n- If a group has an id but doesn't exist \u2192 insert it.\n- If a group has no id \u2192 generate a new UUID and insert it.",
         "operationId": "upsert_groups",
@@ -724,9 +697,6 @@
     },
     "/groups/": {
       "delete": {
-        "tags": [
-          "groups"
-        ],
         "summary": "Delete Groups",
         "operationId": "delete_groups",
         "requestBody": {
@@ -775,9 +745,6 @@
     },
     "/layers": {
       "post": {
-        "tags": [
-          "layers"
-        ],
         "summary": "Create Layer",
         "operationId": "create_layer",
         "requestBody": {
@@ -812,9 +779,6 @@
         }
       },
       "get": {
-        "tags": [
-          "layers"
-        ],
         "summary": "Get Layers",
         "operationId": "get_layers",
         "parameters": [
@@ -871,9 +835,6 @@
     },
     "/layers/{id}": {
       "put": {
-        "tags": [
-          "layers"
-        ],
         "summary": "Update Layer",
         "operationId": "update_layer",
         "parameters": [
@@ -922,9 +883,6 @@
     },
     "/layers/upsert": {
       "put": {
-        "tags": [
-          "layers"
-        ],
         "summary": "Upsert Layers",
         "description": "Bulk upsert layers.\n- If a layer has an id and exists \u2192 update it.\n- If a layer has an id but doesn't exist \u2192 insert it.\n- If a layer has no id \u2192 generate a new UUID and insert it.",
         "operationId": "upsert_layers",
@@ -966,9 +924,6 @@
     },
     "/layers/": {
       "delete": {
-        "tags": [
-          "layers"
-        ],
         "summary": "Delete Layers",
         "operationId": "delete_layers",
         "requestBody": {
@@ -1017,9 +972,6 @@
     },
     "/localizationMaps": {
       "post": {
-        "tags": [
-          "localizationMaps"
-        ],
         "summary": "Create Localizationmap",
         "operationId": "create_localizationMap",
         "requestBody": {
@@ -1054,9 +1006,6 @@
         }
       },
       "get": {
-        "tags": [
-          "localizationMaps"
-        ],
         "summary": "Get Localizationmaps",
         "operationId": "get_localizationMaps",
         "parameters": [
@@ -1113,9 +1062,6 @@
     },
     "/localizationMaps/{id}": {
       "put": {
-        "tags": [
-          "localizationMaps"
-        ],
         "summary": "Update Localizationmap",
         "operationId": "update_localizationMap",
         "parameters": [
@@ -1164,9 +1110,6 @@
     },
     "/localizationMaps/upsert": {
       "put": {
-        "tags": [
-          "localizationMaps"
-        ],
         "summary": "Upsert Localizationmaps",
         "description": "Bulk upsert localizationMaps.\n- If a localizationMap has an id and exists \u2192 update it.\n- If a localizationMap has an id but doesn't exist \u2192 insert it.\n- If a localizationMap has no id \u2192 generate a new UUID and insert it.",
         "operationId": "upsert_localizationMaps",
@@ -1208,9 +1151,6 @@
     },
     "/localizationMaps/": {
       "delete": {
-        "tags": [
-          "localizationMaps"
-        ],
         "summary": "Delete Localizationmaps",
         "operationId": "delete_localizationMaps",
         "requestBody": {
@@ -1357,7 +1297,7 @@
             "extra": {
               "nullable": false,
               "secret": false,
-              "unique": true
+              "unique": false
             }
           },
           "parent": {
@@ -1418,7 +1358,7 @@
             "extra": {
               "nullable": false,
               "secret": false,
-              "unique": true
+              "unique": false
             }
           }
         },
@@ -1449,7 +1389,7 @@
             "extra": {
               "nullable": false,
               "secret": false,
-              "unique": true
+              "unique": false
             }
           },
           "active": {
@@ -1600,7 +1540,7 @@
             "extra": {
               "nullable": false,
               "secret": false,
-              "unique": true
+              "unique": false
             }
           },
           "created_at": {
@@ -1615,7 +1555,7 @@
             ],
             "title": "Created At",
             "extra": {
-              "nullable": true,
+              "nullable": false,
               "secret": false,
               "unique": false
             }

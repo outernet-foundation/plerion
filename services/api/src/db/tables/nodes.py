@@ -9,9 +9,9 @@ from ..piccolo_shims import Table
 class Node(Table):
     id = UUID(primary_key=True, required=True)
 
-    name = Varchar(length=255, unique=True, required=True)
+    name = Varchar(length=255, unique=False, required=True)
 
-    created_at = Timestamp(default=TimestampNow(), null=True, required=False)
+    created_at = Timestamp(default=TimestampNow(), required=False)
 
     active = Boolean(True, null=False, required=True)
 
@@ -43,6 +43,6 @@ class Node(Table):
 
     labelHeight = Float(null=True, required=False)
 
-    parent = UUID(null=True, required=False)
+    parent = UUID(default=None, null=True, required=False)
 
-    layer = UUID(null=True, required=False)
+    layer = UUID(default=None, null=True, required=False)

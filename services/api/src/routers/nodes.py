@@ -14,7 +14,7 @@ class NodeModel(create_pydantic_model(Node)):
 
 # ----------- Router -----------
 
-router = APIRouter(prefix="/nodes", tags=["nodes"])
+router = APIRouter(prefix="/nodes")
 
 
 # CREATE
@@ -28,7 +28,7 @@ async def create_node(node: NodeModel):
             detail=f"Node with id {id} already exists",
         )
 
-    row = await Node.objects().create(**node.model_dump())
+    row = await Node.objects().create(**node.model_dump(exclude_none=True))
 
     return NodeModel.model_validate(row)
 
@@ -48,7 +48,7 @@ async def get_nodes(
 
 
 # UPDATE
-@router.put("/{id}")
+@router.put("/{id:uuid}")
 async def update_node(id: UUID, node: NodeModel):
     exists = await Node.exists().where(Node.id == id)
     if not exists:
@@ -68,7 +68,7 @@ async def upsert_nodes(nodes: List[NodeModel]):
     """
 
     for node in nodes:
-        data = node.model_dump()
+        data = node.model_dump(exclude_none=True)
 
         # Generate an id if missing
         node_id = data.get("id")
@@ -82,8 +82,7 @@ async def upsert_nodes(nodes: List[NodeModel]):
         if exists:
             await Node.update(data).where(Node.id == node_id)  # type: ignore
         else:
-            new_node = Node(**data)
-            await new_node.save()  # type: ignore
+            await Node.objects().create(**data)
 
         # Fetch the final row
         row = cast(dict, await Node.objects().where(Node.id == node_id).first())  # type: ignore

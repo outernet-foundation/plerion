@@ -131,7 +131,7 @@ namespace Outernet.Client
                 PrefabSystem.Destroy(userView);
             }
 
-            subscriptions.Dispose();
+            subscriptions?.Dispose();
         }
 
         static public void Update()

@@ -191,7 +191,7 @@ namespace Outernet.Client.AuthoringTools
         {
             var groups = new List<GroupModel>();
 
-            var directGroups = await PlerionAPI.Groups.GetGroupsAsync(
+            var directGroups = await PlerionAPI.api.GetGroupsAsync(
                 nodes.Where(x => x.Parent.HasValue)
                     .Select(x => x.Parent.Value)
                     .Distinct()
@@ -204,7 +204,7 @@ namespace Outernet.Client.AuthoringTools
 
             while (groups.Any(x => x.Parent.HasValue && !groups.Any(y => y.Id == x.Parent)))
             {
-                var recursiveGroups = await PlerionAPI.Groups.GetGroupsAsync(
+                var recursiveGroups = await PlerionAPI.api.GetGroupsAsync(
                     groups.Where(x => x.Parent.HasValue && !groups.Any(y => y.Id == x.Parent))
                         .Select(x => x.Parent.Value)
                         .Distinct()

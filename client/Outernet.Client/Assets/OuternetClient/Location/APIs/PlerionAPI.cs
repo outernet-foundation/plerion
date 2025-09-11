@@ -30,10 +30,7 @@ namespace Outernet.Client
 
     static public class PlerionAPI
     {
-        public static LocalizationMapsApi LocalizationMaps { get; private set; }
-        public static NodesApi Nodes { get; private set; }
-        public static GroupsApi Groups { get; private set; }
-        public static LayersApi Layers { get; private set; }
+        public static DefaultApi api { get; private set; }
 
         private static readonly string SUPABASE_URL = "https://ysugcfsqhmladpfnqgvs.supabase.co";
         private static readonly string SUPABASE_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzdWdjZnNxaG1sYWRwZm5xZ3ZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MjcyNzU2MzksImV4cCI6MjA0Mjg1MTYzOX0.cIdcZuyN28iFbiUChId4fc-6YjleIkAUeAQs7UQ6gRE";
@@ -83,10 +80,7 @@ namespace Outernet.Client
 
         public static void Initialize(string apiBaseUrl)
         {
-            LocalizationMaps = new LocalizationMapsApi(apiBaseUrl);
-            Nodes = new NodesApi(apiBaseUrl);
-            Groups = new GroupsApi(apiBaseUrl);
-            Layers = new LayersApi(apiBaseUrl);
+            api = new DefaultApi(apiBaseUrl);
         }
 
         private static async UniTask<T> Get<T>(string url)
@@ -101,7 +95,7 @@ namespace Outernet.Client
 
         public static async UniTask<List<NodeModel>> GetNodes(IEnumerable<double3> userPositions, double radius, int limit_count)
         {
-            return await Nodes.GetNodesAsync();
+            return await api.GetNodesAsync();
             // try
             // {
             //     return await Post<List<NodeRecord>, NodesWithRadiusOfAnyUserRequest>(

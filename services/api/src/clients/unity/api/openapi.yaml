@@ -221,8 +221,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Nodes
-      tags:
-      - nodes
     post:
       operationId: create_node
       requestBody:
@@ -244,8 +242,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Node
-      tags:
-      - nodes
   /nodes/{id}:
     put:
       operationId: update_node
@@ -278,8 +274,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Update Node
-      tags:
-      - nodes
   /nodes/upsert:
     put:
       description: |-
@@ -309,8 +303,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Upsert Nodes
-      tags:
-      - nodes
   /nodes/:
     delete:
       operationId: delete_nodes
@@ -340,8 +332,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Delete Nodes
-      tags:
-      - nodes
   /groups:
     get:
       operationId: get_groups
@@ -374,8 +364,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Groups
-      tags:
-      - groups
     post:
       operationId: create_group
       requestBody:
@@ -397,8 +385,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Group
-      tags:
-      - groups
   /groups/{id}:
     put:
       operationId: update_group
@@ -431,8 +417,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Update Group
-      tags:
-      - groups
   /groups/upsert:
     put:
       description: |-
@@ -462,8 +446,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Upsert Groups
-      tags:
-      - groups
   /groups/:
     delete:
       operationId: delete_groups
@@ -493,8 +475,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Delete Groups
-      tags:
-      - groups
   /layers:
     get:
       operationId: get_layers
@@ -527,8 +507,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Layers
-      tags:
-      - layers
     post:
       operationId: create_layer
       requestBody:
@@ -550,8 +528,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Layer
-      tags:
-      - layers
   /layers/{id}:
     put:
       operationId: update_layer
@@ -584,8 +560,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Update Layer
-      tags:
-      - layers
   /layers/upsert:
     put:
       description: |-
@@ -615,8 +589,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Upsert Layers
-      tags:
-      - layers
   /layers/:
     delete:
       operationId: delete_layers
@@ -646,8 +618,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Delete Layers
-      tags:
-      - layers
   /localizationMaps:
     get:
       operationId: get_localizationMaps
@@ -680,8 +650,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Localizationmaps
-      tags:
-      - localizationMaps
     post:
       operationId: create_localizationMap
       requestBody:
@@ -703,8 +671,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Localizationmap
-      tags:
-      - localizationMaps
   /localizationMaps/{id}:
     put:
       operationId: update_localizationMap
@@ -737,8 +703,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Update Localizationmap
-      tags:
-      - localizationMaps
   /localizationMaps/upsert:
     put:
       description: |-
@@ -768,8 +732,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Upsert Localizationmaps
-      tags:
-      - localizationMaps
   /localizationMaps/:
     delete:
       operationId: delete_localizationMaps
@@ -799,8 +761,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Delete Localizationmaps
-      tags:
-      - localizationMaps
 components:
   schemas:
     Body_create_capture:
@@ -878,7 +838,7 @@ components:
           extra:
             nullable: false
             secret: false
-            unique: true
+            unique: false
         parent:
           format: uuid
           nullable: true
@@ -927,7 +887,7 @@ components:
           extra:
             nullable: false
             secret: false
-            unique: true
+            unique: false
       required:
       - id
       - name
@@ -966,7 +926,7 @@ components:
           extra:
             nullable: false
             secret: false
-            unique: true
+            unique: false
         active:
           title: Active
           type: boolean
@@ -1095,7 +1055,7 @@ components:
           extra:
             nullable: false
             secret: false
-            unique: true
+            unique: false
         created_at:
           format: date-time
           nullable: true

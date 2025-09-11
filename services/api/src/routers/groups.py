@@ -1,5 +1,5 @@
 from typing import List, Optional, cast
-from uuid import UUID
+from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import ConfigDict
@@ -14,7 +14,7 @@ class GroupModel(create_pydantic_model(Group)):
 
 # ----------- Router -----------
 
-router = APIRouter(prefix="/groups", tags=["groups"])
+router = APIRouter(prefix="/groups")
 
 
 # CREATE
@@ -28,7 +28,7 @@ async def create_group(group: GroupModel):
             detail=f"Group with id {id} already exists",
         )
 
-    row = await Group.objects().create(**group.model_dump())
+    row = await Group.objects().create(**group.model_dump(exclude_none=True))
 
     return GroupModel.model_validate(row)
 
@@ -48,7 +48,7 @@ async def get_groups(
 
 
 # UPDATE
-@router.put("/{id}")
+@router.put("/{id:uuid}")
 async def update_group(id: UUID, group: GroupModel):
     exists = await Group.exists().where(Group.id == id)
     if not exists:
@@ -68,12 +68,12 @@ async def upsert_groups(groups: List[GroupModel]):
     """
 
     for group in groups:
-        data = group.model_dump()
+        data = group.model_dump(exclude_none=True)
 
         # Generate an id if missing
         group_id = data.get("id")
         if not group_id:
-            group_id = UUID()
+            group_id = uuid4()
             data["id"] = group_id
 
         # Update or insert
@@ -82,8 +82,7 @@ async def upsert_groups(groups: List[GroupModel]):
         if exists:
             await Group.update(data).where(Group.id == group_id)  # type: ignore
         else:
-            new_group = Group(**data)
-            await new_group.save()  # type: ignore
+            await Group.objects().create(**data)
 
         # Fetch the final row
         row = cast(dict, await Group.objects().where(Group.id == group_id).first())  # type: ignore

@@ -8,6 +8,6 @@ from ..piccolo_shims import Table
 class Group(Table):
     id = UUID(primary_key=True, required=True)
 
-    name = Varchar(length=255, unique=True, required=True)
+    name = Varchar(length=255, unique=False, required=True)
 
-    parent = UUID(null=True, required=False)
+    parent = UUID(default=None, null=True, required=False)

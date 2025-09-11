@@ -8,4 +8,4 @@ from ..piccolo_shims import Table
 class Layer(Table):
     id = UUID(primary_key=True, required=True)
 
-    name = Varchar(length=255, unique=True, required=True)
+    name = Varchar(length=255, unique=False, required=True)

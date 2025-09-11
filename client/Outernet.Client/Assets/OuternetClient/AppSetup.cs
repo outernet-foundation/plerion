@@ -112,7 +112,7 @@ namespace Outernet.Client
 
         private async void GetLayersAndPopulate()
         {
-            var layers = await PlerionAPI.Layers.GetLayersAsync();
+            var layers = await PlerionAPI.api.GetLayersAsync();
             await UniTask.SwitchToMainThread();
 
             if (layers == null)

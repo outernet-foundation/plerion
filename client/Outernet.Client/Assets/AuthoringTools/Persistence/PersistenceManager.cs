@@ -259,14 +259,14 @@ namespace Outernet.Client.AuthoringTools
             while (_pendingPersists.TryDequeue(out var toPersist))
             {
                 await UniTask.WhenAll(
-                    PlerionAPI.LocalizationMaps.DeleteLocalizationMapsAsync(toPersist.deletedMaps).AsUniTask(),
-                    PlerionAPI.Nodes.DeleteNodesAsync(toPersist.deletedNodes).AsUniTask(),
-                    PlerionAPI.Groups.DeleteGroupsAsync(toPersist.deletedGroups).AsUniTask(),
-                    PlerionAPI.Layers.DeleteLayersAsync(toPersist.deletedLayers).AsUniTask(),
-                    PlerionAPI.LocalizationMaps.UpsertLocalizationMapsAsync(toPersist.upsertedMaps).AsUniTask(),
-                    PlerionAPI.Layers.UpsertLayersAsync(toPersist.upsertedLayers).AsUniTask()
-                        .ContinueWith(_ => PlerionAPI.Groups.UpsertGroupsAsync(toPersist.upsertedGroups))
-                        .ContinueWith(_ => PlerionAPI.Nodes.UpsertNodesAsync(toPersist.upsertedNodes))
+                    PlerionAPI.api.DeleteLocalizationMapsAsync(toPersist.deletedMaps).AsUniTask(),
+                    PlerionAPI.api.UpsertLocalizationMapsAsync(toPersist.upsertedMaps).AsUniTask(),
+                    PlerionAPI.api.DeleteGroupsAsync(toPersist.deletedGroups).AsUniTask(),
+                    PlerionAPI.api.DeleteLayersAsync(toPersist.deletedLayers).AsUniTask(),
+                    PlerionAPI.api.DeleteNodesAsync(toPersist.deletedNodes).AsUniTask(),
+                    PlerionAPI.api.UpsertLayersAsync(toPersist.upsertedLayers).AsUniTask()
+                        .ContinueWith(_ => PlerionAPI.api.UpsertGroupsAsync(toPersist.upsertedGroups))
+                        .ContinueWith(_ => PlerionAPI.api.UpsertNodesAsync(toPersist.upsertedNodes))
                 );
             }
 
