@@ -10,3 +10,7 @@ install pulumi (for remote backend deployment),
 - cloudbeaver: `localhost:8978`
 - minio obj store: `localhost:9001` (creds listed under `S3`)
 - creds: `root/services/.env`
+
+# to fix line endings
+git rm --cached -r .
+git reset --hard
