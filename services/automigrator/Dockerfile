@@ -18,14 +18,8 @@ WORKDIR /workspace
 # Copy the api directory to the workspace
 COPY services/api/ /workspace/
 
-# Copy and make entrypoint executable
-COPY services/automigrator/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
-
-# Ensure entrypoint script is in Unix format
-RUN apt-get update \
-    && apt-get install -y dos2unix \
-    && dos2unix /usr/local/bin/entrypoint.sh
+# Copy the entrypoint and make it executable
+COPY --chmod=0755 services/automigrator/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 # Set the entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]

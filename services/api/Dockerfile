@@ -39,9 +39,7 @@ COPY services/api/ .
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
-# Entrypoint
-RUN apt-get update && apt-get install -y --no-install-recommends dos2unix && rm -rf /var/lib/apt/lists/*
-COPY services/api/entrypoint.sh /usr/local/bin/entrypoint.sh
-RUN dos2unix /usr/local/bin/entrypoint.sh && chmod +x /usr/local/bin/entrypoint.sh
+# Copy the entrypoint and make it executable
+COPY --chmod=0755 services/api/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
