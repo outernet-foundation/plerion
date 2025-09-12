@@ -23,8 +23,9 @@ def main():
 
             # Create role
             cursor.execute(
-                sql.SQL("CREATE ROLE {} LOGIN PASSWORD %s").format(sql.Identifier(settings.database_name)),
-                (settings.database_password,),
+                sql.SQL("CREATE ROLE {} LOGIN PASSWORD {}").format(
+                    sql.Identifier(settings.database_name), sql.Literal(settings.database_password)
+                )
             )
 
             # Create database
