@@ -129,10 +129,11 @@ services:
     volumes:
       - ./services/api:/workspace
     environment:
+      API_DIR: /workspace
+      PICCOLO_CONF: src.db.conf
       POSTGRES_HOST: ${POSTGRES_HOST}
       DATABASE_NAME: ${API_DATABASE_NAME}
       DATABASE_PASSWORD: ${API_DATABASE_PASSWORD}
-      PYTHONPATH: /workspace
 
   api:
     build:

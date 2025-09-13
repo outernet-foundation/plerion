@@ -1,25 +1,36 @@
-FROM docker.io/library/python:3.12-slim
+FROM ghcr.io/astral-sh/uv:0.7.22-python3.13-bookworm-slim AS dev
 
-# Create a virtual environment and install Piccolo, watchdog, and pydantic-settings
-ENV VENV_DIR=/opt/venv
-RUN python -m venv $VENV_DIR \
-    && $VENV_DIR/bin/pip install --upgrade pip \
-    && $VENV_DIR/bin/pip install --no-cache-dir piccolo[postgres] watchdog[watchmedo] pydantic-settings
+ENV \
+    # Don't buffer stdout/stderr (so logs appear immediately)
+    PYTHONUNBUFFERED=1 \
+    # Disable writing .pyc files to disk
+    PYTHONDONTWRITEBYTECODE=1 \
+    # Enable bytecode compilation, to improve cold-start performance.
+    UV_COMPILE_BYTECODE=1 \
+    # Disable installer metadata, to create a deterministic layer.
+    UV_NO_INSTALLER_METADATA=1 \
+    # Enable copy mode to support bind mount caching.
+    UV_LINK_MODE=copy
 
-# Let Piccolo know where the virtual environment is
-ENV PATH="$VENV_DIR/bin:$PATH"
+# Move the venv out of the project directory to prevent docker compose bind mounts from clobbering it
+ENV UV_PROJECT_ENVIRONMENT=/opt/uv/venv
 
-# Let Piccolo know where the configuration file is
 ENV PICCOLO_CONF="src.db.conf"
 
-# Create the workspace directory
-WORKDIR /workspace
+WORKDIR /app/services/automigrator
 
-# Copy the api directory to the workspace
-COPY services/api/ /app/services/api
+# Install dependencies
+COPY services/automigrator/pyproject.toml services/automigrator/uv.lock ./
+COPY common/ /app/common
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked --no-install-project --no-editable
+
+# Install project
+COPY services/automigrator/ .
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --locked
 
 # Copy the entrypoint and make it executable
 COPY --chmod=0755 services/automigrator/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Set the entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
