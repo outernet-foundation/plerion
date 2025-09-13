@@ -9,42 +9,14 @@ import tempfile
 from pathlib import Path
 from typing import List, Literal, TypedDict, cast
 
+from common.run_command import run_command
 from pydantic import BaseModel, model_validator
 
 workspace_dir = Path("..").resolve()
 infra_dir = workspace_dir / "infra"
 
 
-def run_command(command: str, cwd: Path | None = None, env: dict[str, str] | None = None):
-    print(f"Running command: {command}")
-
-    try:
-        process = subprocess.run(
-            shlex.split(command, posix=True), cwd=cwd, env=env, check=True, text=True, capture_output=True
-        )
-        if process.returncode != 0:
-            raise subprocess.CalledProcessError(
-                process.returncode, command, output=process.stdout, stderr=process.stderr
-            )
-        if process.stdout:
-            print(process.stdout)
-        if process.stderr:
-            print(process.stderr)
-        return process.stdout
-    except subprocess.CalledProcessError as e:
-        print(f"Command failed with exit code {e.returncode}")
-        if e.output:
-            print(e.output)
-        if e.stderr:
-            print(e.stderr)
-        raise
-
-
 def run_streaming(command: str, cwd: Path | None = None) -> None:
-    """
-    Run a long command and stream combined stdout/stderr line-by-line to our console.
-    Raises CalledProcessError on non-zero exit.
-    """
     print(f"Running (streaming): {command}")
     proc = subprocess.Popen(
         shlex.split(command, posix=True),
