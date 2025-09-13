@@ -7,6 +7,7 @@ from pulumi import ComponentResource, Input, Output, ResourceOptions
 from pulumi_aws import iam
 from pulumi_aws.ecs import Service
 from pulumi_aws.iam import RolePolicy
+from pulumi_aws.lambda_ import Function
 from pulumi_aws.s3 import Bucket
 
 if TYPE_CHECKING:
@@ -209,6 +210,33 @@ class Role(ComponentResource):
                 ],
             }),
             opts=self._child_opts,
+        )
+
+    def allow_lambda_deployment(self, deployment_name: str, functions: Iterable[Function | Output[Function]]):
+        self.attach_policy(
+            f"allow-lambda-deployment-{deployment_name}",
+            Output.json_dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {"Effect": "Allow", "Action": ["iam:PassRole"], "Resource": [self.arn]},
+                    {
+                        "Effect": "Allow",
+                        "Action": [
+                            "lambda:CreateFunction",
+                            "lambda:UpdateFunctionCode",
+                            "lambda:UpdateFunctionConfiguration",
+                            "lambda:PublishVersion",
+                            "lambda:DeleteFunction",
+                            "lambda:GetFunction",
+                            "lambda:GetFunctionConfiguration",
+                            "lambda:ListVersionsByFunction",
+                            "lambda:AddPermission",
+                            "lambda:RemovePermission",
+                        ],
+                        "Resource": [function.arn for function in functions],
+                    },
+                ],
+            }),
         )
 
     def allow_service_deployment(

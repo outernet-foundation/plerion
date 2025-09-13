@@ -14,6 +14,13 @@ from .settings import get_settings
 def main():
     settings = get_settings()
 
+    # database_name: str
+    # database_password_plaintext: str | None = Field(default=None, validation_alias="DATABASE_PASSWORD")
+    # database_password_secret_arn: str | None = Field(default=None, validation_alias="DATABASE_PASSWORD_SECRET_ARN")
+
+    # db_plain = bool(self.database_password_plaintext)
+    # db_arn = bool(self.database_password_secret_arn)
+
     try:
         with postgres_cursor(
             host=settings.postgres_host, user=settings.postgres_admin_user, password=settings.postgres_admin_password

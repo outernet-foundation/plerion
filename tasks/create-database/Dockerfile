@@ -3,20 +3,17 @@ FROM ghcr.io/astral-sh/uv:0.7.22 AS uv
 # First, bundle the dependencies into the task root.
 FROM public.ecr.aws/lambda/python:3.13 AS builder
 
-# Don't buffer stdout/stderr (so logs appear immediately)
-ENV PYTHONUNBUFFERED=1
-
-# Disable writing .pyc files to disk
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Enable bytecode compilation, to improve cold-start performance.
-ENV UV_COMPILE_BYTECODE=1
-
-# Disable installer metadata, to create a deterministic layer.
-ENV UV_NO_INSTALLER_METADATA=1
-
-# Enable copy mode to support bind mount caching.
-ENV UV_LINK_MODE=copy
+ENV \
+    # Don't buffer stdout/stderr (so logs appear immediately)
+    PYTHONUNBUFFERED=1 \
+    # Disable writing .pyc files to disk
+    PYTHONDONTWRITEBYTECODE=1 \
+    # Enable bytecode compilation, to improve cold-start performance.
+    UV_COMPILE_BYTECODE=1 \
+    # Disable installer metadata, to create a deterministic layer.
+    UV_NO_INSTALLER_METADATA=1 \
+    # Enable copy mode to support bind mount caching.
+    UV_LINK_MODE=copy
 
 # https://docs.astral.sh/uv/guides/integration/aws-lambda/#getting-started
 RUN --mount=from=uv,source=/uv,target=/bin/uv \

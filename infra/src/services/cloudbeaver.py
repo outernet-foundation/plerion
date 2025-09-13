@@ -1,6 +1,8 @@
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
+from pulumi_aws.efs import AccessPoint
+from pulumi_aws.lambda_ import Function
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
@@ -11,7 +13,7 @@ from components.oauth import Oauth
 from components.rds import RDSInstance
 from components.repository import Repository
 from components.role import Role
-from components.roles import ecs_execution_role, ecs_role
+from components.roles import ecs_execution_role, ecs_role, lambda_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -71,8 +73,19 @@ class Cloudbeaver(ComponentResource):
             name="create-database",
             opts=ResourceOptions.merge(self._child_opts, ResourceOptions(retain_on_delete=True)),
         )
+        delete_database_image_repo = Repository(
+            "delete-database-repo",
+            name="delete-database",
+            opts=ResourceOptions.merge(self._child_opts, ResourceOptions(retain_on_delete=True)),
+        )
         prepare_deploy_role.allow_image_repo_actions(
-            "cloudbeaver", [initialize_cloudbeaver_image_repo, cloudbeaver_image_repo, create_database_image_repo]
+            "cloudbeaver",
+            [
+                initialize_cloudbeaver_image_repo,
+                cloudbeaver_image_repo,
+                create_database_image_repo,
+                delete_database_image_repo,
+            ],
         )
 
         # Load balancer
@@ -212,5 +225,80 @@ class Cloudbeaver(ComponentResource):
             deploy_role.allow_service_deployment(
                 "cloudbeaver", passroles=[execution_role, task_role], services=[cloudbeaver_service.service]
             )
+
+            # Database management Lambdas
+
+            # Log group
+            database_management_log_group = LogGroup(
+                "database-management-log-group",
+                name="/aws/lambda/database-management",
+                retention_in_days=14,
+                opts=self._child_opts,
+            )
+
+            # Security group
+            database_management_security_group = SecurityGroup(
+                "database-management-security-group",
+                vpc=vpc,
+                vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
+                rules=[
+                    {"to_security_group": efs.security_group, "ports": [2049]},
+                    {"to_security_group": rds.security_group, "ports": [5432]},
+                ],
+                opts=self._child_opts,
+            )
+
+            # EFS Access Point
+            efs_access_point = AccessPoint(
+                "database-management-efs-access-point",
+                file_system_id=efs.id,
+                posix_user={"uid": 1000, "gid": 1000},
+                root_directory={
+                    "path": "/opt/cloudbeaver/workspace",
+                    "creation_info": {"owner_uid": 1000, "owner_gid": 1000, "permissions": "0775"},
+                },
+                opts=self._child_opts,
+            )
+
+            # Role
+            database_management_role = lambda_role("cloudbeaver-lambda-role", opts=self._child_opts)
+            database_management_role.allow_secret_get("cloudbeaver-lambda-secrets", [rds.password_secret])
+            # role.allow_service_deployment() ? needs to be able to bounce cloudbeaver
+
+            def DatabaseManagementLambda(resource_name: str, image_repo: Repository):
+                return Function(
+                    resource_name,
+                    package_type="Image",
+                    image_uri=image_repo.locked_digest(),
+                    role=database_management_role.arn,
+                    timeout=900,
+                    vpc_config={
+                        "security_group_ids": [database_management_security_group.id],
+                        "subnet_ids": vpc.private_subnet_ids,
+                    },
+                    file_system_config={"arn": efs_access_point.arn, "local_mount_path": "/mnt/efs"},
+                    environment={
+                        "variables": {
+                            "BACKEND": "aws",
+                            "POSTGRES_HOST": rds.address,
+                            "POSTGRES_ADMIN_USER": config.require("postgres-user"),
+                            "POSTGRES_ADMIN_PASSWORD_SECRET_ARN": rds.password_secret.arn,
+                            "ECS_CLUSTER_ARN": cluster.arn,
+                            "CLOUDBEAVER_SERVICE_ARN": cloudbeaver_service.service.arn,
+                            "_POSTGRES_PASSWORD_VERSION": rds.password_secret.version_id,
+                        }
+                    },
+                    opts=ResourceOptions.merge(
+                        self._child_opts, ResourceOptions(depends_on=[database_management_security_group])
+                    ),
+                )
+
+            if config.require_bool("deploy-create-database"):
+                create_database_lambda = DatabaseManagementLambda("create-database-lambda", create_database_image_repo)
+                deploy_role.allow_lambda_deployment("create-database-lambda", [create_database_lambda])
+
+            if config.require_bool("deploy-delete-database"):
+                delete_database_lambda = DatabaseManagementLambda("delete-database-lambda", delete_database_image_repo)
+                deploy_role.allow_lambda_deployment("delete-database-lambda", [delete_database_lambda])
 
         self.register_outputs({})
