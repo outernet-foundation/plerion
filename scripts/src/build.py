@@ -5,11 +5,10 @@ import os
 import shlex
 import tempfile
 from pathlib import Path
-from typing import Literal, TypedDict, cast
+from typing import Literal, NotRequired, Optional, TypedDict, cast
 
 from common.run_command import run_command, run_streaming
 from pydantic import TypeAdapter
-from rich import Optional
 from typer import Option, Typer
 
 workspace_directory = Path("..").resolve()
@@ -21,10 +20,9 @@ infrastructure_directory = workspace_directory / "infra"
 class Image(TypedDict):
     stack: str
     first_party: bool
-    context: str
-    dockerfile: str
-    hash_paths: list[str]
-    tag: str
+    context: NotRequired[str]
+    dockerfile: NotRequired[str]
+    hash_paths: NotRequired[list[str]]
 
 
 class ImageLock(TypedDict):
@@ -53,34 +51,16 @@ class _Manifest(TypedDict, total=False):
     digest: str
 
 
-ImagesOption = Option(None, "--image", "--images", "-i", help="Image name; can be repeated.")
-AllOption = Option(False, "--all", "-all", help="Select all images in images.json")
-
-app = Typer()
-
-
-@app.command()
-def plan(images: Optional[list[str]] = ImagesOption, all_: Optional[bool] = AllOption):
-    _, plan = create_plan(images, all_)
-    print(json.dumps(plan, indent=2))
-
-
-@app.command()
-def lock(image: list[str] = ImagesOption, all_: bool = AllOption):
-    images_lock, plan = create_plan(image, all_)
-    lock_images(images_lock, plan)
-
-
 def create_plan(images: Optional[list[str]] = None, all_: Optional[bool] = False):
     if images is None and not all_:
-        raise ValueError("Either 'images' or 'all_' must be provided")
+        raise ValueError("Either '--images' or '--all' must be provided")
 
     if not images_path.is_file():
         raise FileNotFoundError(f"{images_path} not found")
 
-    all_images = TypeAdapter(dict[str, Image]).validate_json(json.load(images_path.open("r", encoding="utf-8")))
-    images_lock = TypeAdapter(dict[str, ImageLock]).validate_json(
-        json.load(images_lock_path.open("r", encoding="utf-8"))
+    all_images = TypeAdapter(dict[str, Image]).validate_python(json.load(images_path.open("r", encoding="utf-8")))
+    images_lock = TypeAdapter(dict[str, ImageLock]).validate_python(
+        json.load(images_lock_path.open("r", encoding="utf-8")) if images_lock_path.is_file() else {}
     )
 
     selected_images = all_images if not images else {name: all_images[name] for name in images}
@@ -98,9 +78,6 @@ def create_plan(images: Optional[list[str]] = None, all_: Optional[bool] = False
 def create_image_plan(
     image_name: str, image: Image, image_lock: ImageLock | None
 ) -> FirstPartyPlan | ThirdPartyPlan | None:
-    if image["first_party"] and (not image.get("context") or not image.get("dockerfile")):
-        raise ValueError(f"first_party image '{image_name}' requires 'context' and 'dockerfile'")
-
     stack = image["stack"]
 
     image_repo = run_command(
@@ -112,6 +89,9 @@ def create_image_plan(
             return
 
         return {"name": image_name, "kind": "third_party", "stack": stack, "repo": image_repo}
+
+    if "context" not in image or "dockerfile" not in image or "hash_paths" not in image:
+        raise ValueError(f"first_party image '{image_name}' requires 'context', 'dockerfile', and 'hash_paths'")
 
     context = image["context"]
 
@@ -167,8 +147,8 @@ def lock_images(images_lock: dict[str, ImageLock], plan: list[FirstPartyPlan | T
             run_streaming(
                 "docker buildx build --push --platform linux/amd64 --provenance=false"
                 + f" -t {git_sha_tag} -t {tree_sha_tag}"
-                + f' -f "{workspace_directory / image_plan["context"] / image_plan["dockerfile"]}"'
-                + f' "{workspace_directory / image_plan["context"]}"'
+                + f' -f "{image_plan["dockerfile"]}"'
+                + f' "{image_plan["context"]}"'
             )
 
             digest = get_digest(tree_sha_tag)
@@ -192,3 +172,25 @@ def get_digest(ref: str) -> str | None:
             run_command(f"docker buildx imagetools inspect --format '{{{{json .Manifest}}}}' {shlex.quote(ref)}")
         ),
     ).get("digest")
+
+
+ImagesOption = Option(None, "--image", "--images", "-i", help="Image name; can be repeated.")
+AllOption = Option(False, "--all", "-all", help="Select all images in images.json")
+
+app = Typer()
+
+
+@app.command()
+def plan(images: Optional[list[str]] = ImagesOption, all_: Optional[bool] = AllOption):
+    _, plan = create_plan(images, all_)
+    print(json.dumps(plan, indent=2))
+
+
+@app.command()
+def lock(image: list[str] = ImagesOption, all_: bool = AllOption):
+    images_lock, plan = create_plan(image, all_)
+    lock_images(images_lock, plan)
+
+
+if __name__ == "__main__":
+    app()
