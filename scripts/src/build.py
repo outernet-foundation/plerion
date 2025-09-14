@@ -130,19 +130,21 @@ def create_image_plan(
     }
 
 
-def lock_images(images_lock: dict[str, ImageLock], plan: dict[str, FirstPartyPlan | ThirdPartyPlan]):
+def lock_images(images_lock: dict[str, ImageLock], plan: dict[str, FirstPartyPlan | ThirdPartyPlan], cache_type: str):
     git_sha = run_command("git rev-parse --short HEAD", cwd=workspace_directory).strip()
 
     for image_name, image_plan in plan.items():
         print(f"Processing image: {image_name}")
-        images_lock[image_name] = lock_image(image_name, image_plan, git_sha)
+        images_lock[image_name] = lock_image(image_name, image_plan, git_sha, cache_type)
 
     print(f"Writing {images_lock_path}")
     with images_lock_path.open("w", encoding="utf-8") as file:
         json.dump(images_lock, file, indent=2)
 
 
-def lock_image(image_name: str, image_plan: FirstPartyPlan | ThirdPartyPlan, git_sha: str) -> ImageLock:
+def lock_image(
+    image_name: str, image_plan: FirstPartyPlan | ThirdPartyPlan, git_sha: str, cache_type: str
+) -> ImageLock:
     # If this is a third party image, just get the latest digest, which will pull the image if not present
     if image_plan["kind"] == "third_party":
         digest = get_digest(image_plan["image_repo_url"] + ":latest")
@@ -159,10 +161,18 @@ def lock_image(image_name: str, image_plan: FirstPartyPlan | ThirdPartyPlan, git
         print(f"Image with tag {tree_sha_tag} already exists, skipping build.")
     else:
         print(f"Building and pushing image: {image_name}")
+        cache_type_extra: str = ""
+        if cache_type == "registery":
+            cache_type_extra += f"ref={image_plan['image_repo_url']}"
+        elif cache_type != "gha":
+            cache_type_extra += f"scope={image_name}"
+        else:
+            raise ValueError(f"Unknown cache type: {cache_type}")
+
         run_streaming(
             "docker buildx build --push --platform linux/amd64 --provenance=false"
-            + f" --cache-from type=registry,ref={image_plan['image_repo_url']}:cache"
-            + f" --cache-to type=registry,ref={image_plan['image_repo_url']}:cache,mode=max"
+            + f" --cache-from type={cache_type},{cache_type_extra}:cache"
+            + f" --cache-to type={cache_type},{cache_type_extra}:cache,mode=max"
             + f" -t {git_sha_tag} -t {tree_sha_tag}"
             + f' -f "{workspace_directory / image_plan["context"] / image_plan["dockerfile"]}"'
             + f' "{workspace_directory / image_plan["context"]}"'
@@ -194,7 +204,9 @@ def get_digest(ref: str):
 
 
 ImageOption = Option(None, "--image", "--images", "-i", help="Image name; can be repeated.")
-AllOption = Option(False, "--all", "-all", help="Select all images in images.json")
+AllOption = Option(False, "--all", help="Select all images in images.json")
+PlanOption = Option(None, "--plan", help="Path to a plan JSON file (dict keyed by image name).")
+CacheTypeOption = Option("registry", "--cache-type", help="Type of cache to use when building images.")
 
 app = Typer()
 
@@ -206,14 +218,23 @@ def plan(images: Optional[list[str]] = ImageOption, all_: Optional[bool] = AllOp
 
 
 @app.command()
-def lock(image: list[str] = ImageOption, all_: bool = AllOption):
-    images_lock, plan = create_plan(image, all_)
-    lock_images(images_lock, plan)
+def lock(
+    images: Optional[list[str]] = ImageOption,
+    all_: bool = AllOption,
+    plan_path: Optional[str] = PlanOption,
+    cache_type: str = CacheTypeOption,
+):
+    if plan_path:
+        if not Path(plan_path).is_file():
+            raise FileNotFoundError(f"{plan_path} not found")
 
+        with open(plan_path) as plan_file, open(images_lock_path) as images_lock_file:
+            plan = TypeAdapter(dict[str, FirstPartyPlan | ThirdPartyPlan]).validate_python(json.load(plan_file))
+            images_lock = TypeAdapter(dict[str, ImageLock]).validate_python(json.load(images_lock_file))
+    else:
+        images_lock, plan = create_plan(images, all_)
 
-@app.command()
-def digest(image: str):
-    print(get_digest(image) or "Image not found")
+    lock_images(images_lock, plan, cache_type)
 
 
 if __name__ == "__main__":
