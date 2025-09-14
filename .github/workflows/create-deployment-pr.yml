@@ -94,6 +94,7 @@ jobs:
           set -euo pipefail
           cd scripts
           uv run --locked src/build.py plan --all --output plan.json
+          echo Plan:
           jq . plan.json
 
       - name: Upload plan
@@ -145,6 +146,7 @@ jobs:
         run: |
           set -euo pipefail
           jq -c --arg name '${{ matrix }}' '{($name): .[$name]}' plan.json > image-plan.json
+          echo "Image plan for ${{ matrix }}:"
           jq . image-plan.json
 
       - name: Lock image
@@ -152,6 +154,7 @@ jobs:
           set -euo pipefail
           cd scripts
           uv run --locked src/build.py lock --plan image-plan.json --cache-type gha > ${{ matrix }}-image-lock.json
+          echo "Image lock for ${{ matrix }}:"
           jq . ${{ matrix }}-image-lock.json
 
       - name: Upload lock snippet
@@ -201,11 +204,15 @@ jobs:
           merge-multiple: true
           path: .lock-snippets
 
-      # - name: Build image-lock.json
-      #   run: |
-      #     jq -s 'reduce .[] as $i ({}; . * $i)' .lock-snippets/*.json > infra/image-lock.json
-      #     echo "Final lock file:"
-      #     cat infra/image-lock.json
+      - name: Build image-lock.json
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          files=(.lock-snippets/*.json)
+          ((${#files[@]})) || { echo "No snippets; skipping."; exit 0; }
+          jq -S -s 'add' <(cat infra/image-lock.json 2>/dev/null || echo '{}') "${files[@]}" \
+            > infra/image-lock.json
 
       - name: Create / update Deploy PR
         uses: peter-evans/create-pull-request@v6
