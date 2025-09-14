@@ -148,7 +148,7 @@ jobs:
           set -euo pipefail
           jq -c --arg name '${{ matrix.name }}' '{($name): .[$name]}' plan.json > scripts/image-plan.json
           echo "Image plan for ${{ matrix.name }}:"
-          jq . image-plan.json
+          jq . scripts/image-plan.json
 
       - name: Lock image
         run: |
