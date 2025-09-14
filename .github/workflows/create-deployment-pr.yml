@@ -50,6 +50,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
+
       - name: Setup Pulumi
         uses: pulumi/setup-pulumi@v2
 
@@ -107,6 +115,14 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
+
+      - name: Setup UV
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: |
+            **/pyproject.toml
+            **/uv.lock
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
