@@ -27,15 +27,12 @@ jobs:
   prepare:
     runs-on: ubuntu-latest
 
-    outputs:
-      sha_tag: ${{ steps.prepare.outputs.sha_tag }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with: { fetch-depth: 0 }
 
-      - name: Ensure remote deploy branch exists, create git sha tag
+      - name: Ensure remote deploy branch exists
         id: prepare
         run: |
           set -euo pipefail
@@ -43,7 +40,6 @@ jobs:
             git checkout -B bot/deploy origin/main
             git push origin bot/deploy
           fi
-          echo "sha_tag=git-$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
   plan:
     runs-on: ubuntu-latest
@@ -87,7 +83,8 @@ jobs:
         id: plan
         run: |
           set -euo pipefail
-          uv run --no-sync scripts/scr/build.py plan --all > plan.json
+          cd scripts
+          uv run --no-sync src/build.py plan --all --output plan.json
           jq . plan.json
 
       - name: Upload plan
@@ -136,7 +133,8 @@ jobs:
       - name: Lock image
         run: |
           set -euo pipefail
-          uv run --no-sync scripts/src/build.py lock --plan image-plan.json --cache-type gha > ${{ matrix }}-image-lock.json
+          cd scripts
+          uv run --no-sync src/build.py lock --plan image-plan.json --cache-type gha > ${{ matrix }}-image-lock.json
           jq . ${{ matrix }}-image-lock.json
 
       - name: Upload lock snippet

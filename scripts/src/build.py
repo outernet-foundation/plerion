@@ -112,7 +112,7 @@ def create_image_plan(
         run_command(f"git add -A -- {quoted_paths_string}", env=environment, cwd=workspace_directory)
         tree_sha = run_command("git write-tree", env=environment, cwd=workspace_directory).strip()
         # temp nonce
-        tree_sha += "0"
+        tree_sha += "4"
 
     # If the image is already locked to this tree SHA, skip it
     if image_lock is not None and tree_sha == next(
@@ -130,15 +130,23 @@ def create_image_plan(
     }
 
 
-def lock_images(images_lock: dict[str, ImageLock], plan: dict[str, FirstPartyPlan | ThirdPartyPlan], cache_type: str):
+def lock_images(
+    images_lock: dict[str, ImageLock],
+    plan: dict[str, FirstPartyPlan | ThirdPartyPlan],
+    cache_type: str,
+    output_path: Path | None = None,
+):
     git_sha = run_command("git rev-parse --short HEAD", cwd=workspace_directory).strip()
 
     for image_name, image_plan in plan.items():
         print(f"Processing image: {image_name}")
         images_lock[image_name] = lock_image(image_name, image_plan, git_sha, cache_type)
 
-    print(f"Writing {images_lock_path}")
-    with images_lock_path.open("w", encoding="utf-8") as file:
+    if output_path is None:
+        output_path = images_lock_path
+
+    print(f"Writing {output_path}")
+    with output_path.open("w", encoding="utf-8") as file:
         json.dump(images_lock, file, indent=2)
 
 
@@ -162,7 +170,7 @@ def lock_image(
     else:
         print(f"Building and pushing image: {image_name}")
         cache_type_extra: str = ""
-        if cache_type == "registery":
+        if cache_type == "registry":
             cache_type_extra += f"ref={image_plan['image_repo_url']}"
         elif cache_type != "gha":
             cache_type_extra += f"scope={image_name}"
@@ -204,17 +212,22 @@ def get_digest(ref: str):
 
 
 ImageOption = Option(None, "--image", "--images", "-i", help="Image name; can be repeated.")
-AllOption = Option(False, "--all", help="Select all images in images.json")
-PlanOption = Option(None, "--plan", help="Path to a plan JSON file (dict keyed by image name).")
-CacheTypeOption = Option("registry", "--cache-type", help="Type of cache to use when building images.")
+AllOption = Option(False, "--all", "-a", help="Select all images in images.json")
+PlanOption = Option(None, "--plan", "-p", help="Path to a plan JSON file (dict keyed by image name).")
+CacheTypeOption = Option("registry", "--cache-type", "-c", help="Type of cache to use when building images.")
+OutputPathOption = Option("--output", "-o", help="Path to write the images-lock.json file.")
 
 app = Typer()
 
 
 @app.command()
-def plan(images: Optional[list[str]] = ImageOption, all_: Optional[bool] = AllOption):
+def plan(
+    images: Optional[list[str]] = ImageOption, all_: Optional[bool] = AllOption, plan_path: str = OutputPathOption
+):
     _, plan = create_plan(images, all_)
-    print(json.dumps(plan, indent=2))
+
+    with open(plan_path, "w") as plan_file:
+        json.dump(plan, plan_file, indent=2)
 
 
 @app.command()
@@ -223,6 +236,7 @@ def lock(
     all_: bool = AllOption,
     plan_path: Optional[str] = PlanOption,
     cache_type: str = CacheTypeOption,
+    output_path: Optional[Path] = OutputPathOption,
 ):
     if plan_path:
         if not Path(plan_path).is_file():
@@ -234,7 +248,7 @@ def lock(
     else:
         images_lock, plan = create_plan(images, all_)
 
-    lock_images(images_lock, plan, cache_type)
+    lock_images(images_lock, plan, cache_type, output_path)
 
 
 if __name__ == "__main__":
