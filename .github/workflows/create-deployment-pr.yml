@@ -93,7 +93,7 @@ jobs:
         run: |
           set -euo pipefail
           cd scripts
-          uv run --no-sync src/build.py plan --all --output plan.json
+          uv run --locked src/build.py plan --all --output plan.json
           jq . plan.json
 
       - name: Upload plan
@@ -151,7 +151,7 @@ jobs:
         run: |
           set -euo pipefail
           cd scripts
-          uv run --no-sync src/build.py lock --plan image-plan.json --cache-type gha > ${{ matrix }}-image-lock.json
+          uv run --locked src/build.py lock --plan image-plan.json --cache-type gha > ${{ matrix }}-image-lock.json
           jq . ${{ matrix }}-image-lock.json
 
       - name: Upload lock snippet
@@ -192,8 +192,7 @@ jobs:
         env:
           PICCOLO_CONF: src.db.local_conf
         run: |
-          uv sync --frozen
-          uv run piccolo migrations new all --auto --auto_input=y || true
+          uv run --locked piccolo migrations new all --auto --auto_input=y || true
 
       - name: Download lock snippets
         uses: actions/download-artifact@v4
@@ -202,11 +201,11 @@ jobs:
           merge-multiple: true
           path: .lock-snippets
 
-      - name: Build image-lock.json
-        run: |
-          jq -s 'reduce .[] as $i ({}; . * $i)' .lock-snippets/*.json > infra/image-lock.json
-          echo "Final lock file:"
-          cat infra/image-lock.json
+      # - name: Build image-lock.json
+      #   run: |
+      #     jq -s 'reduce .[] as $i ({}; . * $i)' .lock-snippets/*.json > infra/image-lock.json
+      #     echo "Final lock file:"
+      #     cat infra/image-lock.json
 
       - name: Create / update Deploy PR
         uses: peter-evans/create-pull-request@v6
