@@ -146,7 +146,7 @@ jobs:
       - name: Extract image plan
         run: |
           set -euo pipefail
-          jq -c --arg name '${{ matrix.name }}' '{($name): .[$name]}' plan.json > image-plan.json
+          jq -c --arg name '${{ matrix.name }}' '{($name): .[$name]}' plan.json > scripts/image-plan.json
           echo "Image plan for ${{ matrix.name }}:"
           jq . image-plan.json
 
