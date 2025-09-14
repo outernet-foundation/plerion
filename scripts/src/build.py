@@ -241,7 +241,7 @@ def lock(
     cache_type: str = CacheTypeOption,
     output_path: Optional[Path] = LockOutputPathOption,
 ):
-    if images is None and not all_:
+    if images is None and not all_ and plan_path is None:
         raise ValueError("One of '--images', '--all', or '--plan' must be provided")
 
     if plan_path:
