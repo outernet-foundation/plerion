@@ -86,9 +86,6 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      # - name: Setup Docker Buildx
-      #   uses: docker/setup-buildx-action@v3
-
       - name: Create plan
         id: plan
         run: |
@@ -98,7 +95,7 @@ jobs:
           cd scripts
           uv run --locked src/build.py plan --all --output plan.json
           
-          # Echo plan for logging
+          # Echo plan json for logging
           echo Plan:
           jq . plan.json
 
@@ -149,9 +146,6 @@ jobs:
       - name: Login to Amazon ECR
         uses: aws-actions/amazon-ecr-login@v2
 
-      # - name: Setup Docker Buildx
-      #   uses: docker/setup-buildx-action@v3
-
       - name: Download plan
         uses: actions/download-artifact@v4
         with:
@@ -160,15 +154,26 @@ jobs:
       - name: Extract image plan
         run: |
           set -euo pipefail
+
+          # Extract plan for this image
           jq -c --arg name '${{ matrix.name }}' '{($name): .[$name]}' plan.json > scripts/image-plan.json
+
+          # Echo plan json for logging
           echo "Image plan for ${{ matrix.name }}:"
           jq . scripts/image-plan.json
 
       - name: Lock image
         run: |
           set -euo pipefail
+          
+          # Use Buildx 'docker-container' (not default 'docker') so --cache-to/--cache-from type=gha works.
+          docker buildx create --use --driver docker-container
+
+          # Lock image
           cd scripts
           uv run --locked src/build.py lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
+
+          # Echo lock json for logging
           echo "Image lock for ${{ matrix.name }}:"
           jq . ${{ matrix.name }}-image-lock.json
 
