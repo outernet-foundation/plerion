@@ -14,6 +14,7 @@ from components.secret import Secret
 from components.vpc import Vpc
 from services.auth_gateway import AuthGateway
 from services.cloudbeaver import Cloudbeaver
+from services.database_manager import DatabaseManager
 from services.tailscale_beacon import TailscaleBeacon
 
 
@@ -125,7 +126,7 @@ def create_core_stack(config: Config):
         cookie_secret_secret_arn=auth_gateway.cookie_secret_secret_arn,
     )
 
-    Cloudbeaver(
+    cloudbeaver = Cloudbeaver(
         resource_name="cloudbeaver",
         config=config,
         zone_name=zone.name,
@@ -137,6 +138,18 @@ def create_core_stack(config: Config):
         prepare_deploy_role=main_prepare_deploy_role,
         deploy_role=main_deploy_role,
         oauth=oauth,
+    )
+
+    DatabaseManager(
+        resource_name="database-manager",
+        config=config,
+        vpc=vpc,
+        efs=cloudbeaver.efs,
+        rds=rds,
+        ecs_cluster_arn=cluster.arn,
+        cloudbeaver_service_arn=cloudbeaver.service_arn,
+        prepare_deploy_role=main_prepare_deploy_role,
+        deploy_role=main_deploy_role,
     )
 
     TailscaleBeacon(

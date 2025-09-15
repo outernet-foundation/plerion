@@ -1,8 +1,6 @@
 from pulumi import ComponentResource, Config, Input, Output, ResourceOptions
 from pulumi_aws.cloudwatch import LogGroup
 from pulumi_aws.ecs import Cluster
-from pulumi_aws.efs import AccessPoint
-from pulumi_aws.lambda_ import Function
 from pulumi_aws.route53 import Record
 from pulumi_awsx.ecs import FargateService
 
@@ -13,7 +11,7 @@ from components.oauth import Oauth
 from components.rds import RDSInstance
 from components.repository import Repository
 from components.role import Role
-from components.roles import ecs_execution_role, ecs_role, lambda_role
+from components.roles import ecs_execution_role, ecs_role
 from components.secret import Secret
 from components.security_group import SecurityGroup
 from components.vpc import Vpc
@@ -64,11 +62,9 @@ class Cloudbeaver(ComponentResource):
         cloudbeaver_image_repo = Repository(
             "cloudbeaver-image-repo", name="dockerhub/dbeaver/cloudbeaver", opts=self._child_opts
         )
-        database_manager_repo = Repository(
-            "database-manager-image-repo", name="database-manager", opts=self._child_opts
-        )
+
         prepare_deploy_role.allow_image_repo_actions(
-            "cloudbeaver", [initialize_cloudbeaver_image_repo, cloudbeaver_image_repo, database_manager_repo]
+            "cloudbeaver", [initialize_cloudbeaver_image_repo, cloudbeaver_image_repo]
         )
 
         # Load balancer
@@ -90,7 +86,7 @@ class Cloudbeaver(ComponentResource):
         )
 
         # EFS
-        efs = EFS("cloudbeaver-efs", vpc=vpc, opts=self._child_opts)
+        self.efs = EFS("cloudbeaver-efs", vpc=vpc, opts=self._child_opts)
 
         # Security group
         cloudbeaver_security_group = SecurityGroup(
@@ -99,7 +95,7 @@ class Cloudbeaver(ComponentResource):
             vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
             rules=[
                 {"from_security_group": self.load_balancer.security_group, "ports": [4181]},
-                {"to_security_group": efs.security_group, "ports": [2049]},
+                {"to_security_group": self.efs.security_group, "ports": [2049]},
                 {"to_security_group": rds.security_group, "ports": [5432]},
             ],
             opts=self._child_opts,
@@ -139,6 +135,8 @@ class Cloudbeaver(ComponentResource):
         # Task role
         task_role = ecs_role("cloudbeaver-task-role", opts=self._child_opts)
 
+        self.service_arn: Output[str] | None = None
+
         if config.require_bool("deploy-cloudbeaver"):
             # Service
             cloudbeaver_service = FargateService(
@@ -157,7 +155,7 @@ class Cloudbeaver(ComponentResource):
                         {
                             "name": "efs",
                             "efs_volume_configuration": {
-                                "file_system_id": efs.id,
+                                "file_system_id": self.efs.id,
                                 "transit_encryption": "ENABLED",
                                 "root_directory": "/",
                             },
@@ -203,79 +201,10 @@ class Cloudbeaver(ComponentResource):
                 opts=self._child_opts,
             )
 
+            self.service_arn = cloudbeaver_service.service.arn
+
             deploy_role.allow_service_deployment(
                 "cloudbeaver", passroles=[execution_role, task_role], services=[cloudbeaver_service.service]
             )
 
-            # Database management Lambdas
-
-            # Security group
-            database_management_security_group = SecurityGroup(
-                "database-management-security-group",
-                vpc=vpc,
-                vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
-                rules=[
-                    {"to_security_group": efs.security_group, "ports": [2049]},
-                    {"to_security_group": rds.security_group, "ports": [5432]},
-                ],
-                opts=self._child_opts,
-            )
-
-            # EFS Access Point
-            # Can I omit the creation stuff and the posix user stuff? maybe?
-            efs_access_point = AccessPoint(
-                "database-management-efs-access-point",
-                file_system_id=efs.id,
-                posix_user={"uid": 1000, "gid": 1000},
-                root_directory={
-                    "path": "/opt/cloudbeaver/workspace",
-                    "creation_info": {"owner_uid": 1000, "owner_gid": 1000, "permissions": "0775"},
-                },
-                opts=self._child_opts,
-            )
-
-            # Role
-            database_management_role = lambda_role("cloudbeaver-lambda-role", opts=self._child_opts)
-            database_management_role.allow_secret_get("cloudbeaver-lambda-secrets", [rds.password_secret])
-            # role.allow_service_deployment() ? needs to be able to bounce cloudbeaver
-
-            if config.require_bool("deploy-database-manager"):
-                log_group = LogGroup(
-                    "database-manager-log-group",
-                    name="/aws/lambda/database-manager",
-                    retention_in_days=14,
-                    opts=self._child_opts,
-                )
-
-                function = Function(
-                    "database-manager-function",
-                    name="database-manager",
-                    package_type="Image",
-                    image_uri=database_manager_repo.locked_digest(),
-                    role=database_management_role.arn,
-                    timeout=900,
-                    memory_size=512,
-                    vpc_config={
-                        "security_group_ids": [database_management_security_group.id],
-                        "subnet_ids": vpc.private_subnet_ids,
-                    },
-                    file_system_config={"arn": efs_access_point.arn, "local_mount_path": "/mnt/efs"},
-                    environment={
-                        "variables": {
-                            "BACKEND": "aws",
-                            "POSTGRES_HOST": rds.address,
-                            "POSTGRES_ADMIN_USER": config.require("postgres-user"),
-                            "POSTGRES_ADMIN_PASSWORD_SECRET_ARN": rds.password_secret.arn,
-                            "ECS_CLUSTER_ARN": cluster.arn,
-                            "CLOUDBEAVER_SERVICE_ARN": cloudbeaver_service.service.arn,
-                            "POSTGRES_PASSWORD_VERSION_": rds.password_secret.version_id,
-                        }
-                    },
-                    opts=ResourceOptions.merge(
-                        self._child_opts, ResourceOptions(depends_on=[log_group, database_management_security_group])
-                    ),
-                )
-
-                deploy_role.allow_lambda_deployment(resource_name, [function])
-
-        self.register_outputs({})
+        self.register_outputs({"service_arn": self.service_arn})
