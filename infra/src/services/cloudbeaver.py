@@ -64,7 +64,9 @@ class Cloudbeaver(ComponentResource):
         cloudbeaver_image_repo = Repository(
             "cloudbeaver-image-repo", name="dockerhub/dbeaver/cloudbeaver", opts=self._child_opts
         )
-        database_manager_repo = Repository("database-manager", name="database-manager", opts=self._child_opts)
+        database_manager_repo = Repository(
+            "database-manager-image-repo", name="database-manager", opts=self._child_opts
+        )
         prepare_deploy_role.allow_image_repo_actions(
             "cloudbeaver", [initialize_cloudbeaver_image_repo, cloudbeaver_image_repo, database_manager_repo]
         )
@@ -237,19 +239,19 @@ class Cloudbeaver(ComponentResource):
             database_management_role.allow_secret_get("cloudbeaver-lambda-secrets", [rds.password_secret])
             # role.allow_service_deployment() ? needs to be able to bounce cloudbeaver
 
-            def DatabaseManagementLambda(resource_name: str, name: str, image_repo: Repository):
+            if config.require_bool("deploy-database-manager"):
                 log_group = LogGroup(
-                    f"{resource_name}-log-group",
-                    name=f"/aws/lambda/{name}",
+                    "database-manager-log-group",
+                    name="/aws/lambda/database-manager",
                     retention_in_days=14,
                     opts=self._child_opts,
                 )
 
                 function = Function(
-                    resource_name,
-                    name=name,
+                    "database-manager-function",
+                    name="database-manager",
                     package_type="Image",
-                    image_uri=image_repo.locked_digest(),
+                    image_uri=database_manager_repo.locked_digest(),
                     role=database_management_role.arn,
                     timeout=900,
                     memory_size=512,
@@ -266,7 +268,7 @@ class Cloudbeaver(ComponentResource):
                             "POSTGRES_ADMIN_PASSWORD_SECRET_ARN": rds.password_secret.arn,
                             "ECS_CLUSTER_ARN": cluster.arn,
                             "CLOUDBEAVER_SERVICE_ARN": cloudbeaver_service.service.arn,
-                            "_POSTGRES_PASSWORD_VERSION": rds.password_secret.version_id,
+                            "POSTGRES_PASSWORD_VERSION_": rds.password_secret.version_id,
                         }
                     },
                     opts=ResourceOptions.merge(
@@ -275,8 +277,5 @@ class Cloudbeaver(ComponentResource):
                 )
 
                 deploy_role.allow_lambda_deployment(resource_name, [function])
-
-            if config.require_bool("deploy-database-manager"):
-                DatabaseManagementLambda("database-manager-lambda", "database-manager", database_manager_repo)
 
         self.register_outputs({})

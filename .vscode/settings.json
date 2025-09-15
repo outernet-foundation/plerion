@@ -32,6 +32,10 @@
   "python.experiments.enabled": false,
   "python.experiments.optOutFrom": ["All"],
   "basedpyright.analysis.diagnosticMode": "workspace",
+  "basedpyright.analysis.inlayHints.callArgumentNames": false,
+  "basedpyright.analysis.inlayHints.variableTypes": false,
+  "basedpyright.analysis.inlayHints.functionReturnTypes": false,
+  "basedpyright.analysis.typeCheckingMode": "strict",
   "emeraldwalk.runonsave": {
     "commands": [
       {

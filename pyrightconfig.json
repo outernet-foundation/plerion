@@ -1,7 +1,7 @@
 {
   "pythonVersion": "3.13",
   "typeCheckingMode": "strict",
-  "exclude": ["**/.venv/**", "**/__pycache__/**", "**/node_modules/**"],
+  "exclude": ["**/.venv/**", "**/clients/**"],
   "include": [
     "common",
     "scripts",
@@ -25,6 +25,9 @@
     {
       "root": "scripts",
       "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
         "scripts/.venv/Lib/site-packages",
         "scripts/.venv/lib/python3.13/site-packages"
       ]
@@ -32,6 +35,9 @@
     {
       "root": "infra",
       "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
         "infra/.venv/Lib/site-packages",
         "infra/.venv/lib/python3.13/site-packages"
       ]
@@ -39,7 +45,8 @@
     {
       "root": "services/api",
       "extraPaths": [
-        "common/.venv/Lib/site-packages",
+        "common/src",
+        "common/.venv/lib/site-packages",
         "common/.venv/lib/python3.13/site-packages",
         "services/api/.venv/Lib/site-packages",
         "services/api/.venv/lib/python3.13/site-packages"
@@ -48,6 +55,9 @@
     {
       "root": "services/automigrator",
       "extraPaths": [
+        "common/src",
+        "common/.venv/lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
         "services/automigrator/.venv/Lib/site-packages",
         "services/automigrator/.venv/lib/python3.13/site-packages"
       ]
@@ -55,6 +65,7 @@
     {
       "root": "services/database-manager",
       "extraPaths": [
+        "common/src",
         "common/.venv/Lib/site-packages",
         "common/.venv/lib/python3.13/site-packages",
         "services/database-manager/.venv/Lib/site-packages",
@@ -64,6 +75,7 @@
     {
       "root": "tasks/delete-database",
       "extraPaths": [
+        "common/src",
         "common/.venv/Lib/site-packages",
         "common/.venv/lib/python3.13/site-packages",
         "tasks/delete-database/.venv/Lib/site-packages",
@@ -73,6 +85,9 @@
     {
       "root": "tasks/run-reconstruction",
       "extraPaths": [
+        "common/src",
+        "common/.venv/Lib/site-packages",
+        "common/.venv/lib/python3.13/site-packages",
         "tasks/run-reconstruction/.venv/Lib/site-packages",
         "tasks/run-reconstruction/.venv/lib/python3.13/site-packages"
       ]
@@ -94,6 +109,7 @@
     {
       "root": "capture-app/zed",
       "extraPaths": [
+        "common/src",
         "common/.venv/Lib/site-packages",
         "common/.venv/lib/python3.13/site-packages",
         "capture-app/zed/typings",
