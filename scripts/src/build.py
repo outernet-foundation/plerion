@@ -59,6 +59,7 @@ def create_plan(images: Optional[list[str]] = None, all_: Optional[bool] = False
     # Get Pulumi stack outputs for selected images
     stacks: dict[str, dict[str, str]] = {}
     for stack in {img["stack"] for img in selected_images.values()}:
+        print(f"Getting Pulumi stack outputs for stack: {stack}")
         stacks[stack] = json.loads(
             run_command(f"pulumi stack output --stack {shlex.quote(stack)} --json", cwd=infrastructure_directory)
         )
@@ -105,13 +106,13 @@ def create_image_plan(
         )
         run_command(f"git add -A -- {quoted_paths_string}", env=environment, cwd=workspace_directory)
         tree_sha = run_command("git write-tree", env=environment, cwd=workspace_directory).strip()
-        # temp nonce
-        tree_sha += "16"
+        print(f"Computed tree SHA for image {image_name}: {tree_sha}")
 
     # If the image is already locked to this tree SHA, skip it
     if image_lock is not None and tree_sha == next(
         (tag[5:] for tag in image_lock["tags"] if tag.startswith("tree-")), None
     ):
+        print(f"Image {image_name} is already locked to tree SHA {tree_sha}")
         return
 
     return image_name, {
@@ -137,8 +138,12 @@ def lock_images(
     else:
         images_lock = {}
 
+    if plan == {}:
+        print("Nothing to lock")
+        return
+
     for image_name, image_plan in plan.items():
-        print(f"Processing image: {image_name}")
+        print(f"Locking image: {image_name}")
         images_lock[image_name] = lock_image(image_name, image_plan, git_sha, cache_type)
 
     print(f"Writing {output_path}")

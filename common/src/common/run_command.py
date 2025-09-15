@@ -4,16 +4,17 @@ from shlex import split
 from subprocess import PIPE, STDOUT, CalledProcessError, Popen, run
 
 
-def run_command(command: str, cwd: Path | None = None, env: dict[str, str] | None = None):
-    print(f"Running command: {command}")
+def run_command(command: str, cwd: Path | None = None, env: dict[str, str] | None = None, log: bool = False) -> str:
+    if log:
+        print(f"Running command: {command}")
 
     try:
         process = run(split(command, posix=True), cwd=cwd, env=env, check=True, text=True, capture_output=True)
         if process.returncode != 0:
             raise CalledProcessError(process.returncode, command, output=process.stdout, stderr=process.stderr)
-        if process.stdout:
+        if process.stdout and log:
             print(process.stdout)
-        if process.stderr:
+        if process.stderr and log:
             print(process.stderr)
         return process.stdout
     except CalledProcessError as e:
