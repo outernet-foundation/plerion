@@ -100,9 +100,9 @@ def create_core_stack(config: Config):
 
     NatInstance("main-nat", vpc=vpc)
 
-    rds = RDSInstance("cloudbeaver-rds", config=config, vpc=vpc)
+    rds = RDSInstance("rds", config=config, vpc=vpc)
 
-    cluster = Cluster("core-tooling-cluster")
+    cluster = Cluster("core-cluster")
 
     auth_gateway = AuthGateway(
         resource_name="auth-gateway",

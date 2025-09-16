@@ -12,9 +12,8 @@ from psycopg import sql
 
 from .settings import Settings, get_settings
 
-# EFS is mounted at /mnt/efs for the Lambda; the access point root is /opt/cloudbeaver/workspace
-# so the GlobalConfiguration path lives directly under /mnt/efs.
-data_sources_path = Path("/mnt/efs/GlobalConfiguration/.dbeaver/data-sources.json")
+workspace_directory = Path("/mnt/efs")
+data_sources_path = workspace_directory / "GlobalConfiguration/.dbeaver/data-sources.json"
 
 
 def main(event: Dict[str, Any], _context: Any):
@@ -50,7 +49,8 @@ def main(event: Dict[str, Any], _context: Any):
 
         if op == "create":
             _create_database(name=name, password=password, settings=settings)
-        elif op == "update":
+        else:
+            assert op == "update"
             _update_database(name=name, password=password, settings=settings)
     else:
         assert op == "delete"
@@ -76,7 +76,7 @@ def _create_database(*, name: str, password: str, settings: Settings) -> None:
             )
             cursor.execute(sql.SQL("CREATE DATABASE {} OWNER {}").format(sql.Identifier(name), sql.Identifier(name)))
 
-    _update_cloudbeaver_data_sources(name=name, password=password, settings=settings)
+    _update_cloudbeaver(name=name, password=password, settings=settings)
 
 
 def _update_database(*, name: str, password: str, settings: Settings) -> None:
@@ -91,8 +91,7 @@ def _update_database(*, name: str, password: str, settings: Settings) -> None:
         # Update role password
         cursor.execute(sql.SQL("ALTER ROLE {} WITH PASSWORD {}").format(sql.Identifier(name), sql.Literal(password)))
 
-    # Update data source with new password
-    _update_cloudbeaver_data_sources(name=name, password=password, settings=settings)
+    _update_cloudbeaver(name=name, password=password, settings=settings)
 
     # Terminate old sessions for role so new password is enforced immediately
     with postgres_cursor(
@@ -109,8 +108,7 @@ def _update_database(*, name: str, password: str, settings: Settings) -> None:
 
 
 def _delete_database(*, name: str, settings: Settings) -> None:
-    # Remove data source
-    _update_cloudbeaver_data_sources(name=name, password=None, settings=settings)
+    _update_cloudbeaver(name=name, password=None, settings=settings)
 
     # Drop database and role
     with postgres_cursor(
@@ -120,7 +118,7 @@ def _delete_database(*, name: str, settings: Settings) -> None:
         cursor.execute(sql.SQL("DROP ROLE {}").format(sql.Identifier(name)))
 
 
-def _update_cloudbeaver_data_sources(*, name: str, password: str | None, settings: Settings) -> None:
+def _update_cloudbeaver(*, name: str, password: str | None, settings: Settings) -> None:
     with data_sources_path.open("r", encoding="utf-8") as fh:
         data = json.load(fh)
 
@@ -161,7 +159,8 @@ def _update_cloudbeaver_data_sources(*, name: str, password: str | None, setting
             time.sleep(2)
         raise RuntimeError("CloudBeaver did not become running (docker) in time")
 
-    elif settings.backend == "aws":
+    else:
+        assert settings.backend == "aws"
         assert settings.ecs_cluster_arn is not None
         ecs = create_ecs_client()
         ecs.update_service(
@@ -173,5 +172,3 @@ def _update_cloudbeaver_data_sources(*, name: str, password: str | None, setting
             services=[settings.cloudbeaver_service_id],
             WaiterConfig={"Delay": 5, "MaxAttempts": 120},
         )
-    else:
-        raise RuntimeError(f"Unknown backend: {settings.backend}")

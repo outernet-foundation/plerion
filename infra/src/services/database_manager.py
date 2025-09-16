@@ -60,7 +60,7 @@ class DatabaseManager(ComponentResource):
             file_system_id=efs.id,
             posix_user={"uid": 1000, "gid": 1000},
             root_directory={
-                "path": "/opt/cloudbeaver/workspace",
+                "path": "/",
                 "creation_info": {"owner_uid": 1000, "owner_gid": 1000, "permissions": "0775"},
             },
             opts=self._child_opts,
