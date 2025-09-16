@@ -1,302 +1,284 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading;
+using System.Linq;
+
 using UnityEngine;
 using UnityEngine.UI;
-using R3;
+
 using Cysharp.Threading.Tasks;
-using System.Threading;
 using TMPro;
-using System.Collections.Generic;
-using System.Linq;
-using Unity.VisualScripting;
-using PlerionClient.Client;
 using PlerionClient.Api;
 
-public class Capture
+using FofX;
+using FofX.Stateful;
+using Nessle;
+using ObserveThing;
+using static Nessle.UIBuilder;
+using static PlerionClient.Client.UIPresets;
+
+namespace PlerionClient.Client
 {
-    public enum Mode
+    public class CaptureController : MonoBehaviour
     {
-        Local,
-        Zed
-    }
+        public Canvas canvas;
+        [SerializeField][Range(0, 5)] float captureIntervalSeconds = 0.5f;
 
-    public Guid Id { get; set; }
-    public string Name { get; set; }
-    public Mode Type { get; set; }
-    public CaptureRow Row { get; set; }
-    public IDisposable disposables { get; set; }
-}
+        private CapturesApi capturesApi;
+        private IControl ui;
+        private TaskHandle currentCaptureTask = TaskHandle.Complete;
 
-public class CaptureController : MonoBehaviour
-{
-    private enum Environment
-    {
-        Local,
-        Remote
-    }
+        private string localCaptureNamePath => $"{Application.persistentDataPath}/LocalCaptureNames.json";
 
-    enum CaptureState
-    {
-        Idle,
-        Starting,
-        Capturing,
-        Stopping
-    }
-
-    enum UploadState
-    {
-        NotUploaded,
-        Uploading,
-        Uploaded,
-        Errored
-    }
-
-    public Button startStopButton;
-    public TMP_Text startStopButtonText;
-    public TMP_Dropdown captureMode;
-    public RectTransform capturesTable;
-    public RectTransform captureRowPrefab;
-
-    [SerializeField][Range(0, 5)] float captureIntervalSeconds = 0.5f;
-
-    private static Environment environment = Environment.Local;
-
-    static private QueueSynchronizationContext context = new QueueSynchronizationContext();
-    private ObservableProperty<CaptureState> captureStatus = new ObservableProperty<CaptureState>(context, CaptureState.Idle);
-    private List<Capture> captures;
-    private IDisposable disposables;
-    private CapturesApi capturesApi;
-
-    void Awake()
-    {
-        var temp = Application.streamingAssetsPath;
-
-        var plerionAPIBaseUrl = environment switch
+        void Awake()
         {
-            Environment.Local => "https://tyler-ms-7e12-api.outernetfoundation.org",
-            Environment.Remote => "https://api.outernetfoundation.org",
-            _ => throw new ArgumentOutOfRangeException(nameof(environment), environment, null)
-        };
+            capturesApi = new CapturesApi(new Configuration { BasePath = App.state.plerionAPIBaseUrl.value });
 
-        capturesApi = new CapturesApi(new Configuration
-        {
-            BasePath = plerionAPIBaseUrl
-        });
+            DefaultButtonStyle = StyleButton;
+            DefaultScrollbarStyle = StyleScrollBar;
+            DefaultInputFieldStyle = StyleInputField;
+            DefaultTextStyle = StyleText;
+            DefaultScrollRectStyle = StyleScrollRect;
+            DefaultDropdownStyle = StyleDropdown;
+            DefaultSliderStyle = StyleSlider;
 
-        ZedCaptureController.Initialize();
-        UpdateCaptureList().Forget();
+            ui = ConstructUI(canvas);
 
-        captureMode.options.Clear();
-        foreach (var mode in Enum.GetValues(typeof(Capture.Mode)))
-        {
-            captureMode.options.Add(new TMP_Dropdown.OptionData(mode.ToString()));
+            App.RegisterObserver(HandleCaptureStatusChanged, App.state.captureStatus);
+            App.RegisterObserver(HandleCapturesChanged, App.state.captures);
         }
 
-        var captureModeEventStream = captureMode
-            .OnValueChangedAsObservable()
-            .Select(index => (Capture.Mode)index)
-            .DistinctUntilChanged();
-
-        var captureControlEventStream = startStopButton
-            .OnClickAsObservable()
-            .WithLatestFrom(captureModeEventStream, (_, captureMode) => captureMode)
-            .WithLatestFrom(captureStatus, (captureMode, captureState) => (captureMode, captureState));
-
-        disposables = Disposable.Combine(
-
-            captureStatus
-                .Subscribe(state => startStopButtonText.text = state switch
-                {
-                    CaptureState.Idle => "Start Capture",
-                    CaptureState.Starting => "Starting...",
-                    CaptureState.Capturing => "Stop Capture",
-                    CaptureState.Stopping => "Stopping...",
-                    _ => throw new ArgumentOutOfRangeException(nameof(state), state, null)
-                }),
-
-            captureStatus
-                .Select(state =>
-                    state == CaptureState.Idle || state == CaptureState.Capturing)
-                .Subscribe(isIdleOrCapturing => startStopButton.interactable = isIdleOrCapturing),
-
-            captureStatus
-                .Select(state =>
-                    state == CaptureState.Idle)
-                .Subscribe(isIdle => captureMode.interactable = isIdle),
-
-            captureStatus
-                .Where(state =>
-                    state is CaptureState.Idle)
-                .Skip(1) // Skip the initial state
-                .SubscribeAwait(UpdateCaptureList),
-
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (_, CaptureState.Starting or CaptureState.Stopping))
-                .Subscribe(_ => Debug.LogError("Impossible!")),
-
-            captureModeEventStream
-                .WithLatestFrom(captureStatus, (mode, state) => (mode, state))
-                .Where(@event =>
-                    @event is (_, CaptureState.Starting or CaptureState.Stopping))
-                .Subscribe(_ => Debug.LogError("Impossible!")),
-
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Local, CaptureState.Idle))
-                .SubscribeAwait(StartLocalCapture),
-
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Local, CaptureState.Capturing))
-                .Subscribe(StopLocalCapture),
-
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Zed, CaptureState.Idle))
-                .SubscribeAwait(StartZedCapture),
-
-            captureControlEventStream
-                .Where(@event =>
-                    @event is (Capture.Mode.Zed, CaptureState.Capturing))
-                .SubscribeAwait(StopZedCapture)
-        );
-    }
-
-    void OnDestroy()
-    {
-        disposables?.Dispose();
-        disposables = null;
-    }
-
-    private async UniTask StartLocalCapture(CancellationToken cancellationToken)
-    {
-        captureStatus.EnqueueSet(CaptureState.Starting);
-        await LocalCaptureController.StartCapture(cancellationToken, captureIntervalSeconds);
-        captureStatus.EnqueueSet(CaptureState.Capturing);
-    }
-
-    private void StopLocalCapture()
-    {
-        captureStatus.EnqueueSet(CaptureState.Stopping);
-        LocalCaptureController.StopCapture();
-        captureStatus.EnqueueSet(CaptureState.Idle);
-    }
-
-    private async UniTask StartZedCapture(CancellationToken cancellationToken)
-    {
-        captureStatus.EnqueueSet(CaptureState.Starting);
-        await ZedCaptureController.StartCapture(captureIntervalSeconds, cancellationToken);
-        captureStatus.EnqueueSet(CaptureState.Capturing);
-    }
-
-    private async UniTask StopZedCapture(CancellationToken cancellationToken)
-    {
-        captureStatus.EnqueueSet(CaptureState.Stopping);
-        await ZedCaptureController.StopCapture(cancellationToken);
-        captureStatus.EnqueueSet(CaptureState.Idle);
-    }
-
-    [Serializable]
-    class CaptureUploadRequest
-    {
-        public string filename { get; set; }
-    }
-
-    async UniTask UpdateCaptureList(CancellationToken cancellationToken = default)
-    {
-        try
+        void OnDestroy()
         {
-            // Clear captures table
-            if (captures != null)
-            {
-                foreach (var capture in captures)
-                {
-                    capture.disposables.Dispose();
-                    Destroy(capture.Row.gameObject);
-                }
-            }
+            ui.Dispose();
+            currentCaptureTask.Cancel();
+        }
 
-            var localCaptures = LocalCaptureController
-                .GetCaptures()
-                .Select(id => new Capture
-                {
-                    Id = id,
-                    Name = id.ToString(),
-                    Type = Capture.Mode.Local
-                });
-
-            IEnumerable<Capture> zedCaptures;
-            try
+        private void HandleCaptureStatusChanged(NodeChangeEventArgs args)
+        {
+            switch (App.state.captureStatus.value)
             {
-                zedCaptures = (await ZedCaptureController
-                    .GetCaptures())
-                    .Select(id => new Capture
+                case CaptureStatus.Idle:
+                    UpdateCaptureList().Forget();
+                    break;
+
+                case CaptureStatus.Starting:
+                    currentCaptureTask = TaskHandle.Execute(async token =>
                     {
-                        Id = id,
-                        Name = id.ToString(),
-                        Type = Capture.Mode.Zed
+                        await StartCapture(App.state.captureMode.value, token);
+                        App.state.ExecuteActionOrDelay(new SetCaptureStatusAction(CaptureStatus.Capturing));
                     });
-            }
-            catch (Exception e)
-            {
-                Debug.LogError($"Failed to get ZED captures: {e.Message}");
-                zedCaptures = Enumerable.Empty<Capture>();
-            }
+                    break;
 
-            captures = localCaptures.Concat(zedCaptures).ToList();
-
-            var capturesFromServer = await capturesApi.GetCapturesAsync(
-                captures.Select(c => c.Id).ToList());
-
-            var databaseCaptures = capturesFromServer
-                .ToList();
-
-            foreach (var capture in captures)
-            {
-                var gameObject = Instantiate(captureRowPrefab, capturesTable);
-                capture.Row = gameObject.GetComponent<CaptureRow>();
-                capture.Row.captureName.text = capture.Name;
-                capture.Row.captureType.text = capture.Type.ToString();
-
-                if (databaseCaptures.Select(capture => capture.Id).Contains(capture.Id))
-                {
-                    capture.Row.uploadButton.interactable = false;
-                    capture.Row.uploadButtonText.text = "Uploaded";
-                    capture.disposables = Disposable.Empty;
-                }
-                else
-                {
-                    capture.Row.uploadButton.interactable = true;
-                    capture.Row.uploadButtonText.text = "Upload";
-
-                    async UniTask UploadCapture(CancellationToken cancellationToken)
+                case CaptureStatus.Stopping:
+                    currentCaptureTask = TaskHandle.Execute(async token =>
                     {
-                        capture.Row.uploadButton.interactable = false;
-                        capture.Row.uploadButtonText.text = "Uploading";
-
-                        var response = await capturesApi.CreateCaptureAsync(new PlerionClient.Model.BodyCreateCapture(capture.Id, capture.Name));
-
-                        var captureData = capture.Type switch
-                        {
-                            Capture.Mode.Zed => await ZedCaptureController.GetCapture(capture.Id, cancellationToken),
-                            Capture.Mode.Local => await LocalCaptureController.GetCapture(capture.Id),
-                            _ => throw new ArgumentOutOfRangeException()
-                        };
-
-                        await capturesApi.UploadCaptureTarAsync(response.Id, captureData, cancellationToken);
-
-                        UpdateCaptureList().Forget();
-                    }
-
-                    capture.disposables = capture.Row.uploadButton.onClick
-                        .AsObservable()
-                        .SubscribeAwait(UploadCapture);
-                }
+                        await StopCapture(App.state.captureMode.value, token);
+                        App.state.ExecuteActionOrDelay(new SetCaptureStatusAction(CaptureStatus.Idle));
+                    });
+                    break;
             }
         }
-        catch (Exception e)
+
+        private void HandleCapturesChanged(NodeChangeEventArgs args)
         {
-            Debug.LogError($"Failed to update capture list: {e.Message}");
+            var json = new SimpleJSON.JSONObject();
+
+            foreach (var kvp in App.state.captures.Where(x => !x.Value.uploaded.value))
+                json[kvp.Key.ToString()] = kvp.Value.name.value;
+
+            File.WriteAllText(localCaptureNamePath, json.ToString());
         }
+
+        private async UniTask StopCapture(CaptureType captureType, CancellationToken cancellationToken = default)
+        {
+            switch (captureType)
+            {
+                case CaptureType.Local:
+                    LocalCaptureController.StopCapture();
+                    break;
+                case CaptureType.Zed:
+                    await ZedCaptureController.StopCapture(cancellationToken);
+                    break;
+                default:
+                    throw new Exception($"Unhandled capture type {captureType}");
+            }
+        }
+
+        private async UniTask StartCapture(CaptureType captureType, CancellationToken cancellationToken = default)
+        {
+            switch (captureType)
+            {
+                case CaptureType.Local:
+                    await LocalCaptureController.StartCapture(cancellationToken, captureIntervalSeconds);
+                    break;
+                case CaptureType.Zed:
+                    await ZedCaptureController.StartCapture(captureIntervalSeconds, cancellationToken);
+                    break;
+                default:
+                    throw new Exception($"Unhandled capture type {captureType}");
+            }
+        }
+
+        private async UniTask UpdateCaptureList()
+        {
+            Dictionary<Guid, string> captureNames = new Dictionary<Guid, string>();
+
+            if (File.Exists(localCaptureNamePath))
+            {
+                var data = File.ReadAllText(localCaptureNamePath);
+                var json = SimpleJSON.JSONNode.Parse(data);
+
+                foreach (var kvp in json)
+                    captureNames.Add(Guid.Parse(kvp.Key), kvp.Value);
+            }
+
+            var localCaptures = LocalCaptureController.GetCaptures().ToList();
+            var remoteCaptureList = await capturesApi.GetCapturesAsync(localCaptures);
+
+            var captureData = localCaptures.ToDictionary(x => x, x => remoteCaptureList.FirstOrDefault(y => y.Id == x));
+
+            // var captureData = new Dictionary<Guid, Model.CaptureModel>();
+
+            // for (int i = 0; i < 20; i++)
+            // {
+            //     var capture = new Model.CaptureModel(Guid.NewGuid(), i.ToString());
+            //     captureData.Add(capture.Id, capture);
+            // }
+
+            await UniTask.SwitchToMainThread();
+
+            App.state.captures.ExecuteActionOrDelay(
+                captureData,
+                (captures, state) =>
+                {
+                    state.SetFrom(
+                        captures,
+                        refreshOldEntries: true,
+                        copy: (key, remote, local) =>
+                        {
+                            if (remote == null) //capture is local only
+                            {
+                                local.name.value = captureNames.TryGetValue(key, out var name) ? name : null;
+                                local.type.value = CaptureType.Local;
+                                local.uploaded.value = false;
+                                return;
+                            }
+
+                            local.name.value = remote.Filename;
+                            local.type.value = CaptureType.Local;
+                            local.uploaded.value = true;
+                        }
+                    );
+                }
+            );
+        }
+
+        private async UniTask UploadCapture(Guid id, string name, CaptureType type, CancellationToken cancellationToken)
+        {
+            var response = await capturesApi.CreateCaptureAsync(new Model.BodyCreateCapture(id: id, filename: name));
+
+            if (type == CaptureType.Zed)
+            {
+                var captureData = await ZedCaptureController.GetCapture(id, cancellationToken);
+                await capturesApi.UploadCaptureTarAsync(response.Id, captureData, cancellationToken);
+            }
+            else if (type == CaptureType.Local)
+            {
+                var captureData = await LocalCaptureController.GetCapture(id);
+                await capturesApi.UploadCaptureTarAsync(response.Id, captureData, cancellationToken);
+            }
+
+            await UpdateCaptureList();
+        }
+
+        private IControl ConstructUI(Canvas canvas)
+        {
+            return new Control(canvas.gameObject).Children(SafeArea().FillParent().Children(
+                Image().FillParent().Color(UIResources.PanelColor),
+                VerticalLayout()
+                    .Style(x =>
+                    {
+                        x.childControlWidth.value = true;
+                        x.childControlHeight.value = true;
+                        x.childForceExpandWidth.value = true;
+                        x.spacing.value = 10;
+                        x.padding.value = new RectOffset(10, 10, 10, 10);
+                    })
+                    .FillParent()
+                    .Children(
+                        ScrollRect().Style(x => x.horizontal.value = false).FlexibleHeight(true).Content(
+                            VerticalLayout().FillParentWidth().FitContentVertical(ContentSizeFitter.FitMode.PreferredSize).Style(x =>
+                            {
+                                x.childForceExpandWidth.value = true;
+                                x.childControlWidth.value = true;
+                                x.childControlHeight.value = true;
+                                x.spacing.value = 10;
+                            }).Children(
+                                App.state.captures
+                                    .CreateDynamic(x => ConstructCaptureRow(x.Value).WithMetadata(x.Value.name))
+                                    .OrderByDynamic(x => x.metadata.AsObservable())
+                            )
+                        ),
+                        Row().Children(
+                            Button()
+                                .Interactable(App.state.captureStatus.SelectDynamic(x => x == CaptureStatus.Idle || x == CaptureStatus.Capturing))
+                                .Children(Text().Value(App.state.captureStatus.SelectDynamic(x =>
+                                    x switch
+                                    {
+                                        CaptureStatus.Idle => "Start Capture",
+                                        CaptureStatus.Starting => "Starting...",
+                                        CaptureStatus.Capturing => "Stop Capture",
+                                        CaptureStatus.Stopping => "Stopping...",
+                                        _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
+                                    }
+                                )))
+                                .OnClick(() =>
+                                {
+                                    if (App.state.captureStatus.value == CaptureStatus.Idle)
+                                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Starting));
+                                    else if (App.state.captureStatus.value == CaptureStatus.Capturing)
+                                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Stopping));
+                                }),
+                            Dropdown()
+                                .PreferredWidth(100)
+                                .PreferredHeight(29.65f)
+                                .Options(Enum.GetNames(typeof(CaptureType)))
+                                .Interactable(App.state.captureStatus.SelectDynamic(x => x == CaptureStatus.Idle))
+                                .BindValue(App.state.captureMode, x => (CaptureType)x, x => (int)x)
+                        )
+                    )
+            ));
+        }
+
+        private IControl<LayoutProps> ConstructCaptureRow(CaptureState capture)
+        {
+            return Row().Children(
+                EditableLabel()
+                    .MinHeight(25)
+                    .FlexibleWidth(true)
+                    .BindValue(
+                        capture.name,
+                        x => IsDefaultRowLabel(x, capture.id) ? null : x,
+                        x => string.IsNullOrEmpty(x) ? DefaultRowLabel(capture.id) : x
+                    ),
+                Text()
+                    .Value(capture.type)
+                    .MinHeight(25)
+                    .PreferredWidth(100),
+                Button()
+                    .Interactable(capture.uploaded.AsObservable().SelectDynamic(x => !x))
+                    .PreferredWidth(100)
+                    .Children(Text().Style(x => x.style.alignment.value = TextAlignmentOptions.CaplineGeoAligned).Value(capture.uploaded.SelectDynamic(x => x ? "Uploaded" : "Upload")))
+                    .OnClick(() => UploadCapture(capture.id, capture.name.value ?? capture.id.ToString(), capture.type.value, default).Forget())
+            );
+        }
+
+        private string DefaultRowLabel(Guid id)
+            => $"<i>Unnamed [{id}]";
+
+        private bool IsDefaultRowLabel(string source, Guid id)
+            => source == DefaultRowLabel(id);
     }
 }
