@@ -30,6 +30,9 @@
     {
       "path": "common",
       "name": "common"
+    },
+    {
+      "path": "client"
     }
   ],
   "settings": {
@@ -60,7 +63,7 @@
       "editor.defaultFormatter": "esbenp.prettier-vscode"
     },
     "editor.formatOnSave": true,
-    "dotnet.defaultSolution": "capture-app/android_mobile/android_mobile.sln",
+    "dotnet.defaultSolution": "Outernet.sln",
     "python.terminal.activateEnvironment": true,
     "python.languageServer": "Pylance",
     "python.analysis.languageServerMode": "default",
@@ -70,7 +73,7 @@
         {
           // match either src/routers/*.py OR src/db/tables/*.py
           "match": ".*src[/\\\\](routers|db[/\\\\]tables)[/\\\\].*\\.py$",
-          "cmd": "export CODEGEN=1 && uv run -m src.clients.generate",
+          "cmd": "set CODEGEN=1 && uv run -m src.clients.generate",
           "message": "🔄 Generating C# client…",
           "messageAfter": "✅ Done generating C# client"
         }

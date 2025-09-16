@@ -290,10 +290,41 @@
       }
     },
     "/nodes": {
+      "post": {
+        "summary": "Create Node",
+        "operationId": "create_node",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NodeModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
-        "tags": [
-          "nodes"
-        ],
         "summary": "Get Nodes",
         "operationId": "get_nodes",
         "parameters": [
@@ -346,19 +377,30 @@
             }
           }
         }
-      },
-      "post": {
-        "tags": [
-          "nodes"
+      }
+    },
+    "/nodes/{id}": {
+      "put": {
+        "summary": "Update Node",
+        "operationId": "update_node",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
         ],
-        "summary": "Create Node",
-        "operationId": "create_node",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Body_create_node"
+                "$ref": "#/components/schemas/NodeModel"
               }
             }
           }
@@ -368,8 +410,95 @@
             "description": "Successful Response",
             "content": {
               "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
                 "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nodes/upsert": {
+      "put": {
+        "summary": "Upsert Nodes",
+        "description": "Bulk upsert nodes.\n- If a node has an id and exists \u2192 update it.\n- If a node has an id but doesn't exist \u2192 insert it.\n- If a node has no id \u2192 generate a new UUID and insert it.",
+        "operationId": "upsert_nodes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
                   "$ref": "#/components/schemas/NodeModel"
+                },
+                "type": "array",
+                "title": "Nodes"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/nodes/": {
+      "delete": {
+        "summary": "Delete Nodes",
+        "operationId": "delete_nodes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "title": "Ids"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": "array",
+                  "title": "Response Delete Nodes"
                 }
               }
             }
@@ -387,13 +516,100 @@
         }
       }
     },
-    "/nodes/{id}": {
+    "/groups": {
+      "post": {
+        "summary": "Create Group",
+        "operationId": "create_group",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "get": {
-        "tags": [
-          "nodes"
+        "summary": "Get Groups",
+        "operationId": "get_groups",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional list of Ids to filter by",
+              "title": "Ids"
+            },
+            "description": "Optional list of Ids to filter by"
+          }
         ],
-        "summary": "Get Node",
-        "operationId": "get_node",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/GroupModel"
+                  },
+                  "title": "Response Get Groups"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{id}": {
+      "put": {
+        "summary": "Update Group",
+        "operationId": "update_group",
         "parameters": [
           {
             "name": "id",
@@ -406,13 +622,564 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GroupModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/upsert": {
+      "put": {
+        "summary": "Upsert Groups",
+        "description": "Bulk upsert groups.\n- If a group has an id and exists \u2192 update it.\n- If a group has an id but doesn't exist \u2192 insert it.\n- If a group has no id \u2192 generate a new UUID and insert it.",
+        "operationId": "upsert_groups",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/GroupModel"
+                },
+                "type": "array",
+                "title": "Groups"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/": {
+      "delete": {
+        "summary": "Delete Groups",
+        "operationId": "delete_groups",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "title": "Ids"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/NodeModel"
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": "array",
+                  "title": "Response Delete Groups"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/layers": {
+      "post": {
+        "summary": "Create Layer",
+        "operationId": "create_layer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayerModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get Layers",
+        "operationId": "get_layers",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional list of Ids to filter by",
+              "title": "Ids"
+            },
+            "description": "Optional list of Ids to filter by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LayerModel"
+                  },
+                  "title": "Response Get Layers"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/layers/{id}": {
+      "put": {
+        "summary": "Update Layer",
+        "operationId": "update_layer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LayerModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/layers/upsert": {
+      "put": {
+        "summary": "Upsert Layers",
+        "description": "Bulk upsert layers.\n- If a layer has an id and exists \u2192 update it.\n- If a layer has an id but doesn't exist \u2192 insert it.\n- If a layer has no id \u2192 generate a new UUID and insert it.",
+        "operationId": "upsert_layers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/LayerModel"
+                },
+                "type": "array",
+                "title": "Layers"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/layers/": {
+      "delete": {
+        "summary": "Delete Layers",
+        "operationId": "delete_layers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "title": "Ids"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": "array",
+                  "title": "Response Delete Layers"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps": {
+      "post": {
+        "summary": "Create Localizationmap",
+        "operationId": "create_localizationMap",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalizationMapModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Get Localizationmaps",
+        "operationId": "get_localizationMaps",
+        "parameters": [
+          {
+            "name": "ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional list of Ids to filter by",
+              "title": "Ids"
+            },
+            "description": "Optional list of Ids to filter by"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LocalizationMapModel"
+                  },
+                  "title": "Response Get Localizationmaps"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps/{id}": {
+      "put": {
+        "summary": "Update Localizationmap",
+        "operationId": "update_localizationMap",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalizationMapModel"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps/upsert": {
+      "put": {
+        "summary": "Upsert Localizationmaps",
+        "description": "Bulk upsert localizationMaps.\n- If a localizationMap has an id and exists \u2192 update it.\n- If a localizationMap has an id but doesn't exist \u2192 insert it.\n- If a localizationMap has no id \u2192 generate a new UUID and insert it.",
+        "operationId": "upsert_localizationMaps",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/LocalizationMapModel"
+                },
+                "type": "array",
+                "title": "Localizationmaps"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps/": {
+      "delete": {
+        "summary": "Delete Localizationmaps",
+        "operationId": "delete_localizationMaps",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "title": "Ids"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "type": "array",
+                  "title": "Response Delete Localizationmaps"
                 }
               }
             }
@@ -451,25 +1218,6 @@
           "filename"
         ],
         "title": "Body_create_capture"
-      },
-      "Body_create_node": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Id"
-          },
-          "filename": {
-            "type": "string",
-            "title": "Filename"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "filename"
-        ],
-        "title": "Body_create_node"
       },
       "CaptureModel": {
         "properties": {
@@ -530,6 +1278,54 @@
         "title": "CaptureModel",
         "extra": {}
       },
+      "GroupModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "GroupModel",
+        "extra": {}
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -543,6 +1339,188 @@
         "type": "object",
         "title": "HTTPValidationError"
       },
+      "LayerModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "LayerModel",
+        "extra": {}
+      },
+      "LocalizationMapModel": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "title": "Name",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "lighting": {
+            "type": "integer",
+            "title": "Lighting",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "color": {
+            "type": "integer",
+            "title": "Color",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "positionX": {
+            "type": "number",
+            "title": "Positionx",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "positionY": {
+            "type": "number",
+            "title": "Positiony",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "positionZ": {
+            "type": "number",
+            "title": "Positionz",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationX": {
+            "type": "number",
+            "title": "Rotationx",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationY": {
+            "type": "number",
+            "title": "Rotationy",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationZ": {
+            "type": "number",
+            "title": "Rotationz",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationW": {
+            "type": "number",
+            "title": "Rotationw",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "points": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points",
+            "extra": {
+              "dimensions": 1,
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "active",
+          "lighting",
+          "color",
+          "positionX",
+          "positionY",
+          "positionZ",
+          "rotationX",
+          "rotationY",
+          "rotationZ",
+          "rotationW"
+        ],
+        "title": "LocalizationMapModel",
+        "extra": {}
+      },
       "NodeModel": {
         "properties": {
           "id": {
@@ -555,27 +1533,17 @@
               "unique": false
             }
           },
-          "filename": {
+          "name": {
             "type": "string",
             "maxLength": 255,
-            "title": "Filename",
-            "extra": {
-              "nullable": false,
-              "secret": false,
-              "unique": true
-            }
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At",
+            "title": "Name",
             "extra": {
               "nullable": false,
               "secret": false,
               "unique": false
             }
           },
-          "uploaded_at": {
+          "created_at": {
             "anyOf": [
               {
                 "type": "string",
@@ -585,7 +1553,227 @@
                 "type": "null"
               }
             ],
-            "title": "Uploaded At",
+            "title": "Created At",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "positionX": {
+            "type": "number",
+            "title": "Positionx",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "positionY": {
+            "type": "number",
+            "title": "Positiony",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "positionZ": {
+            "type": "number",
+            "title": "Positionz",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationX": {
+            "type": "number",
+            "title": "Rotationx",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationY": {
+            "type": "number",
+            "title": "Rotationy",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationZ": {
+            "type": "number",
+            "title": "Rotationz",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "rotationW": {
+            "type": "number",
+            "title": "Rotationw",
+            "extra": {
+              "nullable": false,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "labelType": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labeltype",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "linkType": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Linktype",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "link": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 255
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Link",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "labelScale": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labelscale",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "labelWidth": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labelwidth",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "labelHeight": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Labelheight",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "parent": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent",
+            "extra": {
+              "nullable": true,
+              "secret": false,
+              "unique": false
+            }
+          },
+          "layer": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Layer",
             "extra": {
               "nullable": true,
               "secret": false,
@@ -596,8 +1784,15 @@
         "type": "object",
         "required": [
           "id",
-          "filename",
-          "created_at"
+          "name",
+          "active",
+          "positionX",
+          "positionY",
+          "positionZ",
+          "rotationX",
+          "rotationY",
+          "rotationZ",
+          "rotationW"
         ],
         "title": "NodeModel",
         "extra": {}

@@ -130,9 +130,26 @@ Class | Method | HTTP request | Description
 *CapturesApi* | [**GetCapture**](docs/CapturesApi.md#getcapture) | **GET** /captures/{id} | Get Capture
 *CapturesApi* | [**GetCaptures**](docs/CapturesApi.md#getcaptures) | **GET** /captures | Get Captures
 *CapturesApi* | [**UploadCaptureTar**](docs/CapturesApi.md#uploadcapturetar) | **PUT** /captures/{id}/tar | Upload Capture Tar
-*NodesApi* | [**CreateNode**](docs/NodesApi.md#createnode) | **POST** /nodes | Create Node
-*NodesApi* | [**GetNode**](docs/NodesApi.md#getnode) | **GET** /nodes/{id} | Get Node
-*NodesApi* | [**GetNodes**](docs/NodesApi.md#getnodes) | **GET** /nodes | Get Nodes
+*DefaultApi* | [**CreateGroup**](docs/DefaultApi.md#creategroup) | **POST** /groups | Create Group
+*DefaultApi* | [**CreateLayer**](docs/DefaultApi.md#createlayer) | **POST** /layers | Create Layer
+*DefaultApi* | [**CreateLocalizationMap**](docs/DefaultApi.md#createlocalizationmap) | **POST** /localizationMaps | Create Localizationmap
+*DefaultApi* | [**CreateNode**](docs/DefaultApi.md#createnode) | **POST** /nodes | Create Node
+*DefaultApi* | [**DeleteGroups**](docs/DefaultApi.md#deletegroups) | **DELETE** /groups/ | Delete Groups
+*DefaultApi* | [**DeleteLayers**](docs/DefaultApi.md#deletelayers) | **DELETE** /layers/ | Delete Layers
+*DefaultApi* | [**DeleteLocalizationMaps**](docs/DefaultApi.md#deletelocalizationmaps) | **DELETE** /localizationMaps/ | Delete Localizationmaps
+*DefaultApi* | [**DeleteNodes**](docs/DefaultApi.md#deletenodes) | **DELETE** /nodes/ | Delete Nodes
+*DefaultApi* | [**GetGroups**](docs/DefaultApi.md#getgroups) | **GET** /groups | Get Groups
+*DefaultApi* | [**GetLayers**](docs/DefaultApi.md#getlayers) | **GET** /layers | Get Layers
+*DefaultApi* | [**GetLocalizationMaps**](docs/DefaultApi.md#getlocalizationmaps) | **GET** /localizationMaps | Get Localizationmaps
+*DefaultApi* | [**GetNodes**](docs/DefaultApi.md#getnodes) | **GET** /nodes | Get Nodes
+*DefaultApi* | [**UpdateGroup**](docs/DefaultApi.md#updategroup) | **PUT** /groups/{id} | Update Group
+*DefaultApi* | [**UpdateLayer**](docs/DefaultApi.md#updatelayer) | **PUT** /layers/{id} | Update Layer
+*DefaultApi* | [**UpdateLocalizationMap**](docs/DefaultApi.md#updatelocalizationmap) | **PUT** /localizationMaps/{id} | Update Localizationmap
+*DefaultApi* | [**UpdateNode**](docs/DefaultApi.md#updatenode) | **PUT** /nodes/{id} | Update Node
+*DefaultApi* | [**UpsertGroups**](docs/DefaultApi.md#upsertgroups) | **PUT** /groups/upsert | Upsert Groups
+*DefaultApi* | [**UpsertLayers**](docs/DefaultApi.md#upsertlayers) | **PUT** /layers/upsert | Upsert Layers
+*DefaultApi* | [**UpsertLocalizationMaps**](docs/DefaultApi.md#upsertlocalizationmaps) | **PUT** /localizationMaps/upsert | Upsert Localizationmaps
+*DefaultApi* | [**UpsertNodes**](docs/DefaultApi.md#upsertnodes) | **PUT** /nodes/upsert | Upsert Nodes
 *ReconstructionsApi* | [**CreateReconstruction**](docs/ReconstructionsApi.md#createreconstruction) | **POST** /reconstructions | Create Reconstruction
 
 
@@ -140,9 +157,11 @@ Class | Method | HTTP request | Description
 ## Documentation for Models
 
  - [Model.BodyCreateCapture](docs/BodyCreateCapture.md)
- - [Model.BodyCreateNode](docs/BodyCreateNode.md)
  - [Model.CaptureModel](docs/CaptureModel.md)
+ - [Model.GroupModel](docs/GroupModel.md)
  - [Model.HTTPValidationError](docs/HTTPValidationError.md)
+ - [Model.LayerModel](docs/LayerModel.md)
+ - [Model.LocalizationMapModel](docs/LocalizationMapModel.md)
  - [Model.NodeModel](docs/NodeModel.md)
  - [Model.ValidationError](docs/ValidationError.md)
  - [Model.ValidationErrorLocInner](docs/ValidationErrorLocInner.md)

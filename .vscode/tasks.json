@@ -2,6 +2,27 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Regenerate Solution",
+      "type": "shell",
+      "command": "powershell",
+      "problemMatcher": [],
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/generate-sln.ps1"
+      ],
+      "presentation": {
+        "reveal": "never",
+        "focus": false,
+        "panel": "dedicated",
+        "close": true
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
       "label": "uv sync all Python projects",
       "type": "shell",
       "command": "python",
