@@ -13,6 +13,7 @@ from services.github_runner import GithubRunner
 
 def create_dev_stack(config: Config):
     core_stack = StackReference("tyler-s-hatch/plerion_infra/core")
+    database_manager_function_arn = core_stack.require_output("database-manager-function-arn")
     zone_name = core_stack.require_output("zone-name")
     zone_id = core_stack.require_output("zone-id")
     certificate_arn = core_stack.require_output("certificate-arn")
@@ -51,6 +52,7 @@ def create_dev_stack(config: Config):
     Api(
         resource_name="api",
         config=config,
+        database_manager_function_arn=database_manager_function_arn,
         zone_id=zone_id,
         zone_name=zone_name,
         certificate_arn=certificate_arn,

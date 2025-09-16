@@ -4,6 +4,7 @@ runtime:
   name: python
   options:
     toolchain: uv
+    virtualenv: ../.venv
 config:
   pulumi:tags:
     value:

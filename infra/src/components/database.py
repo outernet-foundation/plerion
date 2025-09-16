@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict, Optional
 
 from common.boto_clients import create_lambda_client
-from pulumi import Input, Output, ResourceOptions
+from pulumi import Input, ResourceOptions
 from pulumi.dynamic import CreateResult, DiffResult, Resource, ResourceProvider, UpdateResult
 
 
@@ -45,10 +45,6 @@ class _DatabaseProvider(ResourceProvider):
 
 
 class Database(Resource):
-    function_arn: Output[str]
-    name: Output[str]
-    password_secret_arn: Output[str]
-
     def __init__(
         self,
         resource_name: str,

@@ -7,6 +7,7 @@ from pulumi_awsx.ecs import FargateService
 
 from components.batch_job_definition import BatchJobDefinition
 from components.batch_job_environment import BatchJobEnvironment
+from components.database import Database
 from components.load_balancer import LoadBalancer
 from components.log import log_configuration
 from components.repository import Repository
@@ -22,6 +23,7 @@ class Api(ComponentResource):
         self,
         resource_name: str,
         config: Config,
+        database_manager_function_arn: Input[str],
         zone_id: Input[str],
         zone_name: Input[str],
         certificate_arn: Input[str],
@@ -43,9 +45,16 @@ class Api(ComponentResource):
         # Log groups
         api_log_group = LogGroup("api-log-group", name="/ecs/api", retention_in_days=7, opts=self._child_opts)
 
-        # Secrets
-        postgres_password_secret = Secret(
-            "postgres-password", secret_string=config.require_secret("postgres-password"), opts=self._child_opts
+        # Database
+        api_database_user = config.require("api-database-user")
+        api_database_password_secret = Secret(
+            "api-database-password", secret_string=config.require_secret("api-database-password"), opts=self._child_opts
+        )
+        database = Database(
+            "api-database",
+            database_manager_function_arn=database_manager_function_arn,
+            name=api_database_user,
+            password_secret_arn=api_database_password_secret.arn,
         )
 
         # Image repos
@@ -121,7 +130,7 @@ class Api(ComponentResource):
 
         # Execution role
         execution_role = ecs_execution_role("api-execution-role", opts=self._child_opts)
-        execution_role.allow_secret_get("api-secrets", [postgres_password_secret])
+        execution_role.allow_secret_get("api-secrets", [api_database_password_secret])
 
         # Task role
         task_role = ecs_role("api-task-role", opts=self._child_opts)
@@ -148,23 +157,26 @@ class Api(ComponentResource):
                         "port_mappings": [
                             {"container_port": 8000, "host_port": 8000, "target_group": load_balancer.target_group}
                         ],
-                        "secrets": [{"name": "POSTGRES_PASSWORD", "value_from": postgres_password_secret.arn}],
+                        "secrets": [{"name": "API_DATABASE_PASSWORD", "value_from": api_database_password_secret.arn}],
                         "environment": [
                             {"name": "BACKEND", "value": "aws"},
-                            {"name": "POSTGRES_USER", "value": "api"},
-                            {"name": "POSTGRES_HOST", "value": rds_address},
+                            {"name": "API_DATABASE_USER", "value": "api"},
+                            {"name": "API_DATABASE_HOST", "value": rds_address},
                             {"name": "JOB_QUEUE_ARN", "value": batch_job_environment.job_queue_arn},
                             {
                                 "name": "RECONSTRUCTION_JOB_DEFINITION_ID",
                                 "value": reconstruction_batch_job_definition.arn_prefix,
                             },
                             {"name": "FEATURES_JOB_DEFINITION_ID", "value": features_batch_job_definition.arn_prefix},
-                            {"name": "_POSTGRES_PASSWORD_VERSION", "value": postgres_password_secret.version_id},
+                            {
+                                "name": "_API_DATABASE_PASSWORD_VERSION",
+                                "value": api_database_password_secret.version_id,
+                            },
                         ],
                     }
                 },
             },
-            opts=self._child_opts,
+            opts=ResourceOptions.merge(self._child_opts, ResourceOptions(depends_on=[database])),
         )
 
         # Allow service deployment

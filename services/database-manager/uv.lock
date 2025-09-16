@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.13"
 
 [[package]]
@@ -113,7 +113,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "boto3-stubs", extras = ["batch", "ecs", "secretsmanager", "s3"], specifier = ">=1.40.29" },
+    { name = "boto3-stubs", extras = ["batch", "ecs", "secretsmanager", "s3", "lambda"], specifier = ">=1.40.29" },
     { name = "types-docker", specifier = ">=7.1.0.20250907" },
 ]
 

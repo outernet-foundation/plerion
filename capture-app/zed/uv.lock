@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.13"
 
 [[package]]
@@ -134,7 +134,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "boto3-stubs", extras = ["batch", "ecs", "secretsmanager", "s3"], specifier = ">=1.40.29" },
+    { name = "boto3-stubs", extras = ["batch", "ecs", "secretsmanager", "s3", "lambda"], specifier = ">=1.40.29" },
     { name = "types-docker", specifier = ">=7.1.0.20250907" },
 ]
 
@@ -607,7 +607,7 @@ requires-dist = [
     { name = "common", editable = "../../common" },
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "openapi-generator-cli", specifier = ">=7.14.0" },
-    { name = "pyzed", marker = "python_full_version == '3.13.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'", index = "file:///home/tyler/Repos/plerion/capture-app/zed/third-party/pyzed" },
+    { name = "pyzed", marker = "python_full_version == '3.13.*' and platform_machine == 'aarch64' and platform_python_implementation == 'CPython' and sys_platform == 'linux'", index = "file:///C:/Users/tyler/repos/plerion/capture-app/zed/third-party/pyzed" },
     { name = "scipy", specifier = ">=1.16.1" },
     { name = "uvicorn", specifier = ">=0.35.0" },
 ]
