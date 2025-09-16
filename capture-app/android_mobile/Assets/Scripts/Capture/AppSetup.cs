@@ -11,6 +11,8 @@ namespace PlerionClient.Client
 
         private void Awake()
         {
+            Application.targetFrameRate = 120;
+
             gameObject.AddComponent<App>();
             var plerionAPIBaseUrl = overridePlerionAPIBaseURL ?
                 plerionAPIBaseURL : "https://api.outernetfoundation.org";

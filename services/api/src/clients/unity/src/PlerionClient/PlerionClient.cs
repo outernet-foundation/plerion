@@ -7,7 +7,7 @@ namespace PlerionClient.Client
     // to allow for following redirects, as those endpoints redirect to presigned URLs.
     public partial class ApiClient
     {
-        public void InterceptRequest(HttpRequestMessage req)
+        partial void InterceptRequest(HttpRequestMessage req)
         {
             if (req.Method == HttpMethod.Put &&
                 req.RequestUri != null &&

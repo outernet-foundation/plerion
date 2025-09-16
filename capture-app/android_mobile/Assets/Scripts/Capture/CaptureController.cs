@@ -147,32 +147,30 @@ namespace PlerionClient.Client
             //     captureData.Add(capture.Id, capture);
             // }
 
+            await UniTask.SwitchToMainThread();
+
             App.state.captures.ExecuteActionOrDelay(
                 captureData,
                 (captures, state) =>
                 {
                     state.SetFrom(
                         captures,
+                        refreshOldEntries: true,
                         copy: (key, remote, local) =>
                         {
-                            // if (remote == null) //capture is local only
-                            // {
-                            local.name.value = captureNames.TryGetValue(key, out var name) ? name : null;
-                            local.type.value = CaptureType.Local;
-                            local.uploaded.value = false;
-                            return;
-                            // }
+                            if (remote == null) //capture is local only
+                            {
+                                local.name.value = captureNames.TryGetValue(key, out var name) ? name : null;
+                                local.type.value = CaptureType.Local;
+                                local.uploaded.value = false;
+                                return;
+                            }
 
                             local.name.value = remote.Filename;
                             local.type.value = CaptureType.Local;
                             local.uploaded.value = true;
                         }
                     );
-                    var key = Guid.Parse("494ea91b-453e-4795-9265-2cb35b836f78");
-                    var reloaded = state.Add(key);
-                    reloaded.name.value = captureNames.TryGetValue(key, out var name) ? name : null;
-                    reloaded.type.value = CaptureType.Local;
-                    reloaded.uploaded.value = false;
                 }
             );
         }
