@@ -1,27 +1,67 @@
 # Wrappers for some Piccolo functionality to provide type signatures that pass strict Pyright checks
 
-from typing import Any, Dict, Tuple, Type, TypeVar
+from typing import Any, Dict, Self, Tuple, Type, TypeVar, Union, cast
 
-from piccolo.columns import Column
+from piccolo.columns.base import Column
+from piccolo.columns.combination import And, Or, WhereRaw  # for typing of where clauses
 from piccolo.engine.postgres import PostgresEngine as PiccoloPostgresEngine
-from piccolo.query import Exists, Objects
+from piccolo.query import Exists as _Exists
+from piccolo.query import Objects as _Objects
+from piccolo.query import Select as _Select
+from piccolo.query import Update as _Update
 from piccolo.table import Table as PiccoloTable
 from piccolo.utils.pydantic import (
-    create_pydantic_model as _create_pydantic_model,  # type: ignore[reportUnknownVariableType]
+    create_pydantic_model as _create_pydantic_model,  # type: ignore[import]
 )
 from pydantic import BaseModel, ConfigDict
 
 _TTable = TypeVar("_TTable", bound="Table")
 
 
+WhereExpr = Union[And, Or, WhereRaw, object]
+
+
+class Select(_Select[_TTable]):
+    def where(self, *where: WhereExpr) -> Self:
+        return super().where(*where)  # type: ignore[override]
+
+
+class Update(_Update[_TTable]):
+    def where(self, *where: WhereExpr) -> Self:
+        return super().where(*where)  # type: ignore[override]
+
+
+class Objects(_Objects[_TTable]):
+    def where(self, *where: WhereExpr) -> Self:
+        return super().where(*where)  # type: ignore[override]
+
+
+class Exists(_Exists[_TTable]):
+    def where(self, *where: WhereExpr) -> Self:
+        return super().where(*where)  # type: ignore[override]
+
+
 class Table(PiccoloTable):
     @classmethod
     def objects(cls: Type[_TTable], *prefetch: Any) -> Objects[_TTable]:
-        return super().objects(*prefetch)  # type: ignore[override]
+        return cast(Objects[_TTable], super().objects(*prefetch))  # type: ignore[override]
 
     @classmethod
     def exists(cls: Type[_TTable]) -> Exists[_TTable]:
-        return super().exists()  # type: ignore[override]
+        return cast(Exists[_TTable], super().exists())  # type: ignore[override]
+
+    @classmethod
+    def select(
+        cls: Type[_TTable], *columns: Any, exclude_secrets: bool = False
+    ) -> Select[_TTable]:
+        return cast(
+            Select[_TTable],
+            super().select(*columns, exclude_secrets=exclude_secrets),  # type: ignore[override]
+        )
+
+    @classmethod
+    def update(cls: Type[_TTable], *args: Any, **kwargs: Any) -> Update[_TTable]:
+        return cast(Update[_TTable], super().update(*args, **kwargs))  # type: ignore[override]
 
 
 def create_pydantic_model(

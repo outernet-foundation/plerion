@@ -1,16 +1,9 @@
-from typing import List, Optional, cast
+from typing import List, Optional
 from uuid import UUID, uuid4
 
 from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import ConfigDict
 
-from ..db.piccolo_shims import create_pydantic_model
-from ..db.tables.nodes import Node
-
-
-class NodeModel(create_pydantic_model(Node)):
-    model_config = ConfigDict(from_attributes=True)
-
+from ..db.tables.nodes import Node, NodeModel
 
 # ----------- Router -----------
 
@@ -20,8 +13,7 @@ router = APIRouter(prefix="/nodes")
 # CREATE
 @router.post("")
 async def create_node(node: NodeModel):
-    exists = await Node.exists().where(Node.id == node.id)  # type: ignore
-
+    exists = await Node.exists().where(Node.id == node.id)
     if exists:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -54,7 +46,7 @@ async def update_node(id: UUID, node: NodeModel):
     if not exists:
         raise HTTPException(status_code=404, detail="Node not found")
 
-    await Node.update(node.model_dump()).where(Node.id == id)  # type: ignore
+    await Node.update(node.model_dump()).where(Node.id == id)
     return await Node.objects().where(Node.id == id).first()
 
 
@@ -77,15 +69,15 @@ async def upsert_nodes(nodes: List[NodeModel]):
             data["id"] = node_id
 
         # Update or insert
-        exists = await Node.exists().where(Node.id == node_id)  # type: ignore
+        exists = await Node.exists().where(Node.id == node_id)
 
         if exists:
-            await Node.update(data).where(Node.id == node_id)  # type: ignore
+            await Node.update(data).where(Node.id == node_id)
         else:
             await Node.objects().create(**data)
 
         # Fetch the final row
-        row = cast(dict, await Node.objects().where(Node.id == node_id).first())  # type: ignore
+        row = await Node.objects().where(Node.id == node_id).first()
         if not row:
             raise HTTPException(
                 status_code=500,
@@ -101,7 +93,8 @@ async def delete_nodes(ids: List[UUID]):
         return ids
 
     # First fetch which ids actually exist
-    existing = await Node.select(Node.id).where(Node.id.is_in(ids))  # type: ignore
+    # existing = await Node.objects().where(Node.id.is_in(ids))
+    existing = await Node.select(Node.id).where(Node.id.is_in(ids))
     existing_ids = [str(row["id"]) for row in existing]
 
     if not existing_ids:
