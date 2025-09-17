@@ -4,8 +4,9 @@ using System.Linq;
 using UnityEngine;
 
 using FofX.Stateful;
-
-using Outernet.Client.Location;
+using RSG;
+using System.Threading.Tasks;
+using Cysharp.Threading.Tasks;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -17,6 +18,8 @@ namespace Outernet.Client.AuthoringTools
 
         private Dictionary<Guid, AuthoringToolsNode> _nodes = new Dictionary<Guid, AuthoringToolsNode>();
         private Dictionary<Guid, SceneMap> _maps = new Dictionary<Guid, SceneMap>();
+
+        private static Dictionary<Guid, TaskCompletionSource<GameObject>> _completionSources = new Dictionary<Guid, TaskCompletionSource<GameObject>>();
 
         private void Awake()
         {
@@ -35,17 +38,16 @@ namespace Outernet.Client.AuthoringTools
         private IDisposable SetupMap(MapState map)
         {
             var node = App.state.nodes[map.id];
-
-            var view = Instantiate(AuthoringToolsPrefabs.SceneMap, sceneRoot);
-            view.Setup(sceneObjectID: map.id, mapID: map.id);
-            view.AddBinding(
-                view.props.localPosition.From(node.localPosition),
-                view.props.localRotation.From(node.localRotation),
-                view.props.name.From(map.name),
-                view.props.bounds.From(node.localBounds),
-                view.props.color.From(map.color),
-                view.props.localInputImagePositions.Derive(
-                    _ => view.props.localInputImagePositions.SetValue(
+            var instance = Instantiate(AuthoringToolsPrefabs.SceneMap, sceneRoot);
+            instance.Setup(sceneObjectID: map.id, mapID: map.id);
+            instance.AddBinding(
+                instance.props.name.From(node.name),
+                instance.props.localPosition.BindTo(node.localPosition),
+                instance.props.localRotation.BindTo(node.localRotation),
+                instance.props.localBounds.From(node.localBounds),
+                instance.props.color.From(map.color),
+                instance.props.localInputImagePositions.Derive(
+                    _ => instance.props.localInputImagePositions.SetValue(
                         map.localInputImagePositions
                             .Where((x, i) => i % 3 == 0)
                             .Select(x => new Vector3(-(float)x.x, -(float)x.y, -(float)x.z))
@@ -57,8 +59,11 @@ namespace Outernet.Client.AuthoringTools
                 Bindings.OnRelease(() => _maps.Remove(map.id))
             );
 
-            _maps.Add(map.id, view);
-            return view;
+            _maps.Add(map.id, instance);
+
+            CompleteViewPromise(map.id, instance.gameObject);
+
+            return instance;
         }
 
         private IDisposable SetupExhibit(ExhibitState exhibit)
@@ -68,9 +73,10 @@ namespace Outernet.Client.AuthoringTools
                 uuid: node.id,
                 parent: sceneRoot,
                 bind: props => Bindings.Compose(
+                    props.parentID.BindTo(node.parentID),
                     props.localPosition.BindTo(node.localPosition),
                     props.localRotation.BindTo(node.localRotation),
-                    props.bounds.BindTo(node.localBounds),
+                    props.localBounds.BindTo(node.localBounds),
                     props.visible.From(node.visible),
                     props.link.From(exhibit.link),
                     props.linkType.From(exhibit.linkType),
@@ -91,7 +97,32 @@ namespace Outernet.Client.AuthoringTools
             );
 
             _nodes.Add(node.id, instance);
+
+            CompleteViewPromise(node.id, instance.gameObject);
+
             return instance;
+        }
+
+        private void CompleteViewPromise(Guid id, GameObject view)
+        {
+            if (!_completionSources.TryGetValue(id, out var completionSource))
+            {
+                completionSource = new TaskCompletionSource<GameObject>();
+                _completionSources.Add(id, completionSource);
+            }
+
+            completionSource.SetResult(view);
+        }
+
+        public static UniTask<GameObject> GetView(Guid id)
+        {
+            if (!_completionSources.TryGetValue(id, out var completionSource))
+            {
+                completionSource = new TaskCompletionSource<GameObject>();
+                _completionSources.Add(id, completionSource);
+            }
+
+            return completionSource.Task.AsUniTask();
         }
     }
 }

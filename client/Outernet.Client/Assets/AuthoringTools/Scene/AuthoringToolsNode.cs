@@ -9,12 +9,6 @@ namespace Outernet.Client.AuthoringTools
     {
         private void Update()
         {
-            if (transform.position != props.localPosition.value)
-                props.localPosition.ExecuteSet(transform.position);
-
-            if (transform.rotation != props.localRotation.value)
-                props.localRotation.ExecuteSet(transform.rotation);
-
             var prevMatrix = RuntimeGizmos.matrix;
             RuntimeGizmos.matrix = _currentView.transform.localToWorldMatrix;
             RuntimeGizmos.DrawCube(
@@ -38,15 +32,16 @@ namespace Outernet.Client.AuthoringTools
         public static AuthoringToolsNode Create(
             int nodeID = default,
             Guid uuid = default,
+            Guid? parentID = default,
+            Vector3 localPosition = default,
+            Quaternion? localRotation = default,
+            Bounds localBounds = default,
             string link = default,
             Shared.LinkType linkType = default,
             string label = default,
             Shared.LabelType labelType = default,
             float labelScale = default,
             Vector2 labelDimensions = default,
-            Vector3 position = default,
-            Quaternion? rotation = default,
-            Bounds bounds = default,
             bool visible = default,
             bool exhibitOpen = default,
             Vector3 exhibitPosition = default,
@@ -60,15 +55,16 @@ namespace Outernet.Client.AuthoringTools
             instance.InitializeAndBind(new NodeProps(
                 nodeID,
                 uuid,
+                parentID,
+                localPosition,
+                localRotation,
+                localBounds,
                 link,
                 linkType,
                 label,
                 labelType,
                 labelScale,
                 labelDimensions,
-                position,
-                rotation,
-                bounds,
                 visible,
                 exhibitOpen,
                 exhibitPosition,

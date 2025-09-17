@@ -22,9 +22,6 @@ namespace Outernet.Client
 
         static public void Initialize()
         {
-            LocalizedReferenceFrame.onTransformMatriciesChanged += () =>
-                App.ExecuteActionOrDelay(new SetEcefToLocalMatrixAction(LocalizedReferenceFrame.EcefToLocalTransform));
-
             subscriptions = Disposable.Combine(
                 App.State_Old.users.ObserveAdd().Subscribe(addEvent =>
                 {
@@ -79,7 +76,7 @@ namespace Outernet.Client
                 localPosition: node.localPosition.value,
                 localRotation: node.localRotation.value,
                 bind: props => Bindings.Compose(
-                    props.bounds.From(node.localBounds),
+                    props.localBounds.From(node.localBounds),
                     props.link.From(exhibit.link),
                     props.linkType.From(exhibit.linkType),
                     props.label.From(exhibit.label),

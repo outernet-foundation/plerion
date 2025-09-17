@@ -155,24 +155,29 @@ namespace Outernet.Client.AuthoringTools
             return primitive.value;
         }
 
-        public static LocalizationMapModel ToMapRecord(Guid sceneObjectID)
+        public static LocalizationMapModel ToMapRecord(Guid nodeID)
         {
-            var map = App.state.maps[sceneObjectID];
-            var transform = App.state.nodes[sceneObjectID];
+            var node = App.state.nodes[nodeID];
+            var map = App.state.maps[nodeID];
+            var ecef = Client.Utility.LocalToEcef(
+                App.state.localToEcefMatrix.value,
+                node.localPosition.value,
+                node.localRotation.value
+            );
 
             return new LocalizationMapModel(
                 id: map.id,
-                name: map.name.value,
+                name: node.name.value,
                 lighting: (int)map.lighting.value,
                 color: (int)map.color.value,
                 active: true,
-                positionX: transform.localPosition.value.x,
-                positionY: transform.localPosition.value.y,
-                positionZ: transform.localPosition.value.z,
-                rotationX: transform.localRotation.value.x,
-                rotationY: transform.localRotation.value.y,
-                rotationZ: transform.localRotation.value.z,
-                rotationW: transform.localRotation.value.w,
+                positionX: ecef.position.x,
+                positionY: ecef.position.y,
+                positionZ: ecef.position.z,
+                rotationX: ecef.rotation.value.x,
+                rotationY: ecef.rotation.value.y,
+                rotationZ: ecef.rotation.value.z,
+                rotationW: ecef.rotation.value.w,
                 points: map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
             );
         }
@@ -184,22 +189,27 @@ namespace Outernet.Client.AuthoringTools
             yield return value.z;
         }
 
-        public static NodeModel ToExhibitModel(Guid sceneObjectID)
+        public static NodeModel ToExhibitModel(Guid nodeID)
         {
-            var node = App.state.nodes[sceneObjectID];
-            var exhibit = App.state.exhibits[sceneObjectID];
+            var node = App.state.nodes[nodeID];
+            var exhibit = App.state.exhibits[nodeID];
+            var ecef = Client.Utility.LocalToEcef(
+                App.state.localToEcefMatrix.value,
+                node.position.value,
+                node.rotation.value
+            );
 
             return new NodeModel(
                 id: node.id,
                 name: node.name.value,
                 active: true,
-                positionX: node.localPosition.value.x,
-                positionY: node.localPosition.value.y,
-                positionZ: node.localPosition.value.z,
-                rotationX: node.localRotation.value.x,
-                rotationY: node.localRotation.value.y,
-                rotationZ: node.localRotation.value.z,
-                rotationW: node.localRotation.value.w,
+                positionX: ecef.position.x,
+                positionY: ecef.position.y,
+                positionZ: ecef.position.z,
+                rotationX: ecef.rotation.value.x,
+                rotationY: ecef.rotation.value.y,
+                rotationZ: ecef.rotation.value.z,
+                rotationW: ecef.rotation.value.w,
                 link: exhibit.link.value,
                 linkType: (int)exhibit.linkType.value,
                 label: exhibit.label.value,

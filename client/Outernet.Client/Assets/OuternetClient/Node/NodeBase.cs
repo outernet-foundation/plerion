@@ -7,6 +7,7 @@ using FofX;
 using FofX.Stateful;
 
 using Cysharp.Threading.Tasks;
+using Outernet.Client.AuthoringTools;
 
 namespace Outernet.Client
 {
@@ -14,15 +15,16 @@ namespace Outernet.Client
     {
         public ObservablePrimitive<int> nodeID { get; private set; }
         public ObservablePrimitive<Guid> uuid { get; private set; }
+        public ObservablePrimitive<Guid?> parentID { get; private set; }
+        public ObservablePrimitive<Vector3> localPosition { get; set; }
+        public ObservablePrimitive<Quaternion> localRotation { get; set; }
+        public ObservablePrimitive<Bounds> localBounds { get; private set; }
         public ObservablePrimitive<string> link { get; private set; }
         public ObservablePrimitive<Shared.LinkType> linkType { get; private set; }
         public ObservablePrimitive<string> label { get; private set; }
         public ObservablePrimitive<Shared.LabelType> labelType { get; private set; }
         public ObservablePrimitive<float> labelScale { get; private set; }
         public ObservablePrimitive<Vector2> labelDimensions { get; private set; }
-        public ObservablePrimitive<Vector3> localPosition { get; set; }
-        public ObservablePrimitive<Quaternion> localRotation { get; set; }
-        public ObservablePrimitive<Bounds> bounds { get; private set; }
         public ObservablePrimitive<bool> visible { get; private set; }
 
         public ObservablePrimitive<bool> hoveredLocally { get; private set; }
@@ -41,15 +43,16 @@ namespace Outernet.Client
         public NodeProps(
             int nodeID = default,
             Guid uuid = default,
+            Guid? parentID = default,
+            Vector3 localPosition = default,
+            Quaternion? localRotation = default,
+            Bounds localBounds = default,
             string link = default,
             Shared.LinkType linkType = default,
             string label = default,
             Shared.LabelType labelType = default,
             float labelScale = default,
             Vector2 labelDimensions = default,
-            Vector3 localPosition = default,
-            Quaternion? localRotation = default,
-            Bounds bounds = default,
             bool visible = default,
             bool exhibitOpen = default,
             Vector3 exhibitPosition = default,
@@ -60,15 +63,16 @@ namespace Outernet.Client
         {
             this.nodeID = new ObservablePrimitive<int>(nodeID);
             this.uuid = new ObservablePrimitive<Guid>(uuid);
+            this.parentID = new ObservablePrimitive<Guid?>(parentID);
+            this.localPosition = new ObservablePrimitive<Vector3>(localPosition);
+            this.localRotation = new ObservablePrimitive<Quaternion>(localRotation ?? Quaternion.identity);
+            this.localBounds = new ObservablePrimitive<Bounds>(localBounds);
             this.link = new ObservablePrimitive<string>(link);
             this.linkType = new ObservablePrimitive<Shared.LinkType>(linkType);
             this.label = new ObservablePrimitive<string>(label);
             this.labelType = new ObservablePrimitive<Shared.LabelType>(labelType);
             this.labelScale = new ObservablePrimitive<float>(labelScale);
             this.labelDimensions = new ObservablePrimitive<Vector2>(labelDimensions);
-            this.localPosition = new ObservablePrimitive<Vector3>(localPosition);
-            this.localRotation = new ObservablePrimitive<Quaternion>(localRotation ?? Quaternion.identity);
-            this.bounds = new ObservablePrimitive<Bounds>(bounds);
             this.visible = new ObservablePrimitive<bool>(visible);
             this.exhibitOpen = new ObservablePrimitive<bool>(exhibitOpen);
             this.exhibitLocalPosition = new ObservablePrimitive<Vector3>(exhibitPosition);
@@ -104,19 +108,35 @@ namespace Outernet.Client
 
         private void LateUpdate()
         {
-            if (props.localPosition.value != transform.position)
-                props.localPosition.ExecuteSet(transform.position, logLevel: FofX.LogLevel.None);
+            if (props.localPosition.value != transform.localPosition)
+                props.localPosition.ExecuteSet(transform.localPosition, logLevel: FofX.LogLevel.None);
 
-            if (props.localRotation.value != transform.rotation)
-                props.localRotation.ExecuteSet(transform.rotation, logLevel: FofX.LogLevel.None);
+            if (props.localRotation.value != transform.localRotation)
+                props.localRotation.ExecuteSet(transform.localRotation, logLevel: FofX.LogLevel.None);
         }
 
         protected override void Bind()
         {
             AddBinding(
-                props.localPosition.OnChange(x => transform.position = x),
-                props.localRotation.OnChange(x => transform.rotation = x),
-                _collider.BindBounds(props.bounds),
+                props.localPosition.OnChange(x => transform.localPosition = x),
+                props.localRotation.OnChange(x => transform.localRotation = x),
+                props.parentID.OnChange(async x =>
+                {
+                    if (!x.HasValue)
+                    {
+                        transform.parent = null;
+                        return;
+                    }
+
+                    Guid parentID = x.Value;
+                    var parent = await AuthoringToolsSceneViewManager.GetView(parentID);
+
+                    if (props.parentID.value != parentID)
+                        return;
+
+                    transform.parent = parent.transform;
+                }),
+                _collider.BindBounds(props.localBounds),
                 props.labelType.OnChange(HandleLabelTypeChanged),
                 gameObject.BindActive(props.visible)
             );

@@ -39,10 +39,9 @@ namespace Outernet.Client.AuthoringTools
         private IDisposable _inspectorBinding = Bindings.Empty();
         private TaskHandle _uploadScan = TaskHandle.Complete;
 
-        private Dictionary<Guid, Transform> _viewByID = new Dictionary<Guid, Transform>();
-        private Dictionary<Transform, Guid> _idByView = new Dictionary<Transform, Guid>();
-
-        private Dictionary<Guid, Foldout> _groupFoldouts = new Dictionary<Guid, Foldout>();
+        private Dictionary<Guid, Foldout> _viewByID = new Dictionary<Guid, Foldout>();
+        private Dictionary<Foldout, Guid> _idByView = new Dictionary<Foldout, Guid>();
+        private Dictionary<Transform, Guid> _idByTransform = new Dictionary<Transform, Guid>();
 
         private Guid _lastSelectedElement;
         private List<Guid> _layersInOrder = new List<Guid>();
@@ -205,105 +204,58 @@ namespace Outernet.Client.AuthoringTools
             }
         }
 
-        // private IDisposable SetupGroupView(NodeGroupState nodeGroup)
-        // {
-        //     var view = UIBuilder.Foldout(nodeGroup.name)
-        //         .WithDropReceiver(onDrop: _ =>
-        //         {
-        //             SetParentGroup(
-        //                 App.state.authoringTools.selectedObjects.Where(x => x != nodeGroup.id),
-        //                 nodeGroup.id
-        //             );
-
-        //             RevealSelectedObjects();
-        //         });
-
-        //     foreach (var child in nodeGroup.childObjects)
-        //     {
-        //         if (_viewByID.TryGetValue(child, out var childView))
-        //             childView.SetParent(view.content, false);
-        //     }
-
-        //     _viewByID.Add(nodeGroup.id, view.transform);
-        //     _idByView.Add(view.transform, nodeGroup.id);
-        //     _groupFoldouts.Add(nodeGroup.id, view);
-
-        //     var toHighlight = view.header.AddComponent<Image>();
-        //     toHighlight.color = Color.clear;
-
-        //     view.AddBinding(
-        //         BindHierarchyElement(
-        //             nodeGroup.id,
-        //             view.gameObject,
-        //             toHighlight,
-        //             AuthoringToolsPrefabs.SelectedColor,
-        //             true
-        //         ),
-        //         nodeGroup.parentID.OnChange(x =>
-        //         {
-        //             view.transform.SetParent(
-        //                 x.HasValue &&
-        //                 _groupFoldouts.TryGetValue(x.Value, out var parent) ?
-        //                     parent.content : nodesScrollView.content,
-        //                 false
-        //             );
-
-        //             if (App.state.authoringTools.selectedObjects.Contains(nodeGroup.id))
-        //                 RevealSelectedObjects();
-        //         }),
-        //         nodeGroup.visible.OnChange(x => view.label.color = x ? Color.white : Color.grey),
-        //         Bindings.OnRelease(() =>
-        //         {
-        //             _viewByID.Remove(nodeGroup.id);
-        //             _idByView.Remove(view.transform);
-        //             _groupFoldouts.Remove(nodeGroup.id);
-        //             Destroy(view.gameObject);
-        //         })
-        //     );
-
-        //     return view;
-        // }
-
-        private IDisposable SetupNodeView(NodeState node)
+        private IDisposable SetupNodeView(NodeState nodeState)
         {
-            var element = App.state.nodes[node.id];
-            var text = UIBuilder.Text(element.name);
-            var view = UIBuilder.VerticalLayout(text);
-            view.component.padding.left = 10;
-            view.component.padding.top = 3;
-            view.component.padding.bottom = 3;
+            var view = UIBuilder.Foldout(nodeState.name)
+                .WithDropReceiver(onDrop: _ =>
+                {
+                    SetParentGroup(
+                        App.state.authoringTools.selectedObjects.Where(x => x != nodeState.id),
+                        nodeState.id
+                    );
 
-            _viewByID.Add(node.id, view.transform);
-            _idByView.Add(view.transform, node.id);
+                    RevealSelectedObjects();
+                });
 
-            var toHighlight = view.gameObject.AddComponent<Image>();
+            foreach (var child in nodeState.childNodes)
+            {
+                if (_viewByID.TryGetValue(child, out var childView))
+                    childView.transform.SetParent(view.content, false);
+            }
+
+            _viewByID.Add(nodeState.id, view);
+            _idByView.Add(view, nodeState.id);
+            _idByTransform.Add(view.transform, nodeState.id);
+
+            var toHighlight = view.header.AddComponent<Image>();
             toHighlight.color = Color.clear;
 
             view.AddBinding(
                 BindHierarchyElement(
-                    node.id,
+                    nodeState.id,
                     view.gameObject,
                     toHighlight,
                     AuthoringToolsPrefabs.SelectedColor,
                     true
                 ),
-                node.parentID.OnChange(x =>
+                nodeState.parentID.OnChange(x =>
                 {
                     view.transform.SetParent(
                         x.HasValue &&
-                        _groupFoldouts.TryGetValue(x.Value, out var parent) ?
+                        _viewByID.TryGetValue(x.Value, out var parent) ?
                             parent.content : nodesScrollView.content,
                         false
                     );
 
-                    if (App.state.authoringTools.selectedObjects.Contains(node.id))
+                    if (App.state.authoringTools.selectedObjects.Contains(nodeState.id))
                         RevealSelectedObjects();
                 }),
-                element.visible.OnChange(x => text.component.color = x ? Color.white : Color.grey),
+                nodeState.visible.OnChange(x => view.label.color = x ? Color.white : Color.grey),
                 Bindings.OnRelease(() =>
                 {
-                    _viewByID.Remove(node.id);
-                    _idByView.Remove(view.transform);
+                    _viewByID.Remove(nodeState.id);
+                    _idByView.Remove(view);
+                    _idByTransform.Remove(view.transform);
                     Destroy(view.gameObject);
                 })
             );
@@ -313,7 +265,9 @@ namespace Outernet.Client.AuthoringTools
 
         private IDisposable SetupMapView(MapState mapState)
         {
-            var view = UIBuilder.VerticalLayout(UIBuilder.Text(mapState.name));
+            var node = App.state.nodes[mapState.id];
+
+            var view = UIBuilder.VerticalLayout(UIBuilder.Text(node.name));
             view.component.padding.left = 10;
             view.component.padding.top = 3;
             view.component.padding.bottom = 3;
@@ -371,14 +325,14 @@ namespace Outernet.Client.AuthoringTools
 
             foreach (var selectedObject in App.state.authoringTools.selectedObjects)
             {
-                if (!_viewByID.TryGetValue(selectedObject, out var transform))
+                if (!_viewByID.TryGetValue(selectedObject, out var view))
                     continue;
 
-                var localizedPosition = nodesScrollView.content.InverseTransformPoint(transform.position);
+                var localizedPosition = nodesScrollView.content.InverseTransformPoint(view.transform.position);
 
                 if (topmostElement == null || contentPosition.y < localizedPosition.y)
                 {
-                    topmostElement = transform;
+                    topmostElement = view.transform;
                     contentPosition = localizedPosition;
                 }
             }
@@ -421,9 +375,9 @@ namespace Outernet.Client.AuthoringTools
         {
             if (App.state.nodes.TryGetValue(obj, out var nodeState) &&
                 nodeState.parentID.value.HasValue &&
-                _groupFoldouts.TryGetValue(nodeState.parentID.value.Value, out var foldout))
+                _viewByID.TryGetValue(nodeState.parentID.value.Value, out var view))
             {
-                foldout.foldout.isOn = true;
+                view.foldout.isOn = true;
                 RevealInHierarchy(nodeState.parentID.value.Value);
             }
         }
@@ -592,8 +546,8 @@ namespace Outernet.Client.AuthoringTools
                         _lastSelectedElement != Guid.Empty)
                     {
                         SelectBetween(
-                            _viewByID[_lastSelectedElement],
-                            _viewByID[id]
+                            _viewByID[_lastSelectedElement].transform,
+                            _viewByID[id].transform
                         );
 
                         return;
@@ -672,12 +626,11 @@ namespace Outernet.Client.AuthoringTools
             {
                 yield return child;
 
-                if (_idByView.TryGetValue(child, out var id) &&
-                    App.state.nodes.TryGetValue(id, out var transformState) &&
-                    _groupFoldouts.TryGetValue(transformState.id, out var foldout) &&
-                    foldout.foldout.isOn)
+                if (_idByTransform.TryGetValue(child, out var id) &&
+                    _viewByID.TryGetValue(id, out var view) &&
+                    view.foldout.isOn)
                 {
-                    foreach (var nestedChild in VisibleChildren(foldout.content))
+                    foreach (var nestedChild in VisibleChildren(view.content))
                         yield return nestedChild;
                 }
             }
@@ -687,7 +640,7 @@ namespace Outernet.Client.AuthoringTools
         {
             if (element1 == element2)
             {
-                AuthoringToolsApp.SetSelectedObjects(_idByView[element1]);
+                AuthoringToolsApp.SetSelectedObjects(_idByTransform[element1]);
                 return;
             }
 
@@ -720,7 +673,7 @@ namespace Outernet.Client.AuthoringTools
             }
 
             AuthoringToolsApp.SetSelectedObjects(selected
-                .Select(x => _idByView[x])
+                .Select(x => _idByTransform[x])
                 .ToArray()
             );
         }

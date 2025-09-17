@@ -1,9 +1,6 @@
 using System;
 using UnityEngine;
-using FofX.Stateful;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
-using System.Collections.Generic;
-using Unity.VisualScripting.Antlr3.Runtime;
 
 namespace Outernet.Client
 {
@@ -77,15 +74,16 @@ namespace Outernet.Client
         public static ClientNode Create(
             int nodeID = default,
             Guid uuid = default,
+            Guid? parentID = default,
+            Vector3 localPosition = default,
+            Quaternion? localRotation = default,
+            Bounds localBounds = default,
             string link = default,
             Shared.LinkType linkType = default,
             string label = default,
             Shared.LabelType labelType = default,
             float labelScale = default,
             Vector2 labelDimensions = default,
-            Vector3 localPosition = default,
-            Quaternion? localRotation = default,
-            Bounds bounds = default,
             bool visible = default,
             bool exhibitOpen = default,
             Vector3 exhibitPosition = default,
@@ -99,15 +97,16 @@ namespace Outernet.Client
             instance.InitializeAndBind(new NodeProps(
                 nodeID,
                 uuid,
+                parentID,
+                localPosition,
+                localRotation,
+                localBounds,
                 link,
                 linkType,
                 label,
                 labelType,
                 labelScale,
                 labelDimensions,
-                localPosition,
-                localRotation,
-                bounds,
                 visible,
                 exhibitOpen,
                 exhibitPosition,

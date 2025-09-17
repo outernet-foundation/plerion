@@ -124,15 +124,15 @@ namespace Outernet.Client.AuthoringTools
 
                         App.ExecuteActionOrDelay(
                             logLevel: FofX.LogLevel.Trace,
-                            App.state.authoringTools.SelectedNodes().Select(transform =>
+                            App.state.authoringTools.SelectedNodes().Select(node =>
                             {
-                                var pos = prevMatrix.inverse.MultiplyPoint(transform.position.value);
-                                var rot = Quaternion.Inverse(prevRotation) * transform.rotation.value;
+                                var pos = prevMatrix.inverse.MultiplyPoint(node.position.value);
+                                var rot = Quaternion.Inverse(prevRotation) * node.rotation.value;
 
                                 pos = curMatrix.MultiplyPoint(pos);
                                 rot = props.rotation.value * rot;
 
-                                return new SetTransformWorldValuesAction(transform.id, pos, rot);
+                                return new SetWorldTransformValuesAction(node.id, pos, rot);
                             }
                         ).ToArray());
                     },

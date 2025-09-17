@@ -50,7 +50,7 @@ namespace Outernet.Client.AuthoringTools
 
             if (target.nodes.TryGetValue(_toDuplicate, out var node))
             {
-                foreach (var child in node.childNodes)
+                foreach (var child in node.childNodes.ToArray())
                 {
                     var newChildID = Guid.NewGuid();
                     new DuplicateSceneObjectAction(child, newChildID).Execute(target);
@@ -196,30 +196,9 @@ namespace Outernet.Client.AuthoringTools
 
         public override void Execute(ClientState target)
         {
-            var localTransform = target.localTransforms[_nodeID];
-            localTransform.localPosition.value = _localPosition ?? localTransform.localPosition.value;
-            localTransform.localRotation.value = _localRotation ?? localTransform.localRotation.value;
-        }
-    }
-
-    public class SetECEFTransformAction : ObservableNodeAction<ClientState>
-    {
-        private Guid _nodeID;
-        private double3? _localPosition;
-        private quaternion? _localRotation;
-
-        public SetECEFTransformAction(Guid nodeID, double3? ecefPosition = default, quaternion? ecefRotation = default)
-        {
-            _nodeID = nodeID;
-            _localPosition = ecefPosition;
-            _localRotation = ecefRotation;
-        }
-
-        public override void Execute(ClientState target)
-        {
-            var ecefTransforms = target.ecefTransforms[_nodeID];
-            ecefTransforms.ecefPosition.value = _localPosition ?? ecefTransforms.ecefPosition.value;
-            ecefTransforms.ecefRotation.value = _localRotation ?? ecefTransforms.ecefRotation.value;
+            var node = target.nodes[_nodeID];
+            node.localPosition.value = _localPosition ?? node.localPosition.value;
+            node.localRotation.value = _localRotation ?? node.localRotation.value;
         }
     }
 

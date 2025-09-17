@@ -7,7 +7,7 @@ using UnityEngine;
 using FofX.Stateful;
 
 using Outernet.Client.AuthoringTools;
-using ObserveThing;
+using UnityEditor;
 
 namespace Outernet.Client
 {
@@ -16,8 +16,6 @@ namespace Outernet.Client
         public ObservablePrimitive<Guid> clientID { get; private set; }
 
         public ObservableDictionary<Guid, NodeState> nodes { get; private set; }
-        public ObservableDictionary<Guid, ECEFTransformState> ecefTransforms { get; private set; }
-        public ObservableDictionary<Guid, LocalTransformState> localTransforms { get; private set; }
         public ObservableDictionary<Guid, MapState> maps { get; private set; }
         public ObservableDictionary<Guid, ExhibitState> exhibits { get; private set; }
 
@@ -47,29 +45,6 @@ namespace Outernet.Client
         public ObservableSet<Guid> visibleLayers { get; private set; }
     }
 
-    public class ECEFTransformState : ObservableObject, IKeyedObservableNode<Guid>
-    {
-        public Guid id { get; private set; }
-
-        public ObservablePrimitive<double3> ecefPosition { get; private set; }
-        public ObservablePrimitive<quaternion> ecefRotation { get; private set; }
-
-        void IKeyedObservableNode<Guid>.AssignKey(Guid key)
-        => id = key;
-    }
-
-    public class LocalTransformState : ObservableObject, IKeyedObservableNode<Guid>
-    {
-        public Guid id { get; private set; }
-
-        public ObservablePrimitive<Vector3> localPosition { get; private set; }
-        public ObservablePrimitive<Quaternion> localRotation { get; private set; }
-        public ObservablePrimitive<Bounds> localBounds { get; private set; }
-
-        void IKeyedObservableNode<Guid>.AssignKey(Guid key)
-            => id = key;
-    }
-
     public class NodeState : ObservableObject, IKeyedObservableNode<Guid>
     {
         public Guid id { get; private set; }
@@ -80,6 +55,13 @@ namespace Outernet.Client
         [HideInInspectorUI]
         public ObservablePrimitive<Guid?> parentID { get; private set; }
         public ObservableSet<Guid> childNodes { get; private set; }
+
+        public ObservablePrimitive<Vector3> localPosition { get; private set; }
+        public ObservablePrimitive<Quaternion> localRotation { get; private set; }
+        public ObservablePrimitive<Bounds> localBounds { get; private set; }
+
+        public ObservablePrimitive<Vector3> position { get; private set; }
+        public ObservablePrimitive<Quaternion> rotation { get; private set; }
 
         [InspectorType(typeof(LayerSelectInspector), LabelType.Adaptive)]
         public ObservablePrimitive<Guid> layer { get; private set; }
@@ -96,12 +78,16 @@ namespace Outernet.Client
         private ClientState _clientState => root as ClientState;
         private ObservableDictionary<Guid, NodeState> _nodes => (root as ClientState).nodes;
 
+        private NodeState _parentNode;
+
         void IKeyedObservableNode<Guid>.AssignKey(Guid key)
             => id = key;
 
         protected override void PostInitializeInternal()
         {
             ((IObservableNode)childNodes).SetDerived(true);
+            ((IObservableNode)position).SetDerived(true);
+            ((IObservableNode)rotation).SetDerived(true);
 
             visible.RegisterDerived(
                 _ => visible.value = _clientState.settings.visibleLayers.Contains(layer.value),
@@ -121,13 +107,14 @@ namespace Outernet.Client
         {
             context.DeregisterObserver(HandleParentNodeChanged);
             context.DeregisterObserver(HandleParentExistsChanged);
+            context.DeregisterObserver(HandleWorldTransformSourcesChanged);
         }
 
         private void HandleParentNodeChanged(NodeChangeEventArgs args)
         {
             if (args.initialize)
             {
-                AddChildOrAwaitParent(parentID.value);
+                RegisterParentObservers(parentID.value);
                 return;
             }
 
@@ -151,36 +138,79 @@ namespace Outernet.Client
                     prevParent.childNodes.Remove(id);
                 }
 
-                AddChildOrAwaitParent((Guid?)change.currentValue);
+                RegisterParentObservers((Guid?)change.currentValue);
             }
         }
 
-        private void AddChildOrAwaitParent(Guid? parentID)
+        private void RegisterParentObservers(Guid? parentID)
         {
             context.DeregisterObserver(HandleParentExistsChanged);
+            context.DeregisterObserver(HandleWorldTransformSourcesChanged);
 
-            if (_nodes.TryGetValue(parentID.Value, out var currParent))
+            if (!parentID.HasValue)
             {
-                currParent.childNodes.Add(id);
+                context.RegisterObserver(
+                    HandleWorldTransformSourcesChanged,
+                    new ObserverParameters() { isDerived = true },
+                    localPosition,
+                    localRotation
+                );
+
+                return;
+            }
+
+            if (_nodes.TryGetValue(parentID.Value, out _parentNode))
+            {
+                _parentNode.childNodes.Add(id);
+
+                context.RegisterObserver(
+                    HandleWorldTransformSourcesChanged,
+                    new ObserverParameters() { isDerived = true },
+                    _parentNode.position,
+                    _parentNode.rotation,
+                    localPosition,
+                    localRotation
+                );
+
                 return;
             }
 
             context.RegisterObserver(
                 HandleParentExistsChanged,
                 new ObserverParameters() { scope = ObservationScope.Self, isDerived = true },
-                this.parentID,
                 _nodes
             );
         }
 
         private void HandleParentExistsChanged(NodeChangeEventArgs args)
         {
-            if (parentID.value.HasValue &&
-                _nodes.TryGetValue(parentID.value.Value, out var currChildSet))
+            if (_nodes.TryGetValue(parentID.value.Value, out _parentNode))
             {
-                currChildSet.childNodes.Add(id);
+                _parentNode.childNodes.Add(id);
                 context.DeregisterObserver(HandleParentExistsChanged);
+                context.RegisterObserver(
+                    HandleWorldTransformSourcesChanged,
+                    new ObserverParameters() { isDerived = true },
+                    _parentNode.position,
+                    _parentNode.rotation,
+                    localPosition,
+                    localRotation
+                );
             }
+        }
+
+        private void HandleWorldTransformSourcesChanged(NodeChangeEventArgs args)
+        {
+            if (_parentNode == null)
+            {
+                position.value = localPosition.value;
+                rotation.value = localRotation.value;
+                return;
+            }
+
+            var matrix = Matrix4x4.TRS(_parentNode.position.value, _parentNode.rotation.value, Vector3.one);
+            position.value = matrix.MultiplyPoint3x4(localPosition.value);
+            rotation.value = _parentNode.rotation.value * localRotation.value;
         }
     }
 
@@ -215,25 +245,25 @@ namespace Outernet.Client
         protected override void PostInitializeInternal()
         {
             context.RegisterObserver(
-                AwaitLocalTransform,
+                AwaitNode,
                 new ObserverParameters() { scope = ObservationScope.Self, isDerived = true },
-                _clientState.localTransforms
+                _clientState.nodes
             );
         }
 
         protected override void DisposeInternal()
         {
-            context.DeregisterObserver(AwaitLocalTransform);
+            context.DeregisterObserver(AwaitNode);
         }
 
-        private void AwaitLocalTransform(NodeChangeEventArgs args)
+        private void AwaitNode(NodeChangeEventArgs args)
         {
-            if (!_clientState.localTransforms.TryGetValue(id, out var localTransform))
+            if (!_clientState.nodes.TryGetValue(id, out var node))
                 return;
 
-            context.DeregisterObserver(AwaitLocalTransform);
-            localTransform.localBounds.RegisterDerived(
-                _ => localTransform.localBounds.value = new Bounds(
+            context.DeregisterObserver(AwaitNode);
+            node.localBounds.RegisterDerived(
+                _ => node.localBounds.value = new Bounds(
                     new Vector3(0, 0, -0.5f) * labelScale.value,
                     new Vector3(
                         labelWidth.value,
@@ -252,7 +282,6 @@ namespace Outernet.Client
     public class MapState : ObservableObject, IKeyedObservableNode<Guid>
     {
         public Guid id { get; private set; }
-        public ObservablePrimitive<string> name { get; private set; }
         public ObservablePrimitive<Shared.Lighting> lighting { get; private set; }
         public ObservablePrimitive<long> color { get; private set; }
 
@@ -267,7 +296,7 @@ namespace Outernet.Client
         protected override void PostInitializeInternal()
         {
             context.RegisterObserver(
-                AwaitNestedNode,
+                AwaitNode,
                 new ObserverParameters() { scope = ObservationScope.Self, isDerived = true },
                 _clientState.nodes
             );
@@ -275,21 +304,21 @@ namespace Outernet.Client
 
         protected override void DisposeInternal()
         {
-            context.DeregisterObserver(AwaitNestedNode);
+            context.DeregisterObserver(AwaitNode);
         }
 
-        private void AwaitNestedNode(NodeChangeEventArgs args)
+        private void AwaitNode(NodeChangeEventArgs args)
         {
-            if (!_clientState.localTransforms.TryGetValue(id, out var localTransform))
+            if (!_clientState.nodes.TryGetValue(id, out var node))
                 return;
 
-            context.DeregisterObserver(AwaitNestedNode);
-            localTransform.localBounds.RegisterDerived(
+            context.DeregisterObserver(AwaitNode);
+            node.localBounds.RegisterDerived(
                 _ =>
                 {
                     if (localInputImagePositions.count == 0)
                     {
-                        localTransform.localBounds.value = default;
+                        node.localBounds.value = default;
                         return;
                     }
 
@@ -305,7 +334,7 @@ namespace Outernet.Client
                         -(float)localInputImagePositions.Select(x => x.z).Max()
                     );
 
-                    localTransform.localBounds.value = new Bounds(
+                    node.localBounds.value = new Bounds(
                         (min + max) / 2f,
                         max - min
                     );

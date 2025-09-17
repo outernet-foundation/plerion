@@ -642,7 +642,7 @@ namespace Outernet.Client
         public static IDisposable Observe<T>(this T source, ObserverParameters parameters, ObserverDelegate onChange)
             where T : IObservableNode => Observer(onChange, parameters, source);
 
-        public static IDisposable BindECEFTransform(ObservablePrimitive<double3> ecefPosition, ObservablePrimitive<Quaternion> ecefRotation, ObservablePrimitive<Vector3> localPosition, ObservablePrimitive<Quaternion> localRotation)
+        public static IDisposable BindECEFTransform(ObservablePrimitive<double3> ecefPosition, ObservablePrimitive<quaternion> ecefRotation, ObservablePrimitive<Vector3> localPosition, ObservablePrimitive<Quaternion> localRotation)
         {
             return Relationship(
                 _ =>
