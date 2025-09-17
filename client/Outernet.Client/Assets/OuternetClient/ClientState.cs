@@ -16,6 +16,8 @@ namespace Outernet.Client
         public ObservablePrimitive<Guid> clientID { get; private set; }
 
         public ObservableDictionary<Guid, NodeState> nodes { get; private set; }
+        public ObservableDictionary<Guid, ECEFTransformState> ecefTransforms { get; private set; }
+        public ObservableDictionary<Guid, LocalTransformState> localTransforms { get; private set; }
         public ObservableDictionary<Guid, MapState> maps { get; private set; }
         public ObservableDictionary<Guid, ExhibitState> exhibits { get; private set; }
 
@@ -45,12 +47,39 @@ namespace Outernet.Client
         public ObservableSet<Guid> visibleLayers { get; private set; }
     }
 
+    public class ECEFTransformState : ObservableObject, IKeyedObservableNode<Guid>
+    {
+        public Guid id { get; private set; }
+
+        public ObservablePrimitive<double3> ecefPosition { get; private set; }
+        public ObservablePrimitive<quaternion> ecefRotation { get; private set; }
+
+        void IKeyedObservableNode<Guid>.AssignKey(Guid key)
+        => id = key;
+    }
+
+    public class LocalTransformState : ObservableObject, IKeyedObservableNode<Guid>
+    {
+        public Guid id { get; private set; }
+
+        public ObservablePrimitive<Vector3> localPosition { get; private set; }
+        public ObservablePrimitive<Quaternion> localRotation { get; private set; }
+        public ObservablePrimitive<Bounds> localBounds { get; private set; }
+
+        void IKeyedObservableNode<Guid>.AssignKey(Guid key)
+            => id = key;
+    }
+
     public class NodeState : ObservableObject, IKeyedObservableNode<Guid>
     {
         public Guid id { get; private set; }
 
         public ObservablePrimitive<string> name { get; private set; }
         public ObservablePrimitive<bool> active { get; private set; }
+
+        [HideInInspectorUI]
+        public ObservablePrimitive<Guid?> parentID { get; private set; }
+        public ObservableSet<Guid> childNodes { get; private set; }
 
         [InspectorType(typeof(LayerSelectInspector), LabelType.Adaptive)]
         public ObservablePrimitive<Guid> layer { get; private set; }
@@ -59,25 +88,10 @@ namespace Outernet.Client
         public ObservablePrimitive<bool> visible { get; private set; }
 
         [HideInInspectorUI]
-        public ObservablePrimitive<Guid?> parentID { get; private set; }
-
-        public ObservablePrimitive<double3> ecefPosition { get; private set; }
-        public ObservablePrimitive<Quaternion> ecefRotation { get; private set; }
-
-        public ObservablePrimitive<Vector3> localPosition { get; private set; }
-        public ObservablePrimitive<Quaternion> localRotation { get; private set; }
-        public ObservablePrimitive<Bounds> localBounds { get; private set; }
-
-        public ObservablePrimitive<Vector3> position { get; private set; }
-        public ObservablePrimitive<Quaternion> rotation { get; private set; }
-
-        [HideInInspectorUI]
         public ObservableSet<Guid> hoveringUsers { get; private set; }
 
         [HideInInspectorUI]
         public ObservablePrimitive<Guid> interactingUser { get; private set; }
-
-        public ObservableSet<Guid> childNodes { get; private set; }
 
         private ClientState _clientState => root as ClientState;
         private ObservableDictionary<Guid, NodeState> _nodes => (root as ClientState).nodes;
@@ -201,25 +215,25 @@ namespace Outernet.Client
         protected override void PostInitializeInternal()
         {
             context.RegisterObserver(
-                AwaitNestedNode,
+                AwaitLocalTransform,
                 new ObserverParameters() { scope = ObservationScope.Self, isDerived = true },
-                _clientState.nodes
+                _clientState.localTransforms
             );
         }
 
         protected override void DisposeInternal()
         {
-            context.DeregisterObserver(AwaitNestedNode);
+            context.DeregisterObserver(AwaitLocalTransform);
         }
 
-        private void AwaitNestedNode(NodeChangeEventArgs args)
+        private void AwaitLocalTransform(NodeChangeEventArgs args)
         {
-            if (!_clientState.nodes.TryGetValue(id, out var nestedNode))
+            if (!_clientState.localTransforms.TryGetValue(id, out var localTransform))
                 return;
 
-            context.DeregisterObserver(AwaitNestedNode);
-            nestedNode.localBounds.RegisterDerived(
-                _ => nestedNode.localBounds.value = new Bounds(
+            context.DeregisterObserver(AwaitLocalTransform);
+            localTransform.localBounds.RegisterDerived(
+                _ => localTransform.localBounds.value = new Bounds(
                     new Vector3(0, 0, -0.5f) * labelScale.value,
                     new Vector3(
                         labelWidth.value,
@@ -266,16 +280,16 @@ namespace Outernet.Client
 
         private void AwaitNestedNode(NodeChangeEventArgs args)
         {
-            if (!_clientState.nodes.TryGetValue(id, out var nestedNode))
+            if (!_clientState.localTransforms.TryGetValue(id, out var localTransform))
                 return;
 
             context.DeregisterObserver(AwaitNestedNode);
-            nestedNode.localBounds.RegisterDerived(
+            localTransform.localBounds.RegisterDerived(
                 _ =>
                 {
                     if (localInputImagePositions.count == 0)
                     {
-                        nestedNode.localBounds.value = default;
+                        localTransform.localBounds.value = default;
                         return;
                     }
 
@@ -291,7 +305,7 @@ namespace Outernet.Client
                         -(float)localInputImagePositions.Select(x => x.z).Max()
                     );
 
-                    nestedNode.localBounds.value = new Bounds(
+                    localTransform.localBounds.value = new Bounds(
                         (min + max) / 2f,
                         max - min
                     );

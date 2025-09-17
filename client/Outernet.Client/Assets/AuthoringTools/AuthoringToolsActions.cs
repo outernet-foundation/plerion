@@ -181,43 +181,6 @@ namespace Outernet.Client.AuthoringTools
         }
     }
 
-    public class SetWorldTransformAction : ObservableNodeAction<ClientState>
-    {
-        private Guid _nodeID;
-        private Vector3? _position;
-        private Quaternion? _rotation;
-
-        public SetWorldTransformAction(Guid nodeID, Vector3? position = default, Quaternion? rotation = default)
-        {
-            _nodeID = nodeID;
-            _position = position;
-            _rotation = rotation;
-        }
-
-        public override void Execute(ClientState target)
-        {
-            var node = target.nodes[_nodeID];
-            var position = _position ?? node.position.value;
-            var rotation = _rotation ?? node.rotation.value;
-
-            if (node.parentID.value.HasValue)
-            {
-                var parentTransform = target.nodes[node.parentID.value.Value];
-                node.localPosition.value = Matrix4x4.TRS(parentTransform.position.value, parentTransform.rotation.value, Vector3.one).inverse.MultiplyPoint3x4(_position.Value);
-                node.localRotation.value = Quaternion.Inverse(parentTransform.rotation.value) * _rotation.Value;
-            }
-            else
-            {
-                node.localPosition.value = position;
-                node.localRotation.value = rotation;
-            }
-
-            var ecef = Client.Utility.LocalToEcef(target.localToEcefMatrix.value, position, rotation);
-            node.ecefPosition.value = ecef.position;
-            node.ecefRotation.value = ecef.rotation;
-        }
-    }
-
     public class SetLocalTransformAction : ObservableNodeAction<ClientState>
     {
         private Guid _nodeID;
@@ -233,20 +196,31 @@ namespace Outernet.Client.AuthoringTools
 
         public override void Execute(ClientState target)
         {
-            var node = target.nodes[_nodeID];
-            var position =
-
-            if (_localPosition.HasValue)
-                node.localPosition.value = _localPosition.Value;
-
-            if (_localRotation.HasValue)
-                node.localRotation.value = _localRotation.Value;
+            var localTransform = target.localTransforms[_nodeID];
+            localTransform.localPosition.value = _localPosition ?? localTransform.localPosition.value;
+            localTransform.localRotation.value = _localRotation ?? localTransform.localRotation.value;
         }
     }
 
     public class SetECEFTransformAction : ObservableNodeAction<ClientState>
     {
+        private Guid _nodeID;
+        private double3? _localPosition;
+        private quaternion? _localRotation;
 
+        public SetECEFTransformAction(Guid nodeID, double3? ecefPosition = default, quaternion? ecefRotation = default)
+        {
+            _nodeID = nodeID;
+            _localPosition = ecefPosition;
+            _localRotation = ecefRotation;
+        }
+
+        public override void Execute(ClientState target)
+        {
+            var ecefTransforms = target.ecefTransforms[_nodeID];
+            ecefTransforms.ecefPosition.value = _localPosition ?? ecefTransforms.ecefPosition.value;
+            ecefTransforms.ecefRotation.value = _localRotation ?? ecefTransforms.ecefRotation.value;
+        }
     }
 
     public class SetLocationContentLoadedAction : ObservableNodeAction<ClientState>
