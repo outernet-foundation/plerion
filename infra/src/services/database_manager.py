@@ -1,6 +1,5 @@
 from pulumi import ComponentResource, Config, Input, ResourceOptions, export
 from pulumi_aws.cloudwatch import LogGroup
-from pulumi_aws.efs import AccessPoint
 from pulumi_aws.lambda_ import Function
 
 from components.efs import EFS
@@ -45,7 +44,7 @@ class DatabaseManager(ComponentResource):
         security_group = SecurityGroup(
             "database-management-security-group",
             vpc=vpc,
-            vpc_endpoints=["ecr.api", "ecr.dkr", "secretsmanager", "logs", "sts", "s3"],
+            vpc_endpoints=["ecr.api", "ecr.dkr", "ecs", "secretsmanager", "logs", "sts", "s3"],
             rules=[
                 {"to_security_group": efs.security_group, "ports": [2049]},
                 {"to_security_group": rds.security_group, "ports": [5432]},
@@ -53,27 +52,19 @@ class DatabaseManager(ComponentResource):
             opts=self._child_opts,
         )
 
-        # EFS Access Point
-        # Can I omit the creation stuff and the posix user stuff? maybe?
-        efs_access_point = AccessPoint(
-            "database-management-efs-access-point",
-            file_system_id=efs.id,
-            posix_user={"uid": 1000, "gid": 1000},
-            root_directory={
-                "path": "/",
-                "creation_info": {"owner_uid": 1000, "owner_gid": 1000, "permissions": "0775"},
-            },
-            opts=self._child_opts,
-        )
-
         # Role
         role = lambda_role("database-manager-role", opts=self._child_opts)
         role.allow_secret_get("database-managersecrets", [rds.password_secret])
-        # role.allow_service_deployment() ? needs to be able to bounce cloudbeaver
         export("database-manager-role-name", role.name)
         export("database-manager-role-arn", role.arn)
 
         if config.require_bool("deploy-database-manager") and cloudbeaver_service_arn is not None:
+            role.allow_service_restart(
+                "database-manager-cloudbeaver-deployment",
+                services_arns=[cloudbeaver_service_arn],
+                cluster_arn=ecs_cluster_arn,
+            )
+
             function = Function(
                 "database-manager-function",
                 name="database-manager",
@@ -84,7 +75,7 @@ class DatabaseManager(ComponentResource):
                 timeout=900,
                 memory_size=512,
                 vpc_config={"security_group_ids": [security_group.id], "subnet_ids": vpc.private_subnet_ids},
-                file_system_config={"arn": efs_access_point.arn, "local_mount_path": "/mnt/efs"},
+                file_system_config={"arn": efs.access_point.arn, "local_mount_path": "/mnt/efs"},
                 environment={
                     "variables": {
                         "BACKEND": "aws",
@@ -99,7 +90,7 @@ class DatabaseManager(ComponentResource):
                 opts=ResourceOptions.merge(self._child_opts, ResourceOptions(depends_on=[log_group, security_group])),
             )
 
-            export("database-manager-function-arn", function.qualified_arn)
+            export("database-manager-function-arn", function.arn)
 
             deploy_role.allow_lambda_deployment(resource_name, [function])
 

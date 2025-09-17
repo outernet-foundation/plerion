@@ -60,10 +60,10 @@
     ]
   },
   "database-manager": {
-    "digest": "sha256:428ee03164cd06b3c5e4b2c5a2efb01226e42fb69aef2ae2589722290314804a",
+    "digest": "sha256:06da5b5d4fd45aa96b488c3d3f23784ea5e20e59b76fad3f5860b7444d5aac8d",
     "tags": [
-      "tree-994f86df4391c44bbe409a1e8f053dfb51093dd5",
-      "git-8c59d27ea706e1ddfa328d8444bbe7e6571ec528"
+      "tree-fcb433ddbd60cd49b263e8ddfeb9687852a8bb99",
+      "git-afe510efcacafd892766f4ef4acc60ac208b5711"
     ]
   }
 }

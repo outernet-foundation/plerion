@@ -86,7 +86,7 @@ class Cloudbeaver(ComponentResource):
         )
 
         # EFS
-        self.efs = EFS("cloudbeaver-efs", vpc=vpc, opts=self._child_opts)
+        self.efs = EFS("cloudbeaver-efs", vpc=vpc, opts=self._child_opts, root_directory="/opt/cloudbeaver/workspace")
 
         # Security group
         cloudbeaver_security_group = SecurityGroup(
@@ -158,6 +158,7 @@ class Cloudbeaver(ComponentResource):
                                 "file_system_id": self.efs.id,
                                 "transit_encryption": "ENABLED",
                                 "root_directory": "/",
+                                "authorization_config": {"access_point_id": self.efs.access_point.id},
                             },
                         }
                     ],

@@ -262,6 +262,18 @@ class Role(ComponentResource):
             }),
         )
 
+    def allow_service_restart(self, deployment_name: str, services_arns: Iterable[Input[str]], cluster_arn: Input[str]):
+        return self.attach_policy(
+            f"allow-ecs-service-deploy-{deployment_name}",
+            Output.json_dumps({
+                "Version": "2012-10-17",
+                "Statement": [
+                    {"Effect": "Allow", "Action": ["ecs:UpdateService"], "Resource": [arn for arn in services_arns]},
+                    {"Effect": "Allow", "Action": ["ecs:DescribeTasks"], "Resource": cluster_arn},
+                ],
+            }),
+        )
+
     def allow_batch_job_definition_update(
         self,
         deployment_name: str,

@@ -68,7 +68,8 @@ def _create_database(*, name: str, password: str, settings: Settings) -> None:
                 print(f"Database {name} already exists, skipping creation.")
                 # still update DS and bounce to ensure DS state correct
             else:
-                raise RuntimeError(f"Database {name} already exists")
+                pass
+                # raise RuntimeError(f"Database {name} already exists")
         else:
             # Create database and role
             cursor.execute(

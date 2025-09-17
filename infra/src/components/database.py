@@ -11,15 +11,18 @@ from components.secret import Secret
 
 
 class _DatabaseProvider(ResourceProvider):
+    def _invoke_lambda(self, function_arn: str, payload: Dict[str, Any]) -> None:
+        response = create_lambda_client().invoke(
+            FunctionName=function_arn, InvocationType="RequestResponse", Payload=json.dumps(payload).encode("utf-8")
+        )
+        if response.get("FunctionError"):
+            error_payload = json.loads(response["Payload"].read().decode("utf-8"))
+            raise RuntimeError(f"Lambda invocation failed: {error_payload}")
+
     def create(self, props: Dict[str, Any]):
-        create_lambda_client().invoke(
-            FunctionName=props["function_arn"],
-            InvocationType="RequestResponse",
-            Payload=json.dumps({
-                "op": "create",
-                "name": props["name"],
-                "password_secret_arn": props["password_secret_arn"],
-            }).encode("utf-8"),
+        self._invoke_lambda(
+            function_arn=props["function_arn"],
+            payload={"op": "create", "name": props["name"], "password_secret_arn": props["password_secret_arn"]},
         )
 
         return CreateResult(
@@ -38,27 +41,18 @@ class _DatabaseProvider(ResourceProvider):
             or (olds.get("password_secret_arn") != news.get("password_secret_arn"))
             or (olds.get("password_secret_version_id") != news.get("password_secret_version_id"))
         )
-        return DiffResult(changes=changes, replaces=replaces, delete_before_replace=False)
+        return DiffResult(changes=changes, replaces=replaces, delete_before_replace=True)
 
     def update(self, _id: str, olds: Dict[str, Any], news: Dict[str, Any]) -> UpdateResult:
         if olds.get("password_secret_arn") != news.get("password_secret_arn"):
-            create_lambda_client().invoke(
-                FunctionName=news["function_arn"],
-                InvocationType="RequestResponse",
-                Payload=json.dumps({
-                    "op": "update",
-                    "name": news["name"],
-                    "password_secret_arn": news["password_secret_arn"],
-                }).encode("utf-8"),
+            self._invoke_lambda(
+                function_arn=news["function_arn"],
+                payload={"op": "update", "name": news["name"], "password_secret_arn": news["password_secret_arn"]},
             )
         return UpdateResult(outs=news)
 
     def delete(self, _id: str, props: Dict[str, Any]):
-        create_lambda_client().invoke(
-            FunctionName=props["function_arn"],
-            InvocationType="RequestResponse",
-            Payload=json.dumps({"op": "delete", "name": props["name"]}).encode("utf-8"),
-        )
+        self._invoke_lambda(function_arn=props["function_arn"], payload={"op": "delete", "name": props["name"]})
 
 
 class Database(Resource):
