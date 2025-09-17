@@ -4,7 +4,6 @@ using System.Linq;
 using FofX.Serialization;
 using SimpleJSON;
 using System.Collections;
-using ObserveThing;
 using System.Collections.ObjectModel;
 
 namespace FofX.Stateful
@@ -15,7 +14,7 @@ namespace FofX.Stateful
         object this[int index] { get; }
     }
 
-    public class ObservablePrimitiveArray<T> : ObservableNode, IObservablePrimitiveArray, IEnumerable<T>, IReadOnlyCollection<T>, IValueObservable<ReadOnlyCollection<T>>
+    public class ObservablePrimitiveArray<T> : ObservableNode, IObservablePrimitiveArray, IEnumerable<T>, IReadOnlyCollection<T>
     {
         Type IObservablePrimitive.primitiveType => typeof(T);
 
@@ -110,44 +109,6 @@ namespace FofX.Stateful
         {
             var serializer = JSONSerialization.GetSerializer<T>();
             SetValue(((JSONArray)json).Linq.Select(x => serializer.fromJSON(x)).ToArray());
-        }
-
-        IDisposable IValueObservable<ReadOnlyCollection<T>>.Subscribe(ObserveThing.IObserver<IValueEventArgs<ReadOnlyCollection<T>>> observer)
-            => new Instance(this, observer);
-
-        private class Instance : IDisposable
-        {
-            private ObservablePrimitiveArray<T> _primitive;
-            private ObserveThing.IObserver<IValueEventArgs<ReadOnlyCollection<T>>> _observer;
-            private ValueEventArgs<ReadOnlyCollection<T>> _args = new ValueEventArgs<ReadOnlyCollection<T>>();
-
-            public Instance(ObservablePrimitiveArray<T> primitive, ObserveThing.IObserver<IValueEventArgs<ReadOnlyCollection<T>>> observer)
-            {
-                _primitive = primitive;
-                _observer = observer;
-
-                _primitive.context.RegisterObserver(HandlePrimitiveChanged, _primitive);
-            }
-
-            private void HandlePrimitiveChanged(NodeChangeEventArgs args)
-            {
-                if (args.changes.Any(x => x.changeType == ChangeType.Dispose))
-                {
-                    _primitive.context.DeregisterObserver(HandlePrimitiveChanged);
-                    _observer.OnDispose();
-                    return;
-                }
-
-                _args.previousValue = _args.currentValue;
-                _args.currentValue = _primitive._values.AsReadOnly();
-                _observer.OnNext(_args);
-            }
-
-            public void Dispose()
-            {
-                _primitive.context.DeregisterObserver(HandlePrimitiveChanged);
-                _observer.OnDispose();
-            }
         }
     }
 }

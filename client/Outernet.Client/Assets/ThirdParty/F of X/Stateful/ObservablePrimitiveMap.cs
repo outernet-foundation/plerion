@@ -52,7 +52,7 @@ namespace FofX.Stateful
         }
     }
 
-    public class ObservablePrimitiveMap<TLeft, TRight> : ObservableNode, IObservableCollection<PrimitiveMapPair<TLeft, TRight>>, IObservablePrimitiveMap, ObserveThing.ICollectionObservable<PrimitiveMapPair<TLeft, TRight>>
+    public class ObservablePrimitiveMap<TLeft, TRight> : ObservableNode, IObservableCollection<PrimitiveMapPair<TLeft, TRight>>, IObservablePrimitiveMap
     {
         private Dictionary<TLeft, TRight> _leftToRight = new Dictionary<TLeft, TRight>();
         private Dictionary<TRight, TLeft> _rightToLeft = new Dictionary<TRight, TLeft>();
@@ -302,62 +302,6 @@ namespace FofX.Stateful
         {
             var pair = (PrimitiveMapPair<TLeft, TRight>)value;
             return TryGetRight(pair.left, out var right) && Equals(pair.right, right);
-        }
-
-        IDisposable ObserveThing.ICollectionObservable<PrimitiveMapPair<TLeft, TRight>>.Subscribe(ObserveThing.IObserver<ObserveThing.ICollectionEventArgs<PrimitiveMapPair<TLeft, TRight>>> observer)
-            => new Instance(this, observer);
-
-        private class Instance : IDisposable
-        {
-            private ObservablePrimitiveMap<TLeft, TRight> _primitiveMap;
-            private ObserveThing.IObserver<ObserveThing.ICollectionEventArgs<PrimitiveMapPair<TLeft, TRight>>> _observer;
-            private ObserveThing.CollectionEventArgs<PrimitiveMapPair<TLeft, TRight>> _args = new ObserveThing.CollectionEventArgs<PrimitiveMapPair<TLeft, TRight>>();
-
-            public Instance(ObservablePrimitiveMap<TLeft, TRight> primitiveMap, ObserveThing.IObserver<ObserveThing.ICollectionEventArgs<PrimitiveMapPair<TLeft, TRight>>> observer)
-            {
-                _primitiveMap = primitiveMap;
-                _observer = observer;
-
-                _primitiveMap.context.RegisterObserver(HandleSetChanged, new ObserverParameters() { scope = ObservationScope.Self }, _primitiveMap);
-            }
-
-            private void HandleSetChanged(NodeChangeEventArgs args)
-            {
-                if (args.initialize)
-                {
-                    _args.operationType = ObserveThing.OpType.Add;
-                    foreach (var value in _primitiveMap)
-                    {
-                        _args.element = value;
-                        _observer.OnNext(_args);
-                    }
-
-                    return;
-                }
-
-                foreach (var change in args.changes)
-                {
-                    if (change.changeType == ChangeType.Dispose)
-                    {
-                        _primitiveMap.context.DeregisterObserver(HandleSetChanged);
-                        _observer.OnDispose();
-                        break;
-                    }
-
-                    _args.operationType = change.changeType == ChangeType.Add ?
-                        ObserveThing.OpType.Add : ObserveThing.OpType.Remove;
-
-                    _args.element = (PrimitiveMapPair<TLeft, TRight>)change.collectionElement;
-
-                    _observer.OnNext(_args);
-                }
-            }
-
-            public void Dispose()
-            {
-                _primitiveMap.context.DeregisterObserver(HandleSetChanged);
-                _observer.OnDispose();
-            }
         }
     }
 }

@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using SimpleJSON;
 using FofX.Serialization;
-using ObserveThing;
 
 namespace FofX.Stateful
 {
@@ -17,7 +16,7 @@ namespace FofX.Stateful
         void Clear();
     }
 
-    public class ObservableSet<T> : ObservableNode, IObservableSet, IObservableCollection<T>, ICollectionObservable<T>
+    public class ObservableSet<T> : ObservableNode, IObservableSet, IObservableCollection<T>
     {
         public int count => _hashSet.Count;
         public override bool isDefault => _hashSet.Count == 0;
@@ -148,61 +147,5 @@ namespace FofX.Stateful
 
         bool IObservableCollection.Contains(object value)
             => Contains((T)value);
-
-        IDisposable ICollectionObservable<T>.Subscribe(ObserveThing.IObserver<ICollectionEventArgs<T>> observer)
-            => new Instance(this, observer);
-
-        private class Instance : IDisposable
-        {
-            private ObservableSet<T> _set;
-            private ObserveThing.IObserver<ICollectionEventArgs<T>> _observer;
-            private CollectionEventArgs<T> _args = new CollectionEventArgs<T>();
-
-            public Instance(ObservableSet<T> set, ObserveThing.IObserver<ICollectionEventArgs<T>> observer)
-            {
-                _set = set;
-                _observer = observer;
-
-                _set.context.RegisterObserver(HandleSetChanged, new ObserverParameters() { scope = ObservationScope.Self }, _set);
-            }
-
-            private void HandleSetChanged(NodeChangeEventArgs args)
-            {
-                if (args.initialize)
-                {
-                    _args.operationType = OpType.Add;
-                    foreach (var value in _set)
-                    {
-                        _args.element = value;
-                        _observer.OnNext(_args);
-                    }
-
-                    return;
-                }
-
-                foreach (var change in args.changes)
-                {
-                    if (change.changeType == ChangeType.Dispose)
-                    {
-                        _set.context.DeregisterObserver(HandleSetChanged);
-                        _observer.OnDispose();
-                        break;
-                    }
-
-                    _args.operationType = change.changeType == ChangeType.Add ?
-                        OpType.Add : OpType.Remove;
-
-                    _args.element = (T)change.collectionElement;
-
-                    _observer.OnNext(_args);
-                }
-            }
-
-            public void Dispose()
-            {
-                _set.context.DeregisterObserver(HandleSetChanged);
-                _observer.OnDispose();
-            }
-        }
     }
 }

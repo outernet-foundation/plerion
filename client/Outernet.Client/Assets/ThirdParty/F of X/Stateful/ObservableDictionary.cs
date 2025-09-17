@@ -4,7 +4,6 @@ using System.Collections;
 using System.Collections.Generic;
 using SimpleJSON;
 using FofX.Serialization;
-using ObserveThing;
 
 namespace FofX.Stateful
 {
@@ -54,7 +53,7 @@ namespace FofX.Stateful
         }
     }
 
-    public sealed class ObservableDictionary<TKey, TValue> : ObservableNode, IObservableDictionary<TKey>, IObservableCollection<KVP<TKey, TValue>>, IDictionaryObservable<TKey, TValue> where TValue : IObservableNode, new()
+    public sealed class ObservableDictionary<TKey, TValue> : ObservableNode, IObservableDictionary<TKey>, IObservableCollection<KVP<TKey, TValue>> where TValue : IObservableNode, new()
     {
         public TValue this[TKey key] => _dictionary[key];
         public int count => _dictionary.Count;
@@ -323,61 +322,5 @@ namespace FofX.Stateful
 
         bool IObservableCollection<KVP<TKey, TValue>>.Contains(KVP<TKey, TValue> value)
             => TryGetValue(value.key, out var v) && Equals(value.value, v);
-
-        IDisposable IDictionaryObservable<TKey, TValue>.Subscribe(ObserveThing.IObserver<IDictionaryEventArgs<TKey, TValue>> observer)
-            => new Instance(this, observer);
-
-        private class Instance : IDisposable
-        {
-            private ObservableDictionary<TKey, TValue> _dictionary;
-            private ObserveThing.IObserver<IDictionaryEventArgs<TKey, TValue>> _observer;
-            private DictionaryEventArgs<TKey, TValue> _args = new DictionaryEventArgs<TKey, TValue>();
-
-            public Instance(ObservableDictionary<TKey, TValue> dictionary, ObserveThing.IObserver<IDictionaryEventArgs<TKey, TValue>> observer)
-            {
-                _dictionary = dictionary;
-                _observer = observer;
-
-                _dictionary.context.RegisterObserver(HandleDictionaryChanged, new ObserverParameters() { scope = ObservationScope.Self }, _dictionary);
-            }
-
-            private void HandleDictionaryChanged(NodeChangeEventArgs args)
-            {
-                if (args.initialize)
-                {
-                    _args.operationType = OpType.Add;
-                    foreach (var kvp in _dictionary)
-                    {
-                        _args.element = new KeyValuePair<TKey, TValue>(kvp.key, kvp.value);
-                        _observer.OnNext(_args);
-                    }
-
-                    return;
-                }
-
-                foreach (var change in args.changes)
-                {
-                    if (change.changeType == ChangeType.Dispose)
-                    {
-                        _dictionary.context.DeregisterObserver(HandleDictionaryChanged);
-                        _observer.OnDispose();
-                        break;
-                    }
-
-                    _args.operationType = change.changeType == ChangeType.Add ?
-                        OpType.Add : OpType.Remove;
-
-                    _args.element = new KeyValuePair<TKey, TValue>((TKey)change.key, (TValue)change.child);
-
-                    _observer.OnNext(_args);
-                }
-            }
-
-            public void Dispose()
-            {
-                _dictionary.context.DeregisterObserver(HandleDictionaryChanged);
-                _observer.OnDispose();
-            }
-        }
     }
 }

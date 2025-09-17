@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using FofX.Serialization;
-using ObserveThing;
 using SimpleJSON;
 
 namespace FofX.Stateful
@@ -13,7 +12,7 @@ namespace FofX.Stateful
         void SetValue(object value);
     }
 
-    public sealed class ObservablePrimitive<T> : ObservableNode, IObservablePrimitive, IValueObservable<T>
+    public sealed class ObservablePrimitive<T> : ObservableNode, IObservablePrimitive
     {
         private T _value;
         public T value
@@ -92,44 +91,6 @@ namespace FofX.Stateful
             }
 
             value = JSONSerialization.FromJSON<T>(json);
-        }
-
-        IDisposable IValueObservable<T>.Subscribe(ObserveThing.IObserver<IValueEventArgs<T>> observer)
-            => new Instance(this, observer);
-
-        private class Instance : IDisposable
-        {
-            private ObservablePrimitive<T> _primitive;
-            private ObserveThing.IObserver<IValueEventArgs<T>> _observer;
-            private ValueEventArgs<T> _args = new ValueEventArgs<T>();
-
-            public Instance(ObservablePrimitive<T> primitive, ObserveThing.IObserver<IValueEventArgs<T>> observer)
-            {
-                _primitive = primitive;
-                _observer = observer;
-
-                _primitive.context.RegisterObserver(HandlePrimitiveChanged, _primitive);
-            }
-
-            private void HandlePrimitiveChanged(NodeChangeEventArgs args)
-            {
-                if (!args.initialize && args.changes.Any(x => x.changeType == ChangeType.Dispose))
-                {
-                    _primitive.context.DeregisterObserver(HandlePrimitiveChanged);
-                    _observer.OnDispose();
-                    return;
-                }
-
-                _args.previousValue = _args.currentValue;
-                _args.currentValue = _primitive.value;
-                _observer.OnNext(_args);
-            }
-
-            public void Dispose()
-            {
-                _primitive.context.DeregisterObserver(HandlePrimitiveChanged);
-                _observer.OnDispose();
-            }
         }
     }
 }
