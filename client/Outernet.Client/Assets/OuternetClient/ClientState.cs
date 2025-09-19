@@ -7,7 +7,6 @@ using UnityEngine;
 using FofX.Stateful;
 
 using Outernet.Client.AuthoringTools;
-using UnityEditor;
 
 namespace Outernet.Client
 {
