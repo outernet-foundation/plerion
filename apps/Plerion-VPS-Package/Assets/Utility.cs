@@ -10,6 +10,20 @@ namespace Plerion.VPS
 {
     public static class Utility
     {
+        const double WGS84_A = 6378137.0; // Semi-major axis
+        const double WGS84_E_SQUARED = 0.00669437999014; // Eccentricity squared
+
+        public static double3 GpsToEcef(double latitudeRad, double longitudeRad, double altitude)
+        {
+            double N = WGS84_A / Math.Sqrt(1 - WGS84_E_SQUARED * Math.Sin(latitudeRad) * Math.Sin(latitudeRad));
+
+            double x = (N + altitude) * Math.Cos(latitudeRad) * Math.Cos(longitudeRad);
+            double y = (N + altitude) * Math.Cos(latitudeRad) * Math.Sin(longitudeRad);
+            double z = (N * (1 - WGS84_E_SQUARED) + altitude) * Math.Sin(latitudeRad);
+
+            return new double3(x, y, z);
+        }
+
         public static (Vector3 position, Quaternion rotation) EcefToLocal(double4x4 ecefToLocalTransform, double3 position, quaternion rotation)
         {
             var ecefTransformMatrix = Double4x4.FromTranslationRotation(position, rotation);

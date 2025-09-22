@@ -5,39 +5,28 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Android;
-using static Plerion.VPS.Assert;
 
 namespace Plerion.VPS
 {
     static class MapManager
     {
-        static private bool enabled = false;
-        static private Dictionary<Guid, LocalizationMapModel> _mapsByID = new Dictionary<Guid, LocalizationMapModel>();
-        static private Dictionary<int, LocalizationMapModel> _mapsByNativeHandle = new Dictionary<int, LocalizationMapModel>();
-        static private Dictionary<Guid, int> _nativeHandlesByID = new Dictionary<Guid, int>();
+        static private Dictionary<int, LocalizationMapModel> _mapsByHandle = new Dictionary<int, LocalizationMapModel>();
 
         static private CancellationTokenSource _pollCancellationTokenSource = new CancellationTokenSource();
 
-        static public void Enable()
+        static public void Initialize()
         {
-            if (enabled)
-                return;
-
-            enabled = true;
             _pollCancellationTokenSource = new CancellationTokenSource();
             PollMaps(_pollCancellationTokenSource.Token).Forget();
         }
 
         static public void Terminate()
         {
-            _mapsByID.Clear();
-            _mapsByNativeHandle.Clear();
-            _nativeHandlesByID.Clear();
+            _mapsByHandle.Clear();
 
             _pollCancellationTokenSource?.Cancel();
             _pollCancellationTokenSource?.Dispose();
             _pollCancellationTokenSource = null;
-            enabled = false;
         }
 
         static private async UniTask PollMaps(CancellationToken cancellationToken = default)
@@ -98,13 +87,9 @@ namespace Plerion.VPS
 
         private static async UniTask UpdateMaps(List<LocalizationMapModel> maps, CancellationToken cancellationToken = default)
         {
-            var newMaps = maps
-                .Where(map => !_mapsByID.ContainsKey(map.Id))
-                .ToList();
+            List<(int handle, LocalizationMapModel map)> nativeHandles = new List<(int handle, LocalizationMapModel map)>();
 
-            Dictionary<LocalizationMapModel, int> nativeHandles = new Dictionary<LocalizationMapModel, int>();
-
-            await UniTask.WhenAll(newMaps.Select(async x =>
+            await UniTask.WhenAll(maps.Where(map => !_mapsByHandle.ContainsValue(map)).Select(async x =>
             {
                 Log.Info(LogGroup.Localizer, $"Loading map {x.Name}");
 
@@ -112,7 +97,7 @@ namespace Plerion.VPS
                 {
                     var bytes = await PlerionAPI.DownloadMapBytes(x.Id, x.Name);
                     var nativeHandle = await ImmersalNative.LoadMap(bytes);
-                    nativeHandles.Add(x, nativeHandle);
+                    nativeHandles.Add((nativeHandle, x));
                     Log.Info(LogGroup.Localizer, $"Loaded map {x.Name}");
                 }
                 catch (Exception exc)
@@ -125,53 +110,44 @@ namespace Plerion.VPS
 
             if (cancellationToken.IsCancellationRequested)
             {
-                foreach (var nativeHandle in nativeHandles.Values)
-                    ImmersalNative.FreeMap(nativeHandle).Forget();
+                foreach (var nativeHandle in nativeHandles)
+                    ImmersalNative.FreeMap(nativeHandle.handle).Forget();
 
                 cancellationToken.ThrowIfCancellationRequested();
             }
 
-            var removedMaps = _mapsByID.Keys
-                .Where(id => !maps.Any(x => x.Id == id))
+            var removedMaps = _mapsByHandle.Values
+                .Where(map => !maps.Any(x => x.Id == map.Id))
                 .ToList();
 
-            foreach (var mapId in removedMaps)
+            foreach (var loadedMap in _mapsByHandle.ToList())
             {
-                ASSERT(_mapsByID.ContainsKey(mapId), $"Map {mapId} is not in maps");
-                ASSERT(_nativeHandlesByID.ContainsKey(mapId), "Loaded map is not in nativeHandles");
+                bool found = false;
 
-                var nativeHandle = _nativeHandlesByID[mapId];
+                foreach (var map in maps)
+                {
+                    if (loadedMap.Value.Id == map.Id)
+                    {
+                        found = true;
+                        break;
+                    }
+                }
 
-                _nativeHandlesByID.Remove(mapId);
-                _mapsByNativeHandle.Remove(nativeHandle);
-                _mapsByID.Remove(mapId);
+                if (!found)
+                    _mapsByHandle.Remove(loadedMap.Key);
             }
 
-            foreach (var newMap in newMaps)
-            {
-                var nativeHandle = nativeHandles[newMap];
-                _nativeHandlesByID.Add(newMap.Id, nativeHandle);
-                _mapsByNativeHandle.Add(nativeHandle, newMap);
-                _mapsByID.Add(newMap.Id, newMap);
-            }
+            foreach (var nativeHandle in nativeHandles)
+                _mapsByHandle.Add(nativeHandle.handle, nativeHandle.map);
         }
 
         static public bool TryGetMap(int nativeHandle, out LocalizationMapModel map)
-            => _mapsByNativeHandle.TryGetValue(nativeHandle, out map);
-
-        static public bool TryGetMap(Guid id, out LocalizationMapModel map)
-            => _mapsByID.TryGetValue(id, out map);
+            => _mapsByHandle.TryGetValue(nativeHandle, out map);
 
         static public LocalizationMapModel GetMap(int nativeHandle)
-            => _mapsByNativeHandle[nativeHandle];
-
-        static public LocalizationMapModel GetMap(Guid id)
-            => _mapsByID[id];
+            => _mapsByHandle[nativeHandle];
 
         static public bool HasMap(int nativeHandle)
-            => _mapsByNativeHandle.ContainsKey(nativeHandle);
-
-        static public bool HasMap(Guid id)
-            => _mapsByID.ContainsKey(id);
+            => _mapsByHandle.ContainsKey(nativeHandle);
     }
 }

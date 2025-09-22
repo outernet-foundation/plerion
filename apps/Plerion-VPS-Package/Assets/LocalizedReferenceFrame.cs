@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.XR;
 using UnityEngine.XR.Management;
 using Cysharp.Threading.Tasks;
+using Unity.XR.CoreUtils;
 
 namespace Plerion.VPS
 {
@@ -19,10 +20,11 @@ namespace Plerion.VPS
 
         static private float? floorHeight = null;
         static private double4x4 localToEcefTransform = double4x4.identity;
-        static private double4x4 ecefToLocalTransform = double4x4.identity;
+        static private double4x4 ecefToLocalTransform = math.inverse(double4x4.identity);
         static private Queue<CameraPoseEstimate> estimateHistory = new Queue<CameraPoseEstimate>();
+        static private XRInputSubsystem _xrInputSubsystem;
 
-        static public event Action onReferenceFrameChanged;
+        static public event Action onReferenceFrameUpdated;
 
         static public void Initialize()
         {
@@ -30,9 +32,15 @@ namespace Plerion.VPS
                 .WaitUntil(() => XRGeneralSettings.Instance?.Manager?.activeLoader?.GetLoadedSubsystem<XRInputSubsystem>() != null)
                 .ContinueWith(() =>
                 {
-                    XRInputSubsystem inputSubsystem = XRGeneralSettings.Instance.Manager.activeLoader.GetLoadedSubsystem<XRInputSubsystem>();
-                    inputSubsystem.trackingOriginUpdated += TrackingOriginUpdated;
+                    _xrInputSubsystem = XRGeneralSettings.Instance.Manager.activeLoader.GetLoadedSubsystem<XRInputSubsystem>();
+                    _xrInputSubsystem.trackingOriginUpdated += TrackingOriginUpdated;
                 });
+        }
+
+        static public void Terminate()
+        {
+            if (_xrInputSubsystem != null)
+                _xrInputSubsystem.trackingOriginUpdated -= TrackingOriginUpdated;
         }
 
         static private void TrackingOriginUpdated(XRInputSubsystem subsystem)
@@ -56,7 +64,8 @@ namespace Plerion.VPS
         {
             estimateHistory.Enqueue(estimate);
 
-            if (estimateHistory.Count > estimateHistorySize) estimateHistory.Dequeue();
+            if (estimateHistory.Count > estimateHistorySize)
+                estimateHistory.Dequeue();
 
             var orderedEstiamtes = estimateHistory
                 .OrderByDescending(estimate => estimate.confidence)
@@ -136,46 +145,60 @@ namespace Plerion.VPS
                     }
                 }
 
-                var currentTargetPosition = localToEcefTransform.Position();
-                var newTargetPosition = newLocalToEcefTransform.Value.Position();
-
-                var currentTargetRotation = localToEcefTransform.Rotation();
-                var newTargetRotation = newLocalToEcefTransform.Value.Rotation();
-
-                var distance = math.distance(currentTargetPosition, newTargetPosition);
-                var angle = Quaternion.Angle(currentTargetRotation, newTargetRotation);
-
-                if (distance < Settings.minimumPositionThreshold && angle < Settings.minimumRotationThreshold)
-                    return;
-
-                if (distance > Settings.minimumPositionThreshold)
-                    Log.Info(LogGroup.Localizer, $"Distance threshold exceeded: {distance}");
-
-                if (angle > Settings.minimumRotationThreshold)
-                    Log.Info(LogGroup.Localizer, $"Angle threshold exceeded: {angle}");
-
-                var georeference = GameObject.FindFirstObjectByType<CesiumGeoreference>();
-                if (georeference != null)
-                {
-                    var ecefTransform = Utility.LocalToEcef(newLocalToEcefTransform.Value, new Vector3(0, 0, 0), Quaternion.identity);
-                    georeference.SetOriginEarthCenteredEarthFixed(
-                        ecefTransform.position.x,
-                        ecefTransform.position.y,
-                        ecefTransform.position.z
-                    );
-
-                    var localRotation = Quaternion.Inverse(ecefTransform.rotation) * GetEUNRotationFromECEFPosition(ecefTransform.position);
-                    georeference.transform.rotation = localRotation;
-                }
-
-                localToEcefTransform = newLocalToEcefTransform.Value;
-                ecefToLocalTransform = math.inverse(localToEcefTransform);
-                onReferenceFrameChanged?.Invoke();
+                SetLocalToEcefTransform(newLocalToEcefTransform.Value);
             }
             catch (Exception exception)
             {
                 Log.Error(LogGroup.Localizer, "Failed to apply estimate", exception);
             }
+        }
+
+        static public void SetEcefToLocalTransform(double3 position, quaternion rotation)
+            => SetLocalToEcefTransform(math.inverse(Double4x4.FromTranslationRotation(position, rotation)));
+
+        static public void SetEcefToLocalTransform(double4x4 ecefToLocalTransform)
+            => SetLocalToEcefTransform(math.inverse(ecefToLocalTransform));
+
+        static public void SetLocalToEcefTransform(double3 position, quaternion rotation)
+            => SetLocalToEcefTransform(Double4x4.FromTranslationRotation(position, rotation));
+
+        static public void SetLocalToEcefTransform(double4x4 localToEcefTransform)
+        {
+            var newPosition = localToEcefTransform.Position();
+            var newRotation = localToEcefTransform.Rotation();
+
+            var currentPosition = localToEcefTransform.Position();
+            var currentRotation = localToEcefTransform.Rotation();
+
+            var distance = math.distance(currentPosition, newPosition);
+            var angle = Quaternion.Angle(currentRotation, newRotation);
+
+            // if (distance < Settings.minimumPositionThreshold && angle < Settings.minimumRotationThreshold)
+            //     return;
+
+            if (distance > Settings.minimumPositionThreshold)
+                Log.Info(LogGroup.Localizer, $"Distance threshold exceeded: {distance}");
+
+            if (angle > Settings.minimumRotationThreshold)
+                Log.Info(LogGroup.Localizer, $"Angle threshold exceeded: {angle}");
+
+            var georeference = GameObject.FindFirstObjectByType<CesiumGeoreference>();
+            if (georeference != null)
+            {
+                var ecefTransform = Utility.LocalToEcef(localToEcefTransform, new Vector3(0, 0, 0), Quaternion.identity);
+                georeference.SetOriginEarthCenteredEarthFixed(
+                    ecefTransform.position.x,
+                    ecefTransform.position.y,
+                    ecefTransform.position.z
+                );
+
+                var localRotation = Quaternion.Inverse(ecefTransform.rotation) * GetEUNRotationFromECEFPosition(ecefTransform.position);
+                georeference.transform.rotation = localRotation;
+            }
+
+            LocalizedReferenceFrame.localToEcefTransform = localToEcefTransform;
+            ecefToLocalTransform = math.inverse(localToEcefTransform);
+            onReferenceFrameUpdated?.Invoke();
         }
 
         static public (Vector3 position, Quaternion rotation) EcefToLocal(double3 position, quaternion rotation)
