@@ -19,6 +19,13 @@
       "dependencies": {},
       "hash": "98538ef7c7a22f4ec22101e72f7eec4ed831c724"
     },
+    "com.fofx.stateful": {
+      "version": "https://github.com/epjecha/StatefulUnity.git?path=Assets/Package",
+      "depth": 0,
+      "source": "git",
+      "dependencies": {},
+      "hash": "ab48e69d6ced6381017f42bcf5da527fedd340f4"
+    },
     "com.github-glitchenzo.nugetforunity": {
       "version": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
       "depth": 0,

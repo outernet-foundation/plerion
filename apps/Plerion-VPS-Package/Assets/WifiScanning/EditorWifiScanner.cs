@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Cysharp.Threading.Tasks;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     // Adapted from: https://gist.github.com/lmcarreiro/cb67f6695b1ed78a9ce281bdcb51b4bc
     public class WifiScanner

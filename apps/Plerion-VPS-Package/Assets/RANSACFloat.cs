@@ -4,7 +4,9 @@ using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Plerion.VPS
+using static Plerion.VisualPositioningSystem;
+
+namespace Plerion
 {
     static public class RANSACFloat
     {
@@ -22,7 +24,7 @@ namespace Plerion.VPS
                 float normalizedConfidence
             )> estimates)
         {
-            estimates = estimates.Reverse().Take(Settings.ransacHistorySize);
+            estimates = estimates.Reverse().Take(RansacHistorySize);
 
             if (estimates.Count() < sampleSize) return null;
 
@@ -73,7 +75,7 @@ namespace Plerion.VPS
 
             foreach (var estimate in estimates)
             {
-                score += Mathf.Pow(estimate.normalizedConfidence, Settings.confidenceFactor) * math.exp(-math.abs(estimate.estimate - model) / inlierThresholdPosition);
+                score += Mathf.Pow(estimate.normalizedConfidence, RansacConfidenceFactor) * math.exp(-math.abs(estimate.estimate - model) / inlierThresholdPosition);
             }
 
             return score / estimates.Count();

@@ -1,6 +1,6 @@
 using System;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     [Serializable]
     public class WifiAccessPoint

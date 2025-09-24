@@ -2,7 +2,7 @@ using System;
 
 using UnityEngine;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     public enum LogGroup
     {
@@ -11,7 +11,8 @@ namespace Plerion.VPS
         Immersal,
         Rest,
         Permissions,
-        MagicLeapCamera
+        MagicLeapCamera,
+        Stateful
     }
 
     public static class Log

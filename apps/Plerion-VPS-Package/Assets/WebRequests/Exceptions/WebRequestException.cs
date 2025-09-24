@@ -1,7 +1,7 @@
 using System;
 using UnityEngine.Networking;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     public class WebRequestException : Exception
     {

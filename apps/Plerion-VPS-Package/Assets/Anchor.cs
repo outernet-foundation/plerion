@@ -2,7 +2,7 @@ using System;
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     [ExecuteInEditMode]
     public class Anchor : MonoBehaviour
@@ -29,7 +29,7 @@ namespace Plerion.VPS
             if (_positionInitialized)
                 return;
 
-            var ecef = LocalizedReferenceFrame.LocalToEcef(transform.position, transform.rotation);
+            var ecef = VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);
 
             _lastKnownPosition = transform.position;
             _lastKnownRotation = transform.rotation;
@@ -42,7 +42,7 @@ namespace Plerion.VPS
 
         private void OnEnable()
         {
-            LocalizedReferenceFrame.onReferenceFrameUpdated +=
+            VisualPositioningSystem.onReferenceFrameUpdated +=
                 HandleLocalizedReferenceFrameChanged;
 
             HandleLocalizedReferenceFrameChanged();
@@ -50,7 +50,7 @@ namespace Plerion.VPS
 
         private void OnDisable()
         {
-            LocalizedReferenceFrame.onReferenceFrameUpdated -=
+            VisualPositioningSystem.onReferenceFrameUpdated -=
                 HandleLocalizedReferenceFrameChanged;
         }
 
@@ -59,7 +59,7 @@ namespace Plerion.VPS
             if (transform.position != _lastKnownPosition ||
                 transform.rotation != _lastKnownRotation)
             {
-                var ecef = LocalizedReferenceFrame.LocalToEcef(transform.position, transform.rotation);
+                var ecef = VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);
                 _lastKnownPosition = transform.position;
                 _lastKnownRotation = transform.rotation;
                 _ecefPosition = ecef.position;
@@ -70,7 +70,7 @@ namespace Plerion.VPS
 
         private void HandleLocalizedReferenceFrameChanged()
         {
-            var local = LocalizedReferenceFrame.EcefToLocal(_ecefPosition, _ecefRotation);
+            var local = VisualPositioningSystem.EcefToUnityWorld(_ecefPosition, _ecefRotation);
             _lastKnownPosition = local.position;
             _lastKnownRotation = local.rotation;
             transform.position = local.position;

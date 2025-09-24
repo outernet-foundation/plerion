@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using Cysharp.Threading.Tasks;
 using AOT;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     [StructLayout(LayoutKind.Sequential)]
     public struct LocalizeResult

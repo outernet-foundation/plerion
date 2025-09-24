@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
-using static Plerion.VPS.LocalizedReferenceFrame;
+using static Plerion.VisualPositioningSystem;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     static public class RANSAC
     {
@@ -26,7 +26,7 @@ namespace Plerion.VPS
         {
             if (estimates.Count() < sampleSize) return null;
 
-            estimates = estimates.Reverse().Take(Settings.ransacHistorySize);
+            estimates = estimates.Reverse().Take(RansacHistorySize);
 
             var estimatesList = estimates.ToList();
 
@@ -40,7 +40,7 @@ namespace Plerion.VPS
                     // Compute the local to ecef transform for each estimate (needs to be be
                     // recomputed when floor plane height changes, so for simplicity just always
                     // recompute)
-                    .Select(estimate => ComputeLocalToEcefTransform(estimate))
+                    .Select(estimate => ComputeUnityWorldToEcefTransform(estimate))
                     .ToList());
 
                 bestScore = ComputeModelScore(
@@ -107,13 +107,13 @@ namespace Plerion.VPS
             {
                 var positionScore = math.exp(
                     -math.length(estimate.transform.Position() - position) /
-                    Settings.positionInlierThreshold);
+                    VisualPositioningSystem.RansacPositionInlierThreshold);
 
                 var rotationScore = math.exp(
                     -math.abs(Quaternion.Angle(estimate.transform.Rotation(), rotation)) /
-                    Settings.rotationInlierThreshold);
+                    VisualPositioningSystem.RansacRotationInlierThreshold);
 
-                score += Mathf.Pow(estimate.normalizedConfidence, Settings.confidenceFactor) * (positionScore + rotationScore);
+                score += Mathf.Pow(estimate.normalizedConfidence, VisualPositioningSystem.RansacConfidenceFactor) * (positionScore + rotationScore);
             }
 
             return score / estimates.Count();

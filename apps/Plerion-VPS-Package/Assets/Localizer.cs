@@ -1,10 +1,11 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using UnityEngine;
 
-namespace Plerion.VPS
+namespace Plerion
 {
-    static public class Localizer
+    public static class CameraLocalization
     {
         enum CameraStatus
         {
@@ -13,128 +14,77 @@ namespace Plerion.VPS
             Running
         }
 
-        static public Status Status { get; } = new Status();
-        static private CameraStatus cameraStatus = CameraStatus.Stopped;
-        static private CancellationTokenSource _cancellationTokenSource;
+        public static bool Enabled { get; private set; }
+        public static Status Status { get; } = new Status();
 
-        static public void Initialize()
+        private static ICameraProvider _cameraProvider;
+        private static CancellationTokenSource _cancellationTokenSource;
+
+        public static void SetProvider(ICameraProvider cameraProvider)
         {
-            CameraCapture.Initialize(EstimateCameraPose);
+            if (Enabled)
+                throw new Exception("Cannot set provider while localization is active. Call Disable() first.");
+
+            _cameraProvider = cameraProvider;
         }
 
-        static public void Terminate()
+        public static void Start()
         {
-            StopCameraCapture();
-        }
+            if (Enabled)
+                throw new Exception("Camera Localization is already enabled.");
 
-        static public void StartCameraCapture()
-        {
-            if (cameraStatus == CameraStatus.Running ||
-                cameraStatus == CameraStatus.Starting)
-            {
-                return;
-            }
+            Enabled = true;
 
-            _cancellationTokenSource?.Dispose();
+            _cameraProvider.Start();
             _cancellationTokenSource = new CancellationTokenSource();
-            EstimateCameraPose(_cancellationTokenSource.Token).Forget();
+
+            ExecuteCameraLocalization(_cancellationTokenSource.Token).Forget();
         }
 
-        static public void StopCameraCapture()
+        public static void Stop()
         {
-            if (cameraStatus == CameraStatus.Stopped)
-                return;
+            Enabled = false;
 
-            _cancellationTokenSource.Cancel();
+            _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
             _cancellationTokenSource = null;
+
+            _cameraProvider.Stop();
         }
 
-        static private async UniTask EstimateCameraPose(CancellationToken cancellationToken = default)
+        private static async UniTask ExecuteCameraLocalization(CancellationToken cancellationToken = default)
         {
-            cameraStatus = CameraStatus.Starting;
-            Log.Info(LogGroup.Localizer, "Starting camera capture");
-
-            await CameraCapture.Start();
-            await UniTask.SwitchToMainThread();
-
-            cameraStatus = CameraStatus.Running;
-            Log.Info(LogGroup.Localizer, "Camera capture started");
-
             while (!cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var localization = await CameraCapture.CaptureCameraImageAndEstimatePose();
-                    await UniTask.SwitchToMainThread();
-                    Status.AddLocalization(localization);
+                    var cameraImage = await _cameraProvider.GetFrame();
 
-                    if (localization == null)
-                        return;
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
 
-                    Log.Info(LogGroup.Localizer, $"Localized to map {localization.Value.map.Name} with confidence {localization.Value.confidence}");
-                    LocalizedReferenceFrame.ApplyEstimate(localization.Value);
+                    if (!cameraImage.HasValue)
+                        continue;
+
+                    await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
+
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
+                    await VisualPositioningSystem.LocalizeFromCameraImage(
+                        cameraImage.Value,
+                        Camera.main.transform.position,
+                        Camera.main.transform.rotation
+                    );
                 }
                 catch (Exception exception)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
                     Log.Error(LogGroup.Localizer, "Exception thrown during localization", exception);
                 }
             }
-
-            CameraCapture.Stop();
-            cameraStatus = CameraStatus.Stopped;
-            Log.Info(LogGroup.Localizer, "Camera capture stopped");
-        }
-
-        static private CameraPoseEstimate? EstimateCameraPose(CameraImage cameraImage)
-        {
-            if (cameraImage.pixelBuffer == IntPtr.Zero)
-                return null;
-
-            var cameraRotation = cameraImage.cameraRotation;
-            cameraRotation *= cameraImage.cameraOrientation;
-            cameraRotation.SwitchHandedness();
-
-            var localizeResult = ImmersalNative.Localize(
-                0,
-                IntPtr.Zero,
-                cameraImage.imageWidth,
-                cameraImage.imageHeight,
-                new UnityEngine.Vector4(
-                    cameraImage.focalLength.x,
-                    cameraImage.focalLength.y,
-                    cameraImage.principalPoint.x,
-                    cameraImage.principalPoint.y
-                ),
-                cameraImage.pixelBuffer,
-                1,
-                0,
-                cameraRotation).AsTask().Result;
-
-            if (localizeResult.mapId == -1 ||
-                // This is an edge case I only just discovered, which can happen because we don't
-                // immediately add the native handle to the native handle array upon loading the map
-                // into Immersal (which is what we shoudl be doing). Hacking around it for now.
-                !MapManager.TryGetMap(localizeResult.mapId, out var map))
-            {
-                return null;
-            }
-
-            var estimatedRotation = localizeResult.rotation;
-            var estimatedPosition = localizeResult.position;
-            estimatedRotation *= cameraImage.cameraOrientation;
-            estimatedPosition.SwitchHandedness();
-            estimatedRotation.SwitchHandedness();
-
-            return new CameraPoseEstimate
-            {
-                cameraPosition = cameraImage.cameraPosition,
-                cameraRotation = cameraImage.cameraRotation,
-                estimatedCameraPosition = estimatedPosition,
-                estimatedCameraRotation = estimatedRotation,
-                confidence = localizeResult.confidence,
-                map = map
-            };
         }
     }
 }

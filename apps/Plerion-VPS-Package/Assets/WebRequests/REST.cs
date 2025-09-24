@@ -5,7 +5,7 @@ using Cysharp.Threading.Tasks;
 using Newtonsoft.Json;
 using UnityEngine.Networking;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     public static class RestClient
     {

@@ -1,28 +1,27 @@
-#if !UNITY_EDITOR && OUTERNET_MAGIC_LEAP
+// #if UNITY_LUMIN
 #pragma warning disable CS0618
 using System;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using AOT;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.XR.MagicLeap;
 using UnityEngine.XR.MagicLeap.Native;
-using static Plerion.VPS.NativeBindings;
-using static Plerion.VPS.Assert;
+using static Plerion.NativeBindings;
 
-namespace Plerion.VPS
+namespace Plerion
 {
-    public static class CameraCapture
+    public class MagicLeapCameraProvider : ICameraProvider
     {
+        public static bool initialized { get; private set; }
+        public static bool running { get; private set; }
         private static bool permissionGranted = false;
         private static readonly MLPermissions.Callbacks permissionCallbacks = new MLPermissions.Callbacks();
         private static ulong nativeHandle = ulong.MaxValue;
-        private static Func<CameraImage, CameraPoseEstimate?> onImageCaptured;
-        private static TaskCompletionSource<CameraPoseEstimate?> captureTaskSource = null;
         private static bool processingFrame = false;
         private static byte[] pixelBuffer;
-
 
         private static MLCameraDeviceAvailabilityStatusCallbacks deviceAvailabilityStatusCallbacks = new()
         {
@@ -88,10 +87,33 @@ namespace Plerion.VPS
             }
         };
 
-        public static void Initialize(Func<CameraImage, CameraPoseEstimate?> onImageCaptured)
-        {
-            CameraCapture.onImageCaptured = onImageCaptured;
+        private static TaskCompletionSource<CameraImage?> getFrameTaskCompletionSource;
 
+        public MagicLeapCameraProvider()
+        {
+            Initialize();
+        }
+
+        public void Start()
+        {
+            StartInternal().Forget();
+        }
+
+        public void Stop()
+        {
+            StopInternal();
+        }
+
+        public Task<CameraImage?> GetFrame()
+        {
+            if (getFrameTaskCompletionSource == null)
+                getFrameTaskCompletionSource = new TaskCompletionSource<CameraImage?>();
+
+            return getFrameTaskCompletionSource.Task;
+        }
+
+        private static void Initialize()
+        {
             permissionCallbacks.OnPermissionGranted += (string permission) =>
             {
                 if (permission != MLPermission.Camera) return;
@@ -111,7 +133,7 @@ namespace Plerion.VPS
             MLPermissions.RequestPermission(MLPermission.Camera, permissionCallbacks);
         }
 
-        public static async UniTask Start()
+        private static async UniTask StartInternal()
         {
             if (!permissionGranted)
             {
@@ -139,36 +161,25 @@ namespace Plerion.VPS
             Check(MLCameraCaptureVideoStart(nativeHandle), "MLCameraCaptureVideoStart");
         }
 
-        public static void Stop()
+        private static void StopInternal()
         {
             Check(MLCameraCaptureVideoStop(nativeHandle), "MLCameraCaptureVideoStop");
             Check(MLCameraDisconnect(nativeHandle), "MLCameraDisconnect");
         }
 
-        public static async UniTask<CameraPoseEstimate?> CaptureCameraImageAndEstimatePose()
-        {
-            ASSERT(captureTaskSource == null, "CaptureCamera is already in progress");
-
-
-            captureTaskSource = new TaskCompletionSource<CameraPoseEstimate?>();
-            var cameraImage = await captureTaskSource.Task;
-            captureTaskSource = null;
-            processingFrame = false;
-
-            return cameraImage;
-        }
-
         [MonoPInvokeCallback(typeof(MLCameraCaptureCallbacks.OnVideoBufferAvailableDelegate))]
         public static void OnVideoBufferAvailableCallback(ref MLCameraOutput output, ulong _, ref MLCameraResultExtras extra, IntPtr __)
         {
-            if (extra.Intrinsics == IntPtr.Zero) return;
-
-            if (processingFrame) return;
-            if (captureTaskSource == null) return;
+            if (extra.Intrinsics == IntPtr.Zero ||
+                getFrameTaskCompletionSource == null ||
+                processingFrame)
+            {
+                return;
+            }
 
             processingFrame = true;
 
-            MLCameraIntrinsicCalibrationParameters mLCameraIntrinsicCalibrationParameters = Marshal.PtrToStructure<MLCameraIntrinsicCalibrationParameters>(extra.Intrinsics);
+            var mLCameraIntrinsicCalibrationParameters = Marshal.PtrToStructure<MLCameraIntrinsicCalibrationParameters>(extra.Intrinsics);
 
             IntPtr data = output.Planes[0].Data;
             int width = (int)output.Planes[0].Width;
@@ -177,49 +188,24 @@ namespace Plerion.VPS
             int size = width * height * pixelStride;
 
             if (pixelBuffer is null || pixelBuffer.Length != size)
-            {
                 pixelBuffer = new byte[size];
-            }
 
             Marshal.Copy(data, pixelBuffer, 0, size);
 
-            // C# 11
-            async UniTask EsimatePose()
+            var completionSource = getFrameTaskCompletionSource;
+
+            getFrameTaskCompletionSource = null;
+            processingFrame = false;
+
+            completionSource.SetResult(new CameraImage
             {
-                try
-                {
-                    // Ensure we are main the main thread before grabbing the current camera position
-                    // and rotation
-                    await UniTask.SwitchToMainThread();
-                    var capturedImage = new CameraImage
-                    {
-                        imageWidth = width,
-                        imageHeight = height,
-                        pixelBuffer = Marshal.UnsafeAddrOfPinnedArrayElement(pixelBuffer, 0),
-                        focalLength = MLConvert.ToUnity(mLCameraIntrinsicCalibrationParameters.FocalLength),
-                        principalPoint = MLConvert.ToUnity(mLCameraIntrinsicCalibrationParameters.PrincipalPoint),
-                        cameraOrientation = Quaternion.Euler(0f, 0f, 180.0f),
-                        cameraPosition = Camera.main.transform.position,
-                        cameraRotation = Camera.main.transform.rotation
-                    };
-
-                    // Switch to the the thread pool to perform the pose estimation
-                    await UniTask.SwitchToThreadPool();
-                    var localization = onImageCaptured(capturedImage);
-                    await UniTask.SwitchToMainThread();
-
-                    captureTaskSource.SetResult(localization);
-                }
-                catch (Exception exception)
-                {
-                    Log.Error(LogGroup.MagicLeapCamera, exception, "Exception thrown during pose estimation");
-                    captureTaskSource.SetResult(null);
-                }
-            }
-
-            UniTask
-                .Create(EsimatePose)
-                .Forget();
+                imageWidth = width,
+                imageHeight = height,
+                pixelBuffer = pixelBuffer,
+                focalLength = MLConvert.ToUnity(mLCameraIntrinsicCalibrationParameters.FocalLength),
+                principalPoint = MLConvert.ToUnity(mLCameraIntrinsicCalibrationParameters.PrincipalPoint),
+                cameraOrientation = Quaternion.Euler(0f, 0f, 180.0f)
+            });
         }
 
         static void Check(MLResult.Code code, string functionName)
@@ -284,7 +270,7 @@ namespace Plerion.VPS
         [MonoPInvokeCallback(typeof(MLCameraDeviceStatusCallbacks.OnDeviceDisconnectedDelegate))]
         public static void OnDeviceDisconnectedCallback(DisconnectReason disconnectReason, IntPtr __)
         {
-            Log.Warn(LogGroup.MagicLeapCamera, "Magic Leap Camera Device Disconnected: {DisconnectReason}", disconnectReason.ToString());
+            Log.Warn(LogGroup.MagicLeapCamera, $"Magic Leap Camera Device Disconnected: {disconnectReason}");
 
             // async UniTask Reconnect()
             // {
@@ -303,8 +289,8 @@ namespace Plerion.VPS
         [MonoPInvokeCallback(typeof(MLCameraDeviceStatusCallbacks.OnDeviceErrorDelegate))]
         public static void OnDeviceErrorCallback(ErrorType errorType, IntPtr __)
         {
-            Log.Warn(LogGroup.MagicLeapCamera, "Magic Leap Camera Device Error: {ErrorType}", errorType.ToString());
+            Log.Warn(LogGroup.MagicLeapCamera, $"Magic Leap Camera Device Error: {errorType}");
         }
     }
 }
-#endif
+// #endif

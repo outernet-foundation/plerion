@@ -5,7 +5,7 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     class WifiScanner
     {

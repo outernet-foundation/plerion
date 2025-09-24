@@ -2,7 +2,7 @@ using UnityEngine;
 using UnityEditor;
 using JetBrains.Annotations;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     [CustomEditor(typeof(Anchor))]
     public class AnchorInspector : Editor

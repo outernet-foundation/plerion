@@ -1,33 +1,19 @@
-#if !UNITY_EDITOR && OUTERNET_ANDROID_MOBILE
-using System;
-using System.Threading.Tasks;
+#if UNITY_ANDROID
 using Cysharp.Threading.Tasks;
-using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-using static Plerion.VPS.Assert;
 
-namespace Plerion.VPS
+namespace Plerion
 {
-    public static class CameraCapture
+    public static class ARFoundationCameraLocalizer
     {
         private static ARCameraManager cameraManager;
-        private static Func<CameraImage, CameraPoseEstimate?> onImageCaptured;
-        static TaskCompletionSource<CameraPoseEstimate?> captureTaskSource = null;
-        static bool processingFrame = false;
+        private static bool processingFrame = false;
 
-        public static void Initialize(Func<CameraImage, CameraPoseEstimate?> onImageCaptured)
+        public static void Start(ARCameraManager arCameraManager)
         {
-            CameraCapture.onImageCaptured = onImageCaptured;
-        }
-
-#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-        public static async UniTask Start()
-#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
-        {
-            cameraManager = UnityEngine.Object.FindObjectOfType<ARCameraManager>();
-
+            cameraManager = arCameraManager;
             cameraManager.frameReceived += OnFrameReceived;
         }
 
@@ -36,20 +22,8 @@ namespace Plerion.VPS
             cameraManager.frameReceived += OnFrameReceived;
         }
 
-        public static async UniTask<CameraPoseEstimate?> CaptureCameraImageAndEstimatePose()
-        {
-            ASSERT(captureTaskSource == null, "CaptureCamera is already in progress");
-
-            captureTaskSource = new TaskCompletionSource<CameraPoseEstimate?>();
-            var cameraPoseEstimate = await captureTaskSource.Task;
-            captureTaskSource = null;
-
-            return cameraPoseEstimate;
-        }
-
         private static void OnFrameReceived(ARCameraFrameEventArgs args)
         {
-            if (captureTaskSource == null) return;
             if (processingFrame) return;
 
             if (!cameraManager.TryAcquireLatestCpuImage(out XRCpuImage image) ||
@@ -60,11 +34,11 @@ namespace Plerion.VPS
 
             processingFrame = true;
 
-            IntPtr planeData;
-            unsafe
-            {
-                planeData = (IntPtr)image.GetPlane(0).data.GetUnsafePtr();
-            }
+            var pixelBuffer = image.GetPlane(0).data.ToArray();
+            var width = image.width;
+            var height = image.height;
+
+            image.Dispose();
 
             float angle;
             switch (Screen.orientation)
@@ -86,33 +60,25 @@ namespace Plerion.VPS
                     break;
             }
 
-            var capturedImage = new CameraImage
+            LocalizeWithImage(width, height, pixelBuffer, intrinsics.focalLength, intrinsics.principalPoint, angle).Forget();
+        }
+
+        private static async UniTask LocalizeWithImage(int width, int height, byte[] pixelBuffer, Vector3 focalLength, Vector3 principalPoint, float cameraOrientation)
+        {
+            await UniTask.SwitchToMainThread();
+            await VisualPositioningSystem.LocalizeFromCameraImage(new CameraImage
             {
-                imageWidth = image.width,
-                imageHeight = image.height,
-                pixelBuffer = planeData,
-                focalLength = intrinsics.focalLength,
-                principalPoint = intrinsics.principalPoint,
+                imageWidth = width,
+                imageHeight = height,
+                pixelBuffer = pixelBuffer,
+                focalLength = focalLength,
+                principalPoint = principalPoint,
                 cameraPosition = Camera.main.transform.position,
                 cameraRotation = Camera.main.transform.rotation,
-                cameraOrientation = Quaternion.Euler(0f, 0f, angle),
-            };
+                cameraOrientation = Quaternion.Euler(0f, 0f, cameraOrientation),
+            });
 
-            // C# 11
-            async UniTask EsimatePose()
-            {
-                await UniTask.SwitchToThreadPool();
-                var localization = onImageCaptured(capturedImage);
-                await UniTask.SwitchToMainThread();
-
-                image.Dispose();
-                processingFrame = false;
-                captureTaskSource.SetResult(localization);
-            }
-
-            UniTask
-                .Create(EsimatePose)
-                .Forget();
+            processingFrame = false;
         }
     }
 }

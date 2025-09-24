@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     public class AssertionFailedException : Exception
     {

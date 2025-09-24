@@ -1,6 +1,6 @@
 using System;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     public class ResponseDeserializationException : Exception
     {

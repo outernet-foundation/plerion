@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     public class Status
     {

@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 using UnityEngine.XR.MagicLeap;
 using UnityEngine.XR.MagicLeap.Native;
 
-namespace Plerion.VPS
+namespace Plerion
 {
     public class NativeBindings : MagicLeapNativeBindings
     {
