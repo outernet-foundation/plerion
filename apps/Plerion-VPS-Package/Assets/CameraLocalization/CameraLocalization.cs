@@ -80,7 +80,7 @@ namespace Plerion
                     if (exception is TaskCanceledException)
                         break;
 
-                    Log.Error(LogGroup.Localizer, "Exception thrown during localization", exception);
+                    Log.Error(LogGroup.CameraLocalization, "Exception thrown during localization", exception);
                 }
             }
         }

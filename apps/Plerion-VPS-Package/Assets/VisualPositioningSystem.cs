@@ -25,6 +25,10 @@ namespace Plerion
         // The height above the ground of the blk2go camera array at during scan initialization
         const float scanneraOriginHeightOffset = 0.15f;
 
+        public static double RoughDeviceLatitude;
+        public static double RoughDeviceLongitude;
+        public static float RoughDeviceElevation;
+
         public static bool FallbackToMostRecentEstimate = false;
         public static bool DiscardBelowAverageConfidenceEstimates = false;
         public static float MinimumPositionThreshold = 0.05f;
@@ -40,14 +44,7 @@ namespace Plerion
         private static double4x4 ecefToUnityWorldTransform = math.inverse(double4x4.identity);
         private static Queue<CameraPoseEstimate> estimateHistory = new Queue<CameraPoseEstimate>();
 
-        public static event Action onReferenceFrameUpdated;
-
-        public static void Initialize()
-        {
-            ImmersalNative.Initialize();
-            ImmersalNative.SetInteger("LocalizationMaxPixels", 960 * 720);
-            ImmersalNative.SetInteger("NumThreads", 1);
-        }
+        public static event Action OnReferenceFrameUpdated;
 
         public static void ClearEstimateHistory()
         {
@@ -119,7 +116,7 @@ namespace Plerion
             }
             catch (Exception exception)
             {
-                Log.Error(LogGroup.Localizer, "Failed to apply estimate", exception);
+                Log.Error(LogGroup.VisualPositioningSystem, "Failed to apply estimate", exception);
             }
         }
 
@@ -143,18 +140,21 @@ namespace Plerion
             var distance = math.distance(currentPosition, newPosition);
             var angle = Quaternion.Angle(currentRotation, newRotation);
 
-            if (distance < MinimumPositionThreshold && angle < MinimumRotationThreshold)
-                return;
+            if (Application.isPlaying)
+            {
+                if (distance < MinimumPositionThreshold && angle < MinimumRotationThreshold)
+                    return;
 
-            if (distance > MinimumPositionThreshold)
-                Log.Info(LogGroup.Localizer, $"Distance threshold exceeded: {distance}");
+                if (distance > MinimumPositionThreshold)
+                    Log.Info(LogGroup.VisualPositioningSystem, $"Distance threshold exceeded: {distance}");
 
-            if (angle > MinimumRotationThreshold)
-                Log.Info(LogGroup.Localizer, $"Angle threshold exceeded: {angle}");
+                if (angle > MinimumRotationThreshold)
+                    Log.Info(LogGroup.VisualPositioningSystem, $"Angle threshold exceeded: {angle}");
+            }
 
             VisualPositioningSystem.unityWorldToEcefTransform = unityWorldToEcefTransform;
             ecefToUnityWorldTransform = math.inverse(unityWorldToEcefTransform);
-            onReferenceFrameUpdated?.Invoke();
+            OnReferenceFrameUpdated?.Invoke();
         }
 
         public static (Vector3 position, Quaternion rotation) EcefToUnityWorld(double3 position, quaternion rotation)
@@ -211,7 +211,10 @@ namespace Plerion
                     cameraImage.principalPoint.y
                 ),
                 cameraRotation,
-                cameraImage.pixelBuffer
+                cameraImage.pixelBuffer,
+                RoughDeviceLatitude,
+                RoughDeviceLongitude,
+                RoughDeviceElevation
             );
 
             if (localizeResult.mapID == Guid.Empty)

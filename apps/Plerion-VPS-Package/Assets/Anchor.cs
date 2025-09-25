@@ -42,7 +42,7 @@ namespace Plerion
 
         private void OnEnable()
         {
-            VisualPositioningSystem.onReferenceFrameUpdated +=
+            VisualPositioningSystem.OnReferenceFrameUpdated +=
                 HandleLocalizedReferenceFrameChanged;
 
             HandleLocalizedReferenceFrameChanged();
@@ -50,7 +50,7 @@ namespace Plerion
 
         private void OnDisable()
         {
-            VisualPositioningSystem.onReferenceFrameUpdated -=
+            VisualPositioningSystem.OnReferenceFrameUpdated -=
                 HandleLocalizedReferenceFrameChanged;
         }
 
@@ -66,7 +66,6 @@ namespace Plerion
                 _ecefRotation = ecef.rotation;
             }
         }
-
 
         private void HandleLocalizedReferenceFrameChanged()
         {

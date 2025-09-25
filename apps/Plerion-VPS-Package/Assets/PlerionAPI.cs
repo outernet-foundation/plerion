@@ -12,7 +12,7 @@ namespace Plerion
         public string Name;
         public bool Active;
         public int Lighting;
-        public int Color;
+        public long Color;
         public double PositionX;
         public double PositionY;
         public double PositionZ;
@@ -20,12 +20,12 @@ namespace Plerion
         public double RotationY;
         public double RotationZ;
         public double RotationW;
-        public List<double> Points;
+        public Vector3[] Points;
 
         public double3 EcefPosition => new double3(PositionX, PositionY, PositionZ);
         public quaternion EcefRotation => new quaternion((float)RotationX, (float)RotationY, (float)RotationZ, (float)RotationW);
 
-        public LocalizationMapModel(Guid id = default, string name = default, bool active = default, int lighting = default, int color = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, List<double> points = default)
+        public LocalizationMapModel(Guid id = default, string name = default, bool active = default, int lighting = default, long color = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, Vector3[] points = default)
         {
             this.Id = id;
             // to ensure "name" is required (not null)
@@ -83,14 +83,14 @@ namespace Plerion
             return new LocalizeResponse();
         }
 
-        public static async UniTask<List<LocalizationMapModel>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting)
+        public static async UniTask<List<LocalizationMapModel>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting, bool includePoints)
         {
             return new List<LocalizationMapModel>();
         }
 
-        public static async UniTask<byte[]> DownloadMapBytes(Guid id, bool skipCache = false)
+        public static async UniTask<LocalizationMapModel> GetMap(Guid id, bool includePoints = false)
         {
-            return new byte[0];
+            return new LocalizationMapModel(id);
         }
     }
 }

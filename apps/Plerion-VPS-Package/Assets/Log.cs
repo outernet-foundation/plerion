@@ -6,13 +6,13 @@ namespace Plerion
 {
     public enum LogGroup
     {
-        Localizer,
-        PlaneDetection,
+        VisualPositioningSystem,
+        CameraLocalization,
         Immersal,
         Rest,
         Permissions,
         MagicLeapCamera,
-        Stateful
+        MapVisualization,
     }
 
     public static class Log
