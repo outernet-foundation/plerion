@@ -8,11 +8,13 @@ namespace Plerion
 {
     public struct CameraPoseEstimate
     {
-        public Vector3 unityWorldCameraPosition; // Unity coordinates
-        public Quaternion unityWorldCameraRotation; // Unity coordinates
-        public double3 ecefCameraPosition; // ECEF coordinates
-        public quaternion ecefCameraRotation; // ECEF coordinates
-        public int confidence;
         public Guid map;
+        public double3 mapEcefPosition; // ECEF coordinates
+        public quaternion mapEcefRotation; // ECEF coordinates
+        public Vector3 originalCameraWorldPosition; // Unity coordinates
+        public Quaternion originalCameraWorldRotation; // Unity coordinates
+        public Vector3 estimatedCameraPosition; // Local to map
+        public Quaternion estimatedCameraRotation; // Local to map
+        public int confidence;
     }
 }

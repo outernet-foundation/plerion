@@ -52,8 +52,10 @@ namespace Plerion
     public class LocalizeResponse
     {
         public Guid mapID;
-        public double3 ecefPosition;
-        public quaternion ecefRotation;
+        public double3 mapEcefPosition;
+        public quaternion mapEcefRotation;
+        public Vector3 estimatedCameraPosition;
+        public Quaternion estimatedCameraRotation;
         public int confidence;
     }
 

@@ -33,7 +33,9 @@ namespace Plerion
         public static bool DiscardBelowAverageConfidenceEstimates = false;
         public static float MinimumPositionThreshold = 0.05f;
         public static float MinimumRotationThreshold = 2f;
-        public static float? FloorHeight = null;
+        public static float? DetectedFloorHeight = null;
+        public static float? EstimatedFloorHeight { get; private set; } = null;
+        public static float? FloorHeight => EstimatedFloorHeight ?? DetectedFloorHeight;
 
         public static float RansacPositionInlierThreshold = 0.05f;
         public static float RansacRotationInlierThreshold = 0.05f;
@@ -45,80 +47,6 @@ namespace Plerion
         private static Queue<CameraPoseEstimate> estimateHistory = new Queue<CameraPoseEstimate>();
 
         public static event Action OnReferenceFrameUpdated;
-
-        public static void ClearEstimateHistory()
-        {
-            estimateHistory.Clear();
-        }
-
-        public static void ApplyEstimate(CameraPoseEstimate estimate)
-        {
-            estimateHistory.Enqueue(estimate);
-
-            if (estimateHistory.Count > estimateHistorySize)
-                estimateHistory.Dequeue();
-
-            var orderedEstimates = estimateHistory
-                .OrderByDescending(estimate => estimate.confidence)
-                .ToList();
-
-            float range = orderedEstimates.First().confidence - orderedEstimates.Last().confidence;
-
-            try
-            {
-                var filteredEstimateHistory = estimateHistory.Select(estimate => estimate);
-
-                if (DiscardBelowAverageConfidenceEstimates)
-                {
-                    // Discard estimates below the average confidence
-                    var averageConfidence =
-                        filteredEstimateHistory.Select(estimate => estimate.confidence).Average();
-                    filteredEstimateHistory =
-                        filteredEstimateHistory.Where(estimate => estimate.confidence >= averageConfidence);
-                }
-
-                var estimates = filteredEstimateHistory.Select(estimate => (
-                    estimate,
-                    normalizedConfidence:
-                        (estimate.confidence - orderedEstimates.Last().confidence) / range,
-                    // Compute the local to ecef transform for each estimate (needs to be be
-                    // recomputed when floor plane height changes, so for simplicity just always
-                    // recompute)
-                    transform: ComputeUnityWorldToEcefTransform(estimate)
-                ));
-
-                double4x4? newLocalToEcefTransform = null;
-
-                // if (Settings.localizationReducer == Shared.LocalizationReducer.FAV)
-                // {
-                //     newTargetLocalToEcefTransform = FAV.Compute(estimates);
-                // }
-                // else if (Settings.localizationReducer == Shared.LocalizationReducer.RANSAC)
-                {
-                    newLocalToEcefTransform = RANSAC.Compute(estimates);
-                }
-
-                if (!newLocalToEcefTransform.HasValue)
-                {
-                    if (FallbackToMostRecentEstimate)
-                    {
-                        newLocalToEcefTransform = estimates.Last().transform;
-                    }
-                    else
-                    {
-                        newLocalToEcefTransform = estimates
-                            .OrderByDescending(estimate => estimate.estimate.confidence)
-                            .First().transform;
-                    }
-                }
-
-                SetUnityWorldToEcefTransform(newLocalToEcefTransform.Value);
-            }
-            catch (Exception exception)
-            {
-                Log.Error(LogGroup.VisualPositioningSystem, "Failed to apply estimate", exception);
-            }
-        }
 
         public static void SetEcefToUnityWorldTransform(double3 position, quaternion rotation)
             => SetUnityWorldToEcefTransform(math.inverse(Double4x4.FromTranslationRotation(position, rotation)));
@@ -222,41 +150,120 @@ namespace Plerion
 
             ApplyEstimate(new CameraPoseEstimate
             {
-                unityWorldCameraPosition = cameraPosition,
-                unityWorldCameraRotation = cameraRotation,
-                ecefCameraPosition = localizeResult.ecefPosition,
-                ecefCameraRotation = localizeResult.ecefRotation,
+                mapEcefPosition = localizeResult.mapEcefPosition,
+                mapEcefRotation = localizeResult.mapEcefRotation,
+                originalCameraWorldPosition = cameraPosition,
+                originalCameraWorldRotation = cameraRotation,
+                estimatedCameraPosition = localizeResult.estimatedCameraPosition,
+                estimatedCameraRotation = localizeResult.estimatedCameraRotation,
                 confidence = localizeResult.confidence,
                 map = localizeResult.mapID
             });
         }
 
+        public static void ApplyEstimate(CameraPoseEstimate estimate)
+        {
+            estimateHistory.Enqueue(estimate);
+
+            if (estimateHistory.Count > estimateHistorySize)
+                estimateHistory.Dequeue();
+
+            var orderedEstimates = estimateHistory
+                .OrderByDescending(estimate => estimate.confidence)
+                .ToList();
+
+            float range = orderedEstimates.First().confidence - orderedEstimates.Last().confidence;
+
+            try
+            {
+                var filteredEstimateHistory = estimateHistory.Select(estimate => estimate);
+
+                if (DiscardBelowAverageConfidenceEstimates)
+                {
+                    // Discard estimates below the average confidence
+                    var averageConfidence =
+                        filteredEstimateHistory.Select(estimate => estimate.confidence).Average();
+                    filteredEstimateHistory =
+                        filteredEstimateHistory.Where(estimate => estimate.confidence >= averageConfidence);
+                }
+
+                // If we have any horizontal planes, use the one closest to the estimated floor height
+                EstimatedFloorHeight = RANSACFloat.Compute(estimateHistory.Select(estimate => (
+                    estimate: estimate.originalCameraWorldPosition.y - estimate.estimatedCameraPosition.y - scanneraOriginHeightOffset,
+                    normalizedConfidence: (estimate.confidence - orderedEstimates.Last().confidence) / range
+                )));
+
+                if (EstimatedFloorHeight.HasValue)
+                    Log.Info(LogGroup.VisualPositioningSystem, $"Estimated floor height: {EstimatedFloorHeight}");
+
+                var estimates = filteredEstimateHistory.Select(estimate => (
+                    estimate,
+                    normalizedConfidence: (estimate.confidence - orderedEstimates.Last().confidence) / range,
+                    // Compute the local to ecef transform for each estimate (needs to be be
+                    // recomputed when floor plane height changes, so for simplicity just always
+                    // recompute)
+                    transform: ComputeUnityWorldToEcefTransform(estimate)
+                ));
+
+                double4x4? newLocalToEcefTransform = RANSAC.Compute(estimates);
+
+                if (!newLocalToEcefTransform.HasValue)
+                {
+                    if (FallbackToMostRecentEstimate)
+                    {
+                        newLocalToEcefTransform = estimates.Last().transform;
+                    }
+                    else
+                    {
+                        newLocalToEcefTransform = estimates
+                            .OrderByDescending(estimate => estimate.estimate.confidence)
+                            .First().transform;
+                    }
+                }
+
+                SetUnityWorldToEcefTransform(newLocalToEcefTransform.Value);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(LogGroup.VisualPositioningSystem, "Failed to apply estimate", exception);
+            }
+        }
+
         public static double4x4 ComputeUnityWorldToEcefTransform(CameraPoseEstimate estimate)
         {
-            var unityWorldCameraPosition = estimate.unityWorldCameraPosition;
-            var unityWorldCameraRotation = estimate.unityWorldCameraRotation;
-            var ecefCameraPosition = estimate.ecefCameraPosition;
-            var ecefCameraRotation = estimate.ecefCameraRotation;
+            var originalCameraWorldPosition = estimate.originalCameraWorldPosition;
+            var originalCameraWorldRotation = estimate.originalCameraWorldRotation;
+            var estimatedCameraPosition = estimate.estimatedCameraPosition;
+            var estimatedCameraRotation = estimate.estimatedCameraRotation;
 
             // Up is always up
-            unityWorldCameraRotation = Quaternion.LookRotation(Vector3.Cross(unityWorldCameraRotation * Vector3.right, Vector3.up), Vector3.up);
-            ecefCameraRotation = Quaternion.LookRotation(Vector3.Cross((Quaternion)ecefCameraRotation * Vector3.right, Vector3.up), Vector3.up);
+            originalCameraWorldRotation = Quaternion.LookRotation(Vector3.Cross(originalCameraWorldRotation * Vector3.right, Vector3.up), Vector3.up);
+            estimatedCameraRotation = Quaternion.LookRotation(Vector3.Cross(estimatedCameraRotation * Vector3.right, Vector3.up), Vector3.up);
 
             // The ground is always the ground
             if (FloorHeight != null)
-                ecefCameraPosition.y = -FloorHeight.Value + unityWorldCameraPosition.y - scanneraOriginHeightOffset;
+                estimatedCameraPosition.y = -FloorHeight.Value + originalCameraWorldPosition.y - scanneraOriginHeightOffset;
 
             var cameraTransformLocalSpace = Double4x4.FromTranslationRotation(
-                -unityWorldCameraPosition, // See note in EcefTransform.cs
-                unityWorldCameraRotation
+                -originalCameraWorldPosition, // See note in EcefTransform.cs
+                originalCameraWorldRotation
             );
 
-            var cameraTransformEcefSpace = Double4x4.FromTranslationRotation(
-                -ecefCameraPosition, // See note in EcefTransform.cs
-                ecefCameraRotation
+            var estimateCameraTransformMapSpace = Double4x4.FromTranslationRotation(
+                -estimatedCameraPosition, // See note in EcefTransform.cs
+                estimatedCameraRotation
             );
 
-            return math.mul(cameraTransformEcefSpace, math.inverse(cameraTransformLocalSpace));
+            var mapEcefTransform = Double4x4.FromTranslationRotation(estimate.mapEcefPosition, estimate.mapEcefRotation);
+
+            var cameraEstimateEcefTransform = math.mul(mapEcefTransform, estimateCameraTransformMapSpace);
+
+            return math.mul(cameraEstimateEcefTransform, math.inverse(cameraTransformLocalSpace));
+        }
+
+        public static void ClearEstimateHistory()
+        {
+            estimateHistory.Clear();
         }
     }
 }
