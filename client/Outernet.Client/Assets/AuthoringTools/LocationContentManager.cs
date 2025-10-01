@@ -160,13 +160,17 @@ namespace Outernet.Client.AuthoringTools
             );
 
             List<LocalizationMapModel> maps = null;
+
+#if MAP_REGISTRATION_ONLY
+            await PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
+                .ContinueWith(x => maps = x);
+#else
             List<NodeModel> nodes = null;
             List<GroupModel> nodeGroups = null;
-
+            
             await UniTask.WhenAll(
                 PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
                     .ContinueWith(x => maps = x),
-
                 PlerionAPI.GetNodes(new double3[] { ecefCoordinates }, radius, 9999)
                     .ContinueWith(x =>
                     {
@@ -175,14 +179,19 @@ namespace Outernet.Client.AuthoringTools
                     })
                     .ContinueWith(x => nodeGroups = x)
             );
+#endif
 
             await UniTask.SwitchToMainThread(cancellationToken);
 
+#if MAP_REGISTRATION_ONLY
+            App.ExecuteActionOrDelay(new SetMapsAction(maps.ToArray()));
+#else
             App.ExecuteActionOrDelay(
                 new SetMapsAction(maps.ToArray()),
                 new SetNodesAction(nodes.ToArray()),
                 new SetNodeGroupsAction(nodeGroups.ToArray())
             );
+#endif
 
             Destroy(dialog.gameObject);
 

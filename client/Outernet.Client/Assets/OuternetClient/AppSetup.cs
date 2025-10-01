@@ -86,7 +86,12 @@ namespace Outernet.Client
             var systemMenu = Instantiate(AuthoringTools.AuthoringToolsPrefabs.SystemMenu, canvas.transform);
 
             gameObject.AddComponent<AuthoringTools.AuthoringToolsApp>();
+
+#if MAP_REGISTRATION_ONLY
+            Instantiate(AuthoringTools.AuthoringToolsPrefabs.MapRegistrationUI, canvas.transform);
+#else
             Instantiate(AuthoringTools.AuthoringToolsPrefabs.UI, canvas.transform);
+#endif
 
             systemMenu.transform.SetAsLastSibling();
 

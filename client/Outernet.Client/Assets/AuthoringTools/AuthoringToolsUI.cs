@@ -45,7 +45,6 @@ namespace Outernet.Client.AuthoringTools
         private Dictionary<Guid, Foldout> _groupFoldouts = new Dictionary<Guid, Foldout>();
 
         private Guid _lastSelectedElement;
-        private List<Guid> _layersInOrder = new List<Guid>();
 
         private void Awake()
         {
@@ -72,7 +71,7 @@ namespace Outernet.Client.AuthoringTools
             //     "File/Add Scan",
             //     OpenAddScanDialog
             // );
-
+#if !MAP_REGISTRATION_ONLY
             SystemMenu.AddMenuItem(
                 "Edit/Duplicate",
                 () =>
@@ -94,7 +93,7 @@ namespace Outernet.Client.AuthoringTools
                     Key.D
                 }
             );
-
+#endif
             SystemMenu.AddMenuItem(
                 "Edit/Delete",
                 () =>
@@ -112,7 +111,7 @@ namespace Outernet.Client.AuthoringTools
                     new Key[] { Key.Backspace }
                 }
             );
-
+#if !MAP_REGISTRATION_ONLY
             SystemMenu.AddMenuItem(
                 "Create/Node",
                 CreateNewNode,
@@ -132,6 +131,17 @@ namespace Outernet.Client.AuthoringTools
                     Key.G
                 }
             );
+#endif
+
+            SystemMenu.AddMenuItem(
+                "Create/Map",
+                OpenAddScanDialog,
+                commandKeys: new Key[]
+                {
+                    Utility.GetPlatformCommandKey(),
+                    Key.M
+                }
+            );
 
             SystemMenu.AddMenuItem(
                 "Help/About",
@@ -144,8 +154,7 @@ namespace Outernet.Client.AuthoringTools
             );
 
             // Restore when we have scan upload functionality in place
-            // addScanButton.onClick.AddListener(OpenAddScanDialog);
-
+            addScanButton.onClick.AddListener(OpenAddScanDialog);
             addNodeButton.onClick.AddListener(CreateNewNode);
 
             App.state.authoringTools.settings.loaded.OnChange(loaded =>
@@ -406,30 +415,6 @@ namespace Outernet.Client.AuthoringTools
             nodesScrollView.verticalNormalizedPosition = Mathf.Clamp01((targetY - viewportHeight) / (contentHeight - viewportHeight));
         }
 
-        private IEnumerable<Guid> MaskToLayers(List<Guid> layers, int mask)
-        {
-            for (int i = 0; i < layers.Count; i++)
-            {
-                if ((mask & (int)Mathf.Pow(2, i)) != 0)
-                    yield return layers[i];
-            }
-        }
-
-        private int LayersToMask(List<Guid> layers, IEnumerable<Guid> visibleLayers)
-        {
-            int result = 0;
-            foreach (var layer in visibleLayers)
-            {
-                int index = layers.IndexOf(layer);
-                if (index == -1)
-                    continue;
-
-                result += (int)Mathf.Pow(2, index);
-            }
-
-            return result;
-        }
-
         private void RevealInHierarchy(Guid obj)
         {
             if (App.state.authoringTools.TryGetParent(obj, out var parentID) &&
@@ -483,71 +468,6 @@ namespace Outernet.Client.AuthoringTools
             );
 
             Utility.DisplayDialog(dialog);
-        }
-
-        private void OpenAddScanDialog()
-        {
-            var dialog = Instantiate(addScanDialogPrefab);
-            dialog.Setup();
-            dialog.onCanceled.AddListener(() => Destroy(dialog.gameObject));
-            dialog.onComplete.AddListener((mapName, mapPath) =>
-            {
-                Destroy(dialog.gameObject);
-
-                var loadDialog = Instantiate(loadDialogPrefab);
-                loadDialog.Setup(allowCancel: true);
-
-                loadDialog.onFinishSelected.AddListener(() => Destroy(loadDialog.gameObject));
-                loadDialog.onCancelSelected.AddListener(() => _uploadScan.Cancel());
-
-                var progress = Progress.Create<(string description, float progress)>(
-                    progressUpdate => loadDialog.props.ScheduleAction(
-                        progressUpdate,
-                        (args, props) =>
-                        {
-                            props.description.value = args.description;
-                            props.progress.value = args.progress;
-                            props.isDone.value = args.progress == 1f;
-                        }
-                    )
-                );
-
-                _uploadScan = TaskHandle.Execute(
-                    async _ =>
-                    {
-                        await UploadScan(mapName, mapPath, progress);
-                        await UniTask.SwitchToMainThread();
-                        Destroy(loadDialog.gameObject);
-                    }
-                );
-
-                Utility.DisplayDialog(loadDialog);
-            });
-
-            Utility.DisplayDialog(dialog);
-        }
-
-        private async UniTask UploadScan(string scanName, string scanPath, IProgress<(string description, float progress)> progress, CancellationToken token = default)
-        {
-            progress.Report(new("Converting file", 0.1f));
-
-            // TODO: actually process file here
-            await UniTask.Delay(UnityEngine.Random.Range(100, 500));
-            token.ThrowIfCancellationRequested();
-
-            progress.Report(new("Uploading file", 0.3f));
-
-            // TODO: actually upload here
-            await UniTask.Delay(UnityEngine.Random.Range(500, 1300));
-            token.ThrowIfCancellationRequested();
-
-            progress.Report(new("Processing file", 0.7f));
-
-            // TODO: actually await map here
-            await UniTask.Delay(UnityEngine.Random.Range(800, 1500));
-            token.ThrowIfCancellationRequested();
-
-            progress.Report(new("Done!", 1f));
         }
 
         private void CreateNewNode()
@@ -752,12 +672,62 @@ namespace Outernet.Client.AuthoringTools
             );
         }
 
+        private class AddScanDialogProps : Dialog.Props
+        {
+            public ObservablePrimitive<string> immersalApiKey { get; private set; }
+            public ObservablePrimitive<int> immersalScanId { get; private set; }
+
+            public AddScanDialogProps(string immersalApiKey = default, int immersalScanId = default, string title = default, DialogStatus status = default, bool allowCancel = default, float minimumWidth = 500f)
+                : base(title, status, allowCancel, minimumWidth)
+            {
+                this.immersalApiKey = new ObservablePrimitive<string>(immersalApiKey);
+                this.immersalScanId = new ObservablePrimitive<int>(immersalScanId);
+            }
+        }
+
+        private void OpenAddScanDialog()
+        {
+            Dialogs.Show(
+                props: new AddScanDialogProps(title: "Add Scan", allowCancel: true),
+                constructControls: props => UIBuilder.VerticalLayout(
+                    UIBuilder.AdaptivePropertyLabel("Immersal API Key", UIBuilder.InputField(props.immersalApiKey)),
+                    UIBuilder.AdaptivePropertyLabel("Scan ID", UIBuilder.IntField(props.immersalScanId)),
+                    UIBuilder.HorizontalLayout()
+                        .Alignment(TextAnchor.LowerRight)
+                        .WithChildren(
+                            UIBuilder.Button("Cancel", () => props.status.ExecuteSet(DialogStatus.Canceled)),
+                            UIBuilder.Button("Add Scan", () => props.status.ExecuteSet(DialogStatus.Complete))
+                                .WithBinding(x => Bindings.Observer(
+                                    _ => x.button.interactable =
+                                        props.immersalApiKey.value != null &&
+                                        props.immersalScanId.value != 0,
+                                    ObservationScope.Self,
+                                    props.immersalApiKey,
+                                    props.immersalScanId
+                                ))
+                        )
+                ),
+                binding: props => Bindings.Compose(
+                    props.immersalApiKey.BindTo(App.state.authoringTools.settings.immersalAPIKey),
+                    props.status.OnChange(x =>
+                    {
+                        if (x == DialogStatus.Complete)
+                        {
+                            Debug.Log("ADDING SCAN " + props.immersalApiKey.value + ", " + props.immersalScanId.value);
+                        }
+                    })
+                )
+            );
+        }
+
         private void OpenUserSettings()
         {
             Dialogs.Show(
                 title: "Settings",
                 constructControls: props => UIBuilder.VerticalLayout(
                     UIBuilder.AdaptivePropertyLabel("Content Radius", UIBuilder.FloatField(App.state.authoringTools.settings.nodeFetchRadius)),
+                    UIBuilder.AdaptivePropertyLabel("Immersal API Key", UIBuilder.InputField(App.state.authoringTools.settings.immersalAPIKey)),
+#if !MAP_REGISTRATION_ONLY
                     UIBuilder.HorizontalLayout(
                         UIBuilder.Text("Layers"),
                         UIBuilder.FlexibleSpace(flexibleWidth: true),
@@ -802,6 +772,7 @@ namespace Outernet.Client.AuthoringTools
                                     }
                                 ))
                         ),
+#endif
                     UIBuilder.HorizontalLayout()
                         .Alignment(TextAnchor.LowerRight)
                         .WithChildren(

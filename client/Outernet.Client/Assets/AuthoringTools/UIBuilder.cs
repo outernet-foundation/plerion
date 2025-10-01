@@ -852,6 +852,13 @@ namespace Outernet.Client.AuthoringTools
             return inputField;
         }
 
+        public static ComponentView<TMP_InputField> IntField(ObservablePrimitive<int> bindTo)
+        {
+            var inputField = InputField("0", TMP_InputField.ContentType.IntegerNumber);
+            inputField.AddBinding(inputField.component.BindInput(bindTo));
+            return inputField;
+        }
+
         public static ComponentView<TMP_InputField> InputField(ObservablePrimitive<string> bindTo, TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard)
         {
             var inputField = InputField(bindTo.value, contentType);

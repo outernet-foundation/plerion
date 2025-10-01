@@ -136,6 +136,7 @@ namespace Outernet.Client.AuthoringTools
         public ObservableList<LocationHistoryData> locationHistory { get; private set; }
         public ObservablePrimitive<bool> autosaveEnabled { get; private set; }
         public ObservablePrimitive<float> nodeFetchRadius { get; private set; }
+        public ObservablePrimitive<string> immersalAPIKey { get; private set; }
     }
 
     public class LocationHistoryData : ObservableObject
