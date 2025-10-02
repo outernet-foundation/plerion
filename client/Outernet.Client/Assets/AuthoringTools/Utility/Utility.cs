@@ -177,7 +177,7 @@ namespace Outernet.Client.AuthoringTools
             var transform = App.state.transforms[sceneObjectID];
 
             return new LocalizationMapModel(
-                id: map.id,
+                id: map.uuid,
                 name: map.name.value,
                 lighting: (int)map.lighting.value,
                 color: (int)map.color.value,
@@ -189,7 +189,7 @@ namespace Outernet.Client.AuthoringTools
                 rotationY: transform.rotation.value.y,
                 rotationZ: transform.rotation.value.z,
                 rotationW: transform.rotation.value.w,
-                points: map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
+                localInputImagePositions: map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
             );
         }
 

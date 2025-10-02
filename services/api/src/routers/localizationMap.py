@@ -46,6 +46,16 @@ async def get_localizationMaps(
     return [LocalizationMapModel.model_validate(r) for r in rows]
 
 
+@router.get("/name/{name}")
+async def get_localization_map_by_name(name: str) -> LocalizationMapModel:
+    row = await LocalizationMap.objects().get(LocalizationMap.name == name)
+    if not row:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"LocalizationMap with name '{name}' not found"
+        )
+    return LocalizationMapModel.model_validate(row)
+
+
 # UPDATE
 @router.put("/{id:uuid}")
 async def update_localizationMap(id: UUID, localizationMap: LocalizationMapModel):

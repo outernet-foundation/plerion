@@ -51,8 +51,8 @@ namespace PlerionClient.Model
         /// <param name="rotationY">rotationY (required).</param>
         /// <param name="rotationZ">rotationZ (required).</param>
         /// <param name="rotationW">rotationW (required).</param>
-        /// <param name="points">points.</param>
-        public LocalizationMapModel(Guid id = default, string name = default, bool active = default, int lighting = default, int color = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, List<double> points = default)
+        /// <param name="localInputImagePositions">localInputImagePositions.</param>
+        public LocalizationMapModel(Guid id = default, string name = default, bool active = default, int lighting = default, int color = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, List<double> localInputImagePositions = default)
         {
             this.Id = id;
             // to ensure "name" is required (not null)
@@ -71,7 +71,7 @@ namespace PlerionClient.Model
             this.RotationY = rotationY;
             this.RotationZ = rotationZ;
             this.RotationW = rotationW;
-            this.Points = points;
+            this.LocalInputImagePositions = localInputImagePositions;
         }
 
         /// <summary>
@@ -147,10 +147,10 @@ namespace PlerionClient.Model
         public double RotationW { get; set; }
 
         /// <summary>
-        /// Gets or Sets Points
+        /// Gets or Sets LocalInputImagePositions
         /// </summary>
-        [DataMember(Name = "points", EmitDefaultValue = true)]
-        public List<double> Points { get; set; }
+        [DataMember(Name = "localInputImagePositions", EmitDefaultValue = true)]
+        public List<double> LocalInputImagePositions { get; set; }
 
         /// <summary>
         /// Returns the string presentation of the object
@@ -172,7 +172,7 @@ namespace PlerionClient.Model
             sb.Append("  RotationY: ").Append(RotationY).Append("\n");
             sb.Append("  RotationZ: ").Append(RotationZ).Append("\n");
             sb.Append("  RotationW: ").Append(RotationW).Append("\n");
-            sb.Append("  Points: ").Append(Points).Append("\n");
+            sb.Append("  LocalInputImagePositions: ").Append(LocalInputImagePositions).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

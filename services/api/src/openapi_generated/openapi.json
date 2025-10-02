@@ -1042,6 +1042,45 @@
         }
       }
     },
+    "/localizationMaps/name/{name}": {
+      "get": {
+        "summary": "Get Localization Map By Name",
+        "operationId": "get_localization_map_by_name",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalizationMapModel"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/localizationMaps/{id}": {
       "put": {
         "summary": "Update Localizationmap",
@@ -1682,7 +1721,7 @@
               "unique": false
             }
           },
-          "points": {
+          "localInputImagePositions": {
             "anyOf": [
               {
                 "items": {
@@ -1694,7 +1733,7 @@
                 "type": "null"
               }
             ],
-            "title": "Points",
+            "title": "Localinputimagepositions",
             "extra": {
               "dimensions": 1,
               "nullable": false,

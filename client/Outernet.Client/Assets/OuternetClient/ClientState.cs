@@ -49,7 +49,7 @@ namespace Outernet.Client
                 return true;
             }
 
-#if AUTHORING_TOOLS_ENABLED
+#if AUTHORING_TOOLS_ENABLED && !MAP_REGISTRATION_TOOLS_ENABLED
             if (authoringTools.nodeGroups.TryGetValue(id, out var group))
             {
                 name = group.name;
@@ -159,7 +159,8 @@ namespace Outernet.Client
 
     public class MapState : ObservableObject, IKeyedObservableNode<Guid>
     {
-        public Guid id { get; private set; }
+        public Guid uuid { get; private set; }
+        public ObservablePrimitive<int> id { get; private set; }
         public ObservablePrimitive<string> name { get; private set; }
         public ObservablePrimitive<Lighting> lighting { get; private set; }
         public ObservablePrimitive<long> color { get; private set; }
@@ -168,7 +169,7 @@ namespace Outernet.Client
         public ObservablePrimitiveArray<double3> localInputImagePositions { get; private set; }
 
         void IKeyedObservableNode<Guid>.AssignKey(Guid key)
-            => id = key;
+            => uuid = key;
 
         private ClientState _clientState => root as ClientState;
 
@@ -188,7 +189,7 @@ namespace Outernet.Client
 
         private void AwaitTransform(NodeChangeEventArgs args)
         {
-            if (!_clientState.transforms.TryGetValue(id, out var transform))
+            if (!_clientState.transforms.TryGetValue(uuid, out var transform))
                 return;
 
             context.DeregisterObserver(AwaitTransform);

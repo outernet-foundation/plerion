@@ -161,17 +161,17 @@ namespace Outernet.Client.AuthoringTools
 
             List<LocalizationMapModel> maps = null;
 
-#if MAP_REGISTRATION_ONLY
+#if MAP_REGISTRATION_TOOLS_ENABLED
             await PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
                 .ContinueWith(x => maps = x);
 #else
             List<NodeModel> nodes = null;
             List<GroupModel> nodeGroups = null;
-            
+
             await UniTask.WhenAll(
                 PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
                     .ContinueWith(x => maps = x),
-                PlerionAPI.GetNodes(new double3[] { ecefCoordinates }, radius, 9999)
+                PlerionAPI.GetNodesNearPositionsAsync(new double3[] { ecefCoordinates }, radius, 9999)
                     .ContinueWith(x =>
                     {
                         nodes = x;
@@ -183,7 +183,7 @@ namespace Outernet.Client.AuthoringTools
 
             await UniTask.SwitchToMainThread(cancellationToken);
 
-#if MAP_REGISTRATION_ONLY
+#if MAP_REGISTRATION_TOOLS_ENABLED
             App.ExecuteActionOrDelay(new SetMapsAction(maps.ToArray()));
 #else
             App.ExecuteActionOrDelay(

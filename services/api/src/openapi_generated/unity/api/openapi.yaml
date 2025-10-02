@@ -659,6 +659,32 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Create Localizationmap
+  /localizationMaps/name/{name}:
+    get:
+      operationId: get_localization_map_by_name
+      parameters:
+      - explode: false
+        in: path
+        name: name
+        required: true
+        schema:
+          title: Name
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalizationMapModel"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Localization Map By Name
   /localizationMaps/{id}:
     put:
       operationId: update_localizationMap
@@ -1034,9 +1060,6 @@ components:
         active: true
         lighting: 0
         positionX: 1.4658129805029452
-        points:
-        - 2.027123023002322
-        - 2.027123023002322
         positionY: 5.962133916683182
         positionZ: 5.637376656633329
         rotationW: 3.616076749251911
@@ -1045,6 +1068,9 @@ components:
         rotationZ: 9.301444243932576
         name: name
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        localInputImagePositions:
+        - 2.027123023002322
+        - 2.027123023002322
       properties:
         id:
           format: uuid
@@ -1132,7 +1158,7 @@ components:
             nullable: false
             secret: false
             unique: false
-        points:
+        localInputImagePositions:
           items:
             type: number
           nullable: true

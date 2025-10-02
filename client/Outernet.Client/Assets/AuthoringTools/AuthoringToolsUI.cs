@@ -16,6 +16,9 @@ using FofX.Stateful;
 using Outernet.Client.Location;
 using Plerion.VPS;
 using TMPro;
+using Unity.Mathematics;
+using Unity.VisualScripting;
+using Outernet.Shared;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -71,7 +74,7 @@ namespace Outernet.Client.AuthoringTools
             //     "File/Add Scan",
             //     OpenAddScanDialog
             // );
-#if !MAP_REGISTRATION_ONLY
+#if !MAP_REGISTRATION_TOOLS_ENABLED
             SystemMenu.AddMenuItem(
                 "Edit/Duplicate",
                 () =>
@@ -111,7 +114,7 @@ namespace Outernet.Client.AuthoringTools
                     new Key[] { Key.Backspace }
                 }
             );
-#if !MAP_REGISTRATION_ONLY
+#if !MAP_REGISTRATION_TOOLS_ENABLED
             SystemMenu.AddMenuItem(
                 "Create/Node",
                 CreateNewNode,
@@ -345,7 +348,7 @@ namespace Outernet.Client.AuthoringTools
 
             view.AddBinding(
                 BindHierarchyElement(
-                    mapState.id,
+                    mapState.uuid,
                     view.gameObject,
                     toHighlight,
                     AuthoringToolsPrefabs.SelectedColor,
@@ -674,14 +677,12 @@ namespace Outernet.Client.AuthoringTools
 
         private class AddScanDialogProps : Dialog.Props
         {
-            public ObservablePrimitive<string> immersalApiKey { get; private set; }
-            public ObservablePrimitive<int> immersalScanId { get; private set; }
+            public ObservablePrimitive<string> scanName { get; private set; }
 
-            public AddScanDialogProps(string immersalApiKey = default, int immersalScanId = default, string title = default, DialogStatus status = default, bool allowCancel = default, float minimumWidth = 500f)
+            public AddScanDialogProps(string scanName = default, string title = default, DialogStatus status = default, bool allowCancel = default, float minimumWidth = 500f)
                 : base(title, status, allowCancel, minimumWidth)
             {
-                this.immersalApiKey = new ObservablePrimitive<string>(immersalApiKey);
-                this.immersalScanId = new ObservablePrimitive<int>(immersalScanId);
+                this.scanName = new ObservablePrimitive<string>(scanName);
             }
         }
 
@@ -690,34 +691,77 @@ namespace Outernet.Client.AuthoringTools
             Dialogs.Show(
                 props: new AddScanDialogProps(title: "Add Scan", allowCancel: true),
                 constructControls: props => UIBuilder.VerticalLayout(
-                    UIBuilder.AdaptivePropertyLabel("Immersal API Key", UIBuilder.InputField(props.immersalApiKey)),
-                    UIBuilder.AdaptivePropertyLabel("Scan ID", UIBuilder.IntField(props.immersalScanId)),
+                    UIBuilder.AdaptivePropertyLabel("Scan Name", UIBuilder.InputField(props.scanName)),
                     UIBuilder.HorizontalLayout()
                         .Alignment(TextAnchor.LowerRight)
                         .WithChildren(
                             UIBuilder.Button("Cancel", () => props.status.ExecuteSet(DialogStatus.Canceled)),
                             UIBuilder.Button("Add Scan", () => props.status.ExecuteSet(DialogStatus.Complete))
                                 .WithBinding(x => Bindings.Observer(
-                                    _ => x.button.interactable =
-                                        props.immersalApiKey.value != null &&
-                                        props.immersalScanId.value != 0,
+                                    _ => x.button.interactable = props.scanName.value != null,
                                     ObservationScope.Self,
-                                    props.immersalApiKey,
-                                    props.immersalScanId
+                                    props.scanName
                                 ))
                         )
                 ),
                 binding: props => Bindings.Compose(
-                    props.immersalApiKey.BindTo(App.state.authoringTools.settings.immersalAPIKey),
                     props.status.OnChange(x =>
                     {
                         if (x == DialogStatus.Complete)
-                        {
-                            Debug.Log("ADDING SCAN " + props.immersalApiKey.value + ", " + props.immersalScanId.value);
-                        }
+                            ImportScan(props.scanName.value).Forget();
                     })
                 )
             );
+        }
+
+        public async UniTask ImportScan(string scanName)
+        {
+            try
+            {
+                var newMapTransform = LocalizedReferenceFrame.LocalToEcef(
+                    Camera.main.transform.position + (Camera.main.transform.forward * 3f),
+                    Camera.main.transform.rotation.Flatten()
+                );
+
+                // Insert map record into Plerion database
+                if (App.state.maps.values.Any(m => m.name.value == scanName)) //THIS ONLY CHECKS LOCAL
+                {
+                    Debug.LogError($"Map {scanName} already exists in Plerion database.");
+                    return;
+                }
+
+                var map = await PlerionAPI.api.GetLocalizationMapByNameAsync(scanName);
+
+                if (map == null)
+                {
+                    Debug.LogError($"Map {scanName} not found.");
+                    return;
+                }
+
+                double3[] localInputImagePositions = new double3[map.LocalInputImagePositions.Count / 3];
+                for (int i = 0; i < localInputImagePositions.Length; i++)
+                {
+                    localInputImagePositions[i] = new double3(
+                        map.LocalInputImagePositions[i * 3],
+                        map.LocalInputImagePositions[(i * 3) + 1],
+                        map.LocalInputImagePositions[(i * 3) + 2]
+                    );
+                }
+
+                App.ExecuteActionOrDelay(new AddOrUpdateMapAction(
+                    map.Id,
+                    map.Name,
+                    newMapTransform.position,
+                    newMapTransform.rotation,
+                    Lighting.Day,
+                    ColorExtensions.ToLong(Color.white),
+                    localInputImagePositions
+                ));
+            }
+            catch (Exception exception)
+            {
+                Debug.LogError(exception);
+            }
         }
 
         private void OpenUserSettings()
@@ -726,8 +770,7 @@ namespace Outernet.Client.AuthoringTools
                 title: "Settings",
                 constructControls: props => UIBuilder.VerticalLayout(
                     UIBuilder.AdaptivePropertyLabel("Content Radius", UIBuilder.FloatField(App.state.authoringTools.settings.nodeFetchRadius)),
-                    UIBuilder.AdaptivePropertyLabel("Immersal API Key", UIBuilder.InputField(App.state.authoringTools.settings.immersalAPIKey)),
-#if !MAP_REGISTRATION_ONLY
+#if !MAP_REGISTRATION_TOOLS_ENABLED
                     UIBuilder.HorizontalLayout(
                         UIBuilder.Text("Layers"),
                         UIBuilder.FlexibleSpace(flexibleWidth: true),

@@ -125,13 +125,13 @@ namespace Outernet.Client
             foreach (var toUpdate in newMapsByID.Select(x => x.Value))
             {
                 new AddOrUpdateMapAction(
-                    id: toUpdate.Id,
+                    uuid: toUpdate.Id,
                     name: toUpdate.Name,
                     position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
                     rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW),
                     lighting: (Lighting)toUpdate.Lighting,
                     color: toUpdate.Color,
-                    localInputImagePositions: ParsePoints(toUpdate.Points)
+                    localInputImagePositions: ParsePoints(toUpdate.LocalInputImagePositions)
                 ).Execute(target);
             }
         }
@@ -148,7 +148,7 @@ namespace Outernet.Client
 
     public class AddOrUpdateMapAction : ObservableNodeAction<ClientState>
     {
-        private Guid _id;
+        private Guid _uuid;
         private string _name;
         private double3 _position;
         private Quaternion _rotation;
@@ -157,7 +157,7 @@ namespace Outernet.Client
         private double3[] _localInputImagePositions;
 
         public AddOrUpdateMapAction(
-            Guid id,
+            Guid uuid,
             string name = default,
             double3 position = default,
             Quaternion rotation = default,
@@ -165,7 +165,7 @@ namespace Outernet.Client
             long color = default,
             double3[] localInputImagePositions = default)
         {
-            _id = id;
+            _uuid = uuid;
             _name = name;
             _position = position;
             _rotation = rotation;
@@ -176,16 +176,15 @@ namespace Outernet.Client
 
         public override void Execute(ClientState target)
         {
-            var map = target.maps.GetOrAdd(_id);
-            var transform = target.transforms.GetOrAdd(_id);
+            var transform = target.transforms.GetOrAdd(_uuid);
+            transform.position.value = _position;
+            transform.rotation.value = _rotation;
 
+            var map = target.maps.GetOrAdd(_uuid);
             map.name.value = _name;
             map.lighting.value = _lighting;
             map.color.value = _color;
             map.localInputImagePositions.SetValue(_localInputImagePositions);
-
-            transform.position.value = _position;
-            transform.rotation.value = _rotation;
         }
     }
 

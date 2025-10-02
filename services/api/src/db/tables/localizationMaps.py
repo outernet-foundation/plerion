@@ -30,4 +30,4 @@ class LocalizationMap(Table):
 
     rotationW = Float(null=False, required=True)
 
-    points = Array(base_column=Float())
+    localInputImagePositions = Array(base_column=Float())

@@ -94,7 +94,7 @@ namespace Outernet.Client
             return await RestClient.Post<U, T>(url, content, AddSchemaHeaders(SUPABASE_HEADERS));
         }
 
-        public static async UniTask<List<NodeModel>> GetNodes(IEnumerable<double3> userPositions, double radius, int limit_count)
+        public static async UniTask<List<NodeModel>> GetNodesNearPositionsAsync(IEnumerable<double3> positions, double radius, int limit_count)
         {
             return await api.GetNodesAsync();
             // try
@@ -146,6 +146,10 @@ namespace Outernet.Client
         public static async UniTask<byte[]> DownloadMapBytes(Guid id, bool skipCache = false)
         {
             throw new NotImplementedException();
+        }
+
+        public static async UniTask<byte[]> DownloadMapBytes(int id, string name, bool skipCache = false)
+        {
             string cachePath = Path.Combine(Application.persistentDataPath, "cache");
 
             if (!Directory.Exists(cachePath))
@@ -167,6 +171,11 @@ namespace Outernet.Client
             File.WriteAllBytes(bytesPath, bytes);
 
             return bytes;
+        }
+
+        public static async UniTask UploadMapBytes(int id, byte[] bytes)
+        {
+            throw new NotImplementedException();
         }
 
         public static async UniTask<WifiGeolocationRecord[]> GetWifiGeolocation(params string[] bssids)
