@@ -4,48 +4,29 @@ using Cysharp.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 
+using Plerion.LegacyTestingStructures;
+
 namespace Plerion
 {
     public class LocalizationMapModel
     {
-        public Guid Id;
+        public int Id;
+        public Guid Uuid;
         public string Name;
         public bool Active;
         public int Lighting;
         public long Color;
-        public double PositionX;
-        public double PositionY;
-        public double PositionZ;
-        public double RotationX;
-        public double RotationY;
-        public double RotationZ;
-        public double RotationW;
+        public double Position_X;
+        public double Position_Y;
+        public double Position_Z;
+        public double Rotation_X;
+        public double Rotation_Y;
+        public double Rotation_Z;
+        public double Rotation_W;
         public Vector3[] Points;
 
-        public double3 EcefPosition => new double3(PositionX, PositionY, PositionZ);
-        public quaternion EcefRotation => new quaternion((float)RotationX, (float)RotationY, (float)RotationZ, (float)RotationW);
-
-        public LocalizationMapModel(Guid id = default, string name = default, bool active = default, int lighting = default, long color = default, double positionX = default, double positionY = default, double positionZ = default, double rotationX = default, double rotationY = default, double rotationZ = default, double rotationW = default, Vector3[] points = default)
-        {
-            this.Id = id;
-            // to ensure "name" is required (not null)
-            if (name == null)
-            {
-                throw new ArgumentNullException("name is a required property for LocalizationMapModel and cannot be null");
-            }
-            this.Name = name;
-            this.Active = active;
-            this.Lighting = lighting;
-            this.Color = color;
-            this.PositionX = positionX;
-            this.PositionY = positionY;
-            this.PositionZ = positionZ;
-            this.RotationX = rotationX;
-            this.RotationY = rotationY;
-            this.RotationZ = rotationZ;
-            this.RotationW = rotationW;
-            this.Points = points;
-        }
+        public double3 EcefPosition => new double3(Position_X, Position_Y, Position_Z);
+        public quaternion EcefRotation => new quaternion((float)Rotation_X, (float)Rotation_Y, (float)Rotation_Z, (float)Rotation_W);
     }
 
     [Serializable]
@@ -75,24 +56,26 @@ namespace Plerion
 
     static public class PlerionAPI
     {
-        public static async UniTask<LocalizeResponse> Localize(int imageWidth, int imageHeight, Vector4 intrinsics, Quaternion cameraRotation, byte[] cameraImage, double latitude, double longitude, float height)
+        public static async UniTask UpdateMapsFromLocation(double latitude, double longitude, double height, double radius, Lighting lighting, bool additive = false)
+            => await MapManager.UpdateMapsForLocation(latitude, longitude, height, radius, lighting, additive);
+
+        public static async UniTask UpdateMapsFromList(Guid[] maps, bool additive = false)
         {
-            return new LocalizeResponse();
+            throw new NotImplementedException();
         }
 
-        public static async UniTask<LocalizeResponse> Localize(int imageWidth, int imageHeight, Vector4 intrinsics, Quaternion cameraRotation, byte[] cameraImage, params Guid[] maps)
-        {
-            return new LocalizeResponse();
-        }
-
-        public static async UniTask<List<LocalizationMapModel>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting, bool includePoints)
-        {
-            return new List<LocalizationMapModel>();
-        }
+        public static async UniTask<List<LocalizationMapModel>> GetLoadedMaps(bool includePoints = false)
+            => await MapManager.GetLoadedMaps();
 
         public static async UniTask<LocalizationMapModel> GetMap(Guid id, bool includePoints = false)
         {
-            return new LocalizationMapModel(id);
+            throw new NotImplementedException();
+            // return new LocalizationMapModel(id);
+        }
+
+        public static async UniTask<LocalizeResponse> Localize(int imageWidth, int imageHeight, Vector4 intrinsics, Quaternion cameraRotation, Quaternion cameraOrientation, byte[] cameraImage)
+        {
+            return await MapManager.Localize(imageWidth, imageHeight, intrinsics, cameraRotation, cameraOrientation, cameraImage);
         }
     }
 }

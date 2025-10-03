@@ -1,21 +1,37 @@
+using Cysharp.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
-using Cysharp.Threading.Tasks;
 
 namespace Plerion
 {
     [ExecuteInEditMode]
     public class EditorGPSHelper : MonoBehaviour
     {
+        [Delayed]
         public double editorLatitude;
+
+        [Delayed]
         public double editorLongitude;
-        public double editorElevation;
+
+
+        [Delayed]
+        public float editorHeight;
+
+        [Delayed]
         public float editorRotation;
+
+        [Delayed]
+        public float editorMapRadius = 25f;
+
+        public Lighting editorLighting = Lighting.Day;
+        public bool updateMapsDuringPlayMode = true;
 
         private double _lastEditorLatitude;
         private double _lastEditorLongitude;
-        private double _lastEditorAltitude;
+        private float _lastEditorHeight;
         private float _lastEditorRotation;
+        private float _lastEditorMapRadius;
+        private Lighting _lastEditorLighting;
 
         private void OnEnable()
         {
@@ -26,8 +42,10 @@ namespace Plerion
         {
             if (_lastEditorLatitude != editorLatitude ||
                 _lastEditorLongitude != editorLongitude ||
-                _lastEditorAltitude != editorElevation ||
-                _lastEditorRotation != editorRotation)
+                _lastEditorHeight != editorHeight ||
+                _lastEditorRotation != editorRotation ||
+                _lastEditorMapRadius != editorMapRadius ||
+                _lastEditorLighting != editorLighting)
             {
                 UpdateLocalizedReferenceFrame();
             }
@@ -37,12 +55,27 @@ namespace Plerion
         {
             _lastEditorLatitude = editorLatitude;
             _lastEditorLongitude = editorLongitude;
-            _lastEditorAltitude = editorElevation;
+            _lastEditorHeight = editorHeight;
             _lastEditorRotation = editorRotation;
+            _lastEditorMapRadius = editorMapRadius;
+            _lastEditorLighting = editorLighting;
+
+            if (updateMapsDuringPlayMode && Application.isPlaying)
+            {
+                PlerionAPI.UpdateMapsFromLocation(
+                    _lastEditorLatitude,
+                    _lastEditorLongitude,
+                    _lastEditorHeight,
+                    _lastEditorMapRadius,
+                    _lastEditorLighting
+                ).Forget();
+            }
+
+            var ecefPosition = Utility.LlhToEcefPosition(editorLatitude, editorLongitude, editorHeight);
 
             VisualPositioningSystem.SetUnityWorldToEcefTransform(
-                Utility.GpsToEcef(Mathf.Deg2Rad * editorLatitude, Mathf.Deg2Rad * editorLongitude, editorElevation),
-                Quaternion.AngleAxis(editorRotation, Vector3.up)
+                ecefPosition,
+                Utility.EcefPositionToEunRotation(ecefPosition) * Quaternion.AngleAxis(editorRotation, Vector3.up)
             );
         }
     }

@@ -10,8 +10,6 @@ namespace Plerion
 {
     public class LocalizationMapVisualizer : MonoBehaviour
     {
-        public double mapRadius = 25;
-        public Lighting lightingCondition = Lighting.Day;
         public LocalizationMapRenderer mapRendererPrefab;
 
         private Dictionary<Guid, LocalizationMapRenderer> _mapsByID = new Dictionary<Guid, LocalizationMapRenderer>();
@@ -39,14 +37,7 @@ namespace Plerion
             {
                 try
                 {
-                    var maps = await PlerionAPI.GetMapsWithinRadiusAsync(
-                        VisualPositioningSystem.RoughDeviceLatitude,
-                        VisualPositioningSystem.RoughDeviceLongitude,
-                        VisualPositioningSystem.RoughDeviceElevation,
-                        mapRadius,
-                        lightingCondition,
-                        true
-                    );
+                    var maps = await PlerionAPI.GetLoadedMaps(true);
 
                     if (maps == null)
                         continue;
@@ -67,7 +58,7 @@ namespace Plerion
 
         private void UpdateMaps(List<LocalizationMapModel> maps)
         {
-            var removedMaps = _mapsByID.Keys.Except(maps.Select(x => x.Id)).ToArray();
+            var removedMaps = _mapsByID.Keys.Except(maps.Select(x => x.Uuid)).ToArray();
 
             foreach (var removedMap in removedMaps)
             {
@@ -76,15 +67,16 @@ namespace Plerion
                 _mapsByID.Remove(removedMap);
             }
 
-            var addedMaps = maps.Where(x => !_mapsByID.ContainsKey(x.Id)).ToArray();
+            var addedMaps = maps.Where(x => !_mapsByID.ContainsKey(x.Uuid)).ToArray();
 
             foreach (var addedMap in addedMaps)
             {
                 var local = VisualPositioningSystem.EcefToUnityWorld(addedMap.EcefPosition, addedMap.EcefRotation);
                 var mapView = Instantiate(mapRendererPrefab, local.position, local.rotation);
+                mapView.gameObject.name = addedMap.Name;
                 mapView.Load(addedMap.Name, addedMap.Points);
                 mapView.SetColor(Utility.ToColor(addedMap.Color));
-                _mapsByID.Add(addedMap.Id, mapView);
+                _mapsByID.Add(addedMap.Uuid, mapView);
             }
         }
     }

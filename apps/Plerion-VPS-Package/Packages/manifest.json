@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "com.cesium.unity": "1.18.0",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.fofx.stateful": "https://github.com/epjecha/StatefulUnity.git?path=Assets/Package",
     "com.github-glitchenzo.nugetforunity": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",
@@ -55,13 +54,6 @@
       "url": "https://registry.npmjs.org",
       "scopes": [
         "com.magicleap"
-      ]
-    },
-    {
-      "name": "Cesium",
-      "url": "https://unity.pkg.cesium.com",
-      "scopes": [
-        "com.cesium.unity"
       ]
     }
   ]

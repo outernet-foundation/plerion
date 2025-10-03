@@ -26,7 +26,7 @@ namespace Plerion
 
         private void Awake()
         {
-            if (_positionInitialized)
+            if (!Application.isPlaying && _positionInitialized)
                 return;
 
             var ecef = VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);

@@ -8,11 +8,11 @@ namespace Plerion
     {
         VisualPositioningSystem,
         CameraLocalization,
-        Immersal,
         Rest,
         Permissions,
         MagicLeapCamera,
         MapVisualization,
+        Immersal
     }
 
     public static class Log

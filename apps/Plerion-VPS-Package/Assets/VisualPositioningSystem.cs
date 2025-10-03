@@ -25,10 +25,6 @@ namespace Plerion
         // The height above the ground of the blk2go camera array at during scan initialization
         const float scanneraOriginHeightOffset = 0.15f;
 
-        public static double RoughDeviceLatitude;
-        public static double RoughDeviceLongitude;
-        public static float RoughDeviceElevation;
-
         public static bool FallbackToMostRecentEstimate = false;
         public static bool DiscardBelowAverageConfidenceEstimates = false;
         public static float MinimumPositionThreshold = 0.05f;
@@ -126,9 +122,6 @@ namespace Plerion
             if (cameraImage.pixelBuffer == null)
                 return;
 
-            cameraRotation *= cameraImage.cameraOrientation;
-            cameraRotation.SwitchHandedness();
-
             var localizeResult = await PlerionAPI.Localize(
                 cameraImage.imageWidth,
                 cameraImage.imageHeight,
@@ -139,10 +132,8 @@ namespace Plerion
                     cameraImage.principalPoint.y
                 ),
                 cameraRotation,
-                cameraImage.pixelBuffer,
-                RoughDeviceLatitude,
-                RoughDeviceLongitude,
-                RoughDeviceElevation
+                cameraImage.cameraOrientation,
+                cameraImage.pixelBuffer
             );
 
             if (localizeResult.mapID == Guid.Empty)

@@ -1,10 +1,7 @@
-using CesiumForUnity;
 using Unity.Mathematics;
 using UnityEngine;
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Plerion
 {
@@ -12,16 +9,42 @@ namespace Plerion
     {
         const double WGS84_A = 6378137.0; // Semi-major axis
         const double WGS84_E_SQUARED = 0.00669437999014; // Eccentricity squared
+        private static readonly double3 WGS84_One_Over_Radii_Squared = new double3(
+            1.0 / (6378137.0 * 6378137.0),
+            1.0 / (6378137.0 * 6378137.0),
+            1.0 / (6356752.3142451793 * 6356752.3142451793)
+        );
 
-        public static double3 GpsToEcef(double latitudeRad, double longitudeRad, double altitude)
+        public static double4x4 LlhToEcefTransformationMatrix(double latitude, double longitude, double height)
+            => EcefPositionToTransformationMatrix(LlhToEcefPosition(latitude, longitude, height));
+
+        public static double4x4 EcefPositionToTransformationMatrix(double3 ecefPosition)
+            => Double4x4.FromTranslationRotation(ecefPosition, EcefPositionToEunRotation(ecefPosition));
+
+        public static double3 LlhToEcefPosition(double latitude, double longitude, double height)
         {
-            double N = WGS84_A / Math.Sqrt(1 - WGS84_E_SQUARED * Math.Sin(latitudeRad) * Math.Sin(latitudeRad));
+            latitude *= Mathf.Deg2Rad;
+            longitude *= Mathf.Deg2Rad;
 
-            double x = (N + altitude) * Math.Cos(latitudeRad) * Math.Cos(longitudeRad);
-            double y = (N + altitude) * Math.Cos(latitudeRad) * Math.Sin(longitudeRad);
-            double z = (N * (1 - WGS84_E_SQUARED) + altitude) * Math.Sin(latitudeRad);
+            double N = WGS84_A / Math.Sqrt(1 - WGS84_E_SQUARED * Math.Sin(latitude) * Math.Sin(latitude));
+
+            double x = (N + height) * Math.Cos(latitude) * Math.Cos(longitude);
+            double y = (N + height) * Math.Cos(latitude) * Math.Sin(longitude);
+            double z = (N * (1 - WGS84_E_SQUARED) + height) * Math.Sin(latitude);
 
             return new double3(x, y, z);
+        }
+
+        // Adapted from eastNorthUpToFixedFrame in this file https://github.com/CesiumGS/cesium-native/blob/main/CesiumGeospatial/src/GlobeTransforms.cpp
+        // and Ellipsoid at https://github.com/CesiumGS/cesium-native/blob/main/CesiumGeospatial/src/Ellipsoid.cpp
+        public static Quaternion EcefPositionToEunRotation(double3 ecefPosition)
+        {
+            var up = math.normalize(ecefPosition * WGS84_One_Over_Radii_Squared);
+            var east = math.normalize(new double3(-ecefPosition.y, ecefPosition.x, 0));
+            var north = math.cross(up, east);
+
+            // Negatives here are to account for handedness difference
+            return Quaternion.LookRotation(-north.ToFloats(), -up.ToFloats());
         }
 
         static int Clamp(int value, int min, int max) => value < min ? min : value > max ? max : value;
