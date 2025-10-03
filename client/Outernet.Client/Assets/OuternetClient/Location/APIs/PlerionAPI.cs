@@ -173,11 +173,6 @@ namespace Outernet.Client
             return bytes;
         }
 
-        public static async UniTask UploadMapBytes(int id, byte[] bytes)
-        {
-            throw new NotImplementedException();
-        }
-
         public static async UniTask<WifiGeolocationRecord[]> GetWifiGeolocation(params string[] bssids)
         {
             try

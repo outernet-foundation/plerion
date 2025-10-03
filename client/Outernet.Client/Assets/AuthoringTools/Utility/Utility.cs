@@ -171,7 +171,7 @@ namespace Outernet.Client.AuthoringTools
             );
         }
 
-        public static LocalizationMapModel ToMapRecord(Guid sceneObjectID)
+        public static LocalizationMapModel ToMapModel(Guid sceneObjectID)
         {
             var map = App.state.maps[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];

@@ -723,13 +723,6 @@ namespace Outernet.Client.AuthoringTools
                     Camera.main.transform.rotation.Flatten()
                 );
 
-                // Insert map record into Plerion database
-                if (App.state.maps.values.Any(m => m.name.value == scanName)) //THIS ONLY CHECKS LOCAL
-                {
-                    Debug.LogError($"Map {scanName} already exists in Plerion database.");
-                    return;
-                }
-
                 var map = await PlerionAPI.api.GetLocalizationMapByNameAsync(scanName);
 
                 if (map == null)

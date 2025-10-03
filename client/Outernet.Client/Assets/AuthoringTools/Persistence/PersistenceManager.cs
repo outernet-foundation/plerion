@@ -230,7 +230,7 @@ namespace Outernet.Client.AuthoringTools
                     .ToList(),
 
                 upsertedMaps = _mapPersistenceHelper.inserts.Concat(_mapPersistenceHelper.updates)
-                    .Select(Utility.ToMapRecord)
+                    .Select(Utility.ToMapModel)
                     .ToList(),
 
                 upsertedLayers = _layerPersistenceHelper.inserts.Concat(_layerPersistenceHelper.updates)
