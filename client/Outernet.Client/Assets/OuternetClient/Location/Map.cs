@@ -16,7 +16,7 @@ namespace Outernet.Client.Location
         private MapRenderer mapRenderer;
         private Anchor anchor;
         public MapRenderer.Status status => mapRenderer.status;
-        public LocalizationMapModel metadata { get; private set; }
+        public LocalizationMapRead metadata { get; private set; }
 
         public int NativeHandle => mapRenderer.nativeHandle;
 
@@ -38,7 +38,7 @@ namespace Outernet.Client.Location
             anchor = GetComponent<Anchor>();
         }
 
-        public async UniTask Load(LocalizationMapModel record)
+        public async UniTask Load(LocalizationMapRead record)
         {
             this.metadata = record;
 

@@ -93,7 +93,7 @@ namespace Outernet.Client
             return await RestClient.Post<U, T>(url, content, AddSchemaHeaders(SUPABASE_HEADERS));
         }
 
-        public static async UniTask<List<NodeModel>> GetNodes(IEnumerable<double3> userPositions, double radius, int limit_count)
+        public static async UniTask<List<NodeRead>> GetNodes(IEnumerable<double3> userPositions, double radius, int limit_count)
         {
             return await api.GetNodesAsync();
             // try
@@ -116,14 +116,14 @@ namespace Outernet.Client
             // }
         }
 
-        public static async UniTask<List<LocalizationMapModel>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting)
+        public static async UniTask<List<LocalizationMapRead>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting)
         {
-            return new List<LocalizationMapModel>();
+            return new List<LocalizationMapRead>();
             try
             {
                 var ecefPosition = CesiumWgs84Ellipsoid.LongitudeLatitudeHeightToEarthCenteredEarthFixed(new double3(longitude, latitude, height));
 
-                var maps = await Get<List<LocalizationMapModel>>(
+                var maps = await Get<List<LocalizationMapRead>>(
                     $"{SUPABASE_URL}/rest/v1/rpc/get_maps_within_radius?ecef_x={ecefPosition.x}&ecef_y={ecefPosition.y}&ecef_z={ecefPosition.z}&radius={radius}");
 
                 maps = maps

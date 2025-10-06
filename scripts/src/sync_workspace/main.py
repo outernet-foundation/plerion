@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import json
 import re
 import threading
 import time
+import tomllib
 from pathlib import Path
 from socket import gethostname
 from typing import Any, List, Optional, cast
@@ -32,8 +34,11 @@ WATCH_IGNORE_REGEXES = make_watch_ignore_regexes()
 
 def cli(
     watch: bool = Option(False, "--watch", "-w", help="Watch for changes and re-sync as needed"),
+    no_cache: bool = Option(False, "--no-cache", "-n", help="Do not use caching when syncing"),
     log: bool = Option(False, "--log", "-l", help="Log commands being run"),
 ):
+    workspace_config = json.loads((repo_root / "workspace.json").read_text(encoding="utf-8"))
+
     env_path = repo_root / ".env"
     if not env_path.exists():
         print("WARNING: .env file does not exist, creating from .env.sample")
@@ -41,30 +46,33 @@ def cli(
         env = env.replace("<YOUR_DEVICE_NAME>", gethostname().lower())
         env_path.write_text(env)
 
-    print("Starting backend")
-
-    run_command("docker compose up -d", cwd=repo_root, stream_log=log)
-
     print("Syncing python projects")
 
-    for path in repo_root.rglob("pyproject.toml"):
+    pyproject_paths = list(repo_root.rglob("pyproject.toml"))
+    for path in pyproject_paths:
         if _ignored(path):
             continue
         _sync_uv(path.parent, log=log)
 
+    print("Starting backend")
+
+    run_command("docker compose up -d", cwd=repo_root, stream_log=log)
+
     print("Syncing schemas")
 
-    database_paths = {p.parent for p in repo_root.rglob("database")}
-    for path in database_paths:
+    databases: dict[Path, str] = {repo_root / k: v for k, v in workspace_config.get("databases", {}).items()}
+    for path, database_name in databases.items():
         if _ignored(path):
             continue
-        sync_schema(path, "plerion")
+        sync_schema(path, database_name, no_cache, log)
 
     print("Syncing OpenAPI clients")
 
-    openapi_project_paths = [path.parent.parent for path in repo_root.rglob("dump_openapi.py")]
-    for path in openapi_project_paths:
-        sync_client(path)
+    openapi_projects: dict[Path, List[Path]] = {
+        repo_root / k: [repo_root / p for p in v] for k, v in workspace_config.get("openapi_projects", {}).items()
+    }
+    for path in openapi_projects.keys():
+        sync_client(path, no_cache, log)
 
     if not watch:
         return
@@ -72,10 +80,18 @@ def cli(
     print("Workspace synchronized, watching for changes...")
 
     observer = Observer()
-    for path in database_paths:
-        observer.schedule(DatabaseHandler(), str(path), recursive=True)
-    for path in openapi_project_paths:
-        observer.schedule(OpenApiHandler(path), str(path), recursive=True)
+    for path in pyproject_paths:
+        observer.schedule(PyprojectHandler(log), str(path.parent), recursive=False)
+    for path, database_name in databases.items():
+        observer.schedule(DatabaseHandler(database_name, no_cache, log), str(path), recursive=True)
+    for project_path, additional_paths in openapi_projects.items():
+        observer.schedule(OpenApiHandler(project_path, project_path, no_cache, log), str(project_path), recursive=True)
+        for additional_path in additional_paths:
+            observer.schedule(
+                OpenApiHandler(project_path, repo_root / additional_path, no_cache, log),
+                str(repo_root / additional_path),
+                recursive=True,
+            )
     observer.daemon = True
     observer.start()
 
@@ -90,7 +106,19 @@ def cli(
 
 def _sync_uv(path: Path, log: bool):
     print(f"Syncing uv project: {path}")
-    run_command("uv sync", cwd=path, log=log)
+    run_command("uv sync --all-groups", cwd=path, log=log)
+
+    # For each dependency group (except dev) in pyproject.toml, export pylock.toml
+    for group in cast(
+        dict[str, Any],
+        tomllib.loads((path / "pyproject.toml").read_text(encoding="utf-8")).get("dependency-groups") or {},
+    ).keys():
+        if group == "dev":
+            continue
+        print(f"  Exporting dependency group: {group}")
+        run_command(
+            f"uv export --format=pylock.toml --locked --only-group {group} -o pylock.{group}.toml", cwd=path, log=log
+        )
 
 
 def _ignored(path: Path):
@@ -100,10 +128,10 @@ def _ignored(path: Path):
 
 class DebounceHandler(RegexMatchingEventHandler):
     def __init__(
-        self, project_root: Path, regexes: List[str], ignore_regexes: List[str], debounce_seconds: float = 0.4
+        self, watch_path: Path, regexes: List[str], ignore_regexes: List[str], debounce_seconds: float = 0.4
     ) -> None:
         super().__init__(regexes=regexes, ignore_regexes=ignore_regexes, ignore_directories=True, case_sensitive=False)
-        self.project_root = project_root
+        self.watch_path = watch_path
         self.debounce_seconds = debounce_seconds
         self.lock = threading.Lock()
         self._timer: Optional[threading.Timer] = None
@@ -143,7 +171,7 @@ class DebounceHandler(RegexMatchingEventHandler):
 class PyprojectHandler(DebounceHandler):
     def __init__(self, log: bool) -> None:
         super().__init__(
-            project_root=repo_root, regexes=[r".*[\\/]pyproject\.toml$"], ignore_regexes=WATCH_IGNORE_REGEXES
+            watch_path=repo_root, regexes=[r".*[\\/]pyproject\.toml$"], ignore_regexes=WATCH_IGNORE_REGEXES
         )
         self.log = log
 
@@ -158,13 +186,16 @@ class PyprojectHandler(DebounceHandler):
 
 
 class DatabaseHandler(DebounceHandler):
-    def __init__(self) -> None:
+    def __init__(self, database_name: str, no_cache: bool, log: bool) -> None:
         super().__init__(
-            project_root=repo_root, regexes=[r".*[\\/]database[\\/].*\.sql$"], ignore_regexes=WATCH_IGNORE_REGEXES
+            watch_path=repo_root, regexes=[r".*[\\/]database[\\/].*\.sql$"], ignore_regexes=WATCH_IGNORE_REGEXES
         )
+        self.database_name = database_name
+        self.no_cache = no_cache
+        self.log = log
 
     def _run(self, message: str, path: str):
-        sync_schema(Path(path).parent.parent, "plerion")
+        sync_schema(Path(path).parent.parent, self.database_name, self.no_cache, self.log)
 
     def on_created(self, event: FileSystemEvent):
         self._on_created(event)
@@ -180,11 +211,14 @@ class DatabaseHandler(DebounceHandler):
 
 
 class OpenApiHandler(DebounceHandler):
-    def __init__(self, project_root: Path) -> None:
-        super().__init__(project_root=project_root, regexes=[r".*\.py$"], ignore_regexes=WATCH_IGNORE_REGEXES)
+    def __init__(self, project_root: Path, watch_path: Path, no_cache: bool, log: bool) -> None:
+        super().__init__(watch_path=watch_path, regexes=[r".*\.py$"], ignore_regexes=WATCH_IGNORE_REGEXES)
+        self.project_root = project_root
+        self.no_cache = no_cache
+        self.log = log
 
     def _run(self, message: str, path: str):
-        sync_client(self.project_root)
+        sync_client(self.project_root, self.no_cache, self.log)
 
     def on_created(self, event: FileSystemEvent):
         self._on_created(event)

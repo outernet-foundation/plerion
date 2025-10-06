@@ -2,20 +2,20 @@ from typing import List, Optional
 from uuid import UUID
 
 from common.schemas import tar_schema
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import RedirectResponse
 from models.public_dtos import (
-    CaptureBatchUpdate,
-    CaptureCreate,
-    CaptureRead,
-    CaptureUpdate,
-    capture_apply_batch_update_dto,
-    capture_apply_dto,
-    capture_from_dto,
-    capture_from_dto_overwrite,
-    capture_to_dto,
+    CaptureSessionBatchUpdate,
+    CaptureSessionCreate,
+    CaptureSessionRead,
+    CaptureSessionUpdate,
+    capture_session_apply_batch_update_dto,
+    capture_session_apply_dto,
+    capture_session_from_dto,
+    capture_session_from_dto_overwrite,
+    capture_session_to_dto,
 )
-from models.public_tables import Capture
+from models.public_tables import CaptureSession, Reconstruction
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,51 +24,29 @@ from ..storage import get_storage
 
 BUCKET = "dev-captures"
 
-router = APIRouter(prefix="/captures")
-
-
-@router.get("")
-async def get_captures(
-    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
-    session: AsyncSession = Depends(get_session),
-) -> List[CaptureRead]:
-    query = select(Capture)
-
-    if ids:
-        query = query.where(Capture.id.in_(ids))
-
-    result = await session.execute(query)
-
-    results = [capture_to_dto(row) for row in result.scalars().all()]
-    return results
-
-
-@router.get("/{id:uuid}")
-async def get_capture(id: UUID, session: AsyncSession = Depends(get_session)) -> CaptureRead:
-    row = await session.get(Capture, id)
-
-    if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture with id {id} not found")
-
-    return capture_to_dto(row)
+router = APIRouter(prefix="/capture_sessions", tags=["capture_sessions"])
 
 
 @router.post("")
-async def create_capture(capture: CaptureCreate, session: AsyncSession = Depends(get_session)) -> CaptureRead:
+async def create_capture_session(
+    capture: CaptureSessionCreate, session: AsyncSession = Depends(get_session)
+) -> CaptureSessionRead:
     row = await _create_capture(capture, False, session)
 
     session.add(row)
 
     await session.flush()
     await session.refresh(row)
-    return capture_to_dto(row)
+    return capture_session_to_dto(row)
 
 
 @router.post("/bulk")
-async def create_captures(
-    captures: List[CaptureCreate], overwrite: bool = False, session: AsyncSession = Depends(get_session)
-) -> List[CaptureRead]:
-    rows: List[Capture] = []
+async def create_capture_sessions(
+    captures: List[CaptureSessionCreate] = Body(...),
+    overwrite: bool = False,
+    session: AsyncSession = Depends(get_session),
+) -> List[CaptureSessionRead]:
+    rows: List[CaptureSession] = []
     for capture in captures:
         row = await _create_capture(capture, overwrite, session)
         rows.append(row)
@@ -78,53 +56,52 @@ async def create_captures(
     await session.flush()
     for row in rows:
         await session.refresh(row)
-    return [capture_to_dto(r) for r in rows]
+    return [capture_session_to_dto(r) for r in rows]
 
 
-@router.patch("/{id:uuid}")
-async def update_capture(id: UUID, capture: CaptureUpdate, session: AsyncSession = Depends(get_session)) -> CaptureRead:
-    row = await session.get(Capture, id)
+@router.get("")
+async def get_capture_sessions(
+    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    session: AsyncSession = Depends(get_session),
+) -> List[CaptureSessionRead]:
+    query = select(CaptureSession)
 
-    if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture with id {id} not found")
+    if ids:
+        query = query.where(CaptureSession.id.in_(ids))
 
-    capture_apply_dto(row, capture)
+    result = await session.execute(query)
 
-    await session.flush()
-    await session.refresh(row)
-    return capture_to_dto(row)
-
-
-@router.patch("")
-async def update_captures(
-    captures: list[CaptureBatchUpdate], allow_missing: bool = False, session: AsyncSession = Depends(get_session)
-) -> List[CaptureRead]:
-    rows: List[Capture] = []
-    for capture in captures:
-        row = await session.get(Capture, capture.id)
-
-        if not row:
-            if not allow_missing:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture with id {capture.id} not found"
-                )
-            continue
-
-        capture_apply_batch_update_dto(row, capture)
-        rows.append(row)
-
-    await session.flush()
-    for row in rows:
-        await session.refresh(row)
-    return [capture_to_dto(r) for r in rows]
+    results = [capture_session_to_dto(row) for row in result.scalars().all()]
+    return results
 
 
-@router.delete("/{id:uuid}")
-async def delete_capture(id: UUID, session: AsyncSession = Depends(get_session)) -> None:
-    row = await session.get(Capture, id)
+@router.get("/{id}")
+async def get_capture_session(id: UUID, session: AsyncSession = Depends(get_session)) -> CaptureSessionRead:
+    row = await session.get(CaptureSession, id)
 
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture with id {id} not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
+
+    return capture_session_to_dto(row)
+
+
+@router.get("/{id}/reconstructions")
+async def get_capture_session_reconstructions(id: UUID, session: AsyncSession = Depends(get_session)) -> List[UUID]:
+    row = await session.get(CaptureSession, id)
+
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
+    result = await session.execute(select(Reconstruction.id).where(Reconstruction.capture_session_id == id))
+
+    return [r[0] for r in result.all()]
+
+
+@router.delete("/{id}")
+async def delete_capture_session(id: UUID, session: AsyncSession = Depends(get_session)) -> None:
+    row = await session.get(CaptureSession, id)
+
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
 
     await session.delete(row)
 
@@ -132,16 +109,56 @@ async def delete_capture(id: UUID, session: AsyncSession = Depends(get_session))
     return None
 
 
+@router.patch("/{id}")
+async def update_capture_session(
+    id: UUID, capture: CaptureSessionUpdate, session: AsyncSession = Depends(get_session)
+) -> CaptureSessionRead:
+    row = await session.get(CaptureSession, id)
+
+    if not row:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
+
+    capture_session_apply_dto(row, capture)
+
+    await session.flush()
+    await session.refresh(row)
+    return capture_session_to_dto(row)
+
+
+@router.patch("")
+async def update_capture_sessions(
+    captures: list[CaptureSessionBatchUpdate], allow_missing: bool = False, session: AsyncSession = Depends(get_session)
+) -> List[CaptureSessionRead]:
+    rows: List[CaptureSession] = []
+    for capture in captures:
+        row = await session.get(CaptureSession, capture.id)
+
+        if not row:
+            if not allow_missing:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {capture.id} not found"
+                )
+            continue
+
+        capture_session_apply_batch_update_dto(row, capture)
+        rows.append(row)
+
+    await session.flush()
+    for row in rows:
+        await session.refresh(row)
+    return [capture_session_to_dto(r) for r in rows]
+
+
 @router.put(
-    "/{id:uuid}/tar",
+    "/{id}/tar",
     status_code=status.HTTP_307_TEMPORARY_REDIRECT,
     openapi_extra={"requestBody": {"required": True, "content": tar_schema}},
 )
-async def upload_capture_tar(id: UUID, session: AsyncSession = Depends(get_session)) -> RedirectResponse:
-    row = await session.get(Capture, id)
+async def upload_capture_session_tar(id: UUID, session: AsyncSession = Depends(get_session)) -> RedirectResponse:
+    row = await session.get(CaptureSession, id)
 
     if row is None:
-        raise HTTPException(404, f"Capture {id} not found")
+        raise HTTPException(404, f"Capture session {id} not found")
 
     try:
         url = get_storage().presign_put(BUCKET, f"{id}.tar", "application/x-tar")
@@ -151,12 +168,12 @@ async def upload_capture_tar(id: UUID, session: AsyncSession = Depends(get_sessi
     return RedirectResponse(url)
 
 
-@router.get("/{id:uuid}/tar", status_code=status.HTTP_307_TEMPORARY_REDIRECT, responses={200: {"content": tar_schema}})
-async def download_capture_tar(id: UUID, session: AsyncSession = Depends(get_session)) -> RedirectResponse:
-    row = await session.get(Capture, id)
+@router.get("/{id}/tar", status_code=status.HTTP_307_TEMPORARY_REDIRECT, responses={200: {"content": tar_schema}})
+async def download_capture_session_tar(id: UUID, session: AsyncSession = Depends(get_session)) -> RedirectResponse:
+    row = await session.get(CaptureSession, id)
 
     if row is None:
-        raise HTTPException(404, f"Capture {id} not found")
+        raise HTTPException(404, f"Capture session {id} not found")
 
     try:
         url = get_storage().presign_get(BUCKET, f"{id}.tar", "application/x-tar")
@@ -166,16 +183,16 @@ async def download_capture_tar(id: UUID, session: AsyncSession = Depends(get_ses
     return RedirectResponse(url)
 
 
-async def _create_capture(capture: CaptureCreate, overwrite: bool, session: AsyncSession) -> Capture:
+async def _create_capture(capture: CaptureSessionCreate, overwrite: bool, session: AsyncSession) -> CaptureSession:
     if capture.id is not None:
-        result = await session.execute(select(Capture).where(Capture.id == capture.id))
+        result = await session.execute(select(CaptureSession).where(CaptureSession.id == capture.id))
         existing_row = result.scalar_one_or_none()
 
         if existing_row is not None:
             if not overwrite:
                 raise HTTPException(409, f"Capture with id {capture.id} already exists")
 
-            capture_from_dto_overwrite(existing_row, capture)
+            capture_session_from_dto_overwrite(existing_row, capture)
             return existing_row
 
-    return capture_from_dto(capture)
+    return capture_session_from_dto(capture)

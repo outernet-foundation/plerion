@@ -7,6 +7,8 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
+    backend: Literal["aws", "docker"] = Field()
+
     keycloak_public_host: AnyHttpUrl = Field()
     keycloak_internal_host: AnyHttpUrl = Field()
     keycloak_realm: str = Field()
@@ -19,20 +21,12 @@ class Settings(BaseSettings):
     database_auth_user: str = Field()
     database_auth_user_password: str = Field()
 
-    backend: Literal["aws", "docker"] = Field()
-
     s3_endpoint_url: AnyHttpUrl | None = None
     s3_access_key: str | None = None
     s3_secret_key: str | None = None
 
-    job_queue_arn: str = Field()
-    reconstruction_job_definition_id: str = Field()
-    features_job_definition_id: str = Field()
-
-    debug_reconstruction: bool | None = None
-    debug_wait_reconstruction: bool | None = None
-    debug_features: bool | None = None
-    debug_wait_features: bool | None = None
+    localization_session_image: str = Field()
+    reconstructions_bucket: str = Field(...)
 
     @model_validator(mode="after")
     def check_storage_config(self):

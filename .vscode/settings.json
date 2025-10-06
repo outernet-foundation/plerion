@@ -40,5 +40,7 @@
   "python.experiments.optOutFrom": ["All"],
   "basedpyright.analysis.diagnosticMode": "workspace",
   "basedpyright.analysis.typeCheckingMode": "strict",
-  "pgFormatter.configFile": "${workspaceFolder}/pg_format.conf"
+  "pgFormatter.configFile": "${workspaceFolder}/pg_format.conf",
+  "ruff.nativeServer": "on",
+  "ruff.importStrategy": "useBundled"
 }

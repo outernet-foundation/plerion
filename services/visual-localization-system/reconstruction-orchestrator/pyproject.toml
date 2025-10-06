@@ -16,3 +16,8 @@ models = { path = "../models", editable = true }
 
 [tool.ruff]
 extend = "../../../ruff.toml"
+
+[dependency-groups]
+dev = [
+    "debugpy>=1.8.17",
+]

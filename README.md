@@ -12,5 +12,8 @@ install pulumi (for remote backend deployment),
 - creds: `root/services/.env`
 
 # to fix line endings
+
 git rm --cached -r .
 git reset --hard
+
+git submodule update --init --recursive

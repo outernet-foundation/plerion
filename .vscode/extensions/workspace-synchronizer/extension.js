@@ -10,7 +10,7 @@ function activate() {
     
     // Start daemon
     const root = vscode.workspace.workspaceFolders[0].uri.fsPath;
-    daemon = spawn('uv', ['run', '-m', 'src.sync_workspace.main'], {
+    daemon = spawn('uv', ['run', '-m', 'src.sync_workspace.main', '--watch'], {
         cwd: root + '/scripts',
         env: { ...process.env, PYTHONUNBUFFERED: '1' }  // Force Python to flush output
     });

@@ -42,7 +42,7 @@ class DatabaseManager(ComponentResource):
 
         # Security group
         security_group = SecurityGroup(
-            "database-management-security-group",
+            "database-manager-security-group",
             vpc=vpc,
             vpc_endpoints=["ecr.api", "ecr.dkr", "ecs", "secretsmanager", "logs", "sts", "s3"],
             rules=[
@@ -54,7 +54,7 @@ class DatabaseManager(ComponentResource):
 
         # Role
         self.role = lambda_role("database-manager-role", opts=self._child_opts)
-        self.role.allow_secret_get("database-managersecrets", [rds.password_secret])
+        self.role.allow_secret_get("database-manager-secrets", [rds.password_secret])
         export("database-manager-role-name", self.role.name)
         export("database-manager-role-arn", self.role.arn)
 

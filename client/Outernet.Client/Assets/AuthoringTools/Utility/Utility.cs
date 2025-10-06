@@ -13,7 +13,6 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
-using PlerionClient.Model;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -157,37 +156,40 @@ namespace Outernet.Client.AuthoringTools
             return primitive.value;
         }
 
-        public static GroupModel ToGroupModel(Guid sceneObjectID)
+        public static PlerionClient.Model.GroupBatchUpdate ToGroupModel(Guid sceneObjectID)
         {
             var group = App.state.authoringTools.nodeGroups[sceneObjectID];
 
-            return new GroupModel(
-                id: group.id,
-                name: group.name.value,
-                parent: group.parentID.value
-            );
+            return new PlerionClient.Model.GroupBatchUpdate(
+                id: group.id)
+            {
+                Name = group.name.value,
+                ParentId = group.parentID.value
+            };
         }
 
-        public static LocalizationMapModel ToMapRecord(Guid sceneObjectID)
+        public static PlerionClient.Model.LocalizationMapBatchUpdate ToMapRecord(Guid sceneObjectID)
         {
             var map = App.state.maps[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];
 
-            return new LocalizationMapModel(
-                id: map.id,
-                name: map.name.value,
-                lighting: (int)map.lighting.value,
-                color: (int)map.color.value,
-                active: true,
-                positionX: transform.position.value.x,
-                positionY: transform.position.value.y,
-                positionZ: transform.position.value.z,
-                rotationX: transform.rotation.value.x,
-                rotationY: transform.rotation.value.y,
-                rotationZ: transform.rotation.value.z,
-                rotationW: transform.rotation.value.w,
-                points: map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
-            );
+            return new PlerionClient.Model.LocalizationMapBatchUpdate(
+                id: map.id)
+            {
+                Name = map.name.value,
+                Lighting = (int)map.lighting.value,
+                Color = (int)map.color.value,
+                Active = true,
+                PositionX = transform.position.value.x,
+                PositionY = transform.position.value.y,
+                PositionZ = transform.position.value.z,
+                RotationX = transform.rotation.value.x,
+                RotationY = transform.rotation.value.y,
+                RotationZ = transform.rotation.value.z,
+                RotationW = transform.rotation.value.w,
+                // UNDO TYLER
+                // Points = map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
+            };
         }
 
         public static IEnumerable<double> EnumerateComponents(double3 value)
@@ -197,38 +199,42 @@ namespace Outernet.Client.AuthoringTools
             yield return value.z;
         }
 
-        public static NodeModel ToNodeModel(Guid sceneObjectID)
+        public static PlerionClient.Model.NodeBatchUpdate ToNodeModel(Guid sceneObjectID)
         {
             var node = App.state.nodes[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];
 
-            return new NodeModel(
-                id: node.id,
-                name: node.name.value,
-                active: true,
-                positionX: transform.position.value.x,
-                positionY: transform.position.value.y,
-                positionZ: transform.position.value.z,
-                rotationX: transform.rotation.value.x,
-                rotationY: transform.rotation.value.y,
-                rotationZ: transform.rotation.value.z,
-                rotationW: transform.rotation.value.w,
-                link: node.link.value,
-                linkType: (int)node.linkType.value,
-                label: node.label.value,
-                labelType: (int)node.labelType.value,
-                labelScale: node.labelScale.value,
-                labelWidth: node.labelWidth.value,
-                labelHeight: node.labelHeight.value,
-                layer: node.layer.value,
-                parent: node.parentID.value
-            );
+            return new PlerionClient.Model.NodeBatchUpdate(
+                id: node.id)
+            {
+                Name = node.name.value,
+                Active = true,
+                PositionX = transform.position.value.x,
+                PositionY = transform.position.value.y,
+                PositionZ = transform.position.value.z,
+                RotationX = transform.rotation.value.x,
+                RotationY = transform.rotation.value.y,
+                RotationZ = transform.rotation.value.z,
+                RotationW = transform.rotation.value.w,
+                Link = node.link.value,
+                LinkType = (int)node.linkType.value,
+                Label = node.label.value,
+                LabelType = (int)node.labelType.value,
+                LabelScale = node.labelScale.value,
+                LabelWidth = node.labelWidth.value,
+                LabelHeight = node.labelHeight.value,
+                LayerId = node.layer.value,
+                ParentId = node.parentID.value
+            };
         }
 
-        public static LayerModel ToLayerModel(Guid sceneObjectID)
+        public static PlerionClient.Model.LayerBatchUpdate ToLayerModel(Guid sceneObjectID)
         {
             var layer = App.state.layers[sceneObjectID];
-            return new LayerModel(layer.id, layer.layerName.value);
+            return new PlerionClient.Model.LayerBatchUpdate(layer.id)
+            {
+                Name = layer.layerName.value
+            };
         }
     }
 }

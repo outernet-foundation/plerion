@@ -1,6 +1,12 @@
 {
   "realm": "plerion-dev",
   "enabled": true,
+
+  "accessTokenLifespan": "${KEYCLOAK_ACCESS_TOKEN_LIFESPAN}",
+  "accessTokenLifespanForImplicitFlow": "${KEYCLOAK_ACCESS_TOKEN_LIFESPAN}",
+  "ssoSessionIdleTimeout": "${KEYCLOAK_ACCESS_TOKEN_LIFESPAN}",
+  "ssoSessionMaxLifespan": "${KEYCLOAK_ACCESS_TOKEN_LIFESPAN}",
+
   "clients": [
     {
       "clientId": "plerion-api",

@@ -11,12 +11,7 @@ from scipy.spatial.transform import Rotation
 
 
 class CaptureThread(threading.Thread):
-    def __init__(
-        self,
-        stop_event: threading.Event,
-        output_directory: Path,
-        capture_interval: float,
-    ):
+    def __init__(self, stop_event: threading.Event, output_directory: Path, capture_interval: float):
         super().__init__(daemon=True)
         self.stop_event = stop_event
         self.output_directory = output_directory
@@ -33,11 +28,7 @@ class CaptureThread(threading.Thread):
         # start camera
         zed = sl.Camera()
 
-        init = sl.InitParameters(
-            camera_resolution=sl.RESOLUTION.HD720,
-            coordinate_units=sl.UNIT.METER,
-            camera_fps=60,
-        )
+        init = sl.InitParameters(camera_resolution=sl.RESOLUTION.HD720, coordinate_units=sl.UNIT.METER, camera_fps=60)
 
         zed.set_camera_settings(sl.VIDEO_SETTINGS.AEC_AGC, 0)
         zed.set_camera_settings(sl.VIDEO_SETTINGS.GAIN, 70)
@@ -48,9 +39,7 @@ class CaptureThread(threading.Thread):
             raise RuntimeError(f"ZED open failed: {err.name} ({err.value})")
 
         # write calibration.json
-        calibration_parameters = (
-            zed.get_camera_information().camera_configuration.calibration_parameters
-        )
+        calibration_parameters = zed.get_camera_information().camera_configuration.calibration_parameters
         left_camera = calibration_parameters.left_cam
         right_camera = calibration_parameters.right_cam
         stereo_transform = calibration_parameters.stereo_transform.m
@@ -64,30 +53,16 @@ class CaptureThread(threading.Thread):
                         "model": "PINHOLE",
                         "width": left_camera.image_size.width,
                         "height": left_camera.image_size.height,
-                        "params": [
-                            left_camera.fx,
-                            left_camera.fy,
-                            left_camera.cx,
-                            left_camera.cy,
-                        ],
+                        "params": [left_camera.fx, left_camera.fy, left_camera.cx, left_camera.cy],
                     },
                     {
                         "id": "right",
                         "translation": stereo_transform[:3, 3].tolist(),
-                        "rotation": Rotation.from_matrix(
-                            np.array(stereo_transform[:3, :3])
-                        )
-                        .as_quat()
-                        .tolist(),
+                        "rotation": Rotation.from_matrix(np.array(stereo_transform[:3, :3])).as_quat().tolist(),
                         "model": "PINHOLE",
                         "width": right_camera.image_size.width,
                         "height": right_camera.image_size.height,
-                        "params": [
-                            right_camera.fx,
-                            right_camera.fy,
-                            right_camera.cx,
-                            right_camera.cy,
-                        ],
+                        "params": [right_camera.fx, right_camera.fy, right_camera.cx, right_camera.cy],
                     },
                 ],
                 f,
@@ -121,13 +96,11 @@ class CaptureThread(threading.Thread):
                 pose = sl.Pose()
                 zed.get_position(pose, sl.REFERENCE_FRAME.WORLD)
                 timestamp = int(pose.timestamp.get_milliseconds())
-                csv_writer.writerow(
-                    [
-                        timestamp,
-                        *pose.get_translation(sl.Translation()).get(),
-                        *pose.get_orientation(sl.Orientation()).get(),
-                    ]
-                )
+                csv_writer.writerow([
+                    timestamp,
+                    *pose.get_translation(sl.Translation()).get(),
+                    *pose.get_orientation(sl.Orientation()).get(),
+                ])
                 csv_file.flush()
 
                 # write images to disk

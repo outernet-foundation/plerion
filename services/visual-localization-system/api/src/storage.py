@@ -1,8 +1,7 @@
 from functools import lru_cache
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
-import boto3
-from botocore.config import Config
+from common.boto_clients import create_s3_client
 
 from .settings import get_settings
 
@@ -40,22 +39,11 @@ class Storage:
 def _build_storage() -> Storage:
     settings = get_settings()
 
-    kwargs: dict[str, Any] = {}
-    if settings.s3_endpoint_url:
-        kwargs.update(
-            endpoint_url=str(settings.s3_endpoint_url),
-            aws_access_key_id=settings.s3_access_key,
-            aws_secret_access_key=settings.s3_secret_key,
-            config=Config(
-                signature_version="s3v4",
-                region_name="us-east-1",  # required by SigV4
-                s3={"addressing_style": "path"},  # ← force path-style (/{bucket}/{key})
-            ),
-        )
-
-    # See https://github.com/microsoft/pylance-release/issues/2809
-    client = cast(S3Client, boto3.client("s3", **kwargs))  # type: ignore[call-arg]
-    return Storage(s3=client)
+    return Storage(s3=create_s3_client(
+        s3_endpoint_url=settings.s3_endpoint_url,
+        s3_access_key=settings.s3_access_key,
+        s3_secret_key=settings.s3_secret_key,
+    ))
 
 
 def get_storage() -> Storage:

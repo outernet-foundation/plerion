@@ -1,0 +1,3 @@
+[submodule "services/visual-localization-system/third-party/Hierarchical-Localization"]
+	path = services/visual-localization-system/third-party/Hierarchical-Localization
+	url = https://github.com/cvg/Hierarchical-Localization.git

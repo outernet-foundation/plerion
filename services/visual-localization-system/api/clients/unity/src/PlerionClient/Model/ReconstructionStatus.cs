@@ -38,28 +38,34 @@ namespace PlerionClient.Model
         Queued = 1,
 
         /// <summary>
+        /// Enum Pending for value: pending
+        /// </summary>
+        [EnumMember(Value = "pending")]
+        Pending = 2,
+
+        /// <summary>
         /// Enum Running for value: running
         /// </summary>
         [EnumMember(Value = "running")]
-        Running = 2,
+        Running = 3,
 
         /// <summary>
         /// Enum Succeeded for value: succeeded
         /// </summary>
         [EnumMember(Value = "succeeded")]
-        Succeeded = 3,
+        Succeeded = 4,
 
         /// <summary>
         /// Enum Cancelled for value: cancelled
         /// </summary>
         [EnumMember(Value = "cancelled")]
-        Cancelled = 4,
+        Cancelled = 5,
 
         /// <summary>
         /// Enum Failed for value: failed
         /// </summary>
         [EnumMember(Value = "failed")]
-        Failed = 5
+        Failed = 6
     }
 
 }

@@ -8,7 +8,8 @@ namespace PlerionClient.Client
     public class EditorSettings : ScriptableObject
     {
         private static EditorSettings _instance;
-
+        public bool overrideEnvironment = false;
+        public string overrideEnvironmentURL;
 
         public static EditorSettings GetOrCreateInstance()
         {

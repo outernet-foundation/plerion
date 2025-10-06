@@ -5,6 +5,7 @@ volumes:
   postgres_data:
   cloudbeaver_data:
   uv_cache:
+  keycloak_data:
 
 services:
   minio:
@@ -23,7 +24,8 @@ services:
       retries: 60
 
   minio-reverse-proxy:
-    build: services/minio-reverse-proxy
+    build:
+      dockerfile: services/minio-reverse-proxy/Dockerfile
     depends_on:
       - minio
     ports:
@@ -42,7 +44,8 @@ services:
     entrypoint: >
       /bin/sh -c "
         mc alias set local http://minio:9000 ${S3_ACCESS_KEY} ${S3_SECRET_KEY} && \
-        mc mb --ignore-existing local/dev-captures
+        mc mb --ignore-existing local/dev-captures && \
+        mc mb --ignore-existing local/dev-reconstructions
       "
     environment:
       S3_ACCESS_KEY: "${S3_ACCESS_KEY}"
@@ -68,7 +71,8 @@ services:
       retries: 30
 
   initialize-cloudbeaver:
-    build: tasks/initialize-cloudbeaver
+    build:
+      dockerfile: tasks/initialize-cloudbeaver/Dockerfile
     restart: "no"
     depends_on:
       postgres:
@@ -135,6 +139,7 @@ services:
       - --health-enabled=true
     environment:
       API_HOSTNAME: https://${DEVICE_NAME}-api.${DOMAIN}
+      KEYCLOAK_ACCESS_TOKEN_LIFESPAN: ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN}
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
       KC_HOSTNAME: https://${DEVICE_NAME}-keycloak.${DOMAIN}
@@ -144,9 +149,11 @@ services:
       KC_HOSTNAME_DEBUG: true
     volumes:
       - ./services/keycloak/realm-export:/opt/keycloak/data/import:ro
+      - keycloak_data:/opt/keycloak/data
 
   keycloak-reverse-proxy:
-    build: services/keycloak-reverse-proxy
+    build:
+      dockerfile: services/keycloak-reverse-proxy/Dockerfile
     depends_on:
       - keycloak
     ports:
@@ -155,18 +162,45 @@ services:
       DEVICE_NAME: ${DEVICE_NAME}
       DOMAIN: ${DOMAIN}
 
+  migrate-visual-localization-system-database:
+    build:
+      dockerfile: tasks/migrate-database/Dockerfile
+    depends_on:
+      create-database:
+        condition: service_completed_successfully
+    volumes:
+      - ./:/app # needed so /app/<SCHEMA_DIR> exists in the container
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DATABASE_NAME}
+      DB_USER: ${DATABASE_NAME}_owner
+      DB_PASSWORD: ${DATABASE_OWNER_PASSWORD}
+      SCHEMA_DIR: services/visual-localization-system/database
+      # ALLOWED_HAZARDS: "DELETES_DATA,AUTHZ_UPDATE,INDEX_BUILD,INDEX_DROPPED,HAS_UNTRACKABLE_DEPENDENCIES,ACQUIRES_ACCESS_EXCLUSIVE_LOCK"
+      ALLOWED_HAZARDS: "HAS_UNTRACKABLE_DEPENDENCIES"
+    restart: "no"
+
   visual-localization-system-api:
     build:
       dockerfile: services/visual-localization-system/api/Dockerfile
     depends_on:
       initialize-minio:
         condition: service_completed_successfully
-      create-database:
+      migrate-visual-localization-system-database:
         condition: service_completed_successfully
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1 # or 'all'
+              capabilities: ["gpu"]
     ports:
       - "8000:8000"
       - "5679:5678"
     volumes:
+      - ./services/visual-localization-system/localize:/app/services/visual-localization-system/localize
       - ./services/visual-localization-system/api:/app/services/visual-localization-system/api
       - ./services/visual-localization-system/models:/app/services/visual-localization-system/models
       - ./common:/app/common
@@ -188,26 +222,66 @@ services:
       S3_ENDPOINT_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
       S3_ACCESS_KEY: ${S3_ACCESS_KEY}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
-      JOB_QUEUE_ARN: dummy
-      RECONSTRUCTION_JOB_DEFINITION_ID: plerion-run-reconstruction
-      FEATURES_JOB_DEFINITION_ID: plerion-extract-match-features
+      RECONSTRUCTIONS_BUCKET: dev-reconstructions
+      LOCALIZATION_SESSION_IMAGE: plerion-localize
       RELOAD: true
       DEBUG: ${DEBUG_API}
       DEBUG_WAIT: ${DEBUG_WAIT_API}
-      DEBUG_RECONSTRUCTION: ${DEBUG_RECONSTRUCTION}
-      DEBUG_WAIT_RECONSTRUCTION: ${DEBUG_WAIT_RECONSTRUCTION}
-      DEBUG_FEATURES: ${DEBUG_FEATURES}
-      DEBUG_WAIT_FEATURES: ${DEBUG_WAIT_FEATURES}
 
-  delete-database:
-    profiles: ["tasks"]
+  reconstruction-orchestrator:
     build:
-      dockerfile: tasks/delete-database/Dockerfile
+      dockerfile: services/visual-localization-system/reconstruction-orchestrator/Dockerfile
+    depends_on:
+      create-database:
+        condition: service_completed_successfully
+    volumes:
+      - ./services/visual-localization-system/reconstruction-orchestrator:/app/services/visual-localization-system/reconstruction-orchestrator
+      - ./services/visual-localization-system/models:/app/services/visual-localization-system/models
+      - ./common:/app/common
+      - uv_cache:/root/.cache/uv
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      BACKEND: docker
+      DOCKER_HOST: unix:///var/run/docker.sock
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      DATABASE_NAME: ${DATABASE_NAME}
+      DATABASE_USER: ${DATABASE_NAME}_orchestration_user
+      DATABASE_USER_PASSWORD: ${DATABASE_ORCHESTRATION_USER_PASSWORD}
+      S3_ENDPOINT_URL: "https://${DEVICE_NAME}-minio.${DOMAIN}"
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY}
+      S3_SECRET_KEY: ${S3_SECRET_KEY}
+      CAPTURES_BUCKET: dev-captures
+      RECONSTRUCTIONS_BUCKET: dev-reconstructions
+      BATCH_JOB_QUEUE: dummy
+      BATCH_JOB_DEFINITION: plerion-run-reconstruction
+      DEBUG: ${DEBUG_RECONSTRUCTION_ORCHESTRATOR}
+      DEBUG_WAIT: ${DEBUG_WAIT_RECONSTRUCTION_ORCHESTRATOR}
+      DEBUG_RUN_RECONSTRUCTION: ${DEBUG_RUN_RECONSTRUCTION}
+      DEBUG_WAIT_RUN_RECONSTRUCTION: ${DEBUG_WAIT_RUN_RECONSTRUCTION}
 
   run-reconstruction:
     profiles: ["tasks"]
     build:
-      dockerfile: tasks/run-reconstruction/Dockerfile
+      dockerfile: services/visual-localization-system/run-reconstruction/Dockerfile
+      # Use an external cache avoid large layers being evicted
+      cache_from:
+        - type=local,src=${HOME}/.buildx-cache/run-reconstruction
+      cache_to:
+        - type=local,dest=${HOME}/.buildx-cache/run-reconstruction,mode=max
+    volumes:
+      - uv_cache:/root/.cache/uv
+
+  localize:
+    profiles: ["tasks"]
+    build:
+      dockerfile: services/visual-localization-system/localize/Dockerfile
+      # Use an external cache avoid large layers being evicted
+      cache_from:
+        - type=local,src=${HOME}/.buildx-cache/localize
+      cache_to:
+        - type=local,dest=${HOME}/.buildx-cache/localize,mode=max
+    volumes:
+      - uv_cache:/root/.cache/uv
 
   extract-match-features:
     profiles: ["tasks"]

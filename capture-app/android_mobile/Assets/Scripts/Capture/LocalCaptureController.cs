@@ -10,31 +10,10 @@ using UnityEngine.Android;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
+using static RigConfig;
 
 public static class LocalCaptureController
 {
-    [Serializable]
-    struct CameraCalibration
-    {
-        public string id;
-        public float[] translation;
-        public float[] rotation;
-        public string model;
-        public int width;
-        public int height;
-        public float[] @params;
-    }
-
-    [Serializable]
-    class RigCalibration
-    {
-        public CameraCalibration[] cameras;
-
-        public RigCalibration(params CameraCalibration[] entries)
-        {
-            cameras = entries;
-        }
-    }
 
 
     static ARCameraManager cameraManager;
@@ -45,19 +24,24 @@ public static class LocalCaptureController
     static StreamWriter poseWriter;
     static readonly object inputOutputLock = new();
 
-    static bool calibrationWritten;
+    static bool configWritten;
     static float nextCaptureTime;
 
-    static string RecordingsRoot => Path.Combine(Application.persistentDataPath, "Captures");
-    static string SessionDir(string name) => Path.Combine(RecordingsRoot, name);
-    static string ZipPath(string name) => Path.Combine(RecordingsRoot, $"{name}.zip");
+    static string recordingsRoot;
+    static string SessionDir(string name) => Path.Combine(recordingsRoot, name);
+    static string ZipPath(string name) => Path.Combine(recordingsRoot, $"{name}.zip");
+
+    public static void Initialize()
+    {
+        recordingsRoot = Path.Combine(Application.persistentDataPath, "Captures");
+    }
 
     public static IEnumerable<Guid> GetCaptures()
     {
-        if (!Directory.Exists(RecordingsRoot))
+        if (!Directory.Exists(recordingsRoot))
             return Array.Empty<Guid>();
 
-        return new DirectoryInfo(RecordingsRoot)
+        return new DirectoryInfo(recordingsRoot)
             .GetDirectories()
             .Select(d => d.Name)
             .Select(name => Guid.Parse(name));
@@ -70,7 +54,7 @@ public static class LocalCaptureController
         CancellationToken cancellationToken,
         float requestedCaptureIntervalSeconds)
     {
-        Directory.CreateDirectory(RecordingsRoot); // ensure root exists
+        Directory.CreateDirectory(recordingsRoot); // ensure root exists
 
         cameraManager = UnityEngine.Object.FindObjectOfType<ARCameraManager>();
         captureIntervalSeconds = requestedCaptureIntervalSeconds;
@@ -85,15 +69,13 @@ public static class LocalCaptureController
             () => ARSession.state == ARSessionState.SessionTracking,
             cancellationToken: cancellationToken);
 
-        string recordingsRoot = Path.Combine(
-            Application.persistentDataPath, "Captures");
-
         sessionId = Guid.NewGuid();
         sessionDirectory = SessionDir(sessionId.ToString());
-        Directory.CreateDirectory(Path.Combine(sessionDirectory, "images"));
+        Directory.CreateDirectory(Path.Combine(sessionDirectory, "rig0"));
+        Directory.CreateDirectory(Path.Combine(sessionDirectory, "rig0", "camera0"));
 
         poseWriter = new StreamWriter(
-            Path.Combine(sessionDirectory, "poses.csv"))
+            Path.Combine(sessionDirectory, "rig0", "frames.csv"))
         {
             AutoFlush = true
         };
@@ -113,7 +95,7 @@ public static class LocalCaptureController
             cameraManager = null;
         }
 
-        calibrationWritten = false;
+        configWritten = false;
         nextCaptureTime = 0;
 
         // Put the zip *next to* the sessionDirectory
@@ -123,31 +105,48 @@ public static class LocalCaptureController
 
     static void OnCameraFrameReceived(ARCameraFrameEventArgs _)
     {
-        // Write calibration.json once
-        if (!calibrationWritten && cameraManager.TryGetIntrinsics(out var intrinsics))
+        // Write config.json once
+        if (!configWritten && cameraManager.TryGetIntrinsics(out var intrinsics))
         {
-            File.WriteAllText(
-                Path.Combine(sessionDirectory, "calibration.json"),
-                JsonUtility.ToJson(
-                    new RigCalibration(new CameraCalibration
+            var json = JsonUtility.ToJson(
+                new RigConfig()
+                {
+                    rigs = new Rig[]
                     {
-                        id = "mono",
-                        translation = new[] { 0f, 0f, 0f },
-                        rotation = new[] { 0f, 0f, 0f, 1f },
-                        model = "PINHOLE",
-                        width = intrinsics.resolution.x,
-                        height = intrinsics.resolution.y,
-                        @params = new[]
+                        new()
                         {
-                            intrinsics.focalLength.x, intrinsics.focalLength.y,
-                            intrinsics.principalPoint.x, intrinsics.principalPoint.y
+                            id = "rig0",
+                            cameras = new RigCamera[]
+                            {
+                                new RigCamera()
+                                {
+                                    id = "camera0",
+                                    model = "PINHOLE",
+                                    width = intrinsics.resolution.x,
+                                    height = intrinsics.resolution.y,
+                                    intrinsics = new float[]
+                                    {
+                                        intrinsics.focalLength.x,
+                                        intrinsics.focalLength.y,
+                                        intrinsics.principalPoint.x,
+                                        intrinsics.principalPoint.y
+                                    },
+                                    ref_sensor = true,
+                                    rotation = new float[] {0, 0, 0, 1},
+                                    translation = new float[] {0, 0, 0}
+                                }
+                            }
                         }
-                    }),
-                    true
-                )
+                    }
+                }
             );
 
-            calibrationWritten = true;
+            File.WriteAllText(
+                Path.Combine(sessionDirectory, "config.json"),
+                json
+            );
+
+            configWritten = true;
         }
 
         // Throttle capture to the requested interval.
@@ -158,8 +157,6 @@ public static class LocalCaptureController
         if (!cameraManager.TryAcquireLatestCpuImage(out var cpuImage)) return;
 
         long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        string relativeImagePath = $"images/{timestampMilliseconds}_mono.jpg";
-        string absoluteImagePath = Path.Combine(sessionDirectory, relativeImagePath);
 
         // Write pose row: timestamp, tx,ty,tz, qx,qy,qz,qw
         lock (inputOutputLock)
@@ -177,8 +174,8 @@ public static class LocalCaptureController
                 cameraManager.transform.rotation.w));
         }
 
-        // Save the PNG off-thread.
-        SaveImageAsync(cpuImage, absoluteImagePath).Forget();
+        // Save the jpg off-thread.
+        SaveImageAsync(cpuImage, Path.Combine(sessionDirectory, "rig0", "camera0", $"{timestampMilliseconds}.jpg")).Forget();
     }
 
     static async UniTask SaveImageAsync(

@@ -138,7 +138,7 @@ namespace Outernet.Client.Location
 
         static bool localizerStarted = false;
 
-        static public List<LocalizationMapModel> Maps
+        static public List<LocalizationMapRead> Maps
         {
             get => maps.Values.Select(map => map.metadata).ToList();
             set

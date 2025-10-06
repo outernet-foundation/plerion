@@ -3,7 +3,7 @@ CREATE TYPE device_type AS ENUM(
   'Zed'
 );
 
-CREATE TABLE captures(
+CREATE TABLE capture_sessions(
   tenant_id uuid 
     NOT NULL 
     REFERENCES auth.tenants(id) 
@@ -25,14 +25,14 @@ CREATE TABLE captures(
     DEFAULT uuid_generate_v4()
 );
 
-ALTER TABLE captures ENABLE ROW LEVEL SECURITY;
+ALTER TABLE capture_sessions ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY captures_rls_policy ON captures
+CREATE POLICY capture_sessions_rls_policy ON capture_sessions
   FOR ALL
     USING (tenant_id = current_tenant())
     WITH CHECK (tenant_id = current_tenant());
 
-CREATE TRIGGER captures_touch_updated_at_trigger
-  BEFORE UPDATE ON captures
+CREATE TRIGGER capture_sessions_touch_updated_at_trigger
+  BEFORE UPDATE ON capture_sessions
   FOR EACH ROW EXECUTE FUNCTION touch_updated_at();
 

@@ -31,7 +31,7 @@ paths:
           description: Validation Error
       summary: Start Capture
       tags:
-      - captures
+      - Default
   /captures/stop:
     post:
       operationId: stop_capture
@@ -43,7 +43,7 @@ paths:
           description: Successful Response
       summary: Stop Capture
       tags:
-      - captures
+      - Default
   /captures:
     get:
       operationId: get_captures
@@ -59,7 +59,7 @@ paths:
           description: Successful Response
       summary: Get Captures
       tags:
-      - captures
+      - Default
   /captures/{id}:
     get:
       operationId: download_capture_tar
@@ -89,7 +89,7 @@ paths:
           description: Validation Error
       summary: Download Capture Tar
       tags:
-      - captures
+      - Default
 components:
   schemas:
     HTTPValidationError:

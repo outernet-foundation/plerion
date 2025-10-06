@@ -10,8 +10,6 @@ ENV \
     PYTHONDONTWRITEBYTECODE=1 \
     # Enable bytecode compilation, to improve cold-start performance.
     UV_COMPILE_BYTECODE=1 \
-    # Disable installer metadata, to create a deterministic layer.
-    UV_NO_INSTALLER_METADATA=1 \
     # Enable copy mode to support bind mount caching.
     UV_LINK_MODE=copy
 

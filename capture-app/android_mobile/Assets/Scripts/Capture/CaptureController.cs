@@ -10,6 +10,7 @@ using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using TMPro;
 using PlerionClient.Api;
+using PlerionClient.Model;
 
 using FofX;
 using FofX.Stateful;
@@ -154,12 +155,13 @@ namespace PlerionClient.Client
 
             // var captureData = localCaptures.ToDictionary(x => x, x => remoteCaptureList.FirstOrDefault(y => y.Id == x));
 
-            var captureData = new Dictionary<Guid, Model.CaptureModel>();
+            var captureData = new Dictionary<Guid, CaptureSessionCreate>();
 
             for (int i = 0; i < 20; i++)
             {
-                var capture = new Model.CaptureModel(Guid.NewGuid(), i.ToString());
-                captureData.Add(capture.Id, capture);
+                var id = Guid.NewGuid();
+                var capture = new CaptureSessionCreate(Model.DeviceType.ARFoundation, i.ToString()) { Id = id };
+                captureData.Add(id, capture);
             }
 
             await UniTask.SwitchToMainThread();
@@ -194,15 +196,15 @@ namespace PlerionClient.Client
         {
             if (type == CaptureType.Zed)
             {
-                var response = await capturesApi.CreateCaptureAsync(new Model.CaptureCreate(Model.DeviceType.Zed, name) { Id = id });
+                var response = await capturesApi.CreateCaptureSessionAsync(new CaptureSessionCreate(Model.DeviceType.Zed, name) { Id = id });
                 var captureData = await ZedCaptureController.GetCapture(id, cancellationToken);
-                await capturesApi.UploadCaptureTarAsync(response.Id, captureData, cancellationToken);
+                await capturesApi.UploadCaptureSessionTarAsync(response.Id, captureData, cancellationToken);
             }
             else if (type == CaptureType.Local)
             {
-                var response = await capturesApi.CreateCaptureAsync(new Model.CaptureCreate(Model.DeviceType.ARFoundation, name) { Id = id });
+                var response = await capturesApi.CreateCaptureSessionAsync(new CaptureSessionCreate(Model.DeviceType.ARFoundation, name) { Id = id });
                 var captureData = await LocalCaptureController.GetCapture(id);
-                await capturesApi.UploadCaptureTarAsync(response.Id, captureData, cancellationToken);
+                await capturesApi.UploadCaptureSessionTarAsync(response.Id, captureData, cancellationToken);
             }
 
             await UpdateCaptureList();

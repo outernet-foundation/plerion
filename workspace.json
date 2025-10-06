@@ -1,0 +1,12 @@
+{
+  "databases": {
+    "services/visual-localization-system": "plerion"
+  },
+  "openapi_projects": {
+    "services/visual-localization-system/api": [
+      "services/visual-localization-system/models",
+      "common"
+    ],
+    "capture-app/zed": ["common"]
+  }
+}

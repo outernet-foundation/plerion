@@ -32,32 +32,6 @@ namespace PlerionClient.Model
     [DataContract(Name = "ReconstructionCreate")]
     public partial class ReconstructionCreate
     {
-
-        /// <summary>
-        /// Gets or Sets Status
-        /// </summary>
-
-        [DataMember(Name = "status", EmitDefaultValue = true)]
-        public ReconstructionStatus? Status
-        {
-            get{ return _Status;}
-            set
-            {
-                _Status = value;
-                _flagStatus = true;
-            }
-        }
-        private ReconstructionStatus? _Status;
-        private bool _flagStatus;
-
-        /// <summary>
-        /// Returns false as Status should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeStatus()
-        {
-            return _flagStatus;
-        }
         /// <summary>
         /// Initializes a new instance of the <see cref="ReconstructionCreate" /> class.
         /// </summary>
@@ -66,37 +40,36 @@ namespace PlerionClient.Model
         /// <summary>
         /// Initializes a new instance of the <see cref="ReconstructionCreate" /> class.
         /// </summary>
-        /// <param name="captureId">captureId (required).</param>
+        /// <param name="captureSessionId">captureSessionId (required).</param>
         /// <param name="id">id.</param>
-        /// <param name="status">status.</param>
-        public ReconstructionCreate(Guid captureId)
+        public ReconstructionCreate(Guid captureSessionId)
         {
-            this.CaptureId = captureId;
+            this.CaptureSessionId = captureSessionId;
         }
 
         /// <summary>
-        /// Gets or Sets CaptureId
+        /// Gets or Sets CaptureSessionId
         /// </summary>
-        [DataMember(Name = "capture_id", IsRequired = true, EmitDefaultValue = true)]
-        public Guid CaptureId
+        [DataMember(Name = "capture_session_id", IsRequired = true, EmitDefaultValue = true)]
+        public Guid CaptureSessionId
         {
-            get{ return _CaptureId;}
+            get{ return _CaptureSessionId;}
             set
             {
-                _CaptureId = value;
-                _flagCaptureId = true;
+                _CaptureSessionId = value;
+                _flagCaptureSessionId = true;
             }
         }
-        private Guid _CaptureId;
-        private bool _flagCaptureId;
+        private Guid _CaptureSessionId;
+        private bool _flagCaptureSessionId;
 
         /// <summary>
-        /// Returns false as CaptureId should not be serialized given that it's read-only.
+        /// Returns false as CaptureSessionId should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeCaptureId()
+        public bool ShouldSerializeCaptureSessionId()
         {
-            return _flagCaptureId;
+            return _flagCaptureSessionId;
         }
         /// <summary>
         /// Gets or Sets Id
@@ -130,9 +103,8 @@ namespace PlerionClient.Model
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class ReconstructionCreate {\n");
-            sb.Append("  CaptureId: ").Append(CaptureId).Append("\n");
+            sb.Append("  CaptureSessionId: ").Append(CaptureSessionId).Append("\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
-            sb.Append("  Status: ").Append(Status).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

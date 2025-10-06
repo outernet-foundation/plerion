@@ -50,19 +50,19 @@ namespace ZedClient.Model
             {
                 throw new ArgumentNullException("loc is a required property for ValidationError and cannot be null");
             }
-            this._Loc = loc;
+            this.Loc = loc;
             // to ensure "msg" is required (not null)
             if (msg == null)
             {
                 throw new ArgumentNullException("msg is a required property for ValidationError and cannot be null");
             }
-            this._Msg = msg;
+            this.Msg = msg;
             // to ensure "type" is required (not null)
             if (type == null)
             {
                 throw new ArgumentNullException("type is a required property for ValidationError and cannot be null");
             }
-            this._Type = type;
+            this.Type = type;
         }
 
         /// <summary>

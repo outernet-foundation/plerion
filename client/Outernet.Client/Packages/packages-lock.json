@@ -72,7 +72,7 @@
       "dependencies": {}
     },
     "com.outernet.plerionclient": {
-      "version": "file:../../../services/api/src/openapi_generated/unity/src/PlerionClient",
+      "version": "file:../../../services/visual-localization-system/api/clients/unity/src/PlerionClient",
       "depth": 0,
       "source": "local",
       "dependencies": {}

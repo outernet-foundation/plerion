@@ -6,15 +6,17 @@ from pulumi_aws.iam import OpenIdConnectProvider
 from pulumi_aws.route53 import Record, Zone
 
 from components.nat_instance import NatInstance
-from components.oauth import Oauth
+
+# from components.oauth import Oauth
 from components.rds import RDSInstance
 from components.role import Role
 from components.roles import github_actions_assume_role_policy
 from components.secret import Secret
 from components.vpc import Vpc
-from services.auth_gateway import AuthGateway
-from services.cloudbeaver import Cloudbeaver
-from services.database_manager import DatabaseManager
+
+# from services.auth_gateway import AuthGateway
+# from services.cloudbeaver import Cloudbeaver
+# from services.database_manager import DatabaseManager
 from services.tailscale_beacon import TailscaleBeacon
 
 
@@ -120,53 +122,53 @@ def create_core_stack(config: Config):
 
     cluster = Cluster("core-cluster")
 
-    auth_gateway = AuthGateway(
-        resource_name="auth-gateway",
-        config=config,
-        vpc=vpc,
-        zone_id=zone.id,
-        zone_name=zone.name,
-        certificate_arn=certificate.arn,
-        cluster=cluster,
-        deploy_role=main_deploy_role,
-        prepare_deploy_role=main_prepare_deploy_role,
-    )
+    # auth_gateway = AuthGateway(
+    #     resource_name="auth-gateway",
+    #     config=config,
+    #     vpc=vpc,
+    #     zone_id=zone.id,
+    #     zone_name=zone.name,
+    #     certificate_arn=certificate.arn,
+    #     cluster=cluster,
+    #     deploy_role=main_deploy_role,
+    #     prepare_deploy_role=main_prepare_deploy_role,
+    # )
 
-    oauth = Oauth(
-        "cloudbeaver-oauth",
-        config=config,
-        proxy_image_repo_name=auth_gateway.proxy_image_repo_name,
-        reverse_proxy_image_repo_name=auth_gateway.reverse_proxy_image_repo_name,
-        client_id_secret_arn=auth_gateway.client_id_secret_arn,
-        client_secret_secret_arn=auth_gateway.client_secret_secret_arn,
-        cookie_secret_secret_arn=auth_gateway.cookie_secret_secret_arn,
-    )
+    # oauth = Oauth(
+    #     "cloudbeaver-oauth",
+    #     config=config,
+    #     proxy_image_repo_name=auth_gateway.proxy_image_repo_name,
+    #     reverse_proxy_image_repo_name=auth_gateway.reverse_proxy_image_repo_name,
+    #     client_id_secret_arn=auth_gateway.client_id_secret_arn,
+    #     client_secret_secret_arn=auth_gateway.client_secret_secret_arn,
+    #     cookie_secret_secret_arn=auth_gateway.cookie_secret_secret_arn,
+    # )
 
-    cloudbeaver = Cloudbeaver(
-        resource_name="cloudbeaver",
-        config=config,
-        zone_name=zone.name,
-        zone_id=zone.id,
-        certificate_arn=certificate.arn,
-        vpc=vpc,
-        rds=rds,
-        cluster=cluster,
-        prepare_deploy_role=main_prepare_deploy_role,
-        deploy_role=main_deploy_role,
-        oauth=oauth,
-    )
+    # cloudbeaver = Cloudbeaver(
+    #     resource_name="cloudbeaver",
+    #     config=config,
+    #     zone_name=zone.name,
+    #     zone_id=zone.id,
+    #     certificate_arn=certificate.arn,
+    #     vpc=vpc,
+    #     rds=rds,
+    #     cluster=cluster,
+    #     prepare_deploy_role=main_prepare_deploy_role,
+    #     deploy_role=main_deploy_role,
+    #     oauth=oauth,
+    # )
 
-    DatabaseManager(
-        resource_name="database-manager",
-        config=config,
-        vpc=vpc,
-        efs=cloudbeaver.efs,
-        rds=rds,
-        ecs_cluster_arn=cluster.arn,
-        cloudbeaver_service_arn=cloudbeaver.service_arn,
-        prepare_deploy_role=main_prepare_deploy_role,
-        deploy_role=main_deploy_role,
-    )
+    # DatabaseManager(
+    #     resource_name="database-manager",
+    #     config=config,
+    #     vpc=vpc,
+    #     efs=cloudbeaver.efs,
+    #     rds=rds,
+    #     ecs_cluster_arn=cluster.arn,
+    #     cloudbeaver_service_arn=cloudbeaver.service_arn,
+    #     prepare_deploy_role=main_prepare_deploy_role,
+    #     deploy_role=main_deploy_role,
+    # )
 
     TailscaleBeacon(
         resource_name="tailscale-beacon",

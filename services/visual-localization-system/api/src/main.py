@@ -9,6 +9,11 @@ from src.settings import get_settings
 
 from .auth import AuthMiddleware
 from .routers.captures import router as captures_router
+from .routers.groups import router as groups_router
+from .routers.layers import router as layers_router
+from .routers.localization_maps import router as localization_maps_router
+from .routers.localization_sessions import router as localization_sessions_router
+from .routers.nodes import router as nodes_router
 from .routers.reconstructions import router as reconstructions_router
 
 settings = get_settings()
@@ -68,3 +73,8 @@ app.add_middleware(
 
 app.include_router(captures_router)
 app.include_router(reconstructions_router)
+app.include_router(localization_maps_router)
+app.include_router(localization_sessions_router)
+app.include_router(groups_router)
+app.include_router(layers_router)
+app.include_router(nodes_router)

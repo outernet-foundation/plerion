@@ -66,16 +66,14 @@ namespace PlerionClient.Model
         /// <summary>
         /// Initializes a new instance of the <see cref="ReconstructionRead" /> class.
         /// </summary>
-        /// <param name="tenantId">tenantId (required).</param>
-        /// <param name="captureId">captureId (required).</param>
+        /// <param name="captureSessionId">captureSessionId (required).</param>
         /// <param name="id">id (required).</param>
         /// <param name="createdAt">createdAt (required).</param>
         /// <param name="updatedAt">updatedAt (required).</param>
         /// <param name="status">status (required).</param>
-        public ReconstructionRead(Guid tenantId, Guid captureId, Guid id, DateTime createdAt, DateTime updatedAt, ReconstructionStatus status)
+        public ReconstructionRead(Guid captureSessionId, Guid id, DateTime createdAt, DateTime updatedAt, ReconstructionStatus status)
         {
-            this.TenantId = tenantId;
-            this.CaptureId = captureId;
+            this.CaptureSessionId = captureSessionId;
             this.Id = id;
             this.CreatedAt = createdAt;
             this.UpdatedAt = updatedAt;
@@ -83,52 +81,28 @@ namespace PlerionClient.Model
         }
 
         /// <summary>
-        /// Gets or Sets TenantId
+        /// Gets or Sets CaptureSessionId
         /// </summary>
-        [DataMember(Name = "tenant_id", IsRequired = true, EmitDefaultValue = true)]
-        public Guid TenantId
+        [DataMember(Name = "capture_session_id", IsRequired = true, EmitDefaultValue = true)]
+        public Guid CaptureSessionId
         {
-            get{ return _TenantId;}
+            get{ return _CaptureSessionId;}
             set
             {
-                _TenantId = value;
-                _flagTenantId = true;
+                _CaptureSessionId = value;
+                _flagCaptureSessionId = true;
             }
         }
-        private Guid _TenantId;
-        private bool _flagTenantId;
+        private Guid _CaptureSessionId;
+        private bool _flagCaptureSessionId;
 
         /// <summary>
-        /// Returns false as TenantId should not be serialized given that it's read-only.
+        /// Returns false as CaptureSessionId should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeTenantId()
+        public bool ShouldSerializeCaptureSessionId()
         {
-            return _flagTenantId;
-        }
-        /// <summary>
-        /// Gets or Sets CaptureId
-        /// </summary>
-        [DataMember(Name = "capture_id", IsRequired = true, EmitDefaultValue = true)]
-        public Guid CaptureId
-        {
-            get{ return _CaptureId;}
-            set
-            {
-                _CaptureId = value;
-                _flagCaptureId = true;
-            }
-        }
-        private Guid _CaptureId;
-        private bool _flagCaptureId;
-
-        /// <summary>
-        /// Returns false as CaptureId should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeCaptureId()
-        {
-            return _flagCaptureId;
+            return _flagCaptureSessionId;
         }
         /// <summary>
         /// Gets or Sets Id
@@ -210,8 +184,7 @@ namespace PlerionClient.Model
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("class ReconstructionRead {\n");
-            sb.Append("  TenantId: ").Append(TenantId).Append("\n");
-            sb.Append("  CaptureId: ").Append(CaptureId).Append("\n");
+            sb.Append("  CaptureSessionId: ").Append(CaptureSessionId).Append("\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  CreatedAt: ").Append(CreatedAt).Append("\n");
             sb.Append("  UpdatedAt: ").Append(UpdatedAt).Append("\n");

@@ -157,9 +157,9 @@ namespace Outernet.Client.AuthoringTools
                 smoothTransition: false
             );
 
-            List<LocalizationMapModel> maps = null;
-            List<NodeModel> nodes = null;
-            List<GroupModel> nodeGroups = null;
+            List<LocalizationMapRead> maps = null;
+            List<NodeRead> nodes = null;
+            List<GroupRead> nodeGroups = null;
 
             await UniTask.WhenAll(
                 PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
@@ -187,13 +187,13 @@ namespace Outernet.Client.AuthoringTools
             App.ExecuteActionOrDelay(new SetLocationContentLoadedAction(true));
         }
 
-        private async UniTask<List<GroupModel>> GetNodeGroupsRecursive(List<NodeModel> nodes, CancellationToken cancellationToken = default)
+        private async UniTask<List<GroupRead>> GetNodeGroupsRecursive(List<NodeRead> nodes, CancellationToken cancellationToken = default)
         {
-            var groups = new List<GroupModel>();
+            var groups = new List<GroupRead>();
 
             var directGroups = await PlerionAPI.api.GetGroupsAsync(
-                nodes.Where(x => x.Parent.HasValue)
-                    .Select(x => x.Parent.Value)
+                nodes.Where(x => x.ParentId.HasValue)
+                    .Select(x => x.ParentId.Value)
                     .Distinct()
                     .ToList()
             );
@@ -202,11 +202,11 @@ namespace Outernet.Client.AuthoringTools
 
             cancellationToken.ThrowIfCancellationRequested();
 
-            while (groups.Any(x => x.Parent.HasValue && !groups.Any(y => y.Id == x.Parent)))
+            while (groups.Any(x => x.ParentId.HasValue && !groups.Any(y => y.Id == x.ParentId)))
             {
                 var recursiveGroups = await PlerionAPI.api.GetGroupsAsync(
-                    groups.Where(x => x.Parent.HasValue && !groups.Any(y => y.Id == x.Parent))
-                        .Select(x => x.Parent.Value)
+                    groups.Where(x => x.ParentId.HasValue && !groups.Any(y => y.Id == x.ParentId))
+                        .Select(x => x.ParentId.Value)
                         .Distinct()
                         .ToList()
                 );

@@ -11,7 +11,7 @@ from common.run_command import run_command
 templates_path = Path(__file__).parent / "templates"
 
 
-def sync_client(project_path: Path, log: bool = False):
+def sync_client(project_path: Path, no_cache: bool, log: bool):
     clients_path = project_path / "clients"
     spec_path = clients_path / "openapi.json"
 
@@ -23,7 +23,7 @@ def sync_client(project_path: Path, log: bool = False):
         with spec_path.open("r", encoding="utf-8") as f:
             old_spec = f.read()
 
-        if openapi_spec == old_spec:
+        if openapi_spec == old_spec and not no_cache:
             print("OpenAPI spec unchanged, skipping client generation")
             return False
 
@@ -48,16 +48,29 @@ def sync_client(project_path: Path, log: bool = False):
 
         print(f"Generating client {client_name} using config {config_path}")
 
+        # Change all operation tags to "Api" so code generation puts everything in one API object
+        openapi_spec_json = json.loads(openapi_spec)
+        for path_item in openapi_spec_json.get("paths", {}).values():
+            for method in ("get", "put", "post", "delete", "patch", "options", "head", "trace"):
+                op = path_item.get(method)
+                if isinstance(op, dict):
+                    op["tags"] = ["Default"]
+
+        stripped_spec_path = spec_path.parent / f"stripped_{spec_path.name}"
+        stripped_spec_path.write_text(json.dumps(openapi_spec_json), encoding="utf-8")
+
         run_command(
             f"uv run openapi-generator-cli generate "
             f"-g csharp "
-            f"-i {spec_path.resolve().as_posix()} "
+            f"-i {stripped_spec_path.resolve().as_posix()} "
             f"-o {client_path.resolve().as_posix()} "
             f"-c {str(config_path.resolve())} "
             f"-t {str(templates_path.resolve())}",
             cwd=project_path,
             log=True,
         )
+
+        stripped_spec_path.unlink(missing_ok=True)
 
         # This is a workaround for a bug in one of the openapi jinja templates for C# that results in stray commas in generated code
         print("Checking for stray commas")

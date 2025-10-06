@@ -5,8 +5,6 @@ using UnityEngine;
 using FofX.Stateful;
 
 using Unity.Mathematics;
-using PlerionClient.Model;
-using System.Collections;
 using System.Collections.Generic;
 
 namespace Outernet.Client
@@ -105,9 +103,9 @@ namespace Outernet.Client
 
     public class SetMapsAction : ObservableNodeAction<ClientState>
     {
-        private LocalizationMapModel[] _maps;
+        private PlerionClient.Model.LocalizationMapRead[] _maps;
 
-        public SetMapsAction(LocalizationMapModel[] maps)
+        public SetMapsAction(PlerionClient.Model.LocalizationMapRead[] maps)
         {
             _maps = maps;
         }
@@ -128,8 +126,9 @@ namespace Outernet.Client
                     position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
                     rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW),
                     lighting: (Shared.Lighting)toUpdate.Lighting,
-                    color: toUpdate.Color,
-                    localInputImagePositions: ParsePoints(toUpdate.Points)
+                    color: toUpdate.Color
+                // UNDO TYLER
+                // localInputImagePositions: ParsePoints(toUpdate.Points)
                 ).Execute(target);
             }
         }
@@ -189,9 +188,9 @@ namespace Outernet.Client
 
     public class SetNodesAction : ObservableNodeAction<ClientState>
     {
-        private NodeModel[] _nodes;
+        private PlerionClient.Model.NodeRead[] _nodes;
 
-        public SetNodesAction(NodeModel[] nodes)
+        public SetNodesAction(PlerionClient.Model.NodeRead[] nodes)
         {
             _nodes = nodes;
         }
@@ -216,8 +215,8 @@ namespace Outernet.Client
                     labelScale: (float)(toUpdate.LabelScale.HasValue ? toUpdate.LabelScale.Value : default),
                     labelWidth: (float)(toUpdate.LabelWidth.HasValue ? toUpdate.LabelWidth.Value : default),
                     labelHeight: (float)(toUpdate.LabelHeight.HasValue ? toUpdate.LabelHeight.Value : default),
-                    layer: toUpdate.Layer.HasValue ? toUpdate.Layer.Value : Guid.Empty,
-                    parentID: toUpdate.Parent,
+                    layer: toUpdate.LayerId.HasValue ? toUpdate.LayerId.Value : Guid.Empty,
+                    parentID: toUpdate.ParentId,
                     position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
                     rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW)
                 ).Execute(target);

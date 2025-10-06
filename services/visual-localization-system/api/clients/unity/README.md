@@ -98,17 +98,17 @@ namespace Example
             HttpClient httpClient = new HttpClient();
             HttpClientHandler httpClientHandler = new HttpClientHandler();
             var apiInstance = new DefaultApi(httpClient, config, httpClientHandler);
-            var captureCreate = new CaptureCreate(); // CaptureCreate | 
+            var captureSessionCreate = new CaptureSessionCreate(); // CaptureSessionCreate | 
 
             try
             {
-                // Create Capture
-                CaptureRead result = apiInstance.CreateCapture(captureCreate);
+                // Create Capture Session
+                CaptureSessionRead result = apiInstance.CreateCaptureSession(captureSessionCreate);
                 Debug.WriteLine(result);
             }
             catch (ApiException e)
             {
-                Debug.Print("Exception when calling DefaultApi.CreateCapture: " + e.Message );
+                Debug.Print("Exception when calling DefaultApi.CreateCaptureSession: " + e.Message );
                 Debug.Print("Status Code: "+ e.ErrorCode);
                 Debug.Print(e.StackTrace);
             }
@@ -125,35 +125,88 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*DefaultApi* | [**CreateCapture**](docs/DefaultApi.md#createcapture) | **POST** /captures | Create Capture
-*DefaultApi* | [**CreateCaptures**](docs/DefaultApi.md#createcaptures) | **POST** /captures/bulk | Create Captures
+*DefaultApi* | [**CreateCaptureSession**](docs/DefaultApi.md#createcapturesession) | **POST** /capture_sessions | Create Capture Session
+*DefaultApi* | [**CreateCaptureSessions**](docs/DefaultApi.md#createcapturesessions) | **POST** /capture_sessions/bulk | Create Capture Sessions
+*DefaultApi* | [**CreateGroup**](docs/DefaultApi.md#creategroup) | **POST** /groups | Create Group
+*DefaultApi* | [**CreateLayer**](docs/DefaultApi.md#createlayer) | **POST** /layers | Create Layer
+*DefaultApi* | [**CreateLocalizationMap**](docs/DefaultApi.md#createlocalizationmap) | **POST** /localization_maps | Create Localization Map
+*DefaultApi* | [**CreateLocalizationSession**](docs/DefaultApi.md#createlocalizationsession) | **POST** /localization_sessions | Create Localization Session
+*DefaultApi* | [**CreateNode**](docs/DefaultApi.md#createnode) | **POST** /nodes | Create Node
 *DefaultApi* | [**CreateReconstruction**](docs/DefaultApi.md#createreconstruction) | **POST** /reconstructions | Create Reconstruction
-*DefaultApi* | [**DeleteCapture**](docs/DefaultApi.md#deletecapture) | **DELETE** /captures/{id} | Delete Capture
+*DefaultApi* | [**DeleteCaptureSession**](docs/DefaultApi.md#deletecapturesession) | **DELETE** /capture_sessions/{id} | Delete Capture Session
+*DefaultApi* | [**DeleteGroups**](docs/DefaultApi.md#deletegroups) | **DELETE** /groups | Delete Groups
+*DefaultApi* | [**DeleteLayers**](docs/DefaultApi.md#deletelayers) | **DELETE** /layers | Delete Layers
+*DefaultApi* | [**DeleteLocalizationMap**](docs/DefaultApi.md#deletelocalizationmap) | **DELETE** /localization_maps/{id} | Delete Localization Map
+*DefaultApi* | [**DeleteLocalizationMaps**](docs/DefaultApi.md#deletelocalizationmaps) | **DELETE** /localization_maps | Delete Localization Maps
+*DefaultApi* | [**DeleteLocalizationSession**](docs/DefaultApi.md#deletelocalizationsession) | **DELETE** /localization_sessions/{id} | Delete Localization Session
+*DefaultApi* | [**DeleteNodes**](docs/DefaultApi.md#deletenodes) | **DELETE** /nodes | Delete Nodes
 *DefaultApi* | [**DeleteReconstruction**](docs/DefaultApi.md#deletereconstruction) | **DELETE** /reconstructions/{id} | Delete Reconstruction
-*DefaultApi* | [**DownloadCaptureTar**](docs/DefaultApi.md#downloadcapturetar) | **GET** /captures/{id}/tar | Download Capture Tar
-*DefaultApi* | [**GetCapture**](docs/DefaultApi.md#getcapture) | **GET** /captures/{id} | Get Capture
-*DefaultApi* | [**GetCaptures**](docs/DefaultApi.md#getcaptures) | **GET** /captures | Get Captures
+*DefaultApi* | [**DownloadCaptureSessionTar**](docs/DefaultApi.md#downloadcapturesessiontar) | **GET** /capture_sessions/{id}/tar | Download Capture Session Tar
+*DefaultApi* | [**GetCaptureSession**](docs/DefaultApi.md#getcapturesession) | **GET** /capture_sessions/{id} | Get Capture Session
+*DefaultApi* | [**GetCaptureSessionReconstructions**](docs/DefaultApi.md#getcapturesessionreconstructions) | **GET** /capture_sessions/{id}/reconstructions | Get Capture Session Reconstructions
+*DefaultApi* | [**GetCaptureSessions**](docs/DefaultApi.md#getcapturesessions) | **GET** /capture_sessions | Get Capture Sessions
+*DefaultApi* | [**GetGroups**](docs/DefaultApi.md#getgroups) | **GET** /groups | Get Groups
+*DefaultApi* | [**GetLayers**](docs/DefaultApi.md#getlayers) | **GET** /layers | Get Layers
+*DefaultApi* | [**GetLocalizationMap**](docs/DefaultApi.md#getlocalizationmap) | **GET** /localization_maps/{id} | Get Localization Map
+*DefaultApi* | [**GetLocalizationMapPoints**](docs/DefaultApi.md#getlocalizationmappoints) | **GET** /localization_maps/{id}/points | Get Localization Map Points
+*DefaultApi* | [**GetLocalizationMapPointsPly**](docs/DefaultApi.md#getlocalizationmappointsply) | **GET** /localization_maps/{id}/points.ply | Get Localization Map Points Ply
+*DefaultApi* | [**GetLocalizationMaps**](docs/DefaultApi.md#getlocalizationmaps) | **GET** /localization_maps | Get Localization Maps
+*DefaultApi* | [**GetLocalizationSessionStatus**](docs/DefaultApi.md#getlocalizationsessionstatus) | **GET** /localization_sessions/{id}/status | Get Localization Session Status
+*DefaultApi* | [**GetMapLoadStatus**](docs/DefaultApi.md#getmaploadstatus) | **GET** /localization_sessions/{id}/maps/{map_id}/status | Get Map Load Status
+*DefaultApi* | [**GetNodes**](docs/DefaultApi.md#getnodes) | **GET** /nodes | Get Nodes
 *DefaultApi* | [**GetReconstruction**](docs/DefaultApi.md#getreconstruction) | **GET** /reconstructions/{id} | Get Reconstruction
+*DefaultApi* | [**GetReconstructionImagePoses**](docs/DefaultApi.md#getreconstructionimageposes) | **GET** /reconstructions/{id}/image_poses | Get Reconstruction Image Poses
+*DefaultApi* | [**GetReconstructionLocalizationMap**](docs/DefaultApi.md#getreconstructionlocalizationmap) | **GET** /reconstructions/{id}/localization_map | Get Reconstruction Localization Map
+*DefaultApi* | [**GetReconstructionPoints**](docs/DefaultApi.md#getreconstructionpoints) | **GET** /reconstructions/{id}/points | Get Reconstruction Points
+*DefaultApi* | [**GetReconstructionPoints3DPly**](docs/DefaultApi.md#getreconstructionpoints3dply) | **GET** /reconstructions/{id}/points.ply | Get Reconstruction Points3D Ply
+*DefaultApi* | [**GetReconstructionStatus**](docs/DefaultApi.md#getreconstructionstatus) | **GET** /reconstructions/{id}/status | Get Reconstruction Status
 *DefaultApi* | [**GetReconstructions**](docs/DefaultApi.md#getreconstructions) | **GET** /reconstructions | Get Reconstructions
-*DefaultApi* | [**UpdateCapture**](docs/DefaultApi.md#updatecapture) | **PATCH** /captures/{id} | Update Capture
-*DefaultApi* | [**UpdateCaptures**](docs/DefaultApi.md#updatecaptures) | **PATCH** /captures | Update Captures
-*DefaultApi* | [**UploadCaptureTar**](docs/DefaultApi.md#uploadcapturetar) | **PUT** /captures/{id}/tar | Upload Capture Tar
+*DefaultApi* | [**LoadLocalizationMaps**](docs/DefaultApi.md#loadlocalizationmaps) | **POST** /localization_sessions/{id}/maps | Load Localization Maps
+*DefaultApi* | [**LocalizeImage**](docs/DefaultApi.md#localizeimage) | **POST** /localization_sessions/{id}/localization | Localize Image
+*DefaultApi* | [**UnloadMap**](docs/DefaultApi.md#unloadmap) | **DELETE** /localization_sessions/{id}/maps/{map_id} | Unload Map
+*DefaultApi* | [**UpdateCaptureSession**](docs/DefaultApi.md#updatecapturesession) | **PATCH** /capture_sessions/{id} | Update Capture Session
+*DefaultApi* | [**UpdateCaptureSessions**](docs/DefaultApi.md#updatecapturesessions) | **PATCH** /capture_sessions | Update Capture Sessions
+*DefaultApi* | [**UpdateGroups**](docs/DefaultApi.md#updategroups) | **PATCH** /groups | Update Groups
+*DefaultApi* | [**UpdateLayers**](docs/DefaultApi.md#updatelayers) | **PATCH** /layers | Update Layers
+*DefaultApi* | [**UpdateLocalizationMap**](docs/DefaultApi.md#updatelocalizationmap) | **PATCH** /localization_maps/{id} | Update Localization Map
+*DefaultApi* | [**UpdateLocalizationMapImagePoses**](docs/DefaultApi.md#updatelocalizationmapimageposes) | **PATCH** /localization_maps/{id}/image_poses | Update Localization Map Image Poses
+*DefaultApi* | [**UpdateLocalizationMaps**](docs/DefaultApi.md#updatelocalizationmaps) | **PATCH** /localization_maps | Update Localization Maps
+*DefaultApi* | [**UpdateNodes**](docs/DefaultApi.md#updatenodes) | **PATCH** /nodes | Update Nodes
+*DefaultApi* | [**UploadCaptureSessionTar**](docs/DefaultApi.md#uploadcapturesessiontar) | **PUT** /capture_sessions/{id}/tar | Upload Capture Session Tar
 
 
 <a id="documentation-for-models"></a>
 ## Documentation for Models
 
- - [Model.CaptureBatchUpdate](docs/CaptureBatchUpdate.md)
- - [Model.CaptureCreate](docs/CaptureCreate.md)
- - [Model.CaptureRead](docs/CaptureRead.md)
- - [Model.CaptureUpdate](docs/CaptureUpdate.md)
+ - [Model.CaptureSessionBatchUpdate](docs/CaptureSessionBatchUpdate.md)
+ - [Model.CaptureSessionCreate](docs/CaptureSessionCreate.md)
+ - [Model.CaptureSessionRead](docs/CaptureSessionRead.md)
+ - [Model.CaptureSessionUpdate](docs/CaptureSessionUpdate.md)
  - [Model.DeviceType](docs/DeviceType.md)
+ - [Model.GroupBatchUpdate](docs/GroupBatchUpdate.md)
+ - [Model.GroupCreate](docs/GroupCreate.md)
+ - [Model.GroupRead](docs/GroupRead.md)
  - [Model.HTTPValidationError](docs/HTTPValidationError.md)
+ - [Model.LayerBatchUpdate](docs/LayerBatchUpdate.md)
+ - [Model.LayerCreate](docs/LayerCreate.md)
+ - [Model.LayerRead](docs/LayerRead.md)
+ - [Model.LocalizationMapBatchUpdate](docs/LocalizationMapBatchUpdate.md)
+ - [Model.LocalizationMapCreate](docs/LocalizationMapCreate.md)
+ - [Model.LocalizationMapRead](docs/LocalizationMapRead.md)
+ - [Model.LocalizationMapUpdate](docs/LocalizationMapUpdate.md)
+ - [Model.LocalizationSessionRead](docs/LocalizationSessionRead.md)
+ - [Model.NodeBatchUpdate](docs/NodeBatchUpdate.md)
+ - [Model.NodeCreate](docs/NodeCreate.md)
+ - [Model.NodeRead](docs/NodeRead.md)
+ - [Model.PointCloudPoint](docs/PointCloudPoint.md)
+ - [Model.Quaternion](docs/Quaternion.md)
  - [Model.ReconstructionCreate](docs/ReconstructionCreate.md)
  - [Model.ReconstructionRead](docs/ReconstructionRead.md)
  - [Model.ReconstructionStatus](docs/ReconstructionStatus.md)
+ - [Model.Transform](docs/Transform.md)
  - [Model.ValidationError](docs/ValidationError.md)
  - [Model.ValidationErrorLocInner](docs/ValidationErrorLocInner.md)
+ - [Model.Vector3](docs/Vector3.md)
 
 
 <a id="documentation-for-authorization"></a>

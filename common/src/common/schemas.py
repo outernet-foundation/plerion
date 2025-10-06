@@ -1,12 +1,16 @@
 from fastapi import Response
 
-binary_schema = {
-    "application/octet-stream": {"schema": {"type": "string", "format": "binary"}}
-}
+plaintext_schema = {"text/plain": {"schema": {"type": "string", "format": "binary"}}}
+
+binary_schema = {"application/octet-stream": {"schema": {"type": "string", "format": "binary"}}}
 
 zip_schema = {"application/zip": {"schema": {"type": "string", "format": "binary"}}}
 
 tar_schema = {"application/x-tar": {"schema": {"type": "string", "format": "binary"}}}
+
+
+class PlainTextResponse(Response):
+    media_type = "text/plain; charset=utf-8"
 
 
 class OctetStreamResponse(Response):

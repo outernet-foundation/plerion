@@ -260,13 +260,13 @@ namespace Outernet.Client.AuthoringTools
             {
                 await UniTask.WhenAll(
                     PlerionAPI.api.DeleteLocalizationMapsAsync(toPersist.deletedMaps).AsUniTask(),
-                    PlerionAPI.api.UpsertLocalizationMapsAsync(toPersist.upsertedMaps).AsUniTask(),
+                    PlerionAPI.api.UpdateLocalizationMapsAsync(toPersist.upsertedMaps).AsUniTask(),
                     PlerionAPI.api.DeleteGroupsAsync(toPersist.deletedGroups).AsUniTask(),
                     PlerionAPI.api.DeleteLayersAsync(toPersist.deletedLayers).AsUniTask(),
                     PlerionAPI.api.DeleteNodesAsync(toPersist.deletedNodes).AsUniTask(),
-                    PlerionAPI.api.UpsertLayersAsync(toPersist.upsertedLayers).AsUniTask()
-                        .ContinueWith(_ => PlerionAPI.api.UpsertGroupsAsync(toPersist.upsertedGroups))
-                        .ContinueWith(_ => PlerionAPI.api.UpsertNodesAsync(toPersist.upsertedNodes))
+                    PlerionAPI.api.UpdateLayersAsync(toPersist.upsertedLayers).AsUniTask()
+                        .ContinueWith(_ => PlerionAPI.api.UpdateGroupsAsync(toPersist.upsertedGroups))
+                        .ContinueWith(_ => PlerionAPI.api.UpdateNodesAsync(toPersist.upsertedNodes))
                 );
             }
 
@@ -292,10 +292,10 @@ namespace Outernet.Client.AuthoringTools
 
         private class PersistenceData
         {
-            public List<NodeModel> upsertedNodes;
-            public List<GroupModel> upsertedGroups;
-            public List<LocalizationMapModel> upsertedMaps;
-            public List<LayerModel> upsertedLayers;
+            public List<NodeBatchUpdate> upsertedNodes;
+            public List<GroupBatchUpdate> upsertedGroups;
+            public List<LocalizationMapBatchUpdate> upsertedMaps;
+            public List<LayerBatchUpdate> upsertedLayers;
 
             public List<Guid> deletedNodes;
             public List<Guid> deletedGroups;

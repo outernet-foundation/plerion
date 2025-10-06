@@ -1,0 +1,71 @@
+from __future__ import annotations
+
+from typing import Annotated, Literal, TypedDict, Union
+
+from pydantic import Discriminator
+
+
+class Point3D(TypedDict):
+    x: float
+    y: float
+    z: float
+
+
+class PinholeIntrinsics(TypedDict):
+    model: Literal["PINHOLE"]
+    width: int
+    height: int
+    fx: float
+    fy: float
+    cx: float
+    cy: float
+
+
+class OpenCVRadTanIntrinsics(TypedDict):
+    model: Literal["OPENCV"]
+    width: int
+    height: int
+    fx: float
+    fy: float
+    cx: float
+    cy: float
+    k1: float
+    k2: float
+    p1: float
+    p2: float
+    k3: float | None
+
+
+class GenericParamsIntrinsics(TypedDict):
+    model: Literal["GENERIC"]
+    width: int
+    height: int
+    params: list[float]
+
+
+CameraIntrinsics = Annotated[
+    Union[PinholeIntrinsics, OpenCVRadTanIntrinsics, GenericParamsIntrinsics], Discriminator("model")
+]
+
+
+class Vector3(TypedDict):
+    x: float
+    y: float
+    z: float
+
+
+class Quaternion(TypedDict):
+    w: float
+    x: float
+    y: float
+    z: float
+
+
+class Transform(TypedDict):
+    position: Vector3
+    rotation: Quaternion
+
+
+class PointCloudPoint(TypedDict):
+    position: Vector3  # uses transform.position (rotation ignored for points)
+    color: tuple[float, float, float]  # (r, g, b) in 0..255 floats

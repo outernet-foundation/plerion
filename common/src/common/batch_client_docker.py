@@ -5,6 +5,7 @@ import uuid
 from typing import Literal
 
 import docker
+from docker.types import DeviceRequest
 
 Status = Literal["SUBMITTED", "RUNNING", "SUCCEEDED", "FAILED", "UNKNOWN"]
 
@@ -46,7 +47,7 @@ class DockerBatchClient:
                 labels={"service": job_definition_name, "job": job_id, "task": str(index)},
                 detach=True,
                 remove=False,
-                # device_requests=[DeviceRequest(count=-1, capabilities=[["gpu"]])],
+                device_requests=[DeviceRequest(count=-1, capabilities=[["gpu"]])],
             )
 
             container_id = container.id

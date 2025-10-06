@@ -63,9 +63,9 @@ namespace Outernet.Client.AuthoringTools
 
     public class SetNodeGroupsAction : ObservableNodeAction<ClientState>
     {
-        private GroupModel[] _groups;
+        private GroupRead[] _groups;
 
-        public SetNodeGroupsAction(GroupModel[] groups)
+        public SetNodeGroupsAction(GroupRead[] groups)
         {
             _groups = groups;
         }
@@ -83,7 +83,7 @@ namespace Outernet.Client.AuthoringTools
                 new AddOrUpdateNodeGroupAction(
                     id: toUpdate.Id,
                     name: toUpdate.Name,
-                    parent: toUpdate.Parent
+                    parent: toUpdate.ParentId
                 ).Execute(target);
             }
         }
@@ -135,9 +135,9 @@ namespace Outernet.Client.AuthoringTools
 
     public class SetLayersAction : ObservableNodeAction<ClientState>
     {
-        private LayerModel[] _layers;
+        private PlerionClient.Model.LayerRead[] _layers;
 
-        public SetLayersAction(LayerModel[] layers)
+        public SetLayersAction(LayerRead[] layers)
         {
             _layers = layers;
         }

@@ -70,11 +70,13 @@ class Vpc(ComponentResource):
             "secretsmanager",
             "logs",
             "sts",
-            "batch",
-            "ec2",
-            "ecs",
-            "ecs-agent",
-            "ecs-telemetry",
+            # TODO: renable!
+            # "batch",
+            # "ec2",
+            # "ecs",
+            # "ecs-agent",
+            # "ecs-telemetry",
+            #
             # "ssm",
             # "ssmmessages",
             # "ec2messages",

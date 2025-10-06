@@ -97,7 +97,7 @@ namespace Example
             // create instances of HttpClient, HttpClientHandler to be reused later with different Api classes
             HttpClient httpClient = new HttpClient();
             HttpClientHandler httpClientHandler = new HttpClientHandler();
-            var apiInstance = new CapturesApi(httpClient, config, httpClientHandler);
+            var apiInstance = new DefaultApi(httpClient, config, httpClientHandler);
             var id = "id_example";  // Guid | 
 
             try
@@ -108,7 +108,7 @@ namespace Example
             }
             catch (ApiException e)
             {
-                Debug.Print("Exception when calling CapturesApi.DownloadCaptureTar: " + e.Message );
+                Debug.Print("Exception when calling DefaultApi.DownloadCaptureTar: " + e.Message );
                 Debug.Print("Status Code: "+ e.ErrorCode);
                 Debug.Print(e.StackTrace);
             }
@@ -125,10 +125,10 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
-*CapturesApi* | [**DownloadCaptureTar**](docs/CapturesApi.md#downloadcapturetar) | **GET** /captures/{id} | Download Capture Tar
-*CapturesApi* | [**GetCaptures**](docs/CapturesApi.md#getcaptures) | **GET** /captures | Get Captures
-*CapturesApi* | [**StartCapture**](docs/CapturesApi.md#startcapture) | **POST** /captures/start | Start Capture
-*CapturesApi* | [**StopCapture**](docs/CapturesApi.md#stopcapture) | **POST** /captures/stop | Stop Capture
+*DefaultApi* | [**DownloadCaptureTar**](docs/DefaultApi.md#downloadcapturetar) | **GET** /captures/{id} | Download Capture Tar
+*DefaultApi* | [**GetCaptures**](docs/DefaultApi.md#getcaptures) | **GET** /captures | Get Captures
+*DefaultApi* | [**StartCapture**](docs/DefaultApi.md#startcapture) | **POST** /captures/start | Start Capture
+*DefaultApi* | [**StopCapture**](docs/DefaultApi.md#stopcapture) | **POST** /captures/stop | Stop Capture
 
 
 <a id="documentation-for-models"></a>

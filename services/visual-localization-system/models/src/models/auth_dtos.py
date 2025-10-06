@@ -68,14 +68,12 @@ class MembershipUpdate(BaseModel):
 
 class MembershipBatchUpdate(BaseModel):
     user_id: UUID = Field(..., title='User Id')
-    tenant_id: UUID = Field(..., title='Tenant Id')
     role: Optional[MembershipRole] = None
     is_personal: Optional[bool] = Field(None, title='Is Personal')
 
 
 class MembershipRead(BaseModel):
     user_id: UUID = Field(..., title='User Id')
-    tenant_id: UUID = Field(..., title='Tenant Id')
     created_at: AwareDatetime = Field(..., title='Created At')
     updated_at: AwareDatetime = Field(..., title='Updated At')
     role: MembershipRole

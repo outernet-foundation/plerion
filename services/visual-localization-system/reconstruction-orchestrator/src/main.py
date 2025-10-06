@@ -9,16 +9,28 @@ from models.public_tables import Reconstruction
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
 
-from settings import get_settings
+from .settings import get_settings
 
 settings = get_settings()
 
-captures_bucket = settings.s3_captures_bucket_name
-reconstructions_bucket = settings.s3_reconstructions_bucket_name
+engine = create_engine(
+    f"postgresql+psycopg://{settings.database_user}:{settings.database_user_password}@{settings.postgres_host}:5432/{settings.database_name}",
+    pool_pre_ping=True,
+    future=True,
+)
 
-engine = create_engine(settings.database_url, pool_pre_ping=True, future=True)
 batch_client = create_batch_client(settings.backend)
-s3_client = create_s3_client()
+
+s3_client = create_s3_client(
+    s3_endpoint_url=settings.s3_endpoint_url, s3_access_key=settings.s3_access_key, s3_secret_key=settings.s3_secret_key
+)
+
+
+def main() -> None:
+    while True:
+        reconcile()
+        start_next_reconstruction()
+        time.sleep(3)
 
 
 def start_next_reconstruction() -> None:
@@ -37,27 +49,74 @@ def start_next_reconstruction() -> None:
         queued_reconstruction = session.get(Reconstruction, queued_reconstruction.id)
         assert queued_reconstruction is not None
 
-        job_id = batch_client.submit_job(
+        print(
+            f"Starting reconstruction {queued_reconstruction.id} for capture {queued_reconstruction.capture_session_id}"
+        )
+
+        s3_client.put_object(
+            Bucket=settings.reconstructions_bucket,
+            Key=f"{queued_reconstruction.id}/run.json",
+            Body=json.dumps({"status": "pending", "capture_id": str(queued_reconstruction.capture_session_id)}).encode(
+                "utf-8"
+            ),
+            ContentType="application/json",
+        )
+
+        batch_client.submit_job(
             name=str(queued_reconstruction.id),
             queue_name=settings.batch_job_queue,
             job_definition_name=settings.batch_job_definition,
             environment={
-                "CAPTURE_ID": str(queued_reconstruction.capture_id),
+                "S3_ENDPOINT_URL": str(settings.s3_endpoint_url),
+                "S3_ACCESS_KEY": str(settings.s3_access_key),
+                "S3_SECRET_KEY": str(settings.s3_secret_key),
+                "CAPTURES_BUCKET": settings.captures_bucket,
+                "RECONSTRUCTIONS_BUCKET": settings.reconstructions_bucket,
+                "CAPTURE_ID": str(queued_reconstruction.capture_session_id),
                 "RECONSTRUCTION_ID": str(queued_reconstruction.id),
             },
         )
 
-        s3_client.put_object(
-            Bucket=reconstructions_bucket,
-            Key=f"{queued_reconstruction.id}/run.json",
-            Body=json.dumps({"job_id": job_id}).encode("utf-8"),
-            ContentType="application/json",
+        # https://github.com/agronholm/sqlacodegen/issues/408
+        # TODO: sqlacodegen currently generates strings for enums, which sucks
+        queued_reconstruction.status = "pending"
+        session.add(queued_reconstruction)
+
+
+def reconcile(max_rows: int = 50) -> None:
+    print("Reconciling running reconstructions")
+
+    with Session(engine) as session:
+        running = (
+            session.execute(
+                select(Reconstruction.id)
+                .where(Reconstruction.status.in_(["pending", "running"]))
+                .order_by(Reconstruction.created_at)
+                .limit(max_rows)
+            )
+            .scalars()
+            .all()
         )
 
+    for reconstruction_id in running:
+        print(f"Checking reconstruction {reconstruction_id}")
 
-def main() -> None:
-    while True:
-        time.sleep(15)
+        try:
+            obj = s3_client.get_object(Bucket=settings.reconstructions_bucket, Key=f"{reconstruction_id}/run.json")
+            run = json.loads(obj["Body"].read().decode("utf-8"))
+        except Exception as e:
+            print(f"No run.json found for reconstruction {reconstruction_id}, skipping: {e}")
+            continue
+
+        status = run.get("status") or ""
+        print(f"Reconstruction {reconstruction_id} status: {status}")
+
+        with Session(engine) as session, session.begin():
+            row = session.get(Reconstruction, reconstruction_id, with_for_update=False)
+            assert row is not None
+            row.status = status
+            session.add(row)
+            session.flush()
 
 
 if __name__ == "__main__":

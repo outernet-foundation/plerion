@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING, Any, cast
 
 import boto3
 from botocore.config import Config
+from pydantic.networks import AnyHttpUrl
 
 if TYPE_CHECKING:
     from mypy_boto3_batch import BatchClient
@@ -53,8 +54,21 @@ def create_lambda_client() -> LambdaClient:
     )  # type: ignore[call-arg]
 
 
-def create_s3_client() -> S3Client:
-    return cast(S3Client, boto3.client("s3", region_name="us-east-1"))  # type: ignore[call-arg]
+def create_s3_client(s3_endpoint_url: AnyHttpUrl | None, s3_access_key: str | None, s3_secret_key: str | None) -> S3Client:
+    kwargs: dict[str, Any] = {}
+    if s3_endpoint_url:
+        kwargs.update(
+            endpoint_url=str(s3_endpoint_url),
+            aws_access_key_id=s3_access_key,
+            aws_secret_access_key=s3_secret_key,
+            config=Config(
+                signature_version="s3v4",
+                region_name="us-east-1",  # required by SigV4
+                s3={"addressing_style": "path"},  # ← force path-style (/{bucket}/{key})
+            ),
+        )
+
+    return cast(S3Client, boto3.client("s3", **kwargs))  # type: ignore[call-arg]
 
 
 def create_secretsmanager_client() -> SecretsManagerClient:
