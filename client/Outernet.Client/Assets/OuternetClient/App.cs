@@ -96,6 +96,7 @@ namespace Outernet.Client
             );
 #endif
 
+            GetLayersAndPopulate();
             initialized = true;
         }
 
