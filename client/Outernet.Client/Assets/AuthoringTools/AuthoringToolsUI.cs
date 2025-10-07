@@ -21,7 +21,6 @@ namespace Outernet.Client.AuthoringTools
 {
     public class AuthoringToolsUI : MonoBehaviour
     {
-        public LoginScreen loginScreen;
         public GameObject noLocationSetBlock;
         public Button addScanButton;
         public Button addNodeButton;
