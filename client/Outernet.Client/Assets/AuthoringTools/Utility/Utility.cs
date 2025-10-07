@@ -14,6 +14,9 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using PlerionClient.Model;
+using Plerion.VPS;
+
+using LocalizationMapModel = PlerionClient.Model.LocalizationMapModel;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -57,7 +60,7 @@ namespace Outernet.Client.AuthoringTools
 
             pos /= count;
 
-            var localTransform = LocalizedReferenceFrame.EcefToLocal(pos, rot);
+            var localTransform = ReferenceFrame.EcefToUnityWorld(pos, rot);
 
             position = localTransform.position;
             rotation = count == 1 ? localTransform.rotation : Quaternion.identity;

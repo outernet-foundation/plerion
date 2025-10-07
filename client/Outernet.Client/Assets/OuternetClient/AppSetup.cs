@@ -5,6 +5,7 @@ using FofX.Serialization;
 using Unity.Mathematics;
 using SimpleJSON;
 using Outernet.Client.AuthoringTools;
+using Plerion.VPS;
 
 #if AUTHORING_TOOLS_ENABLED
 using UnityEngine.InputSystem.UI;
@@ -16,6 +17,7 @@ namespace Outernet.Client
     {
         public PrefabSystem prefabSystem;
         public SceneReferences sceneReferences;
+        public LocalizationMapVisualizer mapVisualizer;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
@@ -74,12 +76,11 @@ namespace Outernet.Client
 
             ConnectionManager.Initialize();
             PlaneDetector.Initialize().Forget();
-            LocalizedReferenceFrame.Initialize();
 
 #if !AUTHORING_TOOLS_ENABLED
             SceneViewManager.Initialize();
-            Localizer.Initialize();
             TilesetManager.Initialize();
+            Instantiate(mapVisualizer);
 #else
             var canvas = Instantiate(AuthoringTools.AuthoringToolsPrefabs.Canvas);
             var systemMenu = Instantiate(AuthoringTools.AuthoringToolsPrefabs.SystemMenu, canvas.transform);
@@ -106,19 +107,7 @@ namespace Outernet.Client
             var runtimeHandles = new GameObject("RuntimeHandles", typeof(AuthoringTools.RuntimeHandles));
             runtimeHandles.transform.SetParent(sceneViewRoot.transform);
 #endif
-            GetLayersAndPopulate();
             Destroy(this);
-        }
-
-        private async void GetLayersAndPopulate()
-        {
-            var layers = await PlerionAPI.api.GetLayersAsync();
-            await UniTask.SwitchToMainThread();
-
-            if (layers == null)
-                return;
-
-            App.ExecuteActionOrDelay(new SetLayersAction(layers.ToArray()));
         }
 
         private void AddCustomSerializers()

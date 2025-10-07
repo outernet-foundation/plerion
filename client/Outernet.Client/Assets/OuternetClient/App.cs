@@ -8,6 +8,14 @@ using ObservableCollections;
 
 using R3;
 using System.Collections.Generic;
+using Plerion.VPS;
+using Plerion.VPS.ARFoundation;
+
+using Cysharp.Threading.Tasks;
+
+#if UNITY_LUMIN
+using Plerion.VPS.MagicLeap;
+#endif
 
 namespace Outernet.Client
 {
@@ -21,6 +29,8 @@ namespace Outernet.Client
         private static bool internetReachable = false;
         public static bool InternetReachable => internetReachable;
 
+        private bool initialized = false;
+
         protected override void InitializeState(ClientState state)
             => state.Initialize("root", new ObservableNodeContext(new ChannelLogger() { logGroup = LogGroup.Stateful }));
 
@@ -29,12 +39,13 @@ namespace Outernet.Client
             Application.wantsToQuit += WantsToQuit;
             ConnectionManager.HubConnectionRequested.EnqueueSet(true);
 
-            LocalizedReferenceFrame.onTransformMatriciesChanged += () =>
-                state.ecefToLocalMatrix.ExecuteSetOrDelay(LocalizedReferenceFrame.EcefToLocalTransform);
+            ReferenceFrame.OnReferenceFrameUpdated += () =>
+                state.ecefToLocalMatrix.ExecuteSetOrDelay(ReferenceFrame.EcefToUnityWorldTransform);
+
+            CameraLocalization.SetProvider(GetProvider());
+            CameraLocalization.Start();
 
 #if !AUTHORING_TOOLS_ENABLED
-            MapManager.Enable();
-            Localizer.Start();
 
             internetReachable = Application.internetReachability != NetworkReachability.NotReachable;
 
@@ -83,6 +94,32 @@ namespace Outernet.Client
                     );
                 }
             );
+#endif
+
+            initialized = true;
+        }
+
+        private async void GetLayersAndPopulate()
+        {
+            var layers = await PlerionAPI.api.GetLayersAsync();
+            await UniTask.SwitchToMainThread();
+
+            if (layers == null)
+                return;
+
+            App.ExecuteActionOrDelay(new SetLayersAction(layers.ToArray()));
+        }
+
+        private ICameraProvider GetProvider()
+        {
+#if UNITY_EDITOR
+            return new NoOpCameraProvider();
+#elif UNITY_LUMIN
+            return new MagicLeapCameraProvider();
+#elif UNITY_ANDROID
+            return new ARFoundationCameraProvider(Camera.main.GetComponent<UnityEngine.XR.ARFoundation.ARCameraManager>());
+#else
+            return new NoOpCameraProvider();
 #endif
         }
 
@@ -216,8 +253,6 @@ namespace Outernet.Client
             ConnectionManager.Update();
             PlaneDetector.Update();
             SceneViewManager.Update();
-            Localizer.Update();
-            LocalizedReferenceFrame.Update();
 
             UnityMainThreadDispatcher.Flush();
 
@@ -240,13 +275,16 @@ namespace Outernet.Client
 
         private void OnApplicationPause(bool pause)
         {
+            if (!initialized)
+                return;
+
             if (pause)
             {
-                Localizer.StopCameraCapture();
+                CameraLocalization.Stop();
             }
             else
             {
-                Localizer.StartCameraCapture();
+                CameraLocalization.Start();
             }
         }
 
@@ -254,7 +292,7 @@ namespace Outernet.Client
         {
             ConnectionManager.Terminate(); // BUG, this is async
             SceneViewManager.Terminate();
-            MapManager.Terminate();
+            CameraLocalization.Stop();
             Logger.Terminate();
 
             return true;

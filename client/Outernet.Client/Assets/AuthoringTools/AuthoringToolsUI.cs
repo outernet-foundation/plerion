@@ -14,13 +14,14 @@ using FofX;
 using FofX.Stateful;
 
 using Outernet.Client.Location;
-
+using Plerion.VPS;
 using TMPro;
 
 namespace Outernet.Client.AuthoringTools
 {
     public class AuthoringToolsUI : MonoBehaviour
     {
+        public LoginScreen loginScreen;
         public GameObject noLocationSetBlock;
         public Button addScanButton;
         public Button addNodeButton;
@@ -554,7 +555,7 @@ namespace Outernet.Client.AuthoringTools
         {
             UndoRedoManager.RegisterUndo("Create Node");
 
-            var newNodeTransform = LocalizedReferenceFrame.LocalToEcef(
+            var newNodeTransform = ReferenceFrame.UnityWorldToEcef(
                 Camera.main.transform.position + (Camera.main.transform.forward * 3f),
                 Camera.main.transform.rotation.Flatten()
             );

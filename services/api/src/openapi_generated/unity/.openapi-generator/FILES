@@ -29,6 +29,8 @@ src/PlerionClient/Model/GroupModel.cs
 src/PlerionClient/Model/HTTPValidationError.cs
 src/PlerionClient/Model/LayerModel.cs
 src/PlerionClient/Model/LocalizationMapModel.cs
+src/PlerionClient/Model/LocalizationRequest.cs
+src/PlerionClient/Model/LocalizationResponse.cs
 src/PlerionClient/Model/NodeModel.cs
 src/PlerionClient/Model/ValidationError.cs
 src/PlerionClient/Model/ValidationErrorLocInner.cs

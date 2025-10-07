@@ -7,6 +7,8 @@ using Outernet.Client.Location;
 using System.Linq;
 using System;
 
+using Plerion.VPS;
+
 namespace Outernet.Client.AuthoringTools
 {
     public class ECEFRotationInspector : CustomObservableNodeInspector
@@ -25,7 +27,7 @@ namespace Outernet.Client.AuthoringTools
                     return;
 
                 UndoRedoManager.RegisterUndo("Set Rotation");
-                ecefRotation.ExecuteSet(LocalizedReferenceFrame.LocalToEcef(default, localInput.value).rotation);
+                ecefRotation.ExecuteSet(ReferenceFrame.UnityWorldToEcef(default, localInput.value).rotation);
             };
 
             return Bindings.Compose(
@@ -33,7 +35,7 @@ namespace Outernet.Client.AuthoringTools
                 ecefRotation.OnChange(x =>
                 {
                     pushingChanges = true;
-                    localInput.value = LocalizedReferenceFrame.EcefToLocal(default, x).rotation;
+                    localInput.value = ReferenceFrame.EcefToUnityWorld(default, x).rotation;
                     pushingChanges = false;
                 })
             );

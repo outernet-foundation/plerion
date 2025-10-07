@@ -1178,6 +1178,224 @@
           }
         }
       }
+    },
+    "/localizationMaps/points/{id}": {
+      "get": {
+        "summary": "Get Map Points",
+        "operationId": "get_map_points",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  },
+                  "title": "Response Get Map Points"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps/updateMapsLocation": {
+      "put": {
+        "summary": "Update Maps From Location",
+        "operationId": "update_maps_from_location",
+        "parameters": [
+          {
+            "name": "latitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Latitude"
+            }
+          },
+          {
+            "name": "longitude",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Longitude"
+            }
+          },
+          {
+            "name": "height",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Height"
+            }
+          },
+          {
+            "name": "radius",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "title": "Radius"
+            }
+          },
+          {
+            "name": "lighting",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "title": "Lighting"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps/updateMapsList": {
+      "put": {
+        "summary": "Update Maps From List",
+        "operationId": "update_maps_from_list",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "type": "array",
+                "title": "Maps"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps/loadedMaps": {
+      "get": {
+        "summary": "Get Loaded Maps",
+        "operationId": "get_loaded_maps",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/LocalizationMapModel"
+                  },
+                  "type": "array",
+                  "title": "Response Get Loaded Maps"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/localizationMaps/localize": {
+      "get": {
+        "summary": "Localize",
+        "operationId": "localize",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalizationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalizationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -1502,6 +1720,105 @@
         ],
         "title": "LocalizationMapModel",
         "extra": {}
+      },
+      "LocalizationRequest": {
+        "properties": {
+          "imageWidth": {
+            "type": "integer",
+            "title": "Imagewidth"
+          },
+          "imageHeight": {
+            "type": "integer",
+            "title": "Imageheight"
+          },
+          "cameraIntrinsics": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Cameraintrinsics"
+          },
+          "cameraRotation": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Camerarotation"
+          },
+          "cameraOrientation": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Cameraorientation"
+          },
+          "pixelBuffer": {
+            "type": "string",
+            "format": "binary",
+            "title": "Pixelbuffer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "imageWidth",
+          "imageHeight",
+          "cameraIntrinsics",
+          "cameraRotation",
+          "cameraOrientation",
+          "pixelBuffer"
+        ],
+        "title": "LocalizationRequest"
+      },
+      "LocalizationResponse": {
+        "properties": {
+          "mapID": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Mapid"
+          },
+          "mapEcefPosition": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Mapecefposition"
+          },
+          "mapEcefRotation": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Mapecefrotation"
+          },
+          "estimatedCameraPosition": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Estimatedcameraposition"
+          },
+          "estimatedCameraRotation": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Estimatedcamerarotation"
+          },
+          "confidence": {
+            "type": "integer",
+            "title": "Confidence"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mapID",
+          "mapEcefPosition",
+          "mapEcefRotation",
+          "estimatedCameraPosition",
+          "estimatedCameraRotation",
+          "confidence"
+        ],
+        "title": "LocalizationResponse"
       },
       "NodeModel": {
         "properties": {

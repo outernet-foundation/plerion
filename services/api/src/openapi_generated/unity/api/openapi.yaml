@@ -749,6 +749,153 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Delete Localizationmaps
+  /localizationMaps/points/{id}:
+    get:
+      operationId: get_map_points
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  type: number
+                type: array
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Map Points
+  /localizationMaps/updateMapsLocation:
+    put:
+      operationId: update_maps_from_location
+      parameters:
+      - explode: true
+        in: query
+        name: latitude
+        required: true
+        schema:
+          title: Latitude
+          type: number
+        style: form
+      - explode: true
+        in: query
+        name: longitude
+        required: true
+        schema:
+          title: Longitude
+          type: number
+        style: form
+      - explode: true
+        in: query
+        name: height
+        required: true
+        schema:
+          title: Height
+          type: number
+        style: form
+      - explode: true
+        in: query
+        name: radius
+        required: true
+        schema:
+          title: Radius
+          type: number
+        style: form
+      - explode: true
+        in: query
+        name: lighting
+        required: true
+        schema:
+          title: Lighting
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update Maps From Location
+  /localizationMaps/updateMapsList:
+    put:
+      operationId: update_maps_from_list
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                format: uuid
+                type: string
+              type: array
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Update Maps From List
+  /localizationMaps/loadedMaps:
+    get:
+      operationId: get_loaded_maps
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/LocalizationMapModel"
+                type: array
+          description: Successful Response
+      summary: Get Loaded Maps
+  /localizationMaps/localize:
+    get:
+      operationId: localize
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalizationRequest"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LocalizationResponse"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Localize
 components:
   schemas:
     Body_create_capture:
@@ -1005,6 +1152,99 @@ components:
       - rotationZ
       title: LocalizationMapModel
       extra: {}
+    LocalizationRequest:
+      example:
+        imageWidth: 0
+        cameraIntrinsics:
+        - 1.4658129805029452
+        - 1.4658129805029452
+        cameraOrientation:
+        - 5.637376656633329
+        - 5.637376656633329
+        cameraRotation:
+        - 5.962133916683182
+        - 5.962133916683182
+        imageHeight: 6
+        pixelBuffer: ""
+      properties:
+        imageWidth:
+          title: Imagewidth
+          type: integer
+        imageHeight:
+          title: Imageheight
+          type: integer
+        cameraIntrinsics:
+          items:
+            type: number
+          type: array
+        cameraRotation:
+          items:
+            type: number
+          type: array
+        cameraOrientation:
+          items:
+            type: number
+          type: array
+        pixelBuffer:
+          format: binary
+          title: Pixelbuffer
+          type: string
+      required:
+      - cameraIntrinsics
+      - cameraOrientation
+      - cameraRotation
+      - imageHeight
+      - imageWidth
+      - pixelBuffer
+      title: LocalizationRequest
+    LocalizationResponse:
+      example:
+        mapEcefPosition:
+        - 0.8008281904610115
+        - 0.8008281904610115
+        mapEcefRotation:
+        - 6.027456183070403
+        - 6.027456183070403
+        estimatedCameraPosition:
+        - 1.4658129805029452
+        - 1.4658129805029452
+        confidence: 5
+        estimatedCameraRotation:
+        - 5.962133916683182
+        - 5.962133916683182
+        mapID: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        mapID:
+          format: uuid
+          title: Mapid
+          type: string
+        mapEcefPosition:
+          items:
+            type: number
+          type: array
+        mapEcefRotation:
+          items:
+            type: number
+          type: array
+        estimatedCameraPosition:
+          items:
+            type: number
+          type: array
+        estimatedCameraRotation:
+          items:
+            type: number
+          type: array
+        confidence:
+          title: Confidence
+          type: integer
+      required:
+      - confidence
+      - estimatedCameraPosition
+      - estimatedCameraRotation
+      - mapEcefPosition
+      - mapEcefRotation
+      - mapID
+      title: LocalizationResponse
     NodeModel:
       example:
         parent: 046b6c7f-0b8a-43b9-b35d-6489e6daee91

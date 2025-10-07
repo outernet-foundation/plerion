@@ -7,13 +7,6 @@ using UnityEngine;
 
 namespace Outernet.Shared
 {
-    public enum Lighting
-    {
-        Day,
-        Dusk,
-        Night
-    }
-
     public enum SettingsMenuState
     {
         OpenLeftPalm,

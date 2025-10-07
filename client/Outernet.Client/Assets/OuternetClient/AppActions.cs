@@ -9,6 +9,8 @@ using PlerionClient.Model;
 using System.Collections;
 using System.Collections.Generic;
 
+using Plerion.VPS;
+
 namespace Outernet.Client
 {
     public class SetPrimitiveValueAction<T> : ObservableNodeAction<ObservablePrimitive<T>>
@@ -127,7 +129,7 @@ namespace Outernet.Client
                     name: toUpdate.Name,
                     position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
                     rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW),
-                    lighting: (Shared.Lighting)toUpdate.Lighting,
+                    lighting: (Lighting)toUpdate.Lighting,
                     color: toUpdate.Color,
                     localInputImagePositions: ParsePoints(toUpdate.Points)
                 ).Execute(target);
@@ -150,7 +152,7 @@ namespace Outernet.Client
         private string _name;
         private double3 _position;
         private Quaternion _rotation;
-        private Shared.Lighting _lighting;
+        private Lighting _lighting;
         private long _color;
         private double3[] _localInputImagePositions;
 
@@ -159,7 +161,7 @@ namespace Outernet.Client
             string name = default,
             double3 position = default,
             Quaternion rotation = default,
-            Shared.Lighting lighting = default,
+            Lighting lighting = default,
             long color = default,
             double3[] localInputImagePositions = default)
         {
@@ -456,6 +458,54 @@ namespace Outernet.Client
                 if (node.value.layer.value == _layer)
                     node.value.layer.value = Guid.Empty;
             }
+        }
+    }
+
+    public class SetLayersAction : ObservableNodeAction<ClientState>
+    {
+        private LayerModel[] _layers;
+
+        public SetLayersAction(LayerModel[] layers)
+        {
+            _layers = layers;
+        }
+
+        public override void Execute(ClientState target)
+        {
+            var newLayersByID = _layers.ToDictionary(x => x.Id);
+            var oldLayersByID = target.layers.ToDictionary(x => x.key, x => x.value);
+
+            foreach (var toRemove in oldLayersByID.Where(x => !newLayersByID.ContainsKey(x.Key)))
+                new DestroySceneObjectAction(toRemove.Key).Execute(target);
+
+            foreach (var toUpdate in newLayersByID.Select(x => x.Value))
+            {
+                new AddOrUpdateLayerAction(
+                    id: toUpdate.Id,
+                    name: toUpdate.Name
+                ).Execute(target);
+            }
+        }
+    }
+
+    public class AddOrUpdateLayerAction : ObservableNodeAction<ClientState>
+    {
+        private Guid _id;
+        private string _name;
+
+        public AddOrUpdateLayerAction(
+            Guid id,
+            string name = default
+        )
+        {
+            _id = id;
+            _name = name;
+        }
+
+        public override void Execute(ClientState target)
+        {
+            var layer = target.layers.GetOrAdd(_id);
+            layer.layerName.value = _name;
         }
     }
 }

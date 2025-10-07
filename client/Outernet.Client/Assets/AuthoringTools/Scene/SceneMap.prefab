@@ -12,7 +12,8 @@ GameObject:
   - component: {fileID: 2635961387288592797}
   - component: {fileID: 4338688681949448076}
   - component: {fileID: 4643313840113884994}
-  - component: {fileID: 1243307232061067649}
+  - component: {fileID: 8264571476839269261}
+  - component: {fileID: 5674913627146853103}
   m_Layer: 0
   m_Name: SceneMap
   m_TagString: Untagged
@@ -29,7 +30,7 @@ Transform:
   m_GameObject: {fileID: 1672449841698518041}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: -0, y: -0, z: -0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -59,7 +60,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 0}
+  - {fileID: 2100000, guid: 2378acdd47d268f478873e4224a2f685, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -101,7 +102,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9e2ec93f8773d6548aae717f3b6496f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
---- !u!114 &1243307232061067649
+--- !u!114 &8264571476839269261
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -110,9 +111,35 @@ MonoBehaviour:
   m_GameObject: {fileID: 1672449841698518041}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c77c8345e2b236a4b91d9a086c6c7277, type: 3}
+  m_Script: {fileID: 11500000, guid: 93a3d65dae844014fbce67911049c1a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _ecefPosition:
+    x: 0
+    y: 0
+    z: 0
+  _ecefRotation:
+    value:
+      x: 0
+      y: 0
+      z: 0
+      w: 1
+  _lastKnownPosition: {x: -0, y: -0, z: -0}
+  _lastKnownRotation: {x: 0, y: 0, z: 0, w: 1}
+  _positionInitialized: 1
+--- !u!114 &5674913627146853103
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1672449841698518041}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc808126413b3424cb7de75202495351, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  shaderColorProperty: _PointColor
 --- !u!1 &3509294866578596980
 GameObject:
   m_ObjectHideFlags: 0

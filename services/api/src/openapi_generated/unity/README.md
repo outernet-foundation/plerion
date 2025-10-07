@@ -140,11 +140,16 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**GetCaptures**](docs/DefaultApi.md#getcaptures) | **GET** /captures | Get Captures
 *DefaultApi* | [**GetGroups**](docs/DefaultApi.md#getgroups) | **GET** /groups | Get Groups
 *DefaultApi* | [**GetLayers**](docs/DefaultApi.md#getlayers) | **GET** /layers | Get Layers
+*DefaultApi* | [**GetLoadedMaps**](docs/DefaultApi.md#getloadedmaps) | **GET** /localizationMaps/loadedMaps | Get Loaded Maps
 *DefaultApi* | [**GetLocalizationMaps**](docs/DefaultApi.md#getlocalizationmaps) | **GET** /localizationMaps | Get Localizationmaps
+*DefaultApi* | [**GetMapPoints**](docs/DefaultApi.md#getmappoints) | **GET** /localizationMaps/points/{id} | Get Map Points
 *DefaultApi* | [**GetNodes**](docs/DefaultApi.md#getnodes) | **GET** /nodes | Get Nodes
+*DefaultApi* | [**Localize**](docs/DefaultApi.md#localize) | **GET** /localizationMaps/localize | Localize
 *DefaultApi* | [**UpdateGroup**](docs/DefaultApi.md#updategroup) | **PUT** /groups/{id} | Update Group
 *DefaultApi* | [**UpdateLayer**](docs/DefaultApi.md#updatelayer) | **PUT** /layers/{id} | Update Layer
 *DefaultApi* | [**UpdateLocalizationMap**](docs/DefaultApi.md#updatelocalizationmap) | **PUT** /localizationMaps/{id} | Update Localizationmap
+*DefaultApi* | [**UpdateMapsFromList**](docs/DefaultApi.md#updatemapsfromlist) | **PUT** /localizationMaps/updateMapsList | Update Maps From List
+*DefaultApi* | [**UpdateMapsFromLocation**](docs/DefaultApi.md#updatemapsfromlocation) | **PUT** /localizationMaps/updateMapsLocation | Update Maps From Location
 *DefaultApi* | [**UpdateNode**](docs/DefaultApi.md#updatenode) | **PUT** /nodes/{id} | Update Node
 *DefaultApi* | [**UploadCaptureTar**](docs/DefaultApi.md#uploadcapturetar) | **PUT** /captures/{id}/tar | Upload Capture Tar
 *DefaultApi* | [**UpsertGroups**](docs/DefaultApi.md#upsertgroups) | **PUT** /groups/upsert | Upsert Groups
@@ -162,6 +167,8 @@ Class | Method | HTTP request | Description
  - [Model.HTTPValidationError](docs/HTTPValidationError.md)
  - [Model.LayerModel](docs/LayerModel.md)
  - [Model.LocalizationMapModel](docs/LocalizationMapModel.md)
+ - [Model.LocalizationRequest](docs/LocalizationRequest.md)
+ - [Model.LocalizationResponse](docs/LocalizationResponse.md)
  - [Model.NodeModel](docs/NodeModel.md)
  - [Model.ValidationError](docs/ValidationError.md)
  - [Model.ValidationErrorLocInner](docs/ValidationErrorLocInner.md)

@@ -14,5 +14,3 @@ class Capture(Table):
     created_at = Timestamp(default=TimestampNow(), required=True)
 
     uploaded_at = Timestamp(null=True)
-
-    thing = bool

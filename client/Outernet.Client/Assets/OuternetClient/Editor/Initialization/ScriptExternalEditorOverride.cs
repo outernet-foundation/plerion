@@ -11,7 +11,7 @@ public class SolutionGenerator : AssetPostprocessor
     private static bool OnOpenAsset(int instanceID, int line)
     {
         var projectDirectory = Application.dataPath.Substring(0, Application.dataPath.Length - "Assets".Length);
-        var workspaceFile = Path.Combine(projectDirectory, "../../plerion.code-workspace");
+        var workspaceFile = Path.Combine(projectDirectory, "../../");
 
         string assetPath = AssetDatabase.GetAssetPath(instanceID);
 

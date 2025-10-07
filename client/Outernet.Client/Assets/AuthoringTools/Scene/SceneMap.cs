@@ -9,10 +9,11 @@ using UnityEngine.EventSystems;
 using Cysharp.Threading.Tasks;
 
 using FofX.Stateful;
+using Plerion.VPS;
 
 namespace Outernet.Client.AuthoringTools
 {
-    [RequireComponent(typeof(MapRenderer))]
+    [RequireComponent(typeof(LocalizationMapRenderer))]
     public class SceneMap : Control<SceneMap.Props>, IPointerClickHandler
     {
         public class Props : ObservableObject
@@ -41,11 +42,11 @@ namespace Outernet.Client.AuthoringTools
             }
         }
 
-        private MapRenderer _mapRenderer;
+        private LocalizationMapRenderer _mapRenderer;
 
         private void Awake()
         {
-            _mapRenderer = GetComponent<MapRenderer>();
+            _mapRenderer = GetComponent<LocalizationMapRenderer>();
         }
 
         private void Update()
@@ -81,7 +82,7 @@ namespace Outernet.Client.AuthoringTools
                 props.mapID.OnChange(x =>
                 {
                     if (x != Guid.Empty)
-                        _mapRenderer.Load(x, props.name.value).Forget();
+                        _mapRenderer.Load(x);
                 }),
                 props.color.OnChange(x =>
                 {

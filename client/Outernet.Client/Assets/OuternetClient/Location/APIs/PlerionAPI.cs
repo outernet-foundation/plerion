@@ -8,6 +8,7 @@ using Outernet.Shared;
 using PlerionClient.Api;
 using PlerionClient.Client;
 using PlerionClient.Model;
+using Plerion.VPS;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -142,7 +143,7 @@ namespace Outernet.Client
             }
         }
 
-        public static async UniTask<byte[]> DownloadMapBytes(Guid id, string name, bool skipCache = false)
+        public static async UniTask<byte[]> DownloadMapBytes(Guid id, bool skipCache = false)
         {
             throw new NotImplementedException();
             string cachePath = Path.Combine(Application.persistentDataPath, "cache");
@@ -159,8 +160,6 @@ namespace Outernet.Client
             {
                 return File.ReadAllBytes(bytesPath);
             }
-
-            Toast.ShowToast($"Downloading map {name}...");
 
             var bytes = await Get<byte[]>($"{SUPABASE_URL}/storage/v1/object/public/LocalizationMaps/{id}.bytes");
 

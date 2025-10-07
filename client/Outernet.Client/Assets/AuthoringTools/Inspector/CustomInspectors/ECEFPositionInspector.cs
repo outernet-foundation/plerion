@@ -6,6 +6,7 @@ using Outernet.Client.Location;
 
 using CesiumForUnity;
 using System;
+using Plerion.VPS;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -48,7 +49,7 @@ namespace Outernet.Client.AuthoringTools
                     return;
 
                 UndoRedoManager.RegisterUndo("Set Position");
-                ecefPosition.ExecuteSet(LocalizedReferenceFrame.LocalToEcef(localInput.value, default).position);
+                ecefPosition.ExecuteSet(ReferenceFrame.UnityWorldToEcef(localInput.value, default).position);
             };
 
             return Bindings.Compose(
@@ -57,7 +58,7 @@ namespace Outernet.Client.AuthoringTools
                     pushingChanges = true;
                     ecefInput.value = x;
                     gpsInput.value = CesiumWgs84Ellipsoid.EarthCenteredEarthFixedToLongitudeLatitudeHeight(x);
-                    localInput.value = LocalizedReferenceFrame.EcefToLocal(x, default).position;
+                    localInput.value = ReferenceFrame.EcefToUnityWorld(x, default).position;
                     pushingChanges = false;
                 }),
                 ecefInput,

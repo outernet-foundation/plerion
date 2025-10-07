@@ -9,6 +9,7 @@ using FofX.Stateful;
 
 using Outernet.Client.Location;
 using System.Linq;
+using Plerion.VPS;
 
 namespace Outernet.Client
 {
@@ -22,8 +23,8 @@ namespace Outernet.Client
 
         static public void Initialize()
         {
-            LocalizedReferenceFrame.onTransformMatriciesChanged += () =>
-                App.ExecuteActionOrDelay(new UpdateNodeLocationsAction(LocalizedReferenceFrame.EcefToLocalTransform, _nodes.Values.Select(x => x.props).ToArray()));
+            ReferenceFrame.OnReferenceFrameUpdated += () =>
+                App.ExecuteActionOrDelay(new UpdateNodeLocationsAction(ReferenceFrame.EcefToUnityWorldTransform, _nodes.Values.Select(x => x.props).ToArray()));
 
             subscriptions = Disposable.Combine(
                 App.State_Old.users.ObserveAdd().Subscribe(addEvent =>
@@ -74,7 +75,7 @@ namespace Outernet.Client
         static private IDisposable SetupNode(NodeState node)
         {
             var transform = App.state.transforms[node.id];
-            var localTransform = LocalizedReferenceFrame.EcefToLocal(transform.position.value, transform.rotation.value);
+            var localTransform = ReferenceFrame.EcefToUnityWorld(transform.position.value, transform.rotation.value);
             var instance = ClientNode.Create(
                 uuid: node.id,
                 position: localTransform.position,
