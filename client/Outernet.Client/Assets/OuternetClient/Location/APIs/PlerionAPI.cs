@@ -119,7 +119,7 @@ namespace Outernet.Client
 
         public static async UniTask<List<LocalizationMapModel>> GetMapsWithinRadiusAsync(double latitude, double longitude, double height, double radius, Lighting lighting)
         {
-            return new List<LocalizationMapModel>();
+            throw new NotImplementedException();
             try
             {
                 var ecefPosition = CesiumWgs84Ellipsoid.LongitudeLatitudeHeightToEarthCenteredEarthFixed(new double3(longitude, latitude, height));

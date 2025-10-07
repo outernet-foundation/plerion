@@ -115,7 +115,7 @@ namespace Outernet.Client
             runtimeHandles.transform.SetParent(sceneViewRoot.transform);
 #endif
 
-#if AUTHORING_TOOLS_ENABLED
+#if !MAP_REGISTRATION_TOOLS_ENABLED
             VPSManager.Initialize("outernet", "password");
             App.state.loggedIn.ExecuteSet(true);
 #endif
