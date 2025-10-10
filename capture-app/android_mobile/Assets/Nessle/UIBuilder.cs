@@ -20,12 +20,6 @@ namespace Nessle
         public static Control<T> Control<T>(string identifier, T props, params Type[] components)
             => new Control<T>(identifier, props, components);
 
-        {
-
-
-
-        }
-
         public static Control<T> Style<T>(this Control<T> control, Action<T> style)
         {
             style(control.props);
