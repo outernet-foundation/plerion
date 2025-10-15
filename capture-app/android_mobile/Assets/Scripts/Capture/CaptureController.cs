@@ -13,8 +13,13 @@ using PlerionClient.Api;
 
 using FofX;
 using FofX.Stateful;
+
 using Nessle;
+using Nessle.StatefulExtensions;
+
 using ObserveThing;
+using ObserveThing.StatefulExtensions;
+
 using static Nessle.UIBuilder;
 using static PlerionClient.Client.UIPresets;
 
@@ -34,14 +39,6 @@ namespace PlerionClient.Client
         void Awake()
         {
             capturesApi = new DefaultApi(new Configuration { BasePath = App.state.plerionAPIBaseUrl.value });
-
-            DefaultButtonStyle = StyleButton;
-            DefaultScrollbarStyle = StyleScrollBar;
-            DefaultInputFieldStyle = StyleInputField;
-            DefaultTextStyle = StyleText;
-            DefaultScrollRectStyle = StyleScrollRect;
-            DefaultDropdownStyle = StyleDropdown;
-            DefaultSliderStyle = StyleSlider;
 
             ui = ConstructUI(canvas);
 
@@ -85,8 +82,8 @@ namespace PlerionClient.Client
         {
             var json = new SimpleJSON.JSONObject();
 
-            foreach (var kvp in App.state.captures.Where(x => !x.Value.uploaded.value))
-                json[kvp.Key.ToString()] = kvp.Value.name.value;
+            foreach (var kvp in App.state.captures.Where(x => !x.value.uploaded.value))
+                json[kvp.key.ToString()] = kvp.value.name.value;
 
             File.WriteAllText(localCaptureNamePath, json.ToString());
         }
@@ -135,17 +132,17 @@ namespace PlerionClient.Client
             }
 
             var localCaptures = LocalCaptureController.GetCaptures().ToList();
-            var remoteCaptureList = await capturesApi.GetCapturesAsync(localCaptures);
+            // var remoteCaptureList = await capturesApi.GetCapturesAsync(localCaptures);
 
-            var captureData = localCaptures.ToDictionary(x => x, x => remoteCaptureList.FirstOrDefault(y => y.Id == x));
+            // var captureData = localCaptures.ToDictionary(x => x, x => remoteCaptureList.FirstOrDefault(y => y.Id == x));
 
-            // var captureData = new Dictionary<Guid, Model.CaptureModel>();
+            var captureData = new Dictionary<Guid, Model.CaptureModel>();
 
-            // for (int i = 0; i < 20; i++)
-            // {
-            //     var capture = new Model.CaptureModel(Guid.NewGuid(), i.ToString());
-            //     captureData.Add(capture.Id, capture);
-            // }
+            for (int i = 0; i < 20; i++)
+            {
+                var capture = new Model.CaptureModel(Guid.NewGuid(), i.ToString());
+                captureData.Add(capture.Id, capture);
+            }
 
             await UniTask.SwitchToMainThread();
 
@@ -195,84 +192,108 @@ namespace PlerionClient.Client
 
         private IControl ConstructUI(Canvas canvas)
         {
-            return new Control(canvas.gameObject).Children(SafeArea().FillParent().Children(
-                Image().FillParent().Color(UIResources.PanelColor),
-                VerticalLayout()
-                    .Style(x =>
+            return new Control("root", canvas.gameObject).Setup(root => root.Children(SafeArea().Setup(safeArea =>
+            {
+                safeArea.FillParent();
+                safeArea.Children(
+                    Image("background").Setup(background =>
                     {
-                        x.childControlWidth.value = true;
-                        x.childControlHeight.value = true;
-                        x.childForceExpandWidth.value = true;
-                        x.spacing.value = 10;
-                        x.padding.value = new RectOffset(10, 10, 10, 10);
-                    })
-                    .FillParent()
-                    .Children(
-                        ScrollRect().Style(x => x.horizontal.value = false).FlexibleHeight(true).Content(
-                            VerticalLayout().FillParentWidth().FitContentVertical(ContentSizeFitter.FitMode.PreferredSize).Style(x =>
+                        background.FillParent();
+                        background.props.color.From(new Color(0.2196079f, 0.2196079f, 0.2196079f, 1f));
+                    }),
+                    TightRowsWideColumns("content").Setup(content =>
+                    {
+                        content.props.padding.From(new RectOffset(10, 10, 10, 10));
+                        content.FillParent();
+                        content.Children(
+                            ScrollRect("captureList").Setup(captureList =>
                             {
-                                x.childForceExpandWidth.value = true;
-                                x.childControlWidth.value = true;
-                                x.childControlHeight.value = true;
-                                x.spacing.value = 10;
-                            }).Children(
-                                App.state.captures
-                                    .CreateDynamic(x => ConstructCaptureRow(x.Value).WithMetadata(x.Value.name))
-                                    .OrderByDynamic(x => x.metadata.AsObservable())
-                            )
-                        ),
-                        Row().Children(
-                            Button()
-                                .Interactable(App.state.captureStatus.SelectDynamic(x => x == CaptureStatus.Idle || x == CaptureStatus.Capturing))
-                                .Children(Text().Value(App.state.captureStatus.SelectDynamic(x =>
-                                    x switch
-                                    {
-                                        CaptureStatus.Idle => "Start Capture",
-                                        CaptureStatus.Starting => "Starting...",
-                                        CaptureStatus.Capturing => "Stop Capture",
-                                        CaptureStatus.Stopping => "Stopping...",
-                                        _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
-                                    }
-                                )))
-                                .OnClick(() =>
+                                captureList.FlexibleHeight(true);
+                                captureList.props.horizontal.From(false);
+                                captureList.props.content.From(TightRowsWideColumns("content").Setup(content =>
                                 {
-                                    if (App.state.captureStatus.value == CaptureStatus.Idle)
-                                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Starting));
-                                    else if (App.state.captureStatus.value == CaptureStatus.Capturing)
-                                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Stopping));
+                                    content.FillParentWidth();
+                                    content.FitContentVertical(ContentSizeFitter.FitMode.PreferredSize);
+                                    content.Children(
+                                        App.state.captures
+                                            .AsObservable()
+                                            .CreateDynamic(x => ConstructCaptureRow(x.Value).WithMetadata(x.Value.name))
+                                            .OrderByDynamic(x => x.metadata.AsObservable())
+                                    );
+                                }));
+                            }),
+                            Row("bottomBar").Setup(row => row.Children(
+                                Button().Setup(button =>
+                                {
+                                    button.props.interactable.From(App.state.captureStatus.AsObservable().SelectDynamic(x => x == CaptureStatus.Idle || x == CaptureStatus.Capturing));
+
+                                    button.PreferredWidth(110);
+                                    button.LabelFrom(App.state.captureStatus.AsObservable().SelectDynamic(x =>
+                                        x switch
+                                        {
+                                            CaptureStatus.Idle => "Start Capture",
+                                            CaptureStatus.Starting => "Starting...",
+                                            CaptureStatus.Capturing => "Stop Capture",
+                                            CaptureStatus.Stopping => "Stopping...",
+                                            _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
+                                        }
+                                    ));
+
+                                    button.props.onClick.From(() =>
+                                    {
+                                        if (App.state.captureStatus.value == CaptureStatus.Idle)
+                                            App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Starting));
+                                        else if (App.state.captureStatus.value == CaptureStatus.Capturing)
+                                            App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Stopping));
+                                    });
                                 }),
-                            Dropdown()
-                                .PreferredWidth(100)
-                                .PreferredHeight(29.65f)
-                                .Options(Enum.GetNames(typeof(CaptureType)))
-                                .Interactable(App.state.captureStatus.SelectDynamic(x => x == CaptureStatus.Idle))
-                                .BindValue(App.state.captureMode, x => (CaptureType)x, x => (int)x)
-                        )
-                    )
-            ));
+                                Dropdown().Setup(dropdown =>
+                                {
+                                    dropdown.PreferredWidth(100);
+                                    dropdown.props.options.From(Enum.GetNames(typeof(CaptureType)));
+                                    dropdown.props.interactable.From(App.state.captureStatus.AsObservable().SelectDynamic(x => x == CaptureStatus.Idle));
+                                    dropdown.BindValue(App.state.captureMode, x => (CaptureType)x, x => (int)x);
+                                })
+                            ))
+                        );
+                    })
+                );
+            })));
         }
 
         private IControl<LayoutProps> ConstructCaptureRow(CaptureState capture)
         {
-            return Row().Children(
-                EditableLabel()
-                    .MinHeight(25)
-                    .FlexibleWidth(true)
-                    .BindValue(
+            return Row().Setup(row => row.Children(
+                EditableLabel().Setup(editableLabel =>
+                {
+                    editableLabel.MinHeight(28);
+                    editableLabel.props.label.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
+                    editableLabel.FlexibleWidth(true);
+                    editableLabel.BindValue(
+                        props => props.inputField.inputText.text,
                         capture.name,
                         x => IsDefaultRowLabel(x, capture.id) ? null : x,
                         x => string.IsNullOrEmpty(x) ? DefaultRowLabel(capture.id) : x
-                    ),
-                Text()
-                    .Value(capture.type)
-                    .MinHeight(25)
-                    .PreferredWidth(100),
-                Button()
-                    .Interactable(capture.uploaded.AsObservable().SelectDynamic(x => !x))
-                    .PreferredWidth(100)
-                    .Children(Text().Style(x => x.style.alignment.value = TextAlignmentOptions.CaplineGeoAligned).Value(capture.uploaded.SelectDynamic(x => x ? "Uploaded" : "Upload")))
-                    .OnClick(() => UploadCapture(capture.id, capture.name.value ?? capture.id.ToString(), capture.type.value, default).Forget())
-            );
+                    );
+                }),
+                Text().Setup(text =>
+                {
+                    text.props.text.From(capture.type.AsObservable());
+                    text.props.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
+                    text.MinHeight(25);
+                    text.PreferredWidth(100);
+                }),
+                Button().Setup(button =>
+                {
+                    button.props.interactable.From(capture.uploaded.AsObservable().SelectDynamic(x => !x));
+
+                    button.LabelFrom(capture.uploaded.AsObservable().SelectDynamic(x => x ? "Uploaded" : "Upload"));
+                    button.PreferredWidth(100);
+                    button.props.onClick.From(() =>
+                        UploadCapture(capture.id, capture.name.value ?? capture.id.ToString(), capture.type.value, default).Forget()
+                    );
+                })
+            ));
         }
 
         private string DefaultRowLabel(Guid id)
