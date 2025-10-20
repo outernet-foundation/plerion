@@ -28,7 +28,7 @@ namespace PlerionClient.Client
 
             App.state.plerionAPIBaseUrl.ExecuteSet(plerionAPIBaseUrl);
 
-            ZedCaptureController.Initialize();
+            // ZedCaptureController.Initialize();
             Instantiate(captureControllerPrefab);
 
             Destroy(this);
