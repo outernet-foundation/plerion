@@ -160,6 +160,22 @@ class DebounceHandler(RegexMatchingEventHandler):
         self._timer.start()
 
     def _run_internal(self, message: str, path: str):
+        # If a git operation is in progress, skip syncing
+        git_dir = repo_root / ".git"
+        if any(
+            (git_dir / sentinel).exists()
+            for sentinel in [
+                "rebase-merge",
+                "rebase-apply",
+                "MERGE_HEAD",
+                "CHERRY_PICK_HEAD",
+                "REVERT_HEAD",
+                "BISECT_LOG",
+            ]
+        ):
+            print("Git operation in progress, skipping sync")
+            return
+
         with self.lock:
             self._run(message, path)
             print("Workspace synchronized, watching for changes...")
