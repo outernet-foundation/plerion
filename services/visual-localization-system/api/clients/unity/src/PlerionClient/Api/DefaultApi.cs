@@ -664,8 +664,9 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <returns>List&lt;ReconstructionRead&gt;</returns>
-        List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default);
+        List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default, Guid? captureSessionId = default);
 
         /// <summary>
         /// Get Reconstructions
@@ -675,8 +676,9 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;ReconstructionRead&gt;</returns>
-        ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default);
+        ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default, Guid? captureSessionId = default);
         /// <summary>
         /// Load Localization Maps
         /// </summary>
@@ -1741,9 +1743,10 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;ReconstructionRead&gt;</returns>
-        System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get Reconstructions
@@ -1753,9 +1756,10 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;ReconstructionRead&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Load Localization Maps
         /// </summary>
@@ -6169,10 +6173,11 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <returns>List&lt;ReconstructionRead&gt;</returns>
-        public List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default)
+        public List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default, Guid? captureSessionId = default)
         {
-            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = GetReconstructionsWithHttpInfo(ids);
+            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = GetReconstructionsWithHttpInfo(ids, captureSessionId);
             return localVarResponse.Data;
         }
 
@@ -6181,8 +6186,9 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;ReconstructionRead&gt;</returns>
-        public PlerionClient.Client.ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default)
+        public PlerionClient.Client.ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default, Guid? captureSessionId = default)
         {
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
@@ -6203,6 +6209,10 @@ namespace PlerionClient.Api
             if (ids != null)
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+            }
+            if (captureSessionId != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_id", captureSessionId));
             }
 
 
@@ -6223,11 +6233,12 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;ReconstructionRead&gt;</returns>
-        public async System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = await GetReconstructionsWithHttpInfoAsync(ids, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = await GetReconstructionsWithHttpInfoAsync(ids, captureSessionId, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -6236,9 +6247,10 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;ReconstructionRead&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
@@ -6261,6 +6273,10 @@ namespace PlerionClient.Api
             if (ids != null)
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+            }
+            if (captureSessionId != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_id", captureSessionId));
             }
 
 

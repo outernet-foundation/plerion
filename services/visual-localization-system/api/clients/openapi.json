@@ -574,6 +574,25 @@
               "title": "Ids"
             },
             "description": "Optional list of Ids to filter by"
+          },
+          {
+            "name": "capture_session_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Optional capture session Id to filter by",
+              "title": "Capture Session Id"
+            },
+            "description": "Optional capture session Id to filter by"
           }
         ],
         "responses": {

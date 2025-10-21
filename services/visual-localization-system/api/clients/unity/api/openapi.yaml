@@ -352,6 +352,16 @@ paths:
           nullable: true
           type: array
         style: form
+      - description: Optional capture session Id to filter by
+        explode: true
+        in: query
+        name: capture_session_id
+        required: false
+        schema:
+          format: uuid
+          nullable: true
+          type: string
+        style: form
       responses:
         "200":
           content:

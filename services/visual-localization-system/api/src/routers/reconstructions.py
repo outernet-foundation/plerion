@@ -66,12 +66,16 @@ async def delete_reconstruction(id: UUID, session: AsyncSession = Depends(get_se
 @router.get("")
 async def get_reconstructions(
     ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    capture_session_id: Optional[UUID] = Query(None, description="Optional capture session Id to filter by"),
     session: AsyncSession = Depends(get_session),
 ) -> List[ReconstructionRead]:
     query = select(Reconstruction)
 
     if ids:
         query = query.where(Reconstruction.id.in_(ids))
+
+    if capture_session_id:
+        query = query.where(Reconstruction.capture_session_id == capture_session_id)
 
     result = await session.execute(query)
 
