@@ -1849,12 +1849,12 @@ components:
       title: LayerRead
     LocalizationMapBatchUpdate:
       example:
-        color: 0
-        rotation_x: 2.3021358869347655
-        rotation_w: 5.637376656633329
+        rotation_x: 5.637376656633329
+        color: 9
+        rotation_w: 7.061401241503109
         active: true
-        rotation_z: 9.301444243932576
-        rotation_y: 7.061401241503109
+        rotation_z: 2.3021358869347655
+        rotation_y: 0.8008281904610115
         lighting: 3
         position_x: 6.027456183070403
         position_y: 1.4658129805029452
@@ -1871,12 +1871,9 @@ components:
           format: uuid
           title: Id
           type: string
-        active:
+        rotation_y:
           nullable: true
-          type: boolean
-        color:
-          nullable: true
-          type: integer
+          type: number
         position_x:
           nullable: true
           type: number
@@ -1886,18 +1883,21 @@ components:
         position_z:
           nullable: true
           type: number
-        rotation_w:
-          nullable: true
-          type: number
         rotation_x:
-          nullable: true
-          type: number
-        rotation_y:
           nullable: true
           type: number
         rotation_z:
           nullable: true
           type: number
+        rotation_w:
+          nullable: true
+          type: number
+        color:
+          nullable: true
+          type: integer
+        active:
+          nullable: true
+          type: boolean
         lighting:
           nullable: true
           type: integer
@@ -1909,12 +1909,12 @@ components:
       title: LocalizationMapBatchUpdate
     LocalizationMapCreate:
       example:
-        color: 0
-        rotation_x: 2.3021358869347655
-        rotation_w: 5.637376656633329
+        rotation_x: 5.637376656633329
+        color: 9
+        rotation_w: 7.061401241503109
         active: true
-        rotation_z: 9.301444243932576
-        rotation_y: 7.061401241503109
+        rotation_z: 2.3021358869347655
+        rotation_y: 0.8008281904610115
         lighting: 3
         position_x: 6.027456183070403
         position_y: 1.4658129805029452
@@ -1931,12 +1931,9 @@ components:
           format: uuid
           nullable: true
           type: string
-        active:
-          nullable: true
-          type: boolean
-        color:
-          title: Color
-          type: integer
+        rotation_y:
+          title: Rotation Y
+          type: number
         position_x:
           title: Position X
           type: number
@@ -1946,18 +1943,21 @@ components:
         position_z:
           title: Position Z
           type: number
-        rotation_w:
-          title: Rotation W
-          type: number
         rotation_x:
           title: Rotation X
-          type: number
-        rotation_y:
-          title: Rotation Y
           type: number
         rotation_z:
           title: Rotation Z
           type: number
+        rotation_w:
+          title: Rotation W
+          type: number
+        color:
+          title: Color
+          type: integer
+        active:
+          nullable: true
+          type: boolean
         lighting:
           nullable: true
           type: integer
@@ -1977,18 +1977,18 @@ components:
       title: LocalizationMapCreate
     LocalizationMapRead:
       example:
-        color: 0
-        rotation_x: 2.3021358869347655
-        rotation_w: 5.637376656633329
+        rotation_x: 5.637376656633329
+        color: 9
+        rotation_w: 7.061401241503109
         created_at: 2000-01-23T04:56:07.000+00:00
         active: true
-        rotation_z: 9.301444243932576
-        rotation_y: 7.061401241503109
+        rotation_z: 2.3021358869347655
+        rotation_y: 0.8008281904610115
         lighting: 3
         position_x: 6.027456183070403
         position_y: 1.4658129805029452
-        updated_at: 2000-01-23T04:56:07.000+00:00
         position_z: 5.962133916683182
+        updated_at: 2000-01-23T04:56:07.000+00:00
         name: name
         reconstruction_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -2001,20 +2001,9 @@ components:
           format: uuid
           title: Id
           type: string
-        created_at:
-          format: date-time
-          title: Created At
-          type: string
-        updated_at:
-          format: date-time
-          title: Updated At
-          type: string
-        active:
-          title: Active
-          type: boolean
-        color:
-          title: Color
-          type: integer
+        rotation_y:
+          title: Rotation Y
+          type: number
         position_x:
           title: Position X
           type: number
@@ -2024,18 +2013,29 @@ components:
         position_z:
           title: Position Z
           type: number
-        rotation_w:
-          title: Rotation W
-          type: number
         rotation_x:
           title: Rotation X
           type: number
-        rotation_y:
-          title: Rotation Y
-          type: number
+        updated_at:
+          format: date-time
+          title: Updated At
+          type: string
         rotation_z:
           title: Rotation Z
           type: number
+        rotation_w:
+          title: Rotation W
+          type: number
+        color:
+          title: Color
+          type: integer
+        created_at:
+          format: date-time
+          title: Created At
+          type: string
+        active:
+          title: Active
+          type: boolean
         lighting:
           nullable: true
           type: integer
@@ -2061,27 +2061,24 @@ components:
       example:
         position_x: 6.027456183070403
         position_y: 1.4658129805029452
-        color: 0
         position_z: 5.962133916683182
-        rotation_x: 2.3021358869347655
-        rotation_w: 5.637376656633329
+        rotation_x: 5.637376656633329
+        color: 9
+        rotation_w: 7.061401241503109
         name: name
         reconstruction_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         active: true
-        rotation_z: 9.301444243932576
-        rotation_y: 7.061401241503109
+        rotation_z: 2.3021358869347655
+        rotation_y: 0.8008281904610115
         lighting: 3
       properties:
         reconstruction_id:
           format: uuid
           nullable: true
           type: string
-        active:
+        rotation_y:
           nullable: true
-          type: boolean
-        color:
-          nullable: true
-          type: integer
+          type: number
         position_x:
           nullable: true
           type: number
@@ -2091,18 +2088,21 @@ components:
         position_z:
           nullable: true
           type: number
-        rotation_w:
-          nullable: true
-          type: number
         rotation_x:
-          nullable: true
-          type: number
-        rotation_y:
           nullable: true
           type: number
         rotation_z:
           nullable: true
           type: number
+        rotation_w:
+          nullable: true
+          type: number
+        color:
+          nullable: true
+          type: integer
+        active:
+          nullable: true
+          type: boolean
         lighting:
           nullable: true
           type: integer

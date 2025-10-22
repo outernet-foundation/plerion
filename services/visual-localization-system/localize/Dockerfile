@@ -25,6 +25,9 @@ WORKDIR /app/services/visual-localization-system/localize
 
 # Make hloc third-party code (e.g. SuperGlue) available
 ENV PYTHONPATH="/app/services/visual-localization-system/third-party/Hierarchical-Localization/third_party:${PYTHONPATH}"
+ENV PYTHONPATH="/app/services/visual-localization-system/third-party/Hierarchical-Localization/third_party/deep-image-retrieval:${PYTHONPATH}"
+
+ENV TORCH_HOME=/opt/torch_cache
 
 # Put the virtual environment outside the project directory to prevent docker compose bind mounts from clobbering it
 ENV UV_PROJECT_ENVIRONMENT=/opt/uv/venv
@@ -40,6 +43,30 @@ COPY services/visual-localization-system/third-party/ /app/services/visual-local
 COPY services/visual-localization-system/localize/pylock.hloc.toml /app/services/visual-localization-system/localize/pylock.hloc.toml
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip sync --preview /app/services/visual-localization-system/localize/pylock.hloc.toml
+
+# Preload pretrained models to cache them in the docker image
+RUN --mount=type=cache,id=uvcache,target=/root/.cache/uv \
+    uv run python - <<'PY'
+import torch
+from hloc.extractors.dir import DIR
+from hloc.extractors.superpoint import SuperPoint
+from lightglue import LightGlue
+
+# PyTorch 2.6 flips torch.load default to weights_only=True, so we temporarily force legacy loading to read DIR’s pickled checkpoint; 
+# see: https://dev-discuss.pytorch.org/t/bc-breaking-change-torch-load-is-being-flipped-to-use-weights-only-true-by-default-in-the-nightlies-after-137602/2573
+_orig_load = torch.load
+def _load_legacy(*args, **kwargs):
+    kwargs.setdefault("weights_only", False)
+    return _orig_load(*args, **kwargs)
+
+torch.load = _load_legacy
+_ = DIR({})
+torch.load = _orig_load
+
+_ = SuperPoint({'weights': 'indoor'})
+_ = SuperPoint({'weights': 'outdoor'})
+_ = LightGlue(features="superpoint")
+PY
 
 # Install remaining dependencies
 COPY common/ /app/common

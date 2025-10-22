@@ -28,6 +28,7 @@ build-backend = "hatchling.build"
 dev = [
     "scipy-stubs>=1.16.2.4",
 ]
+hloc = []
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/sync_workspace"]

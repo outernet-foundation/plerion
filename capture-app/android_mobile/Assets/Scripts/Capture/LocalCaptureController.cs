@@ -14,17 +14,17 @@ using static RigConfig;
 
 public static class LocalCaptureController
 {
-
-
     static ARCameraManager cameraManager;
     static float captureIntervalSeconds;
+    static Vector3 startingPosition;
+    static Quaternion startingRotation;
 
     static Guid sessionId;
     static string sessionDirectory;
     static StreamWriter poseWriter;
     static readonly object inputOutputLock = new();
 
-    static bool configWritten;
+    static bool first_frame = true;
     static float nextCaptureTime;
 
     static string recordingsRoot;
@@ -97,7 +97,7 @@ public static class LocalCaptureController
             cameraManager = null;
         }
 
-        configWritten = false;
+        first_frame = true;
         nextCaptureTime = 0;
 
         // Put the zip *next to* the sessionDirectory
@@ -105,50 +105,59 @@ public static class LocalCaptureController
         System.IO.Compression.ZipFile.CreateFromDirectory(sessionDirectory, zipFilePath);
     }
 
-    static void OnCameraFrameReceived(ARCameraFrameEventArgs _)
+    static void OnCameraFrameReceived(ARCameraFrameEventArgs args)
     {
+        var flipped = true; // TODO figure out how to detect this properly
+
         // Write config.json once
-        if (!configWritten && cameraManager.TryGetIntrinsics(out var intrinsics))
+        if (first_frame)
         {
-            var json = JsonUtility.ToJson(
-                new RigConfig()
-                {
-                    rigs = new Rig[]
+            startingPosition = cameraManager.transform.position;
+            startingRotation = cameraManager.transform.rotation;
+
+            if (cameraManager.TryGetIntrinsics(out var intrinsics))
+            {
+                var json = JsonUtility.ToJson(
+                    new RigConfig()
                     {
-                        new()
+                        rigs = new Rig[]
                         {
-                            id = "rig0",
-                            cameras = new RigCamera[]
+                            new()
                             {
-                                new RigCamera()
+                                id = "rig0",
+                                cameras = new RigCamera[]
                                 {
-                                    id = "camera0",
-                                    model = "PINHOLE",
-                                    width = intrinsics.resolution.x,
-                                    height = intrinsics.resolution.y,
-                                    intrinsics = new float[]
+                                    new RigCamera()
                                     {
-                                        intrinsics.focalLength.x,
-                                        intrinsics.focalLength.y,
-                                        intrinsics.principalPoint.x,
-                                        intrinsics.principalPoint.y
-                                    },
-                                    ref_sensor = true,
-                                    rotation = new float[] {0, 0, 0, 1},
-                                    translation = new float[] {0, 0, 0}
+                                        id = "camera0",
+                                        model = "PINHOLE",
+                                        width = intrinsics.resolution.x,
+                                        height = intrinsics.resolution.y,
+                                        intrinsics = new float[]
+                                        {
+                                            intrinsics.focalLength.x,
+                                            intrinsics.focalLength.y,
+                                            // Adjust principal point to account for mirroring the image
+                                            flipped ? (intrinsics.resolution.x - 1) - intrinsics.principalPoint.x : intrinsics.principalPoint.x,
+                                            intrinsics.principalPoint.y
+                                        },
+                                        ref_sensor = true,
+                                        rotation = new float[] {0, 0, 0, 1},
+                                        translation = new float[] {0, 0, 0}
+                                    }
                                 }
                             }
                         }
                     }
-                }
-            );
+                );
 
-            File.WriteAllText(
-                Path.Combine(sessionDirectory, "config.json"),
-                json
-            );
+                File.WriteAllText(
+                    Path.Combine(sessionDirectory, "config.json"),
+                    json
+                );
 
-            configWritten = true;
+                first_frame = false;
+            }
         }
 
         // Throttle capture to the requested interval.
@@ -160,34 +169,40 @@ public static class LocalCaptureController
 
         long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        // Write pose row: timestamp, tx,ty,tz, qx,qy,qz,qw
+        var framePosition = cameraManager.transform.position - startingPosition;
+        var frameRotation = cameraManager.transform.rotation * Quaternion.Inverse(startingRotation);
+
+        // Convert from Unity world to CV world (right-handed, +X right, +Y down, +Z forward)
+        var forward = frameRotation * Vector3.forward;
+        var up = frameRotation * Vector3.up;
+        var rotationCV = Quaternion.LookRotation(new Vector3(forward.x, -forward.y, forward.z), new Vector3(up.x, -up.y, up.z));
+        var positionCV = new Vector3(framePosition.x, -framePosition.y, framePosition.z);
+
+        // Write pose row in canonical CV frame: timestamp, tx,ty,tz, qx,qy,qz,qw
         lock (inputOutputLock)
         {
             poseWriter.WriteLine(string.Format(
                 CultureInfo.InvariantCulture,
                 "{0},{1},{2},{3},{4},{5},{6},{7}",
                 timestampMilliseconds,
-                cameraManager.transform.position.x,
-                cameraManager.transform.position.y,
-                cameraManager.transform.position.z,
-                cameraManager.transform.rotation.x,
-                cameraManager.transform.rotation.y,
-                cameraManager.transform.rotation.z,
-                cameraManager.transform.rotation.w));
+                positionCV.x, positionCV.y, positionCV.z,
+                rotationCV.x, rotationCV.y, rotationCV.z, rotationCV.w));
         }
 
         // Save the jpg off-thread.
-        SaveImageAsync(cpuImage, Path.Combine(sessionDirectory, "rig0", "camera0", $"{timestampMilliseconds}.jpg")).Forget();
+        SaveImageAsync(cpuImage, flipped, Path.Combine(sessionDirectory, "rig0", "camera0", $"{timestampMilliseconds}.jpg")).Forget();
     }
 
     static async UniTask SaveImageAsync(
         XRCpuImage cpuImage,
+        bool flipped,
         string absoluteImagePath)
     {
         var conversion = new XRCpuImage.ConversionParams(
             cpuImage,
             TextureFormat.RGBA32,
-            XRCpuImage.Transformation.None);
+            // Mirror the image on the X axis to match the display orientation
+            flipped ? XRCpuImage.Transformation.MirrorX : XRCpuImage.Transformation.None);
 
         int byteCount = cpuImage.GetConvertedDataSize(conversion);
         using var pixelBuffer = new NativeArray<byte>(byteCount, Allocator.TempJob);

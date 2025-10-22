@@ -91,6 +91,7 @@
         "common/.venv/lib/python3.13/site-packages",
         "services/visual-localization-system/third-party/Hierarchical-Localization",
         "services/visual-localization-system/third-party/Hierarchical-Localization/third_party",
+        "services/visual-localization-system/third-party/Hierarchical-Localization/third_party/deep-image-retrieval",
         "services/visual-localization-system/run-reconstruction/pycolmap-stubs",
         "services/visual-localization-system/run-reconstruction/.venv/Lib/site-packages",
         "services/visual-localization-system/run-reconstruction/.venv/lib/python3.13/site-packages"
@@ -103,7 +104,9 @@
       "root": "services/visual-localization-system/third-party/Hierarchical-Localization",
       "extraPaths": [
         "services/visual-localization-system/run-reconstruction/.venv/Lib/site-packages",
-        "services/visual-localization-system/run-reconstruction/.venv/lib/python3.13/site-packages"
+        "services/visual-localization-system/run-reconstruction/.venv/lib/python3.13/site-packages",
+        "services/visual-localization-system/third-party/Hierarchical-Localization/third_party",
+        "services/visual-localization-system/third-party/Hierarchical-Localization/third_party/deep-image-retrieval"
       ]
     },
     {

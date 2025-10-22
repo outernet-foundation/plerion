@@ -793,6 +793,7 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [{ name = "scipy-stubs", specifier = ">=1.16.2.4" }]
+hloc = []
 
 [[package]]
 name = "shellingham"

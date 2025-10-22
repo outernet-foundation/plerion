@@ -36,15 +36,15 @@ namespace PlerionClient.Model
         /// Initializes a new instance of the <see cref="LocalizationMapUpdate" /> class.
         /// </summary>
         /// <param name="reconstructionId">reconstructionId.</param>
-        /// <param name="active">active.</param>
-        /// <param name="color">color.</param>
+        /// <param name="rotationY">rotationY.</param>
         /// <param name="positionX">positionX.</param>
         /// <param name="positionY">positionY.</param>
         /// <param name="positionZ">positionZ.</param>
-        /// <param name="rotationW">rotationW.</param>
         /// <param name="rotationX">rotationX.</param>
-        /// <param name="rotationY">rotationY.</param>
         /// <param name="rotationZ">rotationZ.</param>
+        /// <param name="rotationW">rotationW.</param>
+        /// <param name="color">color.</param>
+        /// <param name="active">active.</param>
         /// <param name="lighting">lighting.</param>
         /// <param name="name">name.</param>
         public LocalizationMapUpdate()
@@ -76,52 +76,28 @@ namespace PlerionClient.Model
             return _flagReconstructionId;
         }
         /// <summary>
-        /// Gets or Sets Active
+        /// Gets or Sets RotationY
         /// </summary>
-        [DataMember(Name = "active", EmitDefaultValue = true)]
-        public bool? Active
+        [DataMember(Name = "rotation_y", EmitDefaultValue = true)]
+        public double? RotationY
         {
-            get{ return _Active;}
+            get{ return _RotationY;}
             set
             {
-                _Active = value;
-                _flagActive = true;
+                _RotationY = value;
+                _flagRotationY = true;
             }
         }
-        private bool? _Active;
-        private bool _flagActive;
+        private double? _RotationY;
+        private bool _flagRotationY;
 
         /// <summary>
-        /// Returns false as Active should not be serialized given that it's read-only.
+        /// Returns false as RotationY should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeActive()
+        public bool ShouldSerializeRotationY()
         {
-            return _flagActive;
-        }
-        /// <summary>
-        /// Gets or Sets Color
-        /// </summary>
-        [DataMember(Name = "color", EmitDefaultValue = true)]
-        public int? Color
-        {
-            get{ return _Color;}
-            set
-            {
-                _Color = value;
-                _flagColor = true;
-            }
-        }
-        private int? _Color;
-        private bool _flagColor;
-
-        /// <summary>
-        /// Returns false as Color should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeColor()
-        {
-            return _flagColor;
+            return _flagRotationY;
         }
         /// <summary>
         /// Gets or Sets PositionX
@@ -196,30 +172,6 @@ namespace PlerionClient.Model
             return _flagPositionZ;
         }
         /// <summary>
-        /// Gets or Sets RotationW
-        /// </summary>
-        [DataMember(Name = "rotation_w", EmitDefaultValue = true)]
-        public double? RotationW
-        {
-            get{ return _RotationW;}
-            set
-            {
-                _RotationW = value;
-                _flagRotationW = true;
-            }
-        }
-        private double? _RotationW;
-        private bool _flagRotationW;
-
-        /// <summary>
-        /// Returns false as RotationW should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeRotationW()
-        {
-            return _flagRotationW;
-        }
-        /// <summary>
         /// Gets or Sets RotationX
         /// </summary>
         [DataMember(Name = "rotation_x", EmitDefaultValue = true)]
@@ -244,30 +196,6 @@ namespace PlerionClient.Model
             return _flagRotationX;
         }
         /// <summary>
-        /// Gets or Sets RotationY
-        /// </summary>
-        [DataMember(Name = "rotation_y", EmitDefaultValue = true)]
-        public double? RotationY
-        {
-            get{ return _RotationY;}
-            set
-            {
-                _RotationY = value;
-                _flagRotationY = true;
-            }
-        }
-        private double? _RotationY;
-        private bool _flagRotationY;
-
-        /// <summary>
-        /// Returns false as RotationY should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeRotationY()
-        {
-            return _flagRotationY;
-        }
-        /// <summary>
         /// Gets or Sets RotationZ
         /// </summary>
         [DataMember(Name = "rotation_z", EmitDefaultValue = true)]
@@ -290,6 +218,78 @@ namespace PlerionClient.Model
         public bool ShouldSerializeRotationZ()
         {
             return _flagRotationZ;
+        }
+        /// <summary>
+        /// Gets or Sets RotationW
+        /// </summary>
+        [DataMember(Name = "rotation_w", EmitDefaultValue = true)]
+        public double? RotationW
+        {
+            get{ return _RotationW;}
+            set
+            {
+                _RotationW = value;
+                _flagRotationW = true;
+            }
+        }
+        private double? _RotationW;
+        private bool _flagRotationW;
+
+        /// <summary>
+        /// Returns false as RotationW should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeRotationW()
+        {
+            return _flagRotationW;
+        }
+        /// <summary>
+        /// Gets or Sets Color
+        /// </summary>
+        [DataMember(Name = "color", EmitDefaultValue = true)]
+        public int? Color
+        {
+            get{ return _Color;}
+            set
+            {
+                _Color = value;
+                _flagColor = true;
+            }
+        }
+        private int? _Color;
+        private bool _flagColor;
+
+        /// <summary>
+        /// Returns false as Color should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeColor()
+        {
+            return _flagColor;
+        }
+        /// <summary>
+        /// Gets or Sets Active
+        /// </summary>
+        [DataMember(Name = "active", EmitDefaultValue = true)]
+        public bool? Active
+        {
+            get{ return _Active;}
+            set
+            {
+                _Active = value;
+                _flagActive = true;
+            }
+        }
+        private bool? _Active;
+        private bool _flagActive;
+
+        /// <summary>
+        /// Returns false as Active should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeActive()
+        {
+            return _flagActive;
         }
         /// <summary>
         /// Gets or Sets Lighting
@@ -348,15 +348,15 @@ namespace PlerionClient.Model
             StringBuilder sb = new StringBuilder();
             sb.Append("class LocalizationMapUpdate {\n");
             sb.Append("  ReconstructionId: ").Append(ReconstructionId).Append("\n");
-            sb.Append("  Active: ").Append(Active).Append("\n");
-            sb.Append("  Color: ").Append(Color).Append("\n");
+            sb.Append("  RotationY: ").Append(RotationY).Append("\n");
             sb.Append("  PositionX: ").Append(PositionX).Append("\n");
             sb.Append("  PositionY: ").Append(PositionY).Append("\n");
             sb.Append("  PositionZ: ").Append(PositionZ).Append("\n");
-            sb.Append("  RotationW: ").Append(RotationW).Append("\n");
             sb.Append("  RotationX: ").Append(RotationX).Append("\n");
-            sb.Append("  RotationY: ").Append(RotationY).Append("\n");
             sb.Append("  RotationZ: ").Append(RotationZ).Append("\n");
+            sb.Append("  RotationW: ").Append(RotationW).Append("\n");
+            sb.Append("  Color: ").Append(Color).Append("\n");
+            sb.Append("  Active: ").Append(Active).Append("\n");
             sb.Append("  Lighting: ").Append(Lighting).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("}\n");

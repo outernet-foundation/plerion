@@ -9,7 +9,7 @@ from common.classes import CameraIntrinsics, Quaternion, Transform, Vector3
 from common.make_multipar_json_dep import make_multipart_json_dep
 from cv2 import COLOR_BGR2GRAY, COLOR_BGR2RGB, IMREAD_COLOR, cvtColor, imdecode
 from fastapi import FastAPI, HTTPException
-from hloc.extractors.netvlad import NetVLAD
+from hloc.extractors.dir import DIR
 from hloc.extractors.superpoint import SuperPoint
 from lightglue import LightGlue
 from numpy import float32, frombuffer, uint8
@@ -35,15 +35,27 @@ s3_client = create_s3_client(
     s3_endpoint_url=settings.s3_endpoint_url, s3_access_key=settings.s3_access_key, s3_secret_key=settings.s3_secret_key
 )
 
-print("Loading NetVLAD model")
+print(f"Loading retrieval model: {'deep-image-retrieval'}")
 
-netVLAD: NetVLAD = NetVLAD({"weights": WEIGHTS}).to(DEVICE).eval()
+# PyTorch 2.6 flips torch.load default to weights_only=True, so we temporarily force legacy loading to read DIR’s pickled checkpoint;
+# see: https://dev-discuss.pytorch.org/t/bc-breaking-change-torch-load-is-being-flipped-to-use-weights-only-true-by-default-in-the-nightlies-after-137602/2573
+_orig_load = torch.load  # type: ignore
 
-print("Loading SuperPoint model")
+
+def _load_legacy(*args, **kwargs):  # type: ignore
+    kwargs.setdefault("weights_only", False)  # type: ignore
+    return _orig_load(*args, **kwargs)  # type: ignore
+
+
+torch.load = _load_legacy
+dir: DIR = DIR({}).to(DEVICE).eval()
+torch.load = _orig_load
+
+print(f"Loading feature extraction model: {'SuperPoint'}")
 
 superpoint = SuperPoint({"weights": WEIGHTS}).to(DEVICE).eval()
 
-print("Loading LightGlue model")
+print(f"Loading feature matching model: {'LightGlue'}")
 
 LIGHTGLUE_MATCHER = LightGlue(features="superpoint", width_confidence=-1, depth_confidence=-1).eval().to(DEVICE)
 
@@ -96,7 +108,11 @@ async def localize_image_against_reconstruction(map: Map, camera: Camera, image:
 
     # Extract keypoints and global descriptor for query image
     with inference_mode():
-        query_image_global_descriptor = netVLAD({"image": rgb_image_tensor})["global_descriptor"][0]
+        query_image_global_descriptor = dir({"image": rgb_image_tensor})["global_descriptor"][0]
+
+        # Hloc's DIR wrapper moves the descriptor to the CPU for PCA whitening; move it back to DEVICE
+        query_image_global_descriptor = query_image_global_descriptor.to(DEVICE)
+
         superpoint_output = superpoint({"image": grayscale_image_tensor})
         query_image_keypoints = superpoint_output["keypoints"][0]
         query_image_descriptors = superpoint_output["descriptors"][0]

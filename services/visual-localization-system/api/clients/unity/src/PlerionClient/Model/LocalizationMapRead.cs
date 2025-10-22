@@ -42,34 +42,34 @@ namespace PlerionClient.Model
         /// </summary>
         /// <param name="reconstructionId">reconstructionId (required).</param>
         /// <param name="id">id (required).</param>
-        /// <param name="createdAt">createdAt (required).</param>
-        /// <param name="updatedAt">updatedAt (required).</param>
-        /// <param name="active">active (required).</param>
-        /// <param name="color">color (required).</param>
+        /// <param name="rotationY">rotationY (required).</param>
         /// <param name="positionX">positionX (required).</param>
         /// <param name="positionY">positionY (required).</param>
         /// <param name="positionZ">positionZ (required).</param>
-        /// <param name="rotationW">rotationW (required).</param>
         /// <param name="rotationX">rotationX (required).</param>
-        /// <param name="rotationY">rotationY (required).</param>
+        /// <param name="updatedAt">updatedAt (required).</param>
         /// <param name="rotationZ">rotationZ (required).</param>
+        /// <param name="rotationW">rotationW (required).</param>
+        /// <param name="color">color (required).</param>
+        /// <param name="createdAt">createdAt (required).</param>
+        /// <param name="active">active (required).</param>
         /// <param name="lighting">lighting.</param>
         /// <param name="name">name.</param>
-        public LocalizationMapRead(Guid reconstructionId, Guid id, DateTime createdAt, DateTime updatedAt, bool active, int color, double positionX, double positionY, double positionZ, double rotationW, double rotationX, double rotationY, double rotationZ)
+        public LocalizationMapRead(Guid reconstructionId, Guid id, double rotationY, double positionX, double positionY, double positionZ, double rotationX, DateTime updatedAt, double rotationZ, double rotationW, int color, DateTime createdAt, bool active)
         {
             this.ReconstructionId = reconstructionId;
             this.Id = id;
-            this.CreatedAt = createdAt;
-            this.UpdatedAt = updatedAt;
-            this.Active = active;
-            this.Color = color;
+            this.RotationY = rotationY;
             this.PositionX = positionX;
             this.PositionY = positionY;
             this.PositionZ = positionZ;
-            this.RotationW = rotationW;
             this.RotationX = rotationX;
-            this.RotationY = rotationY;
+            this.UpdatedAt = updatedAt;
             this.RotationZ = rotationZ;
+            this.RotationW = rotationW;
+            this.Color = color;
+            this.CreatedAt = createdAt;
+            this.Active = active;
         }
 
         /// <summary>
@@ -121,100 +121,28 @@ namespace PlerionClient.Model
             return _flagId;
         }
         /// <summary>
-        /// Gets or Sets CreatedAt
+        /// Gets or Sets RotationY
         /// </summary>
-        [DataMember(Name = "created_at", IsRequired = true, EmitDefaultValue = true)]
-        public DateTime CreatedAt
+        [DataMember(Name = "rotation_y", IsRequired = true, EmitDefaultValue = true)]
+        public double RotationY
         {
-            get{ return _CreatedAt;}
+            get{ return _RotationY;}
             set
             {
-                _CreatedAt = value;
-                _flagCreatedAt = true;
+                _RotationY = value;
+                _flagRotationY = true;
             }
         }
-        private DateTime _CreatedAt;
-        private bool _flagCreatedAt;
+        private double _RotationY;
+        private bool _flagRotationY;
 
         /// <summary>
-        /// Returns false as CreatedAt should not be serialized given that it's read-only.
+        /// Returns false as RotationY should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeCreatedAt()
+        public bool ShouldSerializeRotationY()
         {
-            return _flagCreatedAt;
-        }
-        /// <summary>
-        /// Gets or Sets UpdatedAt
-        /// </summary>
-        [DataMember(Name = "updated_at", IsRequired = true, EmitDefaultValue = true)]
-        public DateTime UpdatedAt
-        {
-            get{ return _UpdatedAt;}
-            set
-            {
-                _UpdatedAt = value;
-                _flagUpdatedAt = true;
-            }
-        }
-        private DateTime _UpdatedAt;
-        private bool _flagUpdatedAt;
-
-        /// <summary>
-        /// Returns false as UpdatedAt should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeUpdatedAt()
-        {
-            return _flagUpdatedAt;
-        }
-        /// <summary>
-        /// Gets or Sets Active
-        /// </summary>
-        [DataMember(Name = "active", IsRequired = true, EmitDefaultValue = true)]
-        public bool Active
-        {
-            get{ return _Active;}
-            set
-            {
-                _Active = value;
-                _flagActive = true;
-            }
-        }
-        private bool _Active;
-        private bool _flagActive;
-
-        /// <summary>
-        /// Returns false as Active should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeActive()
-        {
-            return _flagActive;
-        }
-        /// <summary>
-        /// Gets or Sets Color
-        /// </summary>
-        [DataMember(Name = "color", IsRequired = true, EmitDefaultValue = true)]
-        public int Color
-        {
-            get{ return _Color;}
-            set
-            {
-                _Color = value;
-                _flagColor = true;
-            }
-        }
-        private int _Color;
-        private bool _flagColor;
-
-        /// <summary>
-        /// Returns false as Color should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeColor()
-        {
-            return _flagColor;
+            return _flagRotationY;
         }
         /// <summary>
         /// Gets or Sets PositionX
@@ -289,30 +217,6 @@ namespace PlerionClient.Model
             return _flagPositionZ;
         }
         /// <summary>
-        /// Gets or Sets RotationW
-        /// </summary>
-        [DataMember(Name = "rotation_w", IsRequired = true, EmitDefaultValue = true)]
-        public double RotationW
-        {
-            get{ return _RotationW;}
-            set
-            {
-                _RotationW = value;
-                _flagRotationW = true;
-            }
-        }
-        private double _RotationW;
-        private bool _flagRotationW;
-
-        /// <summary>
-        /// Returns false as RotationW should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeRotationW()
-        {
-            return _flagRotationW;
-        }
-        /// <summary>
         /// Gets or Sets RotationX
         /// </summary>
         [DataMember(Name = "rotation_x", IsRequired = true, EmitDefaultValue = true)]
@@ -337,28 +241,28 @@ namespace PlerionClient.Model
             return _flagRotationX;
         }
         /// <summary>
-        /// Gets or Sets RotationY
+        /// Gets or Sets UpdatedAt
         /// </summary>
-        [DataMember(Name = "rotation_y", IsRequired = true, EmitDefaultValue = true)]
-        public double RotationY
+        [DataMember(Name = "updated_at", IsRequired = true, EmitDefaultValue = true)]
+        public DateTime UpdatedAt
         {
-            get{ return _RotationY;}
+            get{ return _UpdatedAt;}
             set
             {
-                _RotationY = value;
-                _flagRotationY = true;
+                _UpdatedAt = value;
+                _flagUpdatedAt = true;
             }
         }
-        private double _RotationY;
-        private bool _flagRotationY;
+        private DateTime _UpdatedAt;
+        private bool _flagUpdatedAt;
 
         /// <summary>
-        /// Returns false as RotationY should not be serialized given that it's read-only.
+        /// Returns false as UpdatedAt should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeRotationY()
+        public bool ShouldSerializeUpdatedAt()
         {
-            return _flagRotationY;
+            return _flagUpdatedAt;
         }
         /// <summary>
         /// Gets or Sets RotationZ
@@ -383,6 +287,102 @@ namespace PlerionClient.Model
         public bool ShouldSerializeRotationZ()
         {
             return _flagRotationZ;
+        }
+        /// <summary>
+        /// Gets or Sets RotationW
+        /// </summary>
+        [DataMember(Name = "rotation_w", IsRequired = true, EmitDefaultValue = true)]
+        public double RotationW
+        {
+            get{ return _RotationW;}
+            set
+            {
+                _RotationW = value;
+                _flagRotationW = true;
+            }
+        }
+        private double _RotationW;
+        private bool _flagRotationW;
+
+        /// <summary>
+        /// Returns false as RotationW should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeRotationW()
+        {
+            return _flagRotationW;
+        }
+        /// <summary>
+        /// Gets or Sets Color
+        /// </summary>
+        [DataMember(Name = "color", IsRequired = true, EmitDefaultValue = true)]
+        public int Color
+        {
+            get{ return _Color;}
+            set
+            {
+                _Color = value;
+                _flagColor = true;
+            }
+        }
+        private int _Color;
+        private bool _flagColor;
+
+        /// <summary>
+        /// Returns false as Color should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeColor()
+        {
+            return _flagColor;
+        }
+        /// <summary>
+        /// Gets or Sets CreatedAt
+        /// </summary>
+        [DataMember(Name = "created_at", IsRequired = true, EmitDefaultValue = true)]
+        public DateTime CreatedAt
+        {
+            get{ return _CreatedAt;}
+            set
+            {
+                _CreatedAt = value;
+                _flagCreatedAt = true;
+            }
+        }
+        private DateTime _CreatedAt;
+        private bool _flagCreatedAt;
+
+        /// <summary>
+        /// Returns false as CreatedAt should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeCreatedAt()
+        {
+            return _flagCreatedAt;
+        }
+        /// <summary>
+        /// Gets or Sets Active
+        /// </summary>
+        [DataMember(Name = "active", IsRequired = true, EmitDefaultValue = true)]
+        public bool Active
+        {
+            get{ return _Active;}
+            set
+            {
+                _Active = value;
+                _flagActive = true;
+            }
+        }
+        private bool _Active;
+        private bool _flagActive;
+
+        /// <summary>
+        /// Returns false as Active should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeActive()
+        {
+            return _flagActive;
         }
         /// <summary>
         /// Gets or Sets Lighting
@@ -442,17 +442,17 @@ namespace PlerionClient.Model
             sb.Append("class LocalizationMapRead {\n");
             sb.Append("  ReconstructionId: ").Append(ReconstructionId).Append("\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
-            sb.Append("  CreatedAt: ").Append(CreatedAt).Append("\n");
-            sb.Append("  UpdatedAt: ").Append(UpdatedAt).Append("\n");
-            sb.Append("  Active: ").Append(Active).Append("\n");
-            sb.Append("  Color: ").Append(Color).Append("\n");
+            sb.Append("  RotationY: ").Append(RotationY).Append("\n");
             sb.Append("  PositionX: ").Append(PositionX).Append("\n");
             sb.Append("  PositionY: ").Append(PositionY).Append("\n");
             sb.Append("  PositionZ: ").Append(PositionZ).Append("\n");
-            sb.Append("  RotationW: ").Append(RotationW).Append("\n");
             sb.Append("  RotationX: ").Append(RotationX).Append("\n");
-            sb.Append("  RotationY: ").Append(RotationY).Append("\n");
+            sb.Append("  UpdatedAt: ").Append(UpdatedAt).Append("\n");
             sb.Append("  RotationZ: ").Append(RotationZ).Append("\n");
+            sb.Append("  RotationW: ").Append(RotationW).Append("\n");
+            sb.Append("  Color: ").Append(Color).Append("\n");
+            sb.Append("  CreatedAt: ").Append(CreatedAt).Append("\n");
+            sb.Append("  Active: ").Append(Active).Append("\n");
             sb.Append("  Lighting: ").Append(Lighting).Append("\n");
             sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("}\n");

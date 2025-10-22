@@ -16,14 +16,12 @@ dependencies = [
 ]
 
 [dependency-groups]
-dev = [
-    "h5py-stubs>=0.1.2",
-    "scipy-stubs>=1.16.2.4",
-]
+dev = ["h5py-stubs>=0.1.2", "scipy-stubs>=1.16.2.4"]
 hloc = [
   "hloc",
   "torch==2.6.0+cu126",
   "torchvision==0.21.0+cu126",
+  "scikit-learn>=1.7.2",
   # https://github.com/astral-sh/uv/issues/14237
   # https://discuss.pytorch.org/t/when-i-install-torch-2-6-0-with-whl-cu126-none-of-cuda-dependencies-get-installed-i-have-cu126-in-the-environment-already-is-this-expected/218014/3
   "nvidia-cuda-nvrtc-cu12==12.6.77; platform_system == 'Linux'",

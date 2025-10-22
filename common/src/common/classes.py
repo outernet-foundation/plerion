@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Annotated, Literal, TypedDict, Union
 
-from pydantic import Discriminator
+from fastapi import File, Form, UploadFile
+from pydantic import Discriminator, Json
 
 
 class Point3D(TypedDict):
@@ -75,3 +77,9 @@ class Transform(TypedDict):
 class PointCloudPoint(TypedDict):
     position: Vector3  # uses transform.position (rotation ignored for points)
     color: Color
+
+
+@dataclass
+class LocalizationRequest:
+    camera: Annotated[Json[CameraIntrinsics], Form()]  # This parses JSON automatically!
+    image: UploadFile = File(...)

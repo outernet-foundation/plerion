@@ -31,6 +31,15 @@ def generate_visualization(
     )
 
     localization_x, localization_y, localization_z = _frustum_coords(localization, intrinsics, size=0.6)
+    recon_rx: list[float | None] = []
+    recon_ry: list[float | None] = []
+    recon_rz: list[float | None] = []
+    recon_gx: list[float | None] = []
+    recon_gy: list[float | None] = []
+    recon_gz: list[float | None] = []
+    recon_bx: list[float | None] = []
+    recon_by: list[float | None] = []
+    recon_bz: list[float | None] = []
 
     image_poses_x_all: list[float | None] = []
     image_poses_y_all: list[float | None] = []
@@ -41,6 +50,22 @@ def generate_visualization(
         image_poses_x_all += x_coords
         image_poses_y_all += y_coords
         image_poses_z_all += z_coords
+        # gizmo axes per reconstruction camera (short)
+        (rx, ry, rz), (gx, gy, gz), (bx, by, bz) = _axes_gizmo_coords(pose, length=0.22)
+        recon_rx += rx
+        recon_ry += ry
+        recon_rz += rz
+        recon_gx += gx
+        recon_gy += gy
+        recon_gz += gz
+        recon_bx += bx
+        recon_by += by
+        recon_bz += bz
+
+    # gizmo axes for the localized camera (a touch longer/thicker)
+    (loc_rx, loc_ry, loc_rz), (loc_gx, loc_gy, loc_gz), (loc_bx, loc_by, loc_bz) = _axes_gizmo_coords(
+        localization, length=0.30
+    )
 
     return f"""<!DOCTYPE html>
 <html>
@@ -127,7 +152,7 @@ def generate_visualization(
                 x_coords=image_poses_x_all,
                 y_coords=image_poses_y_all,
                 z_coords=image_poses_z_all,
-                color="rgb(50,50,150)",
+                color="rgb(150,150,255)",
                 width=1,
                 name="Reconstruction Cameras",
             ),
@@ -138,6 +163,66 @@ def generate_visualization(
                 color="rgb(50,220,70)",
                 width=3,
                 name="Localized Camera",
+            ),
+            _trace(
+                recon_rx,
+                recon_ry,
+                recon_rz,
+                color="rgb(255,80,80)",
+                width=2,
+                name="X axis (recon)",
+                showlegend=False,
+                hoverinfo="skip",
+            ),
+            _trace(
+                recon_gx,
+                recon_gy,
+                recon_gz,
+                color="rgb(80,255,80)",
+                width=2,
+                name="Y axis (recon)",
+                showlegend=False,
+                hoverinfo="skip",
+            ),
+            _trace(
+                recon_bx,
+                recon_by,
+                recon_bz,
+                color="rgb(80,80,255)",
+                width=2,
+                name="Z axis (recon)",
+                showlegend=False,
+                hoverinfo="skip",
+            ),
+            _trace(
+                loc_rx,
+                loc_ry,
+                loc_rz,
+                color="rgb(255,0,0)",
+                width=4,
+                name="X axis (localized)",
+                showlegend=False,
+                hoverinfo="skip",
+            ),
+            _trace(
+                loc_gx,
+                loc_gy,
+                loc_gz,
+                color="rgb(0,255,0)",
+                width=4,
+                name="Y axis (localized)",
+                showlegend=False,
+                hoverinfo="skip",
+            ),
+            _trace(
+                loc_bx,
+                loc_by,
+                loc_bz,
+                color="rgb(0,0,255)",
+                width=4,
+                name="Z axis (localized)",
+                showlegend=False,
+                hoverinfo="skip",
             ),
         ])
     };
@@ -187,6 +272,8 @@ def _trace(
     color: str = "rgb(50,220,70)",
     width: int = 3,
     name: str = "Localized Camera",
+    showlegend: bool = True,
+    hoverinfo: str | None = None,
 ):
     return {
         "type": "scatter3d",
@@ -196,7 +283,8 @@ def _trace(
         "z": z_coords,
         "line": {"color": color, "width": width},
         "name": name,
-        "showlegend": True,
+        "showlegend": showlegend,
+        **({"hoverinfo": hoverinfo} if hoverinfo is not None else {}),
     }
 
 
@@ -249,3 +337,41 @@ def _frustum_coords(pose: Transform, intrinsics: PinholeIntrinsics, size: float)
         z_coords += [az, bz, None]
 
     return x_coords, y_coords, z_coords
+
+
+def _axes_gizmo_coords(
+    pose: Transform, length: float
+) -> tuple[
+    tuple[list[float | None], list[float | None], list[float | None]],  # X (red)
+    tuple[list[float | None], list[float | None], list[float | None]],  # Y (green)
+    tuple[list[float | None], list[float | None], list[float | None]],  # Z (blue)
+]:
+    """Return three tiny axes (X,Y,Z) as 3D line segments starting at the camera center.
+    Uses the same camera->world rotation as the frustum."""
+    px = pose["position"]["x"]
+    py = pose["position"]["y"]
+    pz = pose["position"]["z"]
+    R = cast(
+        list[list[float]],
+        Rotation.from_quat([pose["rotation"]["x"], pose["rotation"]["y"], pose["rotation"]["z"], pose["rotation"]["w"]])
+        .as_matrix()
+        .tolist(),
+    )
+
+    def world_tip(cx: float, cy: float, cz: float) -> tuple[float, float, float]:
+        wx = R[0][0] * cx + R[0][1] * cy + R[0][2] * cz
+        wy = R[1][0] * cx + R[1][1] * cy + R[1][2] * cz
+        wz = R[2][0] * cx + R[2][1] * cy + R[2][2] * cz
+        return px + length * wx, py + length * wy, pz + length * wz
+
+    # unit axes in camera frame
+    tips = [world_tip(1, 0, 0), world_tip(0, 1, 0), world_tip(0, 0, 1)]
+
+    def seg(tip: tuple[float, float, float]) -> tuple[list[float | None], list[float | None], list[float | None]]:
+        tx, ty, tz = tip
+        return [px, tx, None], [py, ty, None], [pz, tz, None]
+
+    xr, yr, zr = seg(tips[0])  # X (red)
+    xg, yg, zg = seg(tips[1])  # Y (green)
+    xb, yb, zb = seg(tips[2])  # Z (blue)
+    return (xr, yr, zr), (xg, yg, zg), (xb, yb, zb)

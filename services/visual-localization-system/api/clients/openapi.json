@@ -2837,27 +2837,16 @@
             "format": "uuid",
             "title": "Id"
           },
-          "active": {
+          "rotation_y": {
             "anyOf": [
               {
-                "type": "boolean"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Active"
-          },
-          "color": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color"
+            "title": "Rotation Y"
           },
           "position_x": {
             "anyOf": [
@@ -2892,17 +2881,6 @@
             ],
             "title": "Position Z"
           },
-          "rotation_w": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rotation W"
-          },
           "rotation_x": {
             "anyOf": [
               {
@@ -2914,17 +2892,6 @@
             ],
             "title": "Rotation X"
           },
-          "rotation_y": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rotation Y"
-          },
           "rotation_z": {
             "anyOf": [
               {
@@ -2935,6 +2902,39 @@
               }
             ],
             "title": "Rotation Z"
+          },
+          "rotation_w": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotation W"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
           },
           "lighting": {
             "anyOf": [
@@ -2984,20 +2984,9 @@
             ],
             "title": "Id"
           },
-          "active": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Active"
-          },
-          "color": {
-            "type": "integer",
-            "title": "Color"
+          "rotation_y": {
+            "type": "number",
+            "title": "Rotation Y"
           },
           "position_x": {
             "type": "number",
@@ -3011,21 +3000,32 @@
             "type": "number",
             "title": "Position Z"
           },
-          "rotation_w": {
-            "type": "number",
-            "title": "Rotation W"
-          },
           "rotation_x": {
             "type": "number",
             "title": "Rotation X"
           },
-          "rotation_y": {
-            "type": "number",
-            "title": "Rotation Y"
-          },
           "rotation_z": {
             "type": "number",
             "title": "Rotation Z"
+          },
+          "rotation_w": {
+            "type": "number",
+            "title": "Rotation W"
+          },
+          "color": {
+            "type": "integer",
+            "title": "Color"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
           },
           "lighting": {
             "anyOf": [
@@ -3053,14 +3053,14 @@
         "type": "object",
         "required": [
           "reconstruction_id",
-          "color",
+          "rotation_y",
           "position_x",
           "position_y",
           "position_z",
-          "rotation_w",
           "rotation_x",
-          "rotation_y",
-          "rotation_z"
+          "rotation_z",
+          "rotation_w",
+          "color"
         ],
         "title": "LocalizationMapCreate"
       },
@@ -3076,23 +3076,9 @@
             "format": "uuid",
             "title": "Id"
           },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Created At"
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Updated At"
-          },
-          "active": {
-            "type": "boolean",
-            "title": "Active"
-          },
-          "color": {
-            "type": "integer",
-            "title": "Color"
+          "rotation_y": {
+            "type": "number",
+            "title": "Rotation Y"
           },
           "position_x": {
             "type": "number",
@@ -3106,21 +3092,35 @@
             "type": "number",
             "title": "Position Z"
           },
-          "rotation_w": {
-            "type": "number",
-            "title": "Rotation W"
-          },
           "rotation_x": {
             "type": "number",
             "title": "Rotation X"
           },
-          "rotation_y": {
-            "type": "number",
-            "title": "Rotation Y"
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
           },
           "rotation_z": {
             "type": "number",
             "title": "Rotation Z"
+          },
+          "rotation_w": {
+            "type": "number",
+            "title": "Rotation W"
+          },
+          "color": {
+            "type": "integer",
+            "title": "Color"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "active": {
+            "type": "boolean",
+            "title": "Active"
           },
           "lighting": {
             "anyOf": [
@@ -3149,17 +3149,17 @@
         "required": [
           "reconstruction_id",
           "id",
-          "created_at",
-          "updated_at",
-          "active",
-          "color",
+          "rotation_y",
           "position_x",
           "position_y",
           "position_z",
-          "rotation_w",
           "rotation_x",
-          "rotation_y",
-          "rotation_z"
+          "updated_at",
+          "rotation_z",
+          "rotation_w",
+          "color",
+          "created_at",
+          "active"
         ],
         "title": "LocalizationMapRead"
       },
@@ -3177,27 +3177,16 @@
             ],
             "title": "Reconstruction Id"
           },
-          "active": {
+          "rotation_y": {
             "anyOf": [
               {
-                "type": "boolean"
+                "type": "number"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Active"
-          },
-          "color": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Color"
+            "title": "Rotation Y"
           },
           "position_x": {
             "anyOf": [
@@ -3232,17 +3221,6 @@
             ],
             "title": "Position Z"
           },
-          "rotation_w": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rotation W"
-          },
           "rotation_x": {
             "anyOf": [
               {
@@ -3254,17 +3232,6 @@
             ],
             "title": "Rotation X"
           },
-          "rotation_y": {
-            "anyOf": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Rotation Y"
-          },
           "rotation_z": {
             "anyOf": [
               {
@@ -3275,6 +3242,39 @@
               }
             ],
             "title": "Rotation Z"
+          },
+          "rotation_w": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotation W"
+          },
+          "color": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Color"
+          },
+          "active": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Active"
           },
           "lighting": {
             "anyOf": [

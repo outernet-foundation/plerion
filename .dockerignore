@@ -22,17 +22,3 @@
 
 # JS
 **/node_modules
-
-# Big assets & data (customize!)
-**/data
-**/datasets
-**/tmp
-**/output
-**/*.tar
-**/*.zip
-**/*.whl
-**/*.pt
-**/*.bin
-**/*.h5
-
-# You’ll explicitly COPY only what’s needed later

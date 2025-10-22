@@ -6,20 +6,21 @@ from pathlib import Path
 from tarfile import open as open_tar
 from typing import Dict, List, Tuple, TypedDict, cast
 
+import torch
 from common.boto_clients import create_s3_client
 from cv2 import COLOR_BGR2GRAY, COLOR_BGR2RGB, IMREAD_COLOR, cvtColor, imdecode
 from h5py import File
-from hloc.extractors.netvlad import NetVLAD
+from hloc.extractors.dir import DIR
 from hloc.extractors.superpoint import SuperPoint
-from numpy import array, float32, float64, frombuffer, hstack, int32, ndarray, nonzero, stack, uint8, uint32
+from numpy import array, eye, float32, float64, frombuffer, hstack, int32, ndarray, nonzero, stack, uint8, uint32
 from numpy.typing import NDArray
 from pycolmap import (
     Camera,
     Database,
     IncrementalMapperOptions,
     IncrementalPipelineOptions,
+    PosePrior,
     RANSACOptions,
-    Reconstruction,
     Rigid3d,
     Rotation3d,
     TwoViewGeometry,
@@ -56,8 +57,12 @@ COLMAP_SFM_DIRECTORY = OUTPUT_DIRECTORY / "sfm_model"
 COLMAP_SFM_DIRECTORY.mkdir(parents=True, exist_ok=True)
 
 WEIGHTS = "indoor"
-POSE_NEIGHBOR_COUNT = 8
+POSE_NEIGHBOR_COUNT = 12
 RETRIEVAL_TOP_K = 20
+# Prior weights (tweak as you like)
+POSE_PRIOR_ROT_SIGMA_DEG = 5.0  # 1-sigma on rotation, in degrees
+POSE_PRIOR_POS_SIGMA_M = 0.25  # 1-sigma on position, in meters
+MIN_MODEL_SIZE = 10  # minimum number of registered images for a model to be valid
 # TRACK_MIN_NUM_MATCH = 15
 # BUNDLE_ADJUST_MAX_REPROJECTION = 1.0
 
@@ -201,15 +206,25 @@ def main():
                 )
                 images[image.name] = image
 
-    print("Loading NetVLAD model")
+    print(f"Loading retrieval model: {'deep-image-retrieval'}")
 
-    netVLAD: NetVLAD = NetVLAD({"weights": WEIGHTS}).to(DEVICE).eval()
+    # PyTorch 2.6 flips torch.load default to weights_only=True, so we temporarily force legacy loading to read DIR’s pickled checkpoint;
+    # see: https://dev-discuss.pytorch.org/t/bc-breaking-change-torch-load-is-being-flipped-to-use-weights-only-true-by-default-in-the-nightlies-after-137602/2573
+    _orig_load = torch.load  # type: ignore
 
-    print("Loading SuperPoint model")
+    def _load_legacy(*args, **kwargs):  # type: ignore
+        kwargs.setdefault("weights_only", False)  # type: ignore
+        return _orig_load(*args, **kwargs)  # type: ignore
+
+    torch.load = _load_legacy
+    dir: DIR = DIR({}).to(DEVICE).eval()
+    torch.load = _orig_load
+
+    print(f"Loading feature extraction model: {'SuperPoint'}")
 
     superpoint = SuperPoint({"weights": WEIGHTS}).to(DEVICE).eval()
 
-    print("Loading SuperGlue model")
+    print(f"Loading feature matching model: {'SuperGlue'}")
 
     superglue = SuperGlue({"weights": WEIGHTS}).to(DEVICE).eval()
 
@@ -224,7 +239,7 @@ def main():
 
         with no_grad():
             # Extract global descriptor using NetVLAD
-            global_descriptors[image.name] = netVLAD({"image": image.rgb_tensor.unsqueeze(0)})["global_descriptor"][0]
+            global_descriptors[image.name] = dir({"image": image.rgb_tensor.unsqueeze(0)})["global_descriptor"][0]
 
             # Extract local features and descriptors using SuperPoint
             superpoint_output = superpoint({"image": image.grayscale_tensor.unsqueeze(0)})
@@ -282,9 +297,9 @@ def main():
     )
 
     # exhuastive
-    # pairs_by_pose_proximity = [
-    #     (a.name, b.name) for i, a in enumerate(images.values()) for j, b in enumerate(images.values()) if i < j
-    # ]
+    pairs_by_pose_proximity = [
+        (a.name, b.name) for i, a in enumerate(images.values()) for j, b in enumerate(images.values()) if i < j
+    ]
 
     # Canonicalize and deduplicate pairs
     pairs = {tuple(sorted((a, b))) for a, b in pairs_by_pose_proximity if a != b}
@@ -378,10 +393,40 @@ def main():
         )
         image_id_to_pycolmap_id[image.name] = colmap_image_id
 
-        # database.write_pose_prior(colmap_image_id, PosePrior(position=image.translation.reshape(3, 1)))
         keypoints_array = keypoints[image.name].detach().cpu().numpy().astype(float32, copy=False)
         keypoints_array += 0.5  # Convert from (x,y) corner to COLMAP center-of-pixel (x+0.5,y+0.5)
         database.write_keypoints(colmap_image_id, keypoints_array)
+
+        C_world = -(image.rotation.as_matrix().T @ image.translation)
+        database.write_pose_prior(
+            colmap_image_id,
+            PosePrior(
+                position=C_world.reshape(3, 1), position_covariance=(POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64)
+            ),
+        )
+
+        # cam_from_world = (R, t) already in your Image: image.rotation / image.translation
+        # R_cw = image.rotation.as_matrix()  # 3x3
+        # t_cw = image.translation.reshape(3, 1)  # 3x1
+
+        # # Prior weights (tweak as you like)
+        # POSE_PRIOR_ROT_SIGMA_DEG = 5.0  # 1-sigma on rotation, in degrees
+        # POSE_PRIOR_POS_SIGMA_M = 0.25  # 1-sigma on position, in meters
+
+        # cov_rot = (deg2rad(POSE_PRIOR_ROT_SIGMA_DEG) ** 2) * eye(3, dtype=float64)
+        # cov_pos = (POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64)
+        # cov_6x6 = diag([
+        #     cov_rot[0, 0],
+        #     cov_rot[1, 1],
+        #     cov_rot[2, 2],
+        #     cov_pos[0, 0],
+        #     cov_pos[1, 1],
+        #     cov_pos[2, 2],
+        # ]).astype(float64)
+
+        # database.write_pose_prior(
+        #     colmap_image_id, PosePrior(cam_from_world=Rigid3d(Rotation3d(R_cw), t_cw), cam_cov_from_world=cov_6x6)
+        # )
 
     # print(f"Total pairs: {len(pairs)}")
     # for a, b in list(pairs)[:5]:
@@ -428,42 +473,40 @@ def main():
     print("Running reconstruction")
 
     IMAGES_DIRECTORY.mkdir(parents=True, exist_ok=True)
-    incremental_mapping(
+    reconstructions = incremental_mapping(
         database_path=str(COLMAP_DB_PATH),
         image_path=str(IMAGES_DIRECTORY),
         output_path=str(COLMAP_SFM_DIRECTORY),
         options=IncrementalPipelineOptions(
-            # use_prior_position=True,
+            use_prior_position=True,
             # ba_refine_sensor_from_rig=False,
-            mapper=IncrementalMapperOptions(init_min_num_inliers=15, init_min_tri_angle=0.5)
+            mapper=IncrementalMapperOptions(init_min_num_inliers=15, init_min_tri_angle=0.5),
+            # concerningly none of the three follwing options are having any effect
+            # multiple_models=False,
+            # max_num_models=1,
+            # min_model_size=MIN_MODEL_SIZE,
         ),
     )
 
-    model_dirs = sorted([p for p in COLMAP_SFM_DIRECTORY.iterdir() if p.is_dir()], key=lambda p: p.name)
-
-    if not model_dirs:
+    if len(reconstructions) == 0:
         run_json["status"] = "failed"
         run_json["error"] = "No model was created"
 
-    elif len(model_dirs) > 1:
-        run_json["status"] = "failed"
-        run_json["error"] = "Multiple models were created"
+    # Choose the reconstruction with the most registered images
+    best_id = max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
+    best = reconstructions[best_id]
 
-    else:
-        # Create txt and ply exports of reconstruction
-        reconstruction = Reconstruction(str(model_dirs[0]))
-        reconstruction.write_text(str(model_dirs[0]))
-        reconstruction.export_PLY(str(model_dirs[0] / "points3D.ply"))
+    best_out = COLMAP_SFM_DIRECTORY / "best"
+    best_out.mkdir(parents=True, exist_ok=True)
+    best.write_text(str(best_out))
+    best.export_PLY(str(best_out / "points3D.ply"))
 
-        # upload results to s3, just upload everything in model_dirs[0]
-        for file_path in model_dirs[0].rglob("*"):
-            if file_path.is_file():
-                _put_reconstruction_object(
-                    key=f"sfm_model/{file_path.relative_to(model_dirs[0])}", body=file_path.read_bytes()
-                )
+    # Upload everything from best_out
+    for file_path in best_out.rglob("*"):
+        if file_path.is_file():
+            _put_reconstruction_object(key=f"sfm_model/{file_path.relative_to(best_out)}", body=file_path.read_bytes())
 
-        # Mark reconstruction as succeeded
-        run_json["status"] = "succeeded"
+    run_json["status"] = "succeeded"
 
     _put_reconstruction_object(key="run.json", body=json.dumps(run_json).encode("utf-8"))
 

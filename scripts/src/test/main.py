@@ -12,7 +12,7 @@ from .curl import curl
 from .visualize import generate_visualization
 
 API_BASE_URL = "https://desktop-otd3rch-api.outernetfoundation.org"
-CAPTURE_ID = "d9c5b05e-c152-4070-b0b4-239af5a499e5"  # TODO: replace
+CAPTURE_ID = "24e897fe-238c-4cc5-8a6d-5dd5d8f7ac64"  # TODO: replace
 SCRIPT_DIR = Path(__file__).parent
 TEST_IMAGE_PATH = SCRIPT_DIR / "test_image.jpg"
 OUTPUT_HTML_PATH = SCRIPT_DIR / "vls_test_result.html"
