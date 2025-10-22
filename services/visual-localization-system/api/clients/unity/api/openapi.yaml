@@ -963,6 +963,40 @@ paths:
       summary: Delete Localization Session
       tags:
       - Default
+  /localization_sessions/{localization_session_id}/camera:
+    put:
+      operationId: set_localization_session_camera_intrinsics
+      parameters:
+      - explode: false
+        in: path
+        name: localization_session_id
+        required: true
+        schema:
+          format: uuid
+          title: Localization Session Id
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Camera"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: {}
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Set Localization Session Camera Intrinsics
+      tags:
+      - Default
   /localization_sessions/{localization_session_id}/status:
     get:
       operationId: get_localization_session_status
@@ -1124,10 +1158,6 @@ paths:
       requestBody:
         content:
           multipart/form-data:
-            encoding:
-              camera:
-                contentType: application/json
-                style: form
             schema:
               $ref: "#/components/schemas/Body_localize_image"
         required: true
@@ -1532,16 +1562,11 @@ components:
     Body_localize_image:
       properties:
         image:
-          description: Image to localize
           format: binary
           title: Image
           type: string
-        value:
-          title: Value
-          type: string
       required:
       - image
-      - value
       title: Body_localize_image
     CaptureSessionBatchUpdate:
       example:
@@ -1649,6 +1674,29 @@ components:
       - Zed
       title: DeviceType
       type: string
+    GenericParamsIntrinsics:
+      properties:
+        model:
+          enum:
+          - GENERIC
+          title: Model
+          type: string
+        width:
+          title: Width
+          type: integer
+        height:
+          title: Height
+          type: integer
+        params:
+          items:
+            type: number
+          type: array
+      required:
+      - height
+      - model
+      - params
+      - width
+      title: GenericParamsIntrinsics
     GroupBatchUpdate:
       example:
         parent_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -2372,6 +2420,102 @@ components:
       - rotation_z
       - updated_at
       title: NodeRead
+    OpenCVRadTanIntrinsics:
+      properties:
+        model:
+          enum:
+          - OPENCV
+          title: Model
+          type: string
+        width:
+          title: Width
+          type: integer
+        height:
+          title: Height
+          type: integer
+        fx:
+          title: Fx
+          type: number
+        fy:
+          title: Fy
+          type: number
+        cx:
+          title: Cx
+          type: number
+        cy:
+          title: Cy
+          type: number
+        k1:
+          title: K1
+          type: number
+        k2:
+          title: K2
+          type: number
+        p1:
+          title: P1
+          type: number
+        p2:
+          title: P2
+          type: number
+        k3:
+          nullable: true
+          type: number
+      required:
+      - cx
+      - cy
+      - fx
+      - fy
+      - height
+      - k1
+      - k2
+      - k3
+      - model
+      - p1
+      - p2
+      - width
+      title: OpenCVRadTanIntrinsics
+    PinholeIntrinsics:
+      example:
+        fx: 1.4658129805029452
+        fy: 5.962133916683182
+        cx: 5.637376656633329
+        cy: 2.3021358869347655
+        width: 0
+        model: PINHOLE
+        height: 6
+      properties:
+        model:
+          enum:
+          - PINHOLE
+          title: Model
+          type: string
+        width:
+          title: Width
+          type: integer
+        height:
+          title: Height
+          type: integer
+        fx:
+          title: Fx
+          type: number
+        fy:
+          title: Fy
+          type: number
+        cx:
+          title: Cx
+          type: number
+        cy:
+          title: Cy
+          type: number
+      required:
+      - cx
+      - cy
+      - fx
+      - fy
+      - height
+      - model
+      - width
+      title: PinholeIntrinsics
     PointCloudPoint:
       example:
         color:
@@ -2538,6 +2682,12 @@ components:
       - "y"
       - z
       title: Vector3
+    Camera:
+      anyOf:
+      - $ref: "#/components/schemas/PinholeIntrinsics"
+      - $ref: "#/components/schemas/OpenCVRadTanIntrinsics"
+      - $ref: "#/components/schemas/GenericParamsIntrinsics"
+      title: Camera
     ValidationError_loc_inner:
       anyOf:
       - type: string

@@ -1473,6 +1473,68 @@
         }
       }
     },
+    "/localization_sessions/{localization_session_id}/camera": {
+      "put": {
+        "tags": [
+          "localization_sessions"
+        ],
+        "summary": "Set Localization Session Camera Intrinsics",
+        "operationId": "set_localization_session_camera_intrinsics",
+        "parameters": [
+          {
+            "name": "localization_session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Localization Session Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/PinholeIntrinsics"
+                  },
+                  {
+                    "$ref": "#/components/schemas/OpenCVRadTanIntrinsics"
+                  },
+                  {
+                    "$ref": "#/components/schemas/GenericParamsIntrinsics"
+                  }
+                ],
+                "title": "Camera"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/localization_sessions/{localization_session_id}/status": {
       "get": {
         "tags": [
@@ -1704,11 +1766,6 @@
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/Body_localize_image"
-              },
-              "encoding": {
-                "camera": {
-                  "contentType": "application/json"
-                }
               }
             }
           }
@@ -2352,18 +2409,12 @@
           "image": {
             "type": "string",
             "format": "binary",
-            "title": "Image",
-            "description": "Image to localize"
-          },
-          "value": {
-            "type": "string",
-            "title": "Value"
+            "title": "Image"
           }
         },
         "type": "object",
         "required": [
-          "image",
-          "value"
+          "image"
         ],
         "title": "Body_localize_image"
       },
@@ -2523,6 +2574,38 @@
           "Zed"
         ],
         "title": "DeviceType"
+      },
+      "GenericParamsIntrinsics": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "GENERIC",
+            "title": "Model"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "params": {
+            "items": {
+              "type": "number"
+            },
+            "type": "array",
+            "title": "Params"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "width",
+          "height",
+          "params"
+        ],
+        "title": "GenericParamsIntrinsics"
       },
       "GroupBatchUpdate": {
         "properties": {
@@ -3806,6 +3889,126 @@
           "name"
         ],
         "title": "NodeRead"
+      },
+      "OpenCVRadTanIntrinsics": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "OPENCV",
+            "title": "Model"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "fx": {
+            "type": "number",
+            "title": "Fx"
+          },
+          "fy": {
+            "type": "number",
+            "title": "Fy"
+          },
+          "cx": {
+            "type": "number",
+            "title": "Cx"
+          },
+          "cy": {
+            "type": "number",
+            "title": "Cy"
+          },
+          "k1": {
+            "type": "number",
+            "title": "K1"
+          },
+          "k2": {
+            "type": "number",
+            "title": "K2"
+          },
+          "p1": {
+            "type": "number",
+            "title": "P1"
+          },
+          "p2": {
+            "type": "number",
+            "title": "P2"
+          },
+          "k3": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "K3"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "width",
+          "height",
+          "fx",
+          "fy",
+          "cx",
+          "cy",
+          "k1",
+          "k2",
+          "p1",
+          "p2",
+          "k3"
+        ],
+        "title": "OpenCVRadTanIntrinsics"
+      },
+      "PinholeIntrinsics": {
+        "properties": {
+          "model": {
+            "type": "string",
+            "const": "PINHOLE",
+            "title": "Model"
+          },
+          "width": {
+            "type": "integer",
+            "title": "Width"
+          },
+          "height": {
+            "type": "integer",
+            "title": "Height"
+          },
+          "fx": {
+            "type": "number",
+            "title": "Fx"
+          },
+          "fy": {
+            "type": "number",
+            "title": "Fy"
+          },
+          "cx": {
+            "type": "number",
+            "title": "Cx"
+          },
+          "cy": {
+            "type": "number",
+            "title": "Cy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "model",
+          "width",
+          "height",
+          "fx",
+          "fy",
+          "cx",
+          "cy"
+        ],
+        "title": "PinholeIntrinsics"
       },
       "PointCloudPoint": {
         "properties": {

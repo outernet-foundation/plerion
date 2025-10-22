@@ -704,10 +704,9 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <returns>Dictionary&lt;string, Transform&gt;</returns>
-        Dictionary<string, Transform> LocalizeImage(Guid localizationSessionId, FileParameter image, string value);
+        Dictionary<string, Transform> LocalizeImage(Guid localizationSessionId, FileParameter image);
 
         /// <summary>
         /// Localize Image
@@ -717,10 +716,29 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <returns>ApiResponse of Dictionary&lt;string, Transform&gt;</returns>
-        ApiResponse<Dictionary<string, Transform>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image, string value);
+        ApiResponse<Dictionary<string, Transform>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image);
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <returns>Object</returns>
+        Object SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, Camera camera);
+
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics
+        /// </summary>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <returns>ApiResponse of Object</returns>
+        ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, Camera camera);
         /// <summary>
         /// Unload Map
         /// </summary>
@@ -1793,11 +1811,10 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of Dictionary&lt;string, Transform&gt;</returns>
-        System.Threading.Tasks.Task<Dictionary<string, Transform>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, string value, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<Dictionary<string, Transform>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Localize Image
@@ -1807,11 +1824,35 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (Dictionary&lt;string, Transform&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Dictionary<string, Transform>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, string value, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<Dictionary<string, Transform>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics
+        /// </summary>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        System.Threading.Tasks.Task<Object> SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, Camera camera, System.Threading.CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics
+        /// </summary>
+        /// <remarks>
+        /// 
+        /// </remarks>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        System.Threading.Tasks.Task<ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, Camera camera, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Unload Map
         /// </summary>
@@ -6421,12 +6462,11 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <returns>Dictionary&lt;string, Transform&gt;</returns>
-        public Dictionary<string, Transform> LocalizeImage(Guid localizationSessionId, FileParameter image, string value)
+        public Dictionary<string, Transform> LocalizeImage(Guid localizationSessionId, FileParameter image)
         {
-            PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, image, value);
+            PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, image);
             return localVarResponse.Data;
         }
 
@@ -6435,18 +6475,13 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <returns>ApiResponse of Dictionary&lt;string, Transform&gt;</returns>
-        public PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image, string value)
+        public PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image)
         {
             // verify the required parameter 'image' is set
             if (image == null)
                 throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'image' when calling DefaultApi->LocalizeImage");
-
-            // verify the required parameter 'value' is set
-            if (value == null)
-                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'value' when calling DefaultApi->LocalizeImage");
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
@@ -6467,7 +6502,6 @@ namespace PlerionClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.FileParameters.Add("image", image);
-            localVarRequestOptions.FormParameters.Add("value", PlerionClient.Client.ClientUtils.ParameterToString(value)); // form parameter
 
 
             // make the HTTP request
@@ -6487,13 +6521,12 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of Dictionary&lt;string, Transform&gt;</returns>
-        public async System.Threading.Tasks.Task<Dictionary<string, Transform>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, string value, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<Dictionary<string, Transform>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, image, value, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, image, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -6502,19 +6535,14 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
-        /// <param name="image">Image to localize</param>
-        /// <param name="value"></param>
+        /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (Dictionary&lt;string, Transform&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Dictionary<string, Transform>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, string value, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Dictionary<string, Transform>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
             // verify the required parameter 'image' is set
             if (image == null)
                 throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'image' when calling DefaultApi->LocalizeImage");
-
-            // verify the required parameter 'value' is set
-            if (value == null)
-                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'value' when calling DefaultApi->LocalizeImage");
 
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
@@ -6537,7 +6565,6 @@ namespace PlerionClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.FileParameters.Add("image", image);
-            localVarRequestOptions.FormParameters.Add("value", PlerionClient.Client.ClientUtils.ParameterToString(value)); // form parameter
 
 
             // make the HTTP request
@@ -6547,6 +6574,129 @@ namespace PlerionClient.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("LocalizeImage", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics 
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <returns>Object</returns>
+        public Object SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, Camera camera)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = SetLocalizationSessionCameraIntrinsicsWithHttpInfo(localizationSessionId, camera);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics 
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <returns>ApiResponse of Object</returns>
+        public PlerionClient.Client.ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, Camera camera)
+        {
+            // verify the required parameter 'camera' is set
+            if (camera == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'camera' when calling DefaultApi->SetLocalizationSessionCameraIntrinsics");
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
+            localVarRequestOptions.Data = camera;
+
+
+            // make the HTTP request
+            var localVarResponse = this.Client.Put<Object>("/localization_sessions/{localization_session_id}/camera", localVarRequestOptions, this.Configuration);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("SetLocalizationSessionCameraIntrinsics", localVarResponse);
+                if (_exception != null) throw _exception;
+            }
+
+            return localVarResponse;
+        }
+
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics 
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of Object</returns>
+        public async System.Threading.Tasks.Task<Object> SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, Camera camera, System.Threading.CancellationToken cancellationToken = default)
+        {
+            PlerionClient.Client.ApiResponse<Object> localVarResponse = await SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(localizationSessionId, camera, cancellationToken).ConfigureAwait(false);
+            return localVarResponse.Data;
+        }
+
+        /// <summary>
+        /// Set Localization Session Camera Intrinsics 
+        /// </summary>
+        /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
+        /// <param name="localizationSessionId"></param>
+        /// <param name="camera"></param>
+        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
+        /// <returns>Task of ApiResponse (Object)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, Camera camera, System.Threading.CancellationToken cancellationToken = default)
+        {
+            // verify the required parameter 'camera' is set
+            if (camera == null)
+                throw new PlerionClient.Client.ApiException(400, "Missing required parameter 'camera' when calling DefaultApi->SetLocalizationSessionCameraIntrinsics");
+
+
+            PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
+
+            string[] _contentTypes = new string[] {
+                "application/json"
+            };
+
+            // to determine the Accept header
+            string[] _accepts = new string[] {
+                "application/json"
+            };
+
+
+            var localVarContentType = PlerionClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
+            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
+
+            var localVarAccept = PlerionClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
+            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+            localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
+            localVarRequestOptions.Data = camera;
+
+
+            // make the HTTP request
+
+            var localVarResponse = await this.AsynchronousClient.PutAsync<Object>("/localization_sessions/{localization_session_id}/camera", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+
+            if (this.ExceptionFactory != null)
+            {
+                Exception _exception = this.ExceptionFactory("SetLocalizationSessionCameraIntrinsics", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

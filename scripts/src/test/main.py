@@ -4,7 +4,7 @@ from pathlib import Path
 from time import sleep
 from uuid import UUID
 
-from common.classes import PinholeIntrinsics, PointCloudPoint, Transform
+from common.classes import CameraIntrinsics, PointCloudPoint, Transform
 
 from src.test.auth import password_login  # unify types with visualize.py
 
@@ -18,7 +18,7 @@ TEST_IMAGE_PATH = SCRIPT_DIR / "test_image.jpg"
 OUTPUT_HTML_PATH = SCRIPT_DIR / "vls_test_result.html"
 
 # Pinhole intrinsics (the session currently accepts PINHOLE)
-intrinsics: PinholeIntrinsics = {
+intrinsics: CameraIntrinsics = {
     "model": "PINHOLE",
     "width": 640,
     "height": 480,
@@ -99,6 +99,9 @@ def main() -> None:
             raise RuntimeError("Session failed to start")
         if status == "ready":
             break
+
+    print("Setting camera intrinsics for localization session")
+    curl("PUT", f"{API_BASE_URL}/localization_sessions/{session_id}/camera", json_data=intrinsics)
 
     print(f"Loading localization map {localization_map_id} into session {session_id}")
     curl(

@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from typing import Any
+from typing import Any, Mapping, Sequence
 
 from .auth import get_or_refresh_token  # used only for the token endpoint
 
@@ -15,7 +15,7 @@ def curl(
     method: str,
     url: str,
     headers: dict[str, str] | None = None,
-    json_data: dict[str, Any] | list[Any] | None = None,  # allow list too
+    json_data: Mapping[str, Any] | Sequence[Any] | None = None,
     form_data: dict[str, str] | None = None,
     connect_timeout_s: float | None = None,
     print_command: bool = False,

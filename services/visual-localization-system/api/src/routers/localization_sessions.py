@@ -1,14 +1,12 @@
-import json
-from typing import Annotated, Callable, TypeVar, cast
+from typing import cast
 from uuid import UUID, uuid4
 
 import httpx
 from common.classes import CameraIntrinsics, Transform
 from common.session_client_docker import DockerSessionClient
-from fastapi import APIRouter, Body, Depends, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile, status
 from models.public_dtos import LocalizationSessionRead, localization_session_to_dto
 from models.public_tables import LocalizationMap, LocalizationSession
-from pydantic import TypeAdapter, ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -61,6 +59,22 @@ async def delete_localization_session(localization_session_id: UUID, session: As
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Localization session with id {localization_session_id} not found",
         )
+
+
+@router.put("/{localization_session_id}/camera")
+async def set_localization_session_camera_intrinsics(
+    localization_session_id: UUID, camera: CameraIntrinsics = Body(...), session: AsyncSession = Depends(get_session)
+):
+    if camera["model"] != "PINHOLE":
+        raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
+
+    async with httpx.AsyncClient() as client:
+        try:
+            await client.put(
+                f"{await _session_base_url(session, localization_session_id)}/camera", json=cast(object, camera)
+            )
+        except httpx.RequestError as e:
+            raise HTTPException(502, f"session backend unreachable: {e}") from e
 
 
 @router.get("/{localization_session_id}/status")
@@ -138,41 +152,10 @@ async def get_map_load_status(
     raise HTTPException(status_code=r.status_code, detail=r.text)
 
 
-T = TypeVar("T")
-
-
-def make_multipart_json_dep(name: str, adapter: TypeAdapter[T]) -> Callable[[str], T]:
-    def dep(value: str = Form(..., alias=name)) -> T:
-        try:
-            return adapter.validate_json(value)
-        except ValidationError as e:
-            raise HTTPException(status_code=422, detail=e.errors())
-
-    return dep
-
-
-INTR_ADAPTER: TypeAdapter[CameraIntrinsics] = TypeAdapter(CameraIntrinsics)
-parse_camera = make_multipart_json_dep("camera", INTR_ADAPTER)
-
-
-@router.post(
-    "/{localization_session_id}/localization",
-    openapi_extra={
-        "requestBody": {
-            "content": {"multipart/form-data": {"encoding": {"camera": {"contentType": "application/json"}}}}
-        }
-    },
-)
+@router.post("/{localization_session_id}/localization")
 async def localize_image(
-    localization_session_id: UUID,
-    camera: Annotated[CameraIntrinsics, Depends(parse_camera)],
-    image: UploadFile = File(..., description="Image to localize"),
-    session: AsyncSession = Depends(get_session),
+    localization_session_id: UUID, image: UploadFile = File(...), session: AsyncSession = Depends(get_session)
 ) -> dict[str, Transform]:
-    # only pinhole supported for now
-    if camera["model"] != "PINHOLE":
-        raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
-
     async with httpx.AsyncClient() as client:
         try:
             r = await client.post(
@@ -182,8 +165,7 @@ async def localize_image(
                         image.filename or "image.jpg",
                         await image.read(),
                         image.content_type or "application/octet-stream",
-                    ),
-                    "camera": (None, json.dumps(cast(object, camera)), "application/json"),
+                    )
                 },
             )
         except httpx.RequestError as e:

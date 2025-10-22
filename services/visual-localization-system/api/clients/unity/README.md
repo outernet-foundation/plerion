@@ -163,6 +163,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**GetReconstructions**](docs/DefaultApi.md#getreconstructions) | **GET** /reconstructions | Get Reconstructions
 *DefaultApi* | [**LoadLocalizationMaps**](docs/DefaultApi.md#loadlocalizationmaps) | **POST** /localization_sessions/{localization_session_id}/maps | Load Localization Maps
 *DefaultApi* | [**LocalizeImage**](docs/DefaultApi.md#localizeimage) | **POST** /localization_sessions/{localization_session_id}/localization | Localize Image
+*DefaultApi* | [**SetLocalizationSessionCameraIntrinsics**](docs/DefaultApi.md#setlocalizationsessioncameraintrinsics) | **PUT** /localization_sessions/{localization_session_id}/camera | Set Localization Session Camera Intrinsics
 *DefaultApi* | [**UnloadMap**](docs/DefaultApi.md#unloadmap) | **DELETE** /localization_sessions/{localization_session_id}/maps/{map_id} | Unload Map
 *DefaultApi* | [**UpdateCaptureSession**](docs/DefaultApi.md#updatecapturesession) | **PATCH** /capture_sessions/{id} | Update Capture Session
 *DefaultApi* | [**UpdateCaptureSessions**](docs/DefaultApi.md#updatecapturesessions) | **PATCH** /capture_sessions | Update Capture Sessions
@@ -178,12 +179,14 @@ Class | Method | HTTP request | Description
 <a id="documentation-for-models"></a>
 ## Documentation for Models
 
+ - [Model.Camera](docs/Camera.md)
  - [Model.CaptureSessionBatchUpdate](docs/CaptureSessionBatchUpdate.md)
  - [Model.CaptureSessionCreate](docs/CaptureSessionCreate.md)
  - [Model.CaptureSessionRead](docs/CaptureSessionRead.md)
  - [Model.CaptureSessionUpdate](docs/CaptureSessionUpdate.md)
  - [Model.Color](docs/Color.md)
  - [Model.DeviceType](docs/DeviceType.md)
+ - [Model.GenericParamsIntrinsics](docs/GenericParamsIntrinsics.md)
  - [Model.GroupBatchUpdate](docs/GroupBatchUpdate.md)
  - [Model.GroupCreate](docs/GroupCreate.md)
  - [Model.GroupRead](docs/GroupRead.md)
@@ -199,6 +202,8 @@ Class | Method | HTTP request | Description
  - [Model.NodeBatchUpdate](docs/NodeBatchUpdate.md)
  - [Model.NodeCreate](docs/NodeCreate.md)
  - [Model.NodeRead](docs/NodeRead.md)
+ - [Model.OpenCVRadTanIntrinsics](docs/OpenCVRadTanIntrinsics.md)
+ - [Model.PinholeIntrinsics](docs/PinholeIntrinsics.md)
  - [Model.PointCloudPoint](docs/PointCloudPoint.md)
  - [Model.Quaternion](docs/Quaternion.md)
  - [Model.ReconstructionCreate](docs/ReconstructionCreate.md)

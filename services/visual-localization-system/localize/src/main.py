@@ -5,15 +5,12 @@ from enum import Enum
 from pathlib import Path
 from shutil import rmtree
 from threading import Lock
-from typing import Annotated
 from uuid import UUID
 
 from common.boto_clients import create_s3_client
 from common.classes import CameraIntrinsics, Transform
-from common.make_multipar_json_dep import make_multipart_json_dep
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, UploadFile
 from pycolmap import Camera, CameraModelId, Reconstruction
-from pydantic import TypeAdapter
 from torch import cuda  # type: ignore
 
 from .localize import localize_image_against_reconstruction
@@ -25,8 +22,6 @@ print(f"Using device: {DEVICE}")
 
 RECONSTRUCTIONS_DIR = Path("/tmp/reconstructions")
 
-INTR_ADAPTER: TypeAdapter[CameraIntrinsics] = TypeAdapter(CameraIntrinsics)
-parse_camera = make_multipart_json_dep("camera", INTR_ADAPTER)
 
 maps: dict[UUID, Map] = {}
 settings = get_settings()
@@ -49,6 +44,8 @@ _executor = ThreadPoolExecutor(max_workers=2)
 _load_lock = Lock()
 _load_state: dict[UUID, LoadState] = {}
 _load_error: dict[UUID, str] = {}
+
+_camera = Camera()
 
 
 @app.get("/health")
@@ -132,29 +129,23 @@ async def get_reconstruction_load_status(id: UUID) -> dict[str, str]:
         return {"status": _load_state[id].value}
 
 
-@app.post(
-    "/localization",
-    openapi_extra={
-        "requestBody": {
-            "content": {"multipart/form-data": {"encoding": {"camera": {"contentType": "application/json"}}}}
-        }
-    },
-)
-async def localize_image(
-    camera: Annotated[CameraIntrinsics, Depends(parse_camera)],
-    image: UploadFile = File(..., description="Image to localize"),
-) -> dict[UUID, Transform]:
+@app.put("/camera")
+async def set_camera_intrinsics(camera: CameraIntrinsics):
     # only pinhole supported for now
     if camera["model"] != "PINHOLE":
         raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
 
-    camera_object = Camera()
-    camera_object.model = CameraModelId.PINHOLE
-    camera_object.params = [camera["fx"], camera["fy"], camera["cx"], camera["cy"]]
-    camera_object.width = camera["width"]
-    camera_object.height = camera["height"]
+    _camera.model = CameraModelId.PINHOLE
+    _camera.params = [camera["fx"], camera["fy"], camera["cx"], camera["cy"]]
+    _camera.width = camera["width"]
+    _camera.height = camera["height"]
 
+    return {"ok": True}
+
+
+@app.post("/localization")
+async def localize_image(image: UploadFile = File(...)) -> dict[UUID, Transform]:
     return {
-        id: await localize_image_against_reconstruction(map=maps[id], camera=camera_object, image=await image.read())
+        id: await localize_image_against_reconstruction(map=maps[id], camera=_camera, image=await image.read())
         for id in maps.keys()
     }

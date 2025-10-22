@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 from typing import Sequence, cast
 
-from common.classes import PinholeIntrinsics, PointCloudPoint, Transform
+from common.classes import CameraIntrinsics, PinholeIntrinsics, PointCloudPoint, Transform
 from scipy.spatial.transform import Rotation
 
 
@@ -12,8 +12,11 @@ def generate_visualization(
     point_cloud: Sequence[PointCloudPoint],
     reconstruction_image_poses: Sequence[Transform],
     localization: Transform,
-    intrinsics: PinholeIntrinsics,
+    intrinsics: CameraIntrinsics,
 ):
+    if intrinsics["model"] != "PINHOLE":
+        raise ValueError("Only PINHOLE intrinsics are supported for visualization")
+
     axes = dict(
         visible=True,
         showbackground=False,
