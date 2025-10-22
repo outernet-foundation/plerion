@@ -1432,7 +1432,7 @@
         }
       }
     },
-    "/localization_sessions/{id}": {
+    "/localization_sessions/{localization_session_id}": {
       "delete": {
         "tags": [
           "localization_sessions"
@@ -1441,13 +1441,13 @@
         "operationId": "delete_localization_session",
         "parameters": [
           {
-            "name": "id",
+            "name": "localization_session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Id"
+              "title": "Localization Session Id"
             }
           }
         ],
@@ -1473,7 +1473,7 @@
         }
       }
     },
-    "/localization_sessions/{id}/status": {
+    "/localization_sessions/{localization_session_id}/status": {
       "get": {
         "tags": [
           "localization_sessions"
@@ -1482,13 +1482,13 @@
         "operationId": "get_localization_session_status",
         "parameters": [
           {
-            "name": "id",
+            "name": "localization_session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Id"
+              "title": "Localization Session Id"
             }
           }
         ],
@@ -1517,7 +1517,7 @@
         }
       }
     },
-    "/localization_sessions/{id}/maps": {
+    "/localization_sessions/{localization_session_id}/maps": {
       "post": {
         "tags": [
           "localization_sessions"
@@ -1526,13 +1526,13 @@
         "operationId": "load_localization_maps",
         "parameters": [
           {
-            "name": "id",
+            "name": "localization_session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Id"
+              "title": "Localization Session Id"
             }
           }
         ],
@@ -1574,7 +1574,7 @@
         }
       }
     },
-    "/localization_sessions/{id}/maps/{map_id}": {
+    "/localization_sessions/{localization_session_id}/maps/{map_id}": {
       "delete": {
         "tags": [
           "localization_sessions"
@@ -1583,13 +1583,13 @@
         "operationId": "unload_map",
         "parameters": [
           {
-            "name": "id",
+            "name": "localization_session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Id"
+              "title": "Localization Session Id"
             }
           },
           {
@@ -1625,7 +1625,7 @@
         }
       }
     },
-    "/localization_sessions/{id}/maps/{map_id}/status": {
+    "/localization_sessions/{localization_session_id}/maps/{map_id}/status": {
       "get": {
         "tags": [
           "localization_sessions"
@@ -1634,13 +1634,13 @@
         "operationId": "get_map_load_status",
         "parameters": [
           {
-            "name": "id",
+            "name": "localization_session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Id"
+              "title": "Localization Session Id"
             }
           },
           {
@@ -1679,7 +1679,7 @@
         }
       }
     },
-    "/localization_sessions/{id}/localization": {
+    "/localization_sessions/{localization_session_id}/localization": {
       "post": {
         "tags": [
           "localization_sessions"
@@ -1688,13 +1688,13 @@
         "operationId": "localize_image",
         "parameters": [
           {
-            "name": "id",
+            "name": "localization_session_id",
             "in": "path",
             "required": true,
             "schema": {
               "type": "string",
               "format": "uuid",
-              "title": "Id"
+              "title": "Localization Session Id"
             }
           }
         ],
@@ -2492,6 +2492,29 @@
         },
         "type": "object",
         "title": "CaptureSessionUpdate"
+      },
+      "Color": {
+        "properties": {
+          "r": {
+            "type": "integer",
+            "title": "R"
+          },
+          "g": {
+            "type": "integer",
+            "title": "G"
+          },
+          "b": {
+            "type": "integer",
+            "title": "B"
+          }
+        },
+        "type": "object",
+        "required": [
+          "r",
+          "g",
+          "b"
+        ],
+        "title": "Color"
       },
       "DeviceType": {
         "type": "string",
@@ -3790,21 +3813,7 @@
             "$ref": "#/components/schemas/Vector3"
           },
           "color": {
-            "prefixItems": [
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              },
-              {
-                "type": "number"
-              }
-            ],
-            "type": "array",
-            "maxItems": 3,
-            "minItems": 3,
-            "title": "Color"
+            "$ref": "#/components/schemas/Color"
           }
         },
         "type": "object",

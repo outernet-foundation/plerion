@@ -935,17 +935,17 @@ paths:
       summary: Create Localization Session
       tags:
       - Default
-  /localization_sessions/{id}:
+  /localization_sessions/{localization_session_id}:
     delete:
       operationId: delete_localization_session
       parameters:
       - explode: false
         in: path
-        name: id
+        name: localization_session_id
         required: true
         schema:
           format: uuid
-          title: Id
+          title: Localization Session Id
           type: string
         style: simple
       responses:
@@ -963,17 +963,17 @@ paths:
       summary: Delete Localization Session
       tags:
       - Default
-  /localization_sessions/{id}/status:
+  /localization_sessions/{localization_session_id}/status:
     get:
       operationId: get_localization_session_status
       parameters:
       - explode: false
         in: path
-        name: id
+        name: localization_session_id
         required: true
         schema:
           format: uuid
-          title: Id
+          title: Localization Session Id
           type: string
         style: simple
       responses:
@@ -993,17 +993,17 @@ paths:
       summary: Get Localization Session Status
       tags:
       - Default
-  /localization_sessions/{id}/maps:
+  /localization_sessions/{localization_session_id}/maps:
     post:
       operationId: load_localization_maps
       parameters:
       - explode: false
         in: path
-        name: id
+        name: localization_session_id
         required: true
         schema:
           format: uuid
-          title: Id
+          title: Localization Session Id
           type: string
         style: simple
       requestBody:
@@ -1032,17 +1032,17 @@ paths:
       summary: Load Localization Maps
       tags:
       - Default
-  /localization_sessions/{id}/maps/{map_id}:
+  /localization_sessions/{localization_session_id}/maps/{map_id}:
     delete:
       operationId: unload_map
       parameters:
       - explode: false
         in: path
-        name: id
+        name: localization_session_id
         required: true
         schema:
           format: uuid
-          title: Id
+          title: Localization Session Id
           type: string
         style: simple
       - explode: false
@@ -1069,17 +1069,17 @@ paths:
       summary: Unload Map
       tags:
       - Default
-  /localization_sessions/{id}/maps/{map_id}/status:
+  /localization_sessions/{localization_session_id}/maps/{map_id}/status:
     get:
       operationId: get_map_load_status
       parameters:
       - explode: false
         in: path
-        name: id
+        name: localization_session_id
         required: true
         schema:
           format: uuid
-          title: Id
+          title: Localization Session Id
           type: string
         style: simple
       - explode: false
@@ -1108,17 +1108,17 @@ paths:
       summary: Get Map Load Status
       tags:
       - Default
-  /localization_sessions/{id}/localization:
+  /localization_sessions/{localization_session_id}/localization:
     post:
       operationId: localize_image
       parameters:
       - explode: false
         in: path
-        name: id
+        name: localization_session_id
         required: true
         schema:
           format: uuid
-          title: Id
+          title: Localization Session Id
           type: string
         style: simple
       requestBody:
@@ -1623,6 +1623,26 @@ components:
           nullable: true
           type: string
       title: CaptureSessionUpdate
+    Color:
+      example:
+        r: 5
+        b: 2
+        g: 5
+      properties:
+        r:
+          title: R
+          type: integer
+        g:
+          title: G
+          type: integer
+        b:
+          title: B
+          type: integer
+      required:
+      - b
+      - g
+      - r
+      title: Color
     DeviceType:
       enum:
       - ARFoundation
@@ -2355,9 +2375,9 @@ components:
     PointCloudPoint:
       example:
         color:
-        - ""
-        - ""
-        - ""
+          r: 5
+          b: 2
+          g: 5
         position:
           x: 0.8008281904610115
           "y": 6.027456183070403
@@ -2366,10 +2386,7 @@ components:
         position:
           $ref: "#/components/schemas/Vector3"
         color:
-          items: {}
-          maxItems: 3
-          minItems: 3
-          type: array
+          $ref: "#/components/schemas/Color"
       required:
       - color
       - position

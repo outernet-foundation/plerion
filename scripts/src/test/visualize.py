@@ -112,7 +112,7 @@ def generate_visualization(
                 "marker": {
                     "size": 1.8,
                     "color": [
-                        f"rgb({int(point['color'][0])},{int(point['color'][1])},{int(point['color'][2])})"
+                        f"rgb({int(point['color']['r'])},{int(point['color']['g'])},{int(point['color']['b'])})"
                         for point in point_cloud
                     ],
                     "opacity": 0.95,

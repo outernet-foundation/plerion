@@ -11,6 +11,12 @@ class Point3D(TypedDict):
     z: float
 
 
+class Color(TypedDict):
+    r: int
+    g: int
+    b: int
+
+
 class PinholeIntrinsics(TypedDict):
     model: Literal["PINHOLE"]
     width: int
@@ -68,4 +74,4 @@ class Transform(TypedDict):
 
 class PointCloudPoint(TypedDict):
     position: Vector3  # uses transform.position (rotation ignored for points)
-    color: tuple[float, float, float]  # (r, g, b) in 0..255 floats
+    color: Color

@@ -222,7 +222,7 @@ namespace PlerionClient.Client
                     Image("background").Setup(background =>
                     {
                         background.FillParent();
-                        background.props.color.From(new Color(0.2196079f, 0.2196079f, 0.2196079f, 1f));
+                        background.props.color.From(new UnityEngine.Color(0.2196079f, 0.2196079f, 0.2196079f, 1f));
                     }),
                     TightRowsWideColumns("content").Setup(content =>
                     {

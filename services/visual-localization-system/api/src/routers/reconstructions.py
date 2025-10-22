@@ -124,7 +124,7 @@ async def get_reconstruction_points(id: UUID, session: AsyncSession = Depends(ge
     return [
         PointCloudPoint(
             position={"x": float(parts[1]), "y": float(parts[2]), "z": float(parts[3])},
-            color=(float(parts[4]), float(parts[5]), float(parts[6])),
+            color={"r": int(parts[4]), "g": int(parts[5]), "b": int(parts[6])},
         )
         for parts in [
             line.split()

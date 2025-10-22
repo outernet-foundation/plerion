@@ -47,29 +47,32 @@ async def create_localization_session(session: AsyncSession = Depends(get_sessio
     return localization_session_to_dto(row)
 
 
-@router.delete("/{id}")
-async def delete_localization_session(id: UUID, session: AsyncSession = Depends(get_session)):
-    row = await session.get(LocalizationSession, id)
+@router.delete("/{localization_session_id}")
+async def delete_localization_session(localization_session_id: UUID, session: AsyncSession = Depends(get_session)):
+    row = await session.get(LocalizationSession, localization_session_id)
 
     if row:
         DockerSessionClient().stop_session(container_id=row.container_id)
         await session.delete(row)
         await session.commit()
-        return {"detail": f"Localization session with id {id} deleted"}
+        return {"detail": f"Localization session with id {localization_session_id} deleted"}
     else:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail=f"Localization session with id {id} not found"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Localization session with id {localization_session_id} not found",
         )
 
 
-@router.get("/{id}/status")
-async def get_localization_session_status(id: UUID, session: AsyncSession = Depends(get_session)) -> str:
-    return DockerSessionClient().get_session_status(f"vls-session-{id}")
+@router.get("/{localization_session_id}/status")
+async def get_localization_session_status(
+    localization_session_id: UUID, session: AsyncSession = Depends(get_session)
+) -> str:
+    return DockerSessionClient().get_session_status(f"vls-session-{localization_session_id}")
 
 
-@router.post("/{id}/maps")
+@router.post("/{localization_session_id}/maps")
 async def load_localization_maps(
-    id: UUID,
+    localization_session_id: UUID,
     map_ids: list[UUID] = Body(..., description="IDs of localization maps to load"),
     session: AsyncSession = Depends(get_session),
 ):
@@ -83,7 +86,7 @@ async def load_localization_maps(
             raise HTTPException(status_code=404, detail="Localization map not found")
         reconstruction_ids.add(map_row.reconstruction_id)
 
-    base = await _session_base_url(session, id)
+    base = await _session_base_url(session, localization_session_id)
     async with httpx.AsyncClient() as client:
         for reconstruction_id in reconstruction_ids:
             try:
@@ -98,13 +101,13 @@ async def load_localization_maps(
     return {"ok": True}
 
 
-@router.delete("/{id}/maps/{map_id}")
-async def unload_map(id: UUID, map_id: UUID, session: AsyncSession = Depends(get_session)):
+@router.delete("/{localization_session_id}/maps/{map_id}")
+async def unload_map(localization_session_id: UUID, map_id: UUID, session: AsyncSession = Depends(get_session)):
     map_row = await session.get(LocalizationMap, map_id)
     if not map_row:
         raise HTTPException(status_code=404, detail="Localization map not found")
 
-    base = await _session_base_url(session, id)
+    base = await _session_base_url(session, localization_session_id)
     async with httpx.AsyncClient() as client:
         try:
             r = await client.delete(f"{base}/reconstructions/{map_row.reconstruction_id}")
@@ -115,13 +118,15 @@ async def unload_map(id: UUID, map_id: UUID, session: AsyncSession = Depends(get
     raise HTTPException(status_code=r.status_code, detail=r.text)
 
 
-@router.get("/{id}/maps/{map_id}/status")
-async def get_map_load_status(id: UUID, map_id: UUID, session: AsyncSession = Depends(get_session)) -> str:
+@router.get("/{localization_session_id}/maps/{map_id}/status")
+async def get_map_load_status(
+    localization_session_id: UUID, map_id: UUID, session: AsyncSession = Depends(get_session)
+) -> str:
     map_row = await session.get(LocalizationMap, map_id)
     if not map_row:
         raise HTTPException(status_code=404, detail="Localization map not found")
 
-    base = await _session_base_url(session, id)
+    base = await _session_base_url(session, localization_session_id)
     async with httpx.AsyncClient() as client:
         try:
             r = await client.get(f"{base}/reconstructions/{map_row.reconstruction_id}/status")
@@ -151,7 +156,7 @@ parse_camera = make_multipart_json_dep("camera", INTR_ADAPTER)
 
 
 @router.post(
-    "/{id}/localization",
+    "/{localization_session_id}/localization",
     openapi_extra={
         "requestBody": {
             "content": {"multipart/form-data": {"encoding": {"camera": {"contentType": "application/json"}}}}
@@ -159,7 +164,7 @@ parse_camera = make_multipart_json_dep("camera", INTR_ADAPTER)
     },
 )
 async def localize_image(
-    id: UUID,
+    localization_session_id: UUID,
     camera: Annotated[CameraIntrinsics, Depends(parse_camera)],
     image: UploadFile = File(..., description="Image to localize"),
     session: AsyncSession = Depends(get_session),
@@ -171,7 +176,7 @@ async def localize_image(
     async with httpx.AsyncClient() as client:
         try:
             r = await client.post(
-                f"{await _session_base_url(session, id)}/localization",
+                f"{await _session_base_url(session, localization_session_id)}/localization",
                 files={
                     "image": (
                         image.filename or "image.jpg",

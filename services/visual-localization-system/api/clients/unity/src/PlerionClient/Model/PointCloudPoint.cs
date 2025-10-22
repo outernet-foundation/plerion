@@ -42,7 +42,7 @@ namespace PlerionClient.Model
         /// </summary>
         /// <param name="position">position (required).</param>
         /// <param name="color">color (required).</param>
-        public PointCloudPoint(Vector3 position, List<Object> color)
+        public PointCloudPoint(Vector3 position, Color color)
         {
             // to ensure "position" is required (not null)
             if (position == null)
@@ -86,7 +86,7 @@ namespace PlerionClient.Model
         /// Gets or Sets Color
         /// </summary>
         [DataMember(Name = "color", IsRequired = true, EmitDefaultValue = true)]
-        public List<Object> Color
+        public Color Color
         {
             get{ return _Color;}
             set
@@ -95,7 +95,7 @@ namespace PlerionClient.Model
                 _flagColor = true;
             }
         }
-        private List<Object> _Color;
+        private Color _Color;
         private bool _flagColor;
 
         /// <summary>

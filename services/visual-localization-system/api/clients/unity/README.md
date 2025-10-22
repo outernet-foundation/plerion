@@ -138,7 +138,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**DeleteLayers**](docs/DefaultApi.md#deletelayers) | **DELETE** /layers | Delete Layers
 *DefaultApi* | [**DeleteLocalizationMap**](docs/DefaultApi.md#deletelocalizationmap) | **DELETE** /localization_maps/{id} | Delete Localization Map
 *DefaultApi* | [**DeleteLocalizationMaps**](docs/DefaultApi.md#deletelocalizationmaps) | **DELETE** /localization_maps | Delete Localization Maps
-*DefaultApi* | [**DeleteLocalizationSession**](docs/DefaultApi.md#deletelocalizationsession) | **DELETE** /localization_sessions/{id} | Delete Localization Session
+*DefaultApi* | [**DeleteLocalizationSession**](docs/DefaultApi.md#deletelocalizationsession) | **DELETE** /localization_sessions/{localization_session_id} | Delete Localization Session
 *DefaultApi* | [**DeleteNodes**](docs/DefaultApi.md#deletenodes) | **DELETE** /nodes | Delete Nodes
 *DefaultApi* | [**DeleteReconstruction**](docs/DefaultApi.md#deletereconstruction) | **DELETE** /reconstructions/{id} | Delete Reconstruction
 *DefaultApi* | [**DownloadCaptureSessionTar**](docs/DefaultApi.md#downloadcapturesessiontar) | **GET** /capture_sessions/{id}/tar | Download Capture Session Tar
@@ -151,8 +151,8 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**GetLocalizationMapPoints**](docs/DefaultApi.md#getlocalizationmappoints) | **GET** /localization_maps/{id}/points | Get Localization Map Points
 *DefaultApi* | [**GetLocalizationMapPointsPly**](docs/DefaultApi.md#getlocalizationmappointsply) | **GET** /localization_maps/{id}/points.ply | Get Localization Map Points Ply
 *DefaultApi* | [**GetLocalizationMaps**](docs/DefaultApi.md#getlocalizationmaps) | **GET** /localization_maps | Get Localization Maps
-*DefaultApi* | [**GetLocalizationSessionStatus**](docs/DefaultApi.md#getlocalizationsessionstatus) | **GET** /localization_sessions/{id}/status | Get Localization Session Status
-*DefaultApi* | [**GetMapLoadStatus**](docs/DefaultApi.md#getmaploadstatus) | **GET** /localization_sessions/{id}/maps/{map_id}/status | Get Map Load Status
+*DefaultApi* | [**GetLocalizationSessionStatus**](docs/DefaultApi.md#getlocalizationsessionstatus) | **GET** /localization_sessions/{localization_session_id}/status | Get Localization Session Status
+*DefaultApi* | [**GetMapLoadStatus**](docs/DefaultApi.md#getmaploadstatus) | **GET** /localization_sessions/{localization_session_id}/maps/{map_id}/status | Get Map Load Status
 *DefaultApi* | [**GetNodes**](docs/DefaultApi.md#getnodes) | **GET** /nodes | Get Nodes
 *DefaultApi* | [**GetReconstruction**](docs/DefaultApi.md#getreconstruction) | **GET** /reconstructions/{id} | Get Reconstruction
 *DefaultApi* | [**GetReconstructionImagePoses**](docs/DefaultApi.md#getreconstructionimageposes) | **GET** /reconstructions/{id}/image_poses | Get Reconstruction Image Poses
@@ -161,9 +161,9 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**GetReconstructionPoints3DPly**](docs/DefaultApi.md#getreconstructionpoints3dply) | **GET** /reconstructions/{id}/points.ply | Get Reconstruction Points3D Ply
 *DefaultApi* | [**GetReconstructionStatus**](docs/DefaultApi.md#getreconstructionstatus) | **GET** /reconstructions/{id}/status | Get Reconstruction Status
 *DefaultApi* | [**GetReconstructions**](docs/DefaultApi.md#getreconstructions) | **GET** /reconstructions | Get Reconstructions
-*DefaultApi* | [**LoadLocalizationMaps**](docs/DefaultApi.md#loadlocalizationmaps) | **POST** /localization_sessions/{id}/maps | Load Localization Maps
-*DefaultApi* | [**LocalizeImage**](docs/DefaultApi.md#localizeimage) | **POST** /localization_sessions/{id}/localization | Localize Image
-*DefaultApi* | [**UnloadMap**](docs/DefaultApi.md#unloadmap) | **DELETE** /localization_sessions/{id}/maps/{map_id} | Unload Map
+*DefaultApi* | [**LoadLocalizationMaps**](docs/DefaultApi.md#loadlocalizationmaps) | **POST** /localization_sessions/{localization_session_id}/maps | Load Localization Maps
+*DefaultApi* | [**LocalizeImage**](docs/DefaultApi.md#localizeimage) | **POST** /localization_sessions/{localization_session_id}/localization | Localize Image
+*DefaultApi* | [**UnloadMap**](docs/DefaultApi.md#unloadmap) | **DELETE** /localization_sessions/{localization_session_id}/maps/{map_id} | Unload Map
 *DefaultApi* | [**UpdateCaptureSession**](docs/DefaultApi.md#updatecapturesession) | **PATCH** /capture_sessions/{id} | Update Capture Session
 *DefaultApi* | [**UpdateCaptureSessions**](docs/DefaultApi.md#updatecapturesessions) | **PATCH** /capture_sessions | Update Capture Sessions
 *DefaultApi* | [**UpdateGroups**](docs/DefaultApi.md#updategroups) | **PATCH** /groups | Update Groups
@@ -182,6 +182,7 @@ Class | Method | HTTP request | Description
  - [Model.CaptureSessionCreate](docs/CaptureSessionCreate.md)
  - [Model.CaptureSessionRead](docs/CaptureSessionRead.md)
  - [Model.CaptureSessionUpdate](docs/CaptureSessionUpdate.md)
+ - [Model.Color](docs/Color.md)
  - [Model.DeviceType](docs/DeviceType.md)
  - [Model.GroupBatchUpdate](docs/GroupBatchUpdate.md)
  - [Model.GroupCreate](docs/GroupCreate.md)

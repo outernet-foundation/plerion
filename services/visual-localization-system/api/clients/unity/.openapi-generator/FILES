@@ -27,6 +27,7 @@ src/PlerionClient/Model/CaptureSessionBatchUpdate.cs
 src/PlerionClient/Model/CaptureSessionCreate.cs
 src/PlerionClient/Model/CaptureSessionRead.cs
 src/PlerionClient/Model/CaptureSessionUpdate.cs
+src/PlerionClient/Model/Color.cs
 src/PlerionClient/Model/DeviceType.cs
 src/PlerionClient/Model/GroupBatchUpdate.cs
 src/PlerionClient/Model/GroupCreate.cs
