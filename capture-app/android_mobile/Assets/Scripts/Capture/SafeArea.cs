@@ -23,7 +23,7 @@ public class SafeArea : MonoBehaviour
         _rectTransform.offsetMin = Vector2.zero;
         _rectTransform.offsetMax = Vector2.zero;
 
-#if UNITY_ANDROID 
+#if UNITY_ANDROID && !UNITY_EDITOR
         _rectTransform.offsetMin = new Vector2(0, 25);
 #endif
     }

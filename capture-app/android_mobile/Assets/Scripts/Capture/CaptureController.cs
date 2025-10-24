@@ -26,6 +26,8 @@ using static PlerionClient.Client.UIPresets;
 using System.Net.Http;
 using UnityEngine.SocialPlatforms;
 
+using Color = UnityEngine.Color;
+
 namespace PlerionClient.Client
 {
     public class KeycloakHttpHandler : DelegatingHandler
@@ -320,14 +322,7 @@ namespace PlerionClient.Client
                 try
                 {
                     var reconstructions = await capturesApi.GetCaptureSessionReconstructionsAsync(captureSessionId);
-                    if (reconstructions != null && reconstructions.Count > 0)
-                    {
-                        foreach (var reconstruction in reconstructions)
-                        {
-                            if (reconstruction.HasValue)
-                                return reconstruction.Value;
-                        }
-                    }
+                    return reconstructions[0];
                 }
                 catch (Exception exc)
                 {
