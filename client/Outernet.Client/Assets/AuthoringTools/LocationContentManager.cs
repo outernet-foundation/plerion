@@ -16,6 +16,7 @@ using CesiumForUnity;
 using PlerionClient.Model;
 using PlerionClient.Api;
 using PlerionClient.Client;
+using Plerion.VPS;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -149,12 +150,11 @@ namespace Outernet.Client.AuthoringTools
             var height = heights[0];
             var ecefCoordinates = CesiumWgs84Ellipsoid.LongitudeLatitudeHeightToEarthCenteredEarthFixed(new double3(longitude, latitude, height));
 
-            LocalizedReferenceFrame.SetTargetLocalToEcefTransform(
+            VisualPositioningSystem.SetUnityWorldToEcefTransform(
                 Double4x4.FromTranslationRotation(
                     ecefCoordinates,
                     Client.Utility.GetEUNRotationFromECEFPosition(ecefCoordinates)
-                ),
-                smoothTransition: false
+                )
             );
 
             List<LocalizationMapRead> maps = null;

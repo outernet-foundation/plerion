@@ -133,54 +133,6 @@ namespace Outernet.Client.AuthoringTools
         }
     }
 
-    public class SetLayersAction : ObservableNodeAction<ClientState>
-    {
-        private PlerionClient.Model.LayerRead[] _layers;
-
-        public SetLayersAction(LayerRead[] layers)
-        {
-            _layers = layers;
-        }
-
-        public override void Execute(ClientState target)
-        {
-            var newLayersByID = _layers.ToDictionary(x => x.Id);
-            var oldLayersByID = target.layers.ToDictionary(x => x.key, x => x.value);
-
-            foreach (var toRemove in oldLayersByID.Where(x => !newLayersByID.ContainsKey(x.Key)))
-                new DestroySceneObjectAction(toRemove.Key).Execute(target);
-
-            foreach (var toUpdate in newLayersByID.Select(x => x.Value))
-            {
-                new AddOrUpdateLayerAction(
-                    id: toUpdate.Id,
-                    name: toUpdate.Name
-                ).Execute(target);
-            }
-        }
-    }
-
-    public class AddOrUpdateLayerAction : ObservableNodeAction<ClientState>
-    {
-        private Guid _id;
-        private string _name;
-
-        public AddOrUpdateLayerAction(
-            Guid id,
-            string name = default
-        )
-        {
-            _id = id;
-            _name = name;
-        }
-
-        public override void Execute(ClientState target)
-        {
-            var layer = target.layers.GetOrAdd(_id);
-            layer.layerName.value = _name;
-        }
-    }
-
     public class SetParentGroupAction : ObservableNodeAction<ClientState>
     {
         private Guid _id;

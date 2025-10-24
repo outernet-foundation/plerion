@@ -6,6 +6,7 @@ using UnityEngine;
 using FofX.Stateful;
 
 using Outernet.Client.Location;
+using Plerion.VPS;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -20,9 +21,9 @@ namespace Outernet.Client.AuthoringTools
 
         private void Awake()
         {
-            LocalizedReferenceFrame.onTransformMatriciesChanged += () => App.ExecuteActionOrDelay(
-                new UpdateNodeLocationsAction(LocalizedReferenceFrame.EcefToLocalTransform, _nodes.Values.Select(x => x.props).ToArray()),
-                new UpdateMapLocationsAction(LocalizedReferenceFrame.EcefToLocalTransform, _maps.Values.Select(x => x.props).ToArray())
+            VisualPositioningSystem.OnEcefToUnityWorldTransformUpdated += () => App.ExecuteActionOrDelay(
+                new UpdateNodeLocationsAction(VisualPositioningSystem.EcefToUnityWorldTransform, _nodes.Values.Select(x => x.props).ToArray()),
+                new UpdateMapLocationsAction(VisualPositioningSystem.EcefToUnityWorldTransform, _maps.Values.Select(x => x.props).ToArray())
             );
 
             if (_instance != null)

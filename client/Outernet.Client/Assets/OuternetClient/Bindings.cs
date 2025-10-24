@@ -12,6 +12,8 @@ using Outernet.Client.Location;
 using FofX;
 using TMPro;
 
+using Plerion.VPS;
+
 namespace Outernet.Client
 {
     public static class Bindings
@@ -647,7 +649,7 @@ namespace Outernet.Client
             return Relationship(
                 _ =>
                 {
-                    var transform = LocalizedReferenceFrame.EcefToLocal(ecefPosition.value, ecefRotation.value);
+                    var transform = VisualPositioningSystem.EcefToUnityWorld(ecefPosition.value, ecefRotation.value);
                     localPosition.value = transform.position;
                     localRotation.value = transform.rotation;
                 },
@@ -655,7 +657,7 @@ namespace Outernet.Client
                 new IObservableNode[] { ecefPosition, ecefRotation, App.state.ecefToLocalMatrix },
                 _ =>
                 {
-                    var transform = LocalizedReferenceFrame.LocalToEcef(localPosition.value, localRotation.value);
+                    var transform = VisualPositioningSystem.UnityWorldToEcef(localPosition.value, localRotation.value);
                     ecefPosition.value = transform.position;
                     ecefRotation.value = transform.rotation;
                 },

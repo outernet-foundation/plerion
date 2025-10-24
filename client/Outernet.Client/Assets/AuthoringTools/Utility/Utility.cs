@@ -13,6 +13,12 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using PlerionClient.Model;
+using Plerion.VPS;
+
+using Vector3 = UnityEngine.Vector3;
+using Quaternion = UnityEngine.Quaternion;
+using Color = UnityEngine.Color;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -56,7 +62,7 @@ namespace Outernet.Client.AuthoringTools
 
             pos /= count;
 
-            var localTransform = LocalizedReferenceFrame.EcefToLocal(pos, rot);
+            var localTransform = VisualPositioningSystem.EcefToUnityWorld(pos, rot);
 
             position = localTransform.position;
             rotation = count == 1 ? localTransform.rotation : Quaternion.identity;

@@ -8,6 +8,7 @@ using Outernet.Shared;
 using PlerionClient.Api;
 using PlerionClient.Client;
 using PlerionClient.Model;
+using Plerion.VPS;
 using Unity.Mathematics;
 using UnityEngine;
 
@@ -140,34 +141,6 @@ namespace Outernet.Client
                 Log.Warn(LogGroup.Localizer, exception, "Plerion API nearby maps request failed");
                 return null;
             }
-        }
-
-        public static async UniTask<byte[]> DownloadMapBytes(Guid id, string name, bool skipCache = false)
-        {
-            throw new NotImplementedException();
-            string cachePath = Path.Combine(Application.persistentDataPath, "cache");
-
-            if (!Directory.Exists(cachePath))
-            {
-                Directory.CreateDirectory(cachePath);
-            }
-
-            string mapDirectory = Path.Combine(cachePath, id.ToString());
-            string bytesPath = Path.Combine(mapDirectory, $"map.bytes");
-
-            if (File.Exists(bytesPath) && !skipCache)
-            {
-                return File.ReadAllBytes(bytesPath);
-            }
-
-            Toast.ShowToast($"Downloading map {name}...");
-
-            var bytes = await Get<byte[]>($"{SUPABASE_URL}/storage/v1/object/public/LocalizationMaps/{id}.bytes");
-
-            Directory.CreateDirectory(mapDirectory);
-            File.WriteAllBytes(bytesPath, bytes);
-
-            return bytes;
         }
 
         public static async UniTask<WifiGeolocationRecord[]> GetWifiGeolocation(params string[] bssids)

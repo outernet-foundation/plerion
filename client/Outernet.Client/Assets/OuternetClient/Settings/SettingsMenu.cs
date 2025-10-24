@@ -10,6 +10,7 @@ using Outernet.Client.Location;
 using Cysharp.Threading.Tasks;
 using System;
 using Unity.Mathematics;
+using Plerion.VPS;
 
 namespace Outernet.Client
 {
@@ -426,13 +427,18 @@ namespace Outernet.Client
                 elapsedTime = 0.0f;
             }
 
-            loadedMaps.SetText(string.Join("\n", MapManager.Maps.Select(map => $"{map.Name} [{MapManager.maps[map.Id].status}]")));
+            // TODO EP: Poll Maps And Display Names
+            // loadedMaps.SetText(string.Join("\n", MapManager.Maps.Select(map => $"{map.Name} [{MapManager.maps[map.Id].status}]")));
+
             // localizationRate.SetText(string.Format("{0:0.00}", Localizer.Status.localizationCount));
             // successRate.SetText(string.Format("{0:0.00}", Localizer.Status.successCount));
-            confidenceHistory.SetText(string.Format("{0:0.00}", string.Join(", ", Localizer.Status.confidenceHistory.Reverse<float>().Take(8).Reverse())));
+
+            // TODO EP: Should we maintain this functionality?
+            //confidenceHistory.SetText(string.Format("{0:0.00}", string.Join(", ", Localizer.Status.confidenceHistory.Reverse<float>().Take(8).Reverse())));
+
             // ransacScore.SetText(string.Format("{0:0.00}", RANSAC.Score));
 
-            var cameraEcefTransform = LocalizedReferenceFrame.LocalToEcef(Camera.main.transform.position, Camera.main.transform.rotation);
+            var cameraEcefTransform = VisualPositioningSystem.UnityWorldToEcef(Camera.main.transform.position, Camera.main.transform.rotation);
             var longitudeLatitudeHeight = CesiumWgs84Ellipsoid.EarthCenteredEarthFixedToLongitudeLatitudeHeight(cameraEcefTransform.position);
             preciseLatitude.SetText(string.Format("{0:0.000000}", longitudeLatitudeHeight.y));
             preciseLongitude.SetText(string.Format("{0:0.000000}", longitudeLatitudeHeight.x));

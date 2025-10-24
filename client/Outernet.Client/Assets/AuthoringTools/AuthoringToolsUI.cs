@@ -14,7 +14,7 @@ using FofX;
 using FofX.Stateful;
 
 using Outernet.Client.Location;
-
+using Plerion.VPS;
 using TMPro;
 
 namespace Outernet.Client.AuthoringTools
@@ -554,7 +554,7 @@ namespace Outernet.Client.AuthoringTools
         {
             UndoRedoManager.RegisterUndo("Create Node");
 
-            var newNodeTransform = LocalizedReferenceFrame.LocalToEcef(
+            var newNodeTransform = VisualPositioningSystem.UnityWorldToEcef(
                 Camera.main.transform.position + (Camera.main.transform.forward * 3f),
                 Camera.main.transform.rotation.Flatten()
             );

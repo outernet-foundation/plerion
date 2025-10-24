@@ -509,6 +509,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19ed31dbca7721e4da3fc1ba388d43dd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  loginScreen: {fileID: 0}
   noLocationSetBlock: {fileID: 7420572767977534068}
   addScanButton: {fileID: 1974629698969676219}
   addNodeButton: {fileID: 4317662817199298111}
@@ -2239,7 +2240,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7323711945870715894, guid: 6d529ce17cb96f546a3b78ea99a70242, type: 3}
       propertyPath: m_Size
-      value: 0.9999997
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7323711945870715894, guid: 6d529ce17cb96f546a3b78ea99a70242, type: 3}
       propertyPath: m_Value
@@ -3420,11 +3421,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3473064259515553927, guid: 6d529ce17cb96f546a3b78ea99a70242, type: 3}
       propertyPath: m_Size
-      value: 1
+      value: 0.37980518
       objectReference: {fileID: 0}
     - target: {fileID: 3473064259515553927, guid: 6d529ce17cb96f546a3b78ea99a70242, type: 3}
       propertyPath: m_Value
-      value: 0
+      value: 0.99999017
       objectReference: {fileID: 0}
     - target: {fileID: 3933641551732832106, guid: 6d529ce17cb96f546a3b78ea99a70242, type: 3}
       propertyPath: m_AnchorMax.x

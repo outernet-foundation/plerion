@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using R3;
 using System;
+using Plerion.VPS;
 
 namespace Outernet.Client
 {
@@ -30,7 +31,7 @@ namespace Outernet.Client
             spaceAction.Enable();
 
             var ecefTransform =
-                LocalizedReferenceFrame.LocalToEcef(transform.position, transform.rotation);
+                VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);
             userRecord.geoPose.ecefPosition.EnqueueSet(ecefTransform.position.ToDouble3());
             userRecord.geoPose.ecefRotation.EnqueueSet(ecefTransform.rotation);
             userRecord.hasGeoPose.EnqueueSet(true);
@@ -64,8 +65,6 @@ namespace Outernet.Client
                 settingsPanel = null;
             }
 
-            GetComponent<SyncedAnchor>().Terminate();
-
             spaceAction.Disable();
 
             subscriptions.Dispose();
@@ -73,7 +72,9 @@ namespace Outernet.Client
 
         public void RealUpdate()
         {
-            MapManager.renderVisualizations = Settings.showPointCloud;
+            // TODO EP: Reference this staticly 
+            // MapManager.renderVisualizations = Settings.showPointCloud;
+
             Settings.menuOpen =
                 userRecord.settingsMenuOpen.Value == SettingsMenuState.OpenLeftPalm ||
                 userRecord.settingsMenuOpen.Value == SettingsMenuState.OpenRightPalm;
@@ -125,7 +126,7 @@ namespace Outernet.Client
             var settingsPanelPosition = Camera.main.transform.position + (Camera.main.transform.forward * settingsPanelSpawnDistance);
             var settingsPanelRotation = Quaternion.LookRotation(Camera.main.transform.forward.Flatten(), Vector3.up) * Quaternion.Euler(settingsPanelSpawnTilt, 0, 0);
 
-            var geoPose = LocalizedReferenceFrame.LocalToEcef(settingsPanelPosition, settingsPanelRotation);
+            var geoPose = VisualPositioningSystem.UnityWorldToEcef(settingsPanelPosition, settingsPanelRotation);
 
             userRecord.settingsMenuGeoPose.ecefPosition.EnqueueSet(geoPose.position.ToDouble3());
             userRecord.settingsMenuGeoPose.ecefRotation.EnqueueSet(geoPose.rotation);

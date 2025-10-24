@@ -2,6 +2,7 @@ using Outernet.Client.Location;
 using Outernet.Shared;
 using Unity.Mathematics;
 using UnityEngine;
+using Plerion.VPS;
 
 namespace Outernet.Client
 {
@@ -25,48 +26,32 @@ namespace Outernet.Client
             anchor = GetComponent<Anchor>();
         }
 
-        public void Terminate()
-        {
-            LocalizedReferenceFrame.RemoveSyncedAnchor(this);
-        }
-
         public void Initialize(GeoPoseRecord anchorRecord, double3? initialPosition = null, Quaternion? initialRotation = null)
         {
             this.anchorRecord = anchorRecord;
-
-            LocalizedReferenceFrame.AddSyncedAnchor(this);
-
-            if (initialPosition.HasValue && initialRotation.HasValue)
-            {
-                anchor.SetEcefTransform(initialPosition.Value, initialRotation.Value);
-            }
-            else
-            {
-                anchor.SetEcefTransform(new double3(anchorRecord.ecefPosition.Value.x, anchorRecord.ecefPosition.Value.y, anchorRecord.ecefPosition.Value.z), anchorRecord.ecefRotation.Value);
-            }
+            anchor.SetEcefTransform(
+                initialPosition ?? new double3(anchorRecord.ecefPosition.Value.x, anchorRecord.ecefPosition.Value.y, anchorRecord.ecefPosition.Value.z),
+                initialRotation ?? anchorRecord.ecefRotation.Value
+            );
         }
 
-        public void RealUpdate()
+        private void Update()
         {
             if (State == SyncState.Animating) return;
 
             if (State == SyncState.LocallyControlled)
             {
-                anchor.SetEcefTransformFromLocalTransform();
-                anchorRecord.ecefPosition.EnqueueSet(new Double3(anchor.EcefPosition.x, anchor.EcefPosition.y, anchor.EcefPosition.z));
-                anchorRecord.ecefRotation.EnqueueSet(anchor.EcefRotation);
+                anchorRecord.ecefPosition.EnqueueSet(new Double3(anchor.ecefPosition.x, anchor.ecefPosition.y, anchor.ecefPosition.z));
+                anchorRecord.ecefRotation.EnqueueSet(anchor.ecefRotation);
 
                 return;
             }
 
+            // TODO EP: Optimize by stopping interpolation when we reach our destination
             anchor.SetEcefTransform(
-                math.lerp(anchor.EcefPosition, new double3(anchorRecord.ecefPosition.Value.x, anchorRecord.ecefPosition.Value.y, anchorRecord.ecefPosition.Value.z), 0.1f),
-                math.slerp(anchor.EcefRotation, anchorRecord.ecefRotation.Value, 0.25f));
-        }
-
-        public void SetLocalTransformFromEcefTransform()
-        {
-            anchor.SetLocalTransformFromEcefTransform();
+                math.lerp(anchor.ecefPosition, new double3(anchorRecord.ecefPosition.Value.x, anchorRecord.ecefPosition.Value.y, anchorRecord.ecefPosition.Value.z), 0.1f),
+                math.slerp(anchor.ecefRotation, anchorRecord.ecefRotation.Value, 0.25f)
+            );
         }
     }
 }

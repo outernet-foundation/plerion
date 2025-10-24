@@ -1,6 +1,7 @@
 using Outernet.Shared;
 using R3;
 using UnityEngine;
+using Plerion.VPS;
 
 namespace Outernet.Client
 {
