@@ -186,7 +186,7 @@ namespace PlerionClient.Client
                                 return;
                             }
 
-                            local.name.value = remote.Filename;
+                            local.name.value = remote.Name;
                             local.type.value = CaptureType.Local;
                             local.uploaded.value = true;
                         }

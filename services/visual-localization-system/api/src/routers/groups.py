@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -31,7 +31,7 @@ async def create_group(group: GroupCreate, session: AsyncSession = Depends(get_s
 
 @router.delete("")
 async def delete_groups(
-    ids: List[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
+    ids: list[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
 ) -> None:
     for id in ids:
         row = await session.get(Group, id)
@@ -43,9 +43,9 @@ async def delete_groups(
 
 @router.get("")
 async def get_groups(
-    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
     session: AsyncSession = Depends(get_session),
-) -> List[GroupRead]:
+) -> list[GroupRead]:
     query = select(Group)
     if ids:
         query = query.where(Group.id.in_(ids))
@@ -59,8 +59,8 @@ async def get_groups(
 @router.patch("")
 async def update_groups(
     groups: list[GroupBatchUpdate], allow_missing: bool = False, session: AsyncSession = Depends(get_session)
-) -> List[GroupRead]:
-    rows: List[Group] = []
+) -> list[GroupRead]:
+    rows: list[Group] = []
     for group in groups:
         row = await session.get(Group, group.id)
         if not row:

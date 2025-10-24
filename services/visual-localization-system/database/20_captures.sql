@@ -15,7 +15,7 @@ CREATE TABLE capture_sessions(
   updated_at timestamptz 
     NOT NULL 
     DEFAULT now(),
-  filename text 
+  name text 
     NOT NULL,
   device_type device_type 
     NOT NULL,

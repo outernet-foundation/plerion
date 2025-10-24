@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -31,7 +31,7 @@ async def create_node(node: NodeCreate, session: AsyncSession = Depends(get_sess
 
 @router.delete("")
 async def delete_nodes(
-    ids: List[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
+    ids: list[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
 ) -> None:
     for id in ids:
         row = await session.get(Node, id)
@@ -43,9 +43,9 @@ async def delete_nodes(
 
 @router.get("")
 async def get_nodes(
-    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
     session: AsyncSession = Depends(get_session),
-) -> List[NodeRead]:
+) -> list[NodeRead]:
     query = select(Node)
     if ids:
         query = query.where(Node.id.in_(ids))
@@ -59,8 +59,8 @@ async def get_nodes(
 @router.patch("")
 async def update_nodes(
     nodes: list[NodeBatchUpdate], allow_missing: bool = False, session: AsyncSession = Depends(get_session)
-) -> List[NodeRead]:
-    rows: List[Node] = []
+) -> list[NodeRead]:
+    rows: list[Node] = []
     for node in nodes:
         row = await session.get(Node, node.id)
         if not row:

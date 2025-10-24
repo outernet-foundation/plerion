@@ -43,6 +43,8 @@ src/PlerionClient/Model/LocalizationMapCreate.cs
 src/PlerionClient/Model/LocalizationMapRead.cs
 src/PlerionClient/Model/LocalizationMapUpdate.cs
 src/PlerionClient/Model/LocalizationSessionRead.cs
+src/PlerionClient/Model/MapLocalizationInput.cs
+src/PlerionClient/Model/MapLocalizationOutput.cs
 src/PlerionClient/Model/NodeBatchUpdate.cs
 src/PlerionClient/Model/NodeCreate.cs
 src/PlerionClient/Model/NodeRead.cs

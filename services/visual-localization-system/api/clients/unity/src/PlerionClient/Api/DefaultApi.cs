@@ -665,8 +665,9 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <returns>List&lt;ReconstructionRead&gt;</returns>
-        List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default, Guid? captureSessionId = default);
+        List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default);
 
         /// <summary>
         /// Get Reconstructions
@@ -677,8 +678,9 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;ReconstructionRead&gt;</returns>
-        ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default, Guid? captureSessionId = default);
+        ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default);
         /// <summary>
         /// Load Localization Maps
         /// </summary>
@@ -705,8 +707,8 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
-        /// <returns>Dictionary&lt;string, Transform&gt;</returns>
-        Dictionary<string, Transform> LocalizeImage(Guid localizationSessionId, FileParameter image);
+        /// <returns>List&lt;MapLocalizationOutput&gt;</returns>
+        List<MapLocalizationOutput> LocalizeImage(Guid localizationSessionId, FileParameter image);
 
         /// <summary>
         /// Localize Image
@@ -717,8 +719,8 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
-        /// <returns>ApiResponse of Dictionary&lt;string, Transform&gt;</returns>
-        ApiResponse<Dictionary<string, Transform>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image);
+        /// <returns>ApiResponse of List&lt;MapLocalizationOutput&gt;</returns>
+        ApiResponse<List<MapLocalizationOutput>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image);
         /// <summary>
         /// Set Localization Session Camera Intrinsics
         /// </summary>
@@ -1762,9 +1764,10 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;ReconstructionRead&gt;</returns>
-        System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get Reconstructions
@@ -1775,9 +1778,10 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;ReconstructionRead&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Load Localization Maps
         /// </summary>
@@ -1813,8 +1817,8 @@ namespace PlerionClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Dictionary&lt;string, Transform&gt;</returns>
-        System.Threading.Tasks.Task<Dictionary<string, Transform>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of List&lt;MapLocalizationOutput&gt;</returns>
+        System.Threading.Tasks.Task<List<MapLocalizationOutput>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Localize Image
@@ -1826,8 +1830,8 @@ namespace PlerionClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Dictionary&lt;string, Transform&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Dictionary<string, Transform>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of ApiResponse (List&lt;MapLocalizationOutput&gt;)</returns>
+        System.Threading.Tasks.Task<ApiResponse<List<MapLocalizationOutput>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Set Localization Session Camera Intrinsics
         /// </summary>
@@ -6215,10 +6219,11 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <returns>List&lt;ReconstructionRead&gt;</returns>
-        public List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default, Guid? captureSessionId = default)
+        public List<ReconstructionRead> GetReconstructions(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default)
         {
-            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = GetReconstructionsWithHttpInfo(ids, captureSessionId);
+            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = GetReconstructionsWithHttpInfo(ids, captureSessionId, captureSessionName);
             return localVarResponse.Data;
         }
 
@@ -6228,8 +6233,9 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;ReconstructionRead&gt;</returns>
-        public PlerionClient.Client.ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default, Guid? captureSessionId = default)
+        public PlerionClient.Client.ApiResponse<List<ReconstructionRead>> GetReconstructionsWithHttpInfo(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default)
         {
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
@@ -6254,6 +6260,10 @@ namespace PlerionClient.Api
             if (captureSessionId != null)
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_id", captureSessionId));
+            }
+            if (captureSessionName != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_name", captureSessionName));
             }
 
 
@@ -6275,11 +6285,12 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;ReconstructionRead&gt;</returns>
-        public async System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<ReconstructionRead>> GetReconstructionsAsync(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = await GetReconstructionsWithHttpInfoAsync(ids, captureSessionId, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<ReconstructionRead>> localVarResponse = await GetReconstructionsWithHttpInfoAsync(ids, captureSessionId, captureSessionName, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -6289,9 +6300,10 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
         /// <param name="captureSessionId">Optional capture session Id to filter by (optional)</param>
+        /// <param name="captureSessionName">Optional capture session name to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;ReconstructionRead&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, Guid? captureSessionId = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<ReconstructionRead>>> GetReconstructionsWithHttpInfoAsync(List<Guid>? ids = default, Guid? captureSessionId = default, string? captureSessionName = default, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
@@ -6318,6 +6330,10 @@ namespace PlerionClient.Api
             if (captureSessionId != null)
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_id", captureSessionId));
+            }
+            if (captureSessionName != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_name", captureSessionName));
             }
 
 
@@ -6463,10 +6479,10 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
-        /// <returns>Dictionary&lt;string, Transform&gt;</returns>
-        public Dictionary<string, Transform> LocalizeImage(Guid localizationSessionId, FileParameter image)
+        /// <returns>List&lt;MapLocalizationOutput&gt;</returns>
+        public List<MapLocalizationOutput> LocalizeImage(Guid localizationSessionId, FileParameter image)
         {
-            PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, image);
+            PlerionClient.Client.ApiResponse<List<MapLocalizationOutput>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, image);
             return localVarResponse.Data;
         }
 
@@ -6476,8 +6492,8 @@ namespace PlerionClient.Api
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
-        /// <returns>ApiResponse of Dictionary&lt;string, Transform&gt;</returns>
-        public PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image)
+        /// <returns>ApiResponse of List&lt;MapLocalizationOutput&gt;</returns>
+        public PlerionClient.Client.ApiResponse<List<MapLocalizationOutput>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image)
         {
             // verify the required parameter 'image' is set
             if (image == null)
@@ -6505,7 +6521,7 @@ namespace PlerionClient.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Post<Dictionary<string, Transform>>("/localization_sessions/{localization_session_id}/localization", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Post<List<MapLocalizationOutput>>("/localization_sessions/{localization_session_id}/localization", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -6523,10 +6539,10 @@ namespace PlerionClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Dictionary&lt;string, Transform&gt;</returns>
-        public async System.Threading.Tasks.Task<Dictionary<string, Transform>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of List&lt;MapLocalizationOutput&gt;</returns>
+        public async System.Threading.Tasks.Task<List<MapLocalizationOutput>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<Dictionary<string, Transform>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, image, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<MapLocalizationOutput>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, image, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -6537,8 +6553,8 @@ namespace PlerionClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Dictionary&lt;string, Transform&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<Dictionary<string, Transform>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of ApiResponse (List&lt;MapLocalizationOutput&gt;)</returns>
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<MapLocalizationOutput>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
             // verify the required parameter 'image' is set
             if (image == null)
@@ -6569,7 +6585,7 @@ namespace PlerionClient.Api
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.PostAsync<Dictionary<string, Transform>>("/localization_sessions/{localization_session_id}/localization", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.PostAsync<List<MapLocalizationOutput>>("/localization_sessions/{localization_session_id}/localization", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {

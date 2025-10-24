@@ -362,6 +362,15 @@ paths:
           nullable: true
           type: string
         style: form
+      - description: Optional capture session name to filter by
+        explode: true
+        in: query
+        name: capture_session_name
+        required: false
+        schema:
+          nullable: true
+          type: string
+        style: form
       responses:
         "200":
           content:
@@ -1166,9 +1175,9 @@ paths:
           content:
             application/json:
               schema:
-                additionalProperties:
-                  $ref: "#/components/schemas/Transform"
-                title: Response Localize Image
+                items:
+                  $ref: "#/components/schemas/MapLocalization-Output"
+                type: array
           description: Successful Response
         "422":
           content:
@@ -1570,7 +1579,7 @@ components:
       title: Body_localize_image
     CaptureSessionBatchUpdate:
       example:
-        filename: filename
+        name: name
         device_type: ARFoundation
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
@@ -1580,7 +1589,7 @@ components:
           type: string
         device_type:
           $ref: "#/components/schemas/DeviceType"
-        filename:
+        name:
           nullable: true
           type: string
       required:
@@ -1588,7 +1597,7 @@ components:
       title: CaptureSessionBatchUpdate
     CaptureSessionCreate:
       example:
-        filename: filename
+        name: name
         device_type: ARFoundation
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
@@ -1598,17 +1607,17 @@ components:
           type: string
         device_type:
           $ref: "#/components/schemas/DeviceType"
-        filename:
-          title: Filename
+        name:
+          title: Name
           type: string
       required:
       - device_type
-      - filename
+      - name
       title: CaptureSessionCreate
     CaptureSessionRead:
       example:
-        filename: filename
         updated_at: 2000-01-23T04:56:07.000+00:00
+        name: name
         created_at: 2000-01-23T04:56:07.000+00:00
         device_type: ARFoundation
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -1627,24 +1636,24 @@ components:
           type: string
         device_type:
           $ref: "#/components/schemas/DeviceType"
-        filename:
-          title: Filename
+        name:
+          title: Name
           type: string
       required:
       - created_at
       - device_type
-      - filename
       - id
+      - name
       - updated_at
       title: CaptureSessionRead
     CaptureSessionUpdate:
       example:
-        filename: filename
+        name: name
         device_type: ARFoundation
       properties:
         device_type:
           $ref: "#/components/schemas/DeviceType"
-        filename:
+        name:
           nullable: true
           type: string
       title: CaptureSessionUpdate
@@ -2137,6 +2146,80 @@ components:
       - created_at
       - id
       title: LocalizationSessionRead
+    MapLocalization-Input:
+      example:
+        transform:
+          rotation:
+            w: 0.8008281904610115
+            x: 6.027456183070403
+            "y": 1.4658129805029452
+            z: 5.962133916683182
+          position:
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        map_transform:
+          rotation:
+            w: 0.8008281904610115
+            x: 6.027456183070403
+            "y": 1.4658129805029452
+            z: 5.962133916683182
+          position:
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        transform:
+          $ref: "#/components/schemas/Transform"
+        map_transform:
+          $ref: "#/components/schemas/Transform"
+      required:
+      - id
+      - map_transform
+      - transform
+      title: MapLocalization
+    MapLocalization-Output:
+      example:
+        transform:
+          rotation:
+            w: 0.8008281904610115
+            x: 6.027456183070403
+            "y": 1.4658129805029452
+            z: 5.962133916683182
+          position:
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        map_transform:
+          rotation:
+            w: 0.8008281904610115
+            x: 6.027456183070403
+            "y": 1.4658129805029452
+            z: 5.962133916683182
+          position:
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+      properties:
+        id:
+          format: uuid
+          title: Id
+          type: string
+        transform:
+          $ref: "#/components/schemas/Transform"
+        map_transform:
+          $ref: "#/components/schemas/Transform"
+      required:
+      - id
+      - map_transform
+      - transform
+      title: MapLocalization
     NodeBatchUpdate:
       example:
         rotation_x: 5.962133916683182

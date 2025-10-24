@@ -282,18 +282,18 @@ class ReconstructionStatus(Enum):
 class CaptureSessionCreate(BaseModel):
     id: Optional[UUID] = Field(None, title='Id')
     device_type: DeviceType
-    filename: str = Field(..., title='Filename')
+    name: str = Field(..., title='Name')
 
 
 class CaptureSessionUpdate(BaseModel):
     device_type: Optional[DeviceType] = None
-    filename: Optional[str] = Field(None, title='Filename')
+    name: Optional[str] = Field(None, title='Name')
 
 
 class CaptureSessionBatchUpdate(BaseModel):
     id: UUID = Field(..., title='Id')
     device_type: Optional[DeviceType] = None
-    filename: Optional[str] = Field(None, title='Filename')
+    name: Optional[str] = Field(None, title='Name')
 
 
 class CaptureSessionRead(BaseModel):
@@ -301,7 +301,7 @@ class CaptureSessionRead(BaseModel):
     created_at: AwareDatetime = Field(..., title='Created At')
     updated_at: AwareDatetime = Field(..., title='Updated At')
     device_type: DeviceType
-    filename: str = Field(..., title='Filename')
+    name: str = Field(..., title='Name')
 
 
 class ReconstructionRead(BaseModel):

@@ -41,7 +41,7 @@ class CaptureSession(Base):
     created_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
     updated_at: Mapped[datetime.datetime] = mapped_column(DateTime(True), nullable=False, server_default=text('now()'))
     device_type: Mapped[str] = mapped_column(Enum('ARFoundation', 'Zed', name='device_type'), nullable=False)
-    filename: Mapped[str] = mapped_column(Text, nullable=False)
+    name: Mapped[str] = mapped_column(Text, nullable=False)
 
     tenant: Mapped['Tenant'] = relationship('Tenant', back_populates='capture_sessions')
     reconstructions: Mapped[list['Reconstruction']] = relationship('Reconstruction', back_populates='capture_session')

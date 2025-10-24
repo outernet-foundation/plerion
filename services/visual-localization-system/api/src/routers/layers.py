@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -31,7 +31,7 @@ async def create_layer(layer: LayerCreate, session: AsyncSession = Depends(get_s
 
 @router.delete("")
 async def delete_layers(
-    ids: List[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
+    ids: list[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
 ) -> None:
     for id in ids:
         row = await session.get(Layer, id)
@@ -43,9 +43,9 @@ async def delete_layers(
 
 @router.get("")
 async def get_layers(
-    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
     session: AsyncSession = Depends(get_session),
-) -> List[LayerRead]:
+) -> list[LayerRead]:
     query = select(Layer)
     if ids:
         query = query.where(Layer.id.in_(ids))
@@ -59,8 +59,8 @@ async def get_layers(
 @router.patch("")
 async def update_layers(
     layers: list[LayerBatchUpdate], allow_missing: bool = False, session: AsyncSession = Depends(get_session)
-) -> List[LayerRead]:
-    rows: List[Layer] = []
+) -> list[LayerRead]:
+    rows: list[Layer] = []
     for layer in layers:
         row = await session.get(Layer, layer.id)
         if not row:

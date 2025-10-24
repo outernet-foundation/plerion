@@ -68,7 +68,7 @@ namespace PlerionClient.Model
         /// </summary>
         /// <param name="id">id (required).</param>
         /// <param name="deviceType">deviceType.</param>
-        /// <param name="filename">filename.</param>
+        /// <param name="name">name.</param>
         public CaptureSessionBatchUpdate(Guid id)
         {
             this.Id = id;
@@ -99,28 +99,28 @@ namespace PlerionClient.Model
             return _flagId;
         }
         /// <summary>
-        /// Gets or Sets Filename
+        /// Gets or Sets Name
         /// </summary>
-        [DataMember(Name = "filename", EmitDefaultValue = true)]
-        public string Filename
+        [DataMember(Name = "name", EmitDefaultValue = true)]
+        public string Name
         {
-            get{ return _Filename;}
+            get{ return _Name;}
             set
             {
-                _Filename = value;
-                _flagFilename = true;
+                _Name = value;
+                _flagName = true;
             }
         }
-        private string _Filename;
-        private bool _flagFilename;
+        private string _Name;
+        private bool _flagName;
 
         /// <summary>
-        /// Returns false as Filename should not be serialized given that it's read-only.
+        /// Returns false as Name should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeFilename()
+        public bool ShouldSerializeName()
         {
-            return _flagFilename;
+            return _flagName;
         }
         /// <summary>
         /// Returns the string presentation of the object
@@ -132,7 +132,7 @@ namespace PlerionClient.Model
             sb.Append("class CaptureSessionBatchUpdate {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
             sb.Append("  DeviceType: ").Append(DeviceType).Append("\n");
-            sb.Append("  Filename: ").Append(Filename).Append("\n");
+            sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

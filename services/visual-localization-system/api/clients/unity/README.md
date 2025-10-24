@@ -199,6 +199,8 @@ Class | Method | HTTP request | Description
  - [Model.LocalizationMapRead](docs/LocalizationMapRead.md)
  - [Model.LocalizationMapUpdate](docs/LocalizationMapUpdate.md)
  - [Model.LocalizationSessionRead](docs/LocalizationSessionRead.md)
+ - [Model.MapLocalizationInput](docs/MapLocalizationInput.md)
+ - [Model.MapLocalizationOutput](docs/MapLocalizationOutput.md)
  - [Model.NodeBatchUpdate](docs/NodeBatchUpdate.md)
  - [Model.NodeCreate](docs/NodeCreate.md)
  - [Model.NodeRead](docs/NodeRead.md)

@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from common.classes import PointCloudPoint, Transform
@@ -73,7 +73,7 @@ async def delete_localization_map(id: UUID, session: AsyncSession = Depends(get_
 
 @router.delete("")
 async def delete_localization_maps(
-    ids: List[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
+    ids: list[UUID] = Query(..., description="List of Ids to delete"), session: AsyncSession = Depends(get_session)
 ) -> None:
     for id in ids:
         row = await session.get(LocalizationMap, id)
@@ -89,9 +89,9 @@ async def delete_localization_maps(
 
 @router.get("")
 async def get_localization_maps(
-    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
     session: AsyncSession = Depends(get_session),
-) -> List[LocalizationMapRead]:
+) -> list[LocalizationMapRead]:
     query = select(LocalizationMap)
 
     if ids:
@@ -132,7 +132,7 @@ async def get_localization_map_points_ply(id: UUID, session: AsyncSession = Depe
 @router.patch("/{id}/image_poses")
 async def update_localization_map_image_poses(
     id: UUID, session: AsyncSession = Depends(get_session)
-) -> List[Transform]:
+) -> list[Transform]:
     row = await session.get(LocalizationMap, id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"LocalizationMap with id {id} not found")
@@ -160,8 +160,8 @@ async def update_localization_maps(
     localization_maps: list[LocalizationMapBatchUpdate],
     allow_missing: bool = False,
     session: AsyncSession = Depends(get_session),
-) -> List[LocalizationMapRead]:
-    rows: List[LocalizationMap] = []
+) -> list[LocalizationMapRead]:
+    rows: list[LocalizationMap] = []
     for localization_map in localization_maps:
         row = await session.get(LocalizationMap, localization_map.id)
         if not row:

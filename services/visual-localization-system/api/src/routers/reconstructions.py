@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from common.boto_clients import create_s3_client
@@ -65,10 +65,17 @@ async def delete_reconstruction(id: UUID, session: AsyncSession = Depends(get_se
 
 @router.get("")
 async def get_reconstructions(
-    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
     capture_session_id: Optional[UUID] = Query(None, description="Optional capture session Id to filter by"),
+    capture_session_name: Optional[str] = Query(None, description="Optional capture session name to filter by"),
     session: AsyncSession = Depends(get_session),
-) -> List[ReconstructionRead]:
+) -> list[ReconstructionRead]:
+    if capture_session_name and capture_session_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot provide both capture_session_id and capture_session_name",
+        )
+
     query = select(Reconstruction)
 
     if ids:
@@ -76,6 +83,16 @@ async def get_reconstructions(
 
     if capture_session_id:
         query = query.where(Reconstruction.capture_session_id == capture_session_id)
+
+    if capture_session_name:
+        result = await session.execute(select(CaptureSession.id).where(CaptureSession.name == capture_session_name))
+        capture_session_row = result.scalar_one_or_none()
+        if not capture_session_row:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Capture session with name {capture_session_name} not found",
+            )
+        query = query.where(Reconstruction.capture_session_id == capture_session_row)
 
     result = await session.execute(query)
 

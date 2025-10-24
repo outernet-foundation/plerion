@@ -7,8 +7,11 @@ from common.session_client_docker import DockerSessionClient
 from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile, status
 from models.public_dtos import LocalizationSessionRead, localization_session_to_dto
 from models.public_tables import LocalizationMap, LocalizationSession
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.routers.localization_maps import get_localization_maps
 
 from ..database import get_session
 from ..settings import get_settings
@@ -152,10 +155,16 @@ async def get_map_load_status(
     raise HTTPException(status_code=r.status_code, detail=r.text)
 
 
+class MapLocalization(BaseModel):
+    id: UUID
+    transform: Transform
+    map_transform: Transform
+
+
 @router.post("/{localization_session_id}/localization")
 async def localize_image(
     localization_session_id: UUID, image: UploadFile = File(...), session: AsyncSession = Depends(get_session)
-) -> dict[str, Transform]:
+) -> list[MapLocalization]:
     async with httpx.AsyncClient() as client:
         try:
             r = await client.post(
@@ -174,7 +183,25 @@ async def localize_image(
     if not r.is_success:
         raise HTTPException(status_code=r.status_code, detail=r.text)
 
-    return r.json()
+    localizer_response: dict[UUID, Transform] = r.json()
+    maps = await get_localization_maps(ids=[id for id in localizer_response.keys()], session=session)
+
+    return [
+        MapLocalization(
+            id=id,
+            transform=localizer_response[id],
+            map_transform={
+                "position": {"x": maps[i].position_x, "y": maps[i].position_y, "z": maps[i].position_z},
+                "rotation": {
+                    "w": maps[i].rotation_w,
+                    "x": maps[i].rotation_x,
+                    "y": maps[i].rotation_y,
+                    "z": maps[i].rotation_z,
+                },
+            },
+        )
+        for i, id in enumerate(localizer_response)
+    ]
 
 
 async def _session_base_url(db: AsyncSession, session_id: UUID) -> str:

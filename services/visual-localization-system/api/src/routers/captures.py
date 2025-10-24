@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
 from common.schemas import tar_schema
@@ -42,11 +42,11 @@ async def create_capture_session(
 
 @router.post("/bulk")
 async def create_capture_sessions(
-    captures: List[CaptureSessionCreate] = Body(...),
+    captures: list[CaptureSessionCreate] = Body(...),
     overwrite: bool = False,
     session: AsyncSession = Depends(get_session),
-) -> List[CaptureSessionRead]:
-    rows: List[CaptureSession] = []
+) -> list[CaptureSessionRead]:
+    rows: list[CaptureSession] = []
     for capture in captures:
         row = await _create_capture(capture, overwrite, session)
         rows.append(row)
@@ -61,9 +61,9 @@ async def create_capture_sessions(
 
 @router.get("")
 async def get_capture_sessions(
-    ids: Optional[List[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
     session: AsyncSession = Depends(get_session),
-) -> List[CaptureSessionRead]:
+) -> list[CaptureSessionRead]:
     query = select(CaptureSession)
 
     if ids:
@@ -86,7 +86,7 @@ async def get_capture_session(id: UUID, session: AsyncSession = Depends(get_sess
 
 
 @router.get("/{id}/reconstructions")
-async def get_capture_session_reconstructions(id: UUID, session: AsyncSession = Depends(get_session)) -> List[UUID]:
+async def get_capture_session_reconstructions(id: UUID, session: AsyncSession = Depends(get_session)) -> list[UUID]:
     row = await session.get(CaptureSession, id)
 
     if not row:
@@ -128,8 +128,8 @@ async def update_capture_session(
 @router.patch("")
 async def update_capture_sessions(
     captures: list[CaptureSessionBatchUpdate], allow_missing: bool = False, session: AsyncSession = Depends(get_session)
-) -> List[CaptureSessionRead]:
-    rows: List[CaptureSession] = []
+) -> list[CaptureSessionRead]:
+    rows: list[CaptureSession] = []
     for capture in captures:
         row = await session.get(CaptureSession, capture.id)
 

@@ -70,19 +70,19 @@ namespace PlerionClient.Model
         /// <param name="createdAt">createdAt (required).</param>
         /// <param name="updatedAt">updatedAt (required).</param>
         /// <param name="deviceType">deviceType (required).</param>
-        /// <param name="filename">filename (required).</param>
-        public CaptureSessionRead(Guid id, DateTime createdAt, DateTime updatedAt, DeviceType deviceType, string filename)
+        /// <param name="name">name (required).</param>
+        public CaptureSessionRead(Guid id, DateTime createdAt, DateTime updatedAt, DeviceType deviceType, string name)
         {
             this.Id = id;
             this.CreatedAt = createdAt;
             this.UpdatedAt = updatedAt;
             this.DeviceType = deviceType;
-            // to ensure "filename" is required (not null)
-            if (filename == null)
+            // to ensure "name" is required (not null)
+            if (name == null)
             {
-                throw new ArgumentNullException("filename is a required property for CaptureSessionRead and cannot be null");
+                throw new ArgumentNullException("name is a required property for CaptureSessionRead and cannot be null");
             }
-            this.Filename = filename;
+            this.Name = name;
         }
 
         /// <summary>
@@ -158,28 +158,28 @@ namespace PlerionClient.Model
             return _flagUpdatedAt;
         }
         /// <summary>
-        /// Gets or Sets Filename
+        /// Gets or Sets Name
         /// </summary>
-        [DataMember(Name = "filename", IsRequired = true, EmitDefaultValue = true)]
-        public string Filename
+        [DataMember(Name = "name", IsRequired = true, EmitDefaultValue = true)]
+        public string Name
         {
-            get{ return _Filename;}
+            get{ return _Name;}
             set
             {
-                _Filename = value;
-                _flagFilename = true;
+                _Name = value;
+                _flagName = true;
             }
         }
-        private string _Filename;
-        private bool _flagFilename;
+        private string _Name;
+        private bool _flagName;
 
         /// <summary>
-        /// Returns false as Filename should not be serialized given that it's read-only.
+        /// Returns false as Name should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeFilename()
+        public bool ShouldSerializeName()
         {
-            return _flagFilename;
+            return _flagName;
         }
         /// <summary>
         /// Returns the string presentation of the object
@@ -193,7 +193,7 @@ namespace PlerionClient.Model
             sb.Append("  CreatedAt: ").Append(CreatedAt).Append("\n");
             sb.Append("  UpdatedAt: ").Append(UpdatedAt).Append("\n");
             sb.Append("  DeviceType: ").Append(DeviceType).Append("\n");
-            sb.Append("  Filename: ").Append(Filename).Append("\n");
+            sb.Append("  Name: ").Append(Name).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
