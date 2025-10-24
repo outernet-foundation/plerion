@@ -105,7 +105,6 @@ namespace Outernet.Client
             Auth.username = "user";
             Auth.password = "password";
             App.state.loggedIn.ExecuteSet(true);
-            //TODO EP: Add login to App.API fields
             Destroy(this);
         }
 
