@@ -719,14 +719,16 @@ namespace Outernet.Client.AuthoringTools
                     Camera.main.transform.rotation.Flatten()
                 );
 
-                var map = await App.API.GetReconstructionAsync(Guid.Empty /*scanName*/);
-                var imagePoses = await App.API.GetReconstructionImagePosesAsync(map.Id);
+                var maps = await App.API.GetReconstructionsAsync(captureSessionName: scanName);
 
-                if (map == null)
+                if (maps.Count == 0)
                 {
                     Debug.LogError($"Map {scanName} not found.");
                     return;
                 }
+
+                var map = maps[0];
+                var imagePoses = await App.API.GetReconstructionImagePosesAsync(map.Id);
 
                 App.ExecuteActionOrDelay(new AddOrUpdateMapAction(
                     map.Id,
