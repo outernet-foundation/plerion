@@ -3,7 +3,7 @@ using System.Linq;
 using Unity.Mathematics;
 using UnityEngine;
 using static Plerion.VPS.VisualPositioningSystem;
-
+/*
 namespace Plerion.VPS
 {
     static public class RANSAC
@@ -120,3 +120,4 @@ namespace Plerion.VPS
         }
     }
 }
+*/

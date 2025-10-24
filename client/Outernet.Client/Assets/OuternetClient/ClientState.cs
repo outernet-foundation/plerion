@@ -14,6 +14,7 @@ namespace Outernet.Client
     public class ClientState : ObservableObject
     {
         public ObservablePrimitive<bool> loggedIn { get; private set; }
+        public ObservablePrimitive<double2> roughGrainedLocation { get; private set; }
         public ObservableDictionary<Guid, NodeState> nodes { get; private set; }
         public ObservableDictionary<Guid, MapState> maps { get; private set; }
         public ObservableDictionary<Guid, TransformState> transforms { get; private set; }
@@ -159,16 +160,16 @@ namespace Outernet.Client
 
     public class MapState : ObservableObject, IKeyedObservableNode<Guid>
     {
-        public Guid id { get; private set; }
+        public Guid uuid { get; private set; }
+        public ObservablePrimitive<int> id { get; private set; }
         public ObservablePrimitive<string> name { get; private set; }
         public ObservablePrimitive<Lighting> lighting { get; private set; }
-        public ObservablePrimitive<long> color { get; private set; }
 
         [HideInInspectorUI]
-        public ObservablePrimitiveArray<double3> localInputImagePositions { get; private set; }
+        public ObservablePrimitiveArray<Vector3> localInputImagePositions { get; private set; }
 
         void IKeyedObservableNode<Guid>.AssignKey(Guid key)
-            => id = key;
+            => uuid = key;
 
         private ClientState _clientState => root as ClientState;
 
@@ -188,7 +189,7 @@ namespace Outernet.Client
 
         private void AwaitTransform(NodeChangeEventArgs args)
         {
-            if (!_clientState.transforms.TryGetValue(id, out var transform))
+            if (!_clientState.transforms.TryGetValue(uuid, out var transform))
                 return;
 
             context.DeregisterObserver(AwaitTransform);

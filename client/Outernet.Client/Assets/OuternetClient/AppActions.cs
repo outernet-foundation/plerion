@@ -8,6 +8,10 @@ using Unity.Mathematics;
 using System.Collections.Generic;
 
 using Plerion.VPS;
+using PlerionClient.Model;
+
+using Vector3 = UnityEngine.Vector3;
+using Quaternion = UnityEngine.Quaternion;
 
 namespace Outernet.Client
 {
@@ -105,16 +109,16 @@ namespace Outernet.Client
 
     public class SetMapsAction : ObservableNodeAction<ClientState>
     {
-        private PlerionClient.Model.LocalizationMapRead[] _maps;
+        private (LocalizationMapRead map, Vector3[] localInputImagePositions)[] _maps;
 
-        public SetMapsAction(PlerionClient.Model.LocalizationMapRead[] maps)
+        public SetMapsAction((LocalizationMapRead map, Vector3[] localInputImagePositions)[] maps)
         {
             _maps = maps;
         }
 
         public override void Execute(ClientState target)
         {
-            var newMapsByID = _maps.ToDictionary(x => x.Id);
+            var newMapsByID = _maps.ToDictionary(x => x.map.Id);
             var oldMapsByID = target.maps.ToDictionary(x => x.key, x => x.value);
 
             foreach (var toRemove in oldMapsByID.Where(x => !newMapsByID.ContainsKey(x.Key)))
@@ -123,68 +127,52 @@ namespace Outernet.Client
             foreach (var toUpdate in newMapsByID.Select(x => x.Value))
             {
                 new AddOrUpdateMapAction(
-                    id: toUpdate.Id,
-                    name: toUpdate.Name,
-                    position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
-                    rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW),
-                    lighting: (Lighting)toUpdate.Lighting,
-                    color: toUpdate.Color
-                // UNDO TYLER
-                // localInputImagePositions: ParsePoints(toUpdate.Points)
+                    uuid: toUpdate.map.Id,
+                    name: toUpdate.map.Name,
+                    position: new double3() { x = toUpdate.map.PositionX, y = toUpdate.map.PositionY, z = toUpdate.map.PositionZ },
+                    rotation: new Quaternion((float)toUpdate.map.RotationX, (float)toUpdate.map.RotationY, (float)toUpdate.map.RotationZ, (float)toUpdate.map.RotationW),
+                    lighting: (Lighting)toUpdate.map.Lighting,
+                    localInputImagePositions: toUpdate.localInputImagePositions
                 ).Execute(target);
             }
-        }
-
-        private double3[] ParsePoints(List<double> flatPoints)
-        {
-            var result = new double3[flatPoints.Count / 3];
-            for (int i = 0; i < flatPoints.Count; i += 3)
-                result[i / 3] = new double3(flatPoints[i], flatPoints[i + 1], flatPoints[i + 2]);
-
-            return result;
         }
     }
 
     public class AddOrUpdateMapAction : ObservableNodeAction<ClientState>
     {
-        private Guid _id;
+        private Guid _uuid;
         private string _name;
         private double3 _position;
         private Quaternion _rotation;
         private Lighting _lighting;
-        private long _color;
-        private double3[] _localInputImagePositions;
+        private Vector3[] _localInputImagePositions;
 
         public AddOrUpdateMapAction(
-            Guid id,
+            Guid uuid,
             string name = default,
             double3 position = default,
             Quaternion rotation = default,
             Lighting lighting = default,
-            long color = default,
-            double3[] localInputImagePositions = default)
+            Vector3[] localInputImagePositions = default)
         {
-            _id = id;
+            _uuid = uuid;
             _name = name;
             _position = position;
             _rotation = rotation;
             _lighting = lighting;
-            _color = color;
             _localInputImagePositions = localInputImagePositions;
         }
 
         public override void Execute(ClientState target)
         {
-            var map = target.maps.GetOrAdd(_id);
-            var transform = target.transforms.GetOrAdd(_id);
-
-            map.name.value = _name;
-            map.lighting.value = _lighting;
-            map.color.value = _color;
-            map.localInputImagePositions.SetValue(_localInputImagePositions);
-
+            var transform = target.transforms.GetOrAdd(_uuid);
             transform.position.value = _position;
             transform.rotation.value = _rotation;
+
+            var map = target.maps.GetOrAdd(_uuid);
+            map.name.value = _name;
+            map.lighting.value = _lighting;
+            map.localInputImagePositions.SetValue(_localInputImagePositions);
         }
     }
 

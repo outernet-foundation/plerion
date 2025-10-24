@@ -433,7 +433,7 @@ namespace Outernet.Client
             // localizationRate.SetText(string.Format("{0:0.00}", Localizer.Status.localizationCount));
             // successRate.SetText(string.Format("{0:0.00}", Localizer.Status.successCount));
 
-            // TODO EP: Should we maintain this functionality?
+            // TODO EP: Remove confidence history
             //confidenceHistory.SetText(string.Format("{0:0.00}", string.Join(", ", Localizer.Status.confidenceHistory.Reverse<float>().Take(8).Reverse())));
 
             // ransacScore.SetText(string.Format("{0:0.00}", RANSAC.Score));

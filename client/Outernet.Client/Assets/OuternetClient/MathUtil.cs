@@ -37,6 +37,14 @@ namespace Outernet.Client
             b = b2.GetColumn(3);
             return b;
         }
+
+        public static double3 SwitchHandedness(this ref double3 b)
+        {
+            double4x4 b2 = Double4x4.FromTranslationRotation(b, quaternion.identity);
+            b2.SwitchHandedness();
+            b = new double3(b2.c3.x, b2.c3.y, b2.c3.z);
+            return b;
+        }
     }
 
     public static class Double4x4

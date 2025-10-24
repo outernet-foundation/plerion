@@ -24,16 +24,11 @@ namespace Outernet.Client
         {
             Logger.Initialize();
 
-#if UNITY_EDITOR
-            var editorSettings = EditorSettings.GetOrCreateInstance();
-            Log.enabledLogGroups = editorSettings.enabledLogGroups;
-            Log.logLevel = editorSettings.logLevel;
-            Log.stackTraceLevel = editorSettings.stackTraceLevel;
-#else
-            Log.enabledLogGroups = ~LogGroup.None; // Enable all log groups
-            Log.logLevel = LogLevel.Info;
-            Log.stackTraceLevel = LogLevel.Warn;
-#endif
+            UnityEnv env = UnityEnv.GetOrCreateInstance();
+
+            Log.enabledLogGroups = env.enabledLogGroups;
+            Log.logLevel = env.logLevel;
+            Log.stackTraceLevel = env.stackTraceLevel;
         }
 
         private void Awake()
@@ -51,21 +46,15 @@ namespace Outernet.Client
             var defaultRaycaster = camera.gameObject.AddComponent<AuthoringTools.DefaultRaycaster>();
 #endif
 
-            string plerionAPIBaseUrl = "https://api.outernetfoundation.org";
+            UnityEnv env = UnityEnv.GetOrCreateInstance();
 
-#if UNITY_EDITOR
-            var editorSettings = EditorSettings.GetOrCreateInstance();
-            App.environmentURL = editorSettings.environmentURL;
-            App.environmentSchema = editorSettings.environmentSchema;
+            Auth.tokenUrl = string.IsNullOrEmpty(env.serverPrefix) ?
+                "https://keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token" :
+                $"https://{env.serverPrefix}-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token";
 
-            if (editorSettings.overridePlerionBaseUrl)
-                plerionAPIBaseUrl = editorSettings.plerionAPIBaseUrl;
-#else
-            App.environmentURL = "http://34.196.34.28";
-            App.environmentSchema = "dev2";
-#endif
-
-            PlerionAPI.Initialize(plerionAPIBaseUrl);
+            App.environmentURL = env.environmentURL;
+            App.environmentSchema = env.environmentSchema;
+            App.serverPrefix = env.serverPrefix;
 
             Instantiate(prefabSystem, transform);
 
@@ -77,18 +66,23 @@ namespace Outernet.Client
             ConnectionManager.Initialize();
             PlaneDetector.Initialize().Forget();
 
+            gameObject.AddComponent<GPSManager>();
+
 #if !AUTHORING_TOOLS_ENABLED
             SceneViewManager.Initialize();
             TilesetManager.Initialize();
             Instantiate(mapVisualizer);
 #else
-            var canvas = Instantiate(AuthoringTools.AuthoringToolsPrefabs.Canvas);
-            var systemMenu = Instantiate(AuthoringTools.AuthoringToolsPrefabs.SystemMenu, canvas.transform);
-
             gameObject.AddComponent<AuthoringTools.AuthoringToolsApp>();
+
+            var canvas = Instantiate(AuthoringTools.AuthoringToolsPrefabs.Canvas);
+            var systemUI = Instantiate(AuthoringTools.AuthoringToolsPrefabs.SystemMenu, canvas.transform);
+            var mainUI =
             Instantiate(AuthoringTools.AuthoringToolsPrefabs.UI, canvas.transform);
 
-            systemMenu.transform.SetAsLastSibling();
+            systemUI.transform.SetAsLastSibling();
+
+            Instantiate(AuthoringTools.AuthoringToolsPrefabs.LoginScreen, canvas.transform);
 
             gameObject.AddComponent<AuthoringTools.LocationContentManager>();
             gameObject.AddComponent<AuthoringTools.SettingsManager>();
@@ -107,6 +101,9 @@ namespace Outernet.Client
             var runtimeHandles = new GameObject("RuntimeHandles", typeof(AuthoringTools.RuntimeHandles));
             runtimeHandles.transform.SetParent(sceneViewRoot.transform);
 #endif
+            VisualPositioningSystem.Initialize("outernet", "password");
+            App.state.loggedIn.ExecuteSet(true);
+            //TODO EP: Add login to App.API fields
             Destroy(this);
         }
 

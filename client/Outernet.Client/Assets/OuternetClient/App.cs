@@ -1,30 +1,50 @@
-using UnityEngine;
-using Outernet.Shared;
-using Outernet.Client.Location;
 using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Net.Http;
+
+using UnityEngine;
+
+using Outernet.Shared;
 
 using FofX.Stateful;
-using ObservableCollections;
 
 using R3;
-using System.Collections.Generic;
-using Plerion.VPS;
-using Plerion.VPS.ARFoundation;
+using ObservableCollections;
 
 using Cysharp.Threading.Tasks;
 
+using PlerionClient.Api;
+using Plerion.VPS;
+using Plerion.VPS.ARFoundation;
+using PlerionClient.Model;
 #if UNITY_LUMIN
 using Plerion.VPS.MagicLeap;
 #endif
+
 
 namespace Outernet.Client
 {
     public class App : FofX.AppBase<ClientState>
     {
+        private class KeycloakHttpHandler : DelegatingHandler
+        {
+            protected override async System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(
+                HttpRequestMessage request, CancellationToken cancellationToken)
+            {
+                var token = await Auth.GetOrRefreshToken();
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                return await base.SendAsync(request, cancellationToken);
+            }
+        }
+
+        public static DefaultApi API { get; private set; }
+
         public static RoomRecord State_Old => ConnectionManager.State;
         public static Guid? ClientID => ConnectionManager.ClientID;
         public static string environmentURL;
         public static string environmentSchema;
+        public static string serverPrefix;
 
         private static bool internetReachable = false;
         public static bool InternetReachable => internetReachable;
@@ -36,6 +56,17 @@ namespace Outernet.Client
 
         private void Start()
         {
+            var plerionAPIBaseUrl = string.IsNullOrEmpty(serverPrefix) ?
+                "https://api.outernetfoundation.org" : $"https://{serverPrefix}-api.outernetfoundation.org";
+
+            API = new DefaultApi(
+                new HttpClient(new KeycloakHttpHandler() { InnerHandler = new HttpClientHandler() })
+                {
+                    BaseAddress = new Uri(plerionAPIBaseUrl)
+                },
+                plerionAPIBaseUrl
+            );
+
             Application.wantsToQuit += WantsToQuit;
             ConnectionManager.HubConnectionRequested.EnqueueSet(true);
 
@@ -95,14 +126,21 @@ namespace Outernet.Client
                 }
             );
 #endif
+            App.RegisterObserver(HandleLoggedInChanged, App.state.loggedIn);
+            initialized = true;
+        }
+
+        private void HandleLoggedInChanged(NodeChangeEventArgs args)
+        {
+            if (!App.state.loggedIn.value)
+                return;
 
             GetLayersAndPopulate();
-            initialized = true;
         }
 
         private async void GetLayersAndPopulate()
         {
-            var layers = await PlerionAPI.api.GetLayersAsync();
+            var layers = await App.API.GetLayersAsync();
             await UniTask.SwitchToMainThread();
 
             if (layers == null)

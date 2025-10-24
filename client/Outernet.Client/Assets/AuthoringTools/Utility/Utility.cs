@@ -162,11 +162,11 @@ namespace Outernet.Client.AuthoringTools
             return primitive.value;
         }
 
-        public static PlerionClient.Model.GroupBatchUpdate ToGroupModel(Guid sceneObjectID)
+        public static GroupBatchUpdate ToGroupModel(Guid sceneObjectID)
         {
             var group = App.state.authoringTools.nodeGroups[sceneObjectID];
 
-            return new PlerionClient.Model.GroupBatchUpdate(
+            return new GroupBatchUpdate(
                 id: group.id)
             {
                 Name = group.name.value,
@@ -174,17 +174,15 @@ namespace Outernet.Client.AuthoringTools
             };
         }
 
-        public static PlerionClient.Model.LocalizationMapBatchUpdate ToMapRecord(Guid sceneObjectID)
+        public static LocalizationMapBatchUpdate ToMapModel(Guid sceneObjectID)
         {
             var map = App.state.maps[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];
 
-            return new PlerionClient.Model.LocalizationMapBatchUpdate(
-                id: map.id)
+            return new LocalizationMapBatchUpdate(id: map.uuid)
             {
                 Name = map.name.value,
                 Lighting = (int)map.lighting.value,
-                Color = (int)map.color.value,
                 Active = true,
                 PositionX = transform.position.value.x,
                 PositionY = transform.position.value.y,
@@ -192,9 +190,7 @@ namespace Outernet.Client.AuthoringTools
                 RotationX = transform.rotation.value.x,
                 RotationY = transform.rotation.value.y,
                 RotationZ = transform.rotation.value.z,
-                RotationW = transform.rotation.value.w,
-                // UNDO TYLER
-                // Points = map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
+                RotationW = transform.rotation.value.w
             };
         }
 
@@ -205,12 +201,12 @@ namespace Outernet.Client.AuthoringTools
             yield return value.z;
         }
 
-        public static PlerionClient.Model.NodeBatchUpdate ToNodeModel(Guid sceneObjectID)
+        public static NodeBatchUpdate ToNodeModel(Guid sceneObjectID)
         {
             var node = App.state.nodes[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];
 
-            return new PlerionClient.Model.NodeBatchUpdate(
+            return new NodeBatchUpdate(
                 id: node.id)
             {
                 Name = node.name.value,
@@ -234,10 +230,10 @@ namespace Outernet.Client.AuthoringTools
             };
         }
 
-        public static PlerionClient.Model.LayerBatchUpdate ToLayerModel(Guid sceneObjectID)
+        public static LayerBatchUpdate ToLayerModel(Guid sceneObjectID)
         {
             var layer = App.state.layers[sceneObjectID];
-            return new PlerionClient.Model.LayerBatchUpdate(layer.id)
+            return new LayerBatchUpdate(layer.id)
             {
                 Name = layer.layerName.value
             };

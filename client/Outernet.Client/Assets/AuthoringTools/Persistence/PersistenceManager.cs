@@ -230,7 +230,7 @@ namespace Outernet.Client.AuthoringTools
                     .ToList(),
 
                 upsertedMaps = _mapPersistenceHelper.inserts.Concat(_mapPersistenceHelper.updates)
-                    .Select(Utility.ToMapRecord)
+                    .Select(Utility.ToMapModel)
                     .ToList(),
 
                 upsertedLayers = _layerPersistenceHelper.inserts.Concat(_layerPersistenceHelper.updates)
@@ -259,14 +259,14 @@ namespace Outernet.Client.AuthoringTools
             while (_pendingPersists.TryDequeue(out var toPersist))
             {
                 await UniTask.WhenAll(
-                    PlerionAPI.api.DeleteLocalizationMapsAsync(toPersist.deletedMaps).AsUniTask(),
-                    PlerionAPI.api.UpdateLocalizationMapsAsync(toPersist.upsertedMaps).AsUniTask(),
-                    PlerionAPI.api.DeleteGroupsAsync(toPersist.deletedGroups).AsUniTask(),
-                    PlerionAPI.api.DeleteLayersAsync(toPersist.deletedLayers).AsUniTask(),
-                    PlerionAPI.api.DeleteNodesAsync(toPersist.deletedNodes).AsUniTask(),
-                    PlerionAPI.api.UpdateLayersAsync(toPersist.upsertedLayers).AsUniTask()
-                        .ContinueWith(_ => PlerionAPI.api.UpdateGroupsAsync(toPersist.upsertedGroups))
-                        .ContinueWith(_ => PlerionAPI.api.UpdateNodesAsync(toPersist.upsertedNodes))
+                    App.API.DeleteLocalizationMapsAsync(toPersist.deletedMaps).AsUniTask(),
+                    App.API.UpdateLocalizationMapsAsync(toPersist.upsertedMaps).AsUniTask(),
+                    App.API.DeleteGroupsAsync(toPersist.deletedGroups).AsUniTask(),
+                    App.API.DeleteLayersAsync(toPersist.deletedLayers).AsUniTask(),
+                    App.API.DeleteNodesAsync(toPersist.deletedNodes).AsUniTask(),
+                    App.API.UpdateLayersAsync(toPersist.upsertedLayers).AsUniTask()
+                        .ContinueWith(_ => App.API.UpdateGroupsAsync(toPersist.upsertedGroups))
+                        .ContinueWith(_ => App.API.UpdateNodesAsync(toPersist.upsertedNodes))
                 );
             }
 

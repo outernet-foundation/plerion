@@ -6,6 +6,7 @@ using UnityEngine;
 
 using static Plerion.VPS.VisualPositioningSystem;
 
+/*
 namespace Plerion.VPS
 {
     static public class RANSACFloat
@@ -82,3 +83,4 @@ namespace Plerion.VPS
         }
     }
 }
+*/

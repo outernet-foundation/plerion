@@ -17,6 +17,7 @@ using PlerionClient.Model;
 using PlerionClient.Api;
 using PlerionClient.Client;
 using Plerion.VPS;
+using System.Threading.Tasks;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -28,7 +29,12 @@ namespace Outernet.Client.AuthoringTools
 
         private void Awake()
         {
-            App.RegisterObserver(HandleLocationChanged, App.state.authoringTools.location, App.state.authoringTools.settings.nodeFetchRadius);
+            App.RegisterObserver(
+                HandleLocationChanged,
+                App.state.loggedIn,
+                App.state.authoringTools.location,
+                App.state.authoringTools.settings.nodeFetchRadius
+            );
         }
 
         private void OnDestroy()
@@ -38,6 +44,9 @@ namespace Outernet.Client.AuthoringTools
 
         private void HandleLocationChanged(NodeChangeEventArgs args)
         {
+            if (!App.state.loggedIn.value)
+                return;
+
             _updateLocationAndContentTask.Cancel();
 
             if (_loadedLocation.Equals(App.state.authoringTools.location.value) &&
@@ -157,41 +166,81 @@ namespace Outernet.Client.AuthoringTools
                 )
             );
 
-            List<LocalizationMapRead> maps = null;
+            (LocalizationMapRead, UnityEngine.Vector3[])[] maps = default;
+
+#if MAP_REGISTRATION_TOOLS_ENABLED
+            maps = await GetLocalizationMapsWithInputPositions();
+
+            // TODO EP: Re-enable this when we get this endpoint
+            // await App.API.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
+            //     .ContinueWith(x => maps = x);
+#else
             List<NodeRead> nodes = null;
             List<GroupRead> nodeGroups = null;
 
             await UniTask.WhenAll(
-                PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
+                GetLocalizationMapsWithInputPositions()
                     .ContinueWith(x => maps = x),
 
-                PlerionAPI.GetNodes(new double3[] { ecefCoordinates }, radius, 9999)
+                // TODO EP: Re-enable this when we get this endpoint
+                // PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
+                //     .ContinueWith(x => maps = x),
+
+                App.API.GetNodesAsync().AsUniTask()
                     .ContinueWith(x =>
                     {
                         nodes = x;
-                        return GetNodeGroupsRecursive(x, cancellationToken);
+                        return GetNodeGroupsRecursive(x);
                     })
                     .ContinueWith(x => nodeGroups = x)
+
+                // TODO EP: Re-enable this when we get this endpoint
+                // PlerionAPI.GetNodesNearPositionsAsync(new double3[] { ecefCoordinates }, radius, 9999)
+                //     .ContinueWith(x =>
+                //     {
+                //         nodes = x;
+                //         return GetNodeGroupsRecursive(x, cancellationToken);
+                //     })
+                //     .ContinueWith(x => nodeGroups = x)
             );
+#endif
 
             await UniTask.SwitchToMainThread(cancellationToken);
 
+#if MAP_REGISTRATION_TOOLS_ENABLED
+            App.ExecuteActionOrDelay(new SetMapsAction(maps.ToArray()));
+#else
             App.ExecuteActionOrDelay(
                 new SetMapsAction(maps.ToArray()),
                 new SetNodesAction(nodes.ToArray()),
                 new SetNodeGroupsAction(nodeGroups.ToArray())
             );
+#endif
 
             Destroy(dialog.gameObject);
 
             App.ExecuteActionOrDelay(new SetLocationContentLoadedAction(true));
         }
 
+        private async UniTask<(LocalizationMapRead, UnityEngine.Vector3[])[]> GetLocalizationMapsWithInputPositions()
+        {
+            var maps = await App.API.GetLocalizationMapsAsync();
+            var result = new (LocalizationMapRead, UnityEngine.Vector3[])[maps.Count];
+
+            await Task.WhenAll(maps.Select(
+                map => App.API
+                    .GetLocalizationMapPointsAsync(map.Id)
+                    .ContinueWith(points => result[maps.IndexOf(map)] = (map, points.Result.Select(x => x.Position.ToUnityVector3()).ToArray()))
+            ));
+
+            return result;
+        }
+
         private async UniTask<List<GroupRead>> GetNodeGroupsRecursive(List<NodeRead> nodes, CancellationToken cancellationToken = default)
         {
             var groups = new List<GroupRead>();
 
-            var directGroups = await PlerionAPI.api.GetGroupsAsync(
+            var directGroups = await App.API.GetGroupsAsync(
                 nodes.Where(x => x.ParentId.HasValue)
                     .Select(x => x.ParentId.Value)
                     .Distinct()
@@ -204,7 +253,7 @@ namespace Outernet.Client.AuthoringTools
 
             while (groups.Any(x => x.ParentId.HasValue && !groups.Any(y => y.Id == x.ParentId)))
             {
-                var recursiveGroups = await PlerionAPI.api.GetGroupsAsync(
+                var recursiveGroups = await App.API.GetGroupsAsync(
                     groups.Where(x => x.ParentId.HasValue && !groups.Any(y => y.Id == x.ParentId))
                         .Select(x => x.ParentId.Value)
                         .Distinct()

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Linq;
 
 using UnityEngine;
@@ -13,7 +12,6 @@ using Cysharp.Threading.Tasks;
 using FofX;
 using FofX.Stateful;
 
-using Outernet.Client.Location;
 using Plerion.VPS;
 using TMPro;
 
@@ -45,7 +43,6 @@ namespace Outernet.Client.AuthoringTools
         private Dictionary<Guid, Foldout> _groupFoldouts = new Dictionary<Guid, Foldout>();
 
         private Guid _lastSelectedElement;
-        private List<Guid> _layersInOrder = new List<Guid>();
 
         private void Awake()
         {
@@ -336,7 +333,7 @@ namespace Outernet.Client.AuthoringTools
 
             view.AddBinding(
                 BindHierarchyElement(
-                    mapState.id,
+                    mapState.uuid,
                     view.gameObject,
                     toHighlight,
                     AuthoringToolsPrefabs.SelectedColor,
@@ -404,30 +401,6 @@ namespace Outernet.Client.AuthoringTools
 
             float targetY = contentPosition.y + ((RectTransform)topmostElement).rect.yMax - nodesScrollView.content.rect.yMin;
             nodesScrollView.verticalNormalizedPosition = Mathf.Clamp01((targetY - viewportHeight) / (contentHeight - viewportHeight));
-        }
-
-        private IEnumerable<Guid> MaskToLayers(List<Guid> layers, int mask)
-        {
-            for (int i = 0; i < layers.Count; i++)
-            {
-                if ((mask & (int)Mathf.Pow(2, i)) != 0)
-                    yield return layers[i];
-            }
-        }
-
-        private int LayersToMask(List<Guid> layers, IEnumerable<Guid> visibleLayers)
-        {
-            int result = 0;
-            foreach (var layer in visibleLayers)
-            {
-                int index = layers.IndexOf(layer);
-                if (index == -1)
-                    continue;
-
-                result += (int)Mathf.Pow(2, index);
-            }
-
-            return result;
         }
 
         private void RevealInHierarchy(Guid obj)
