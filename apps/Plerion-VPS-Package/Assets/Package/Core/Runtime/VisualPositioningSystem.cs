@@ -116,7 +116,7 @@ namespace Plerion.VPS
         {
             await api.LoadLocalizationMapsAsync(
                 localizationSession.Id,
-                maps.Cast<Guid?>().ToList(),
+                maps.ToList(),
                 startSessionTokenSource.Token
             );
         }

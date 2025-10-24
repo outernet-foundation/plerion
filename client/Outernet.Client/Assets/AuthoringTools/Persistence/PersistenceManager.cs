@@ -239,7 +239,7 @@ namespace Outernet.Client.AuthoringTools
 
                 deletedNodes = _nodePersistenceHelper.deletes.ToList(),
                 deletedGroups = _nodeGroupPersistenceHelper.deletes.ToList(),
-                deletedMaps = _mapPersistenceHelper.deletes.Cast<Guid?>().ToList(),
+                deletedMaps = _mapPersistenceHelper.deletes.ToList(),
                 deletedLayers = _layerPersistenceHelper.deletes.ToList()
             });
 
@@ -299,7 +299,7 @@ namespace Outernet.Client.AuthoringTools
 
             public List<Guid> deletedNodes;
             public List<Guid> deletedGroups;
-            public List<Guid?> deletedMaps;
+            public List<Guid> deletedMaps;
             public List<Guid> deletedLayers;
         }
     }
