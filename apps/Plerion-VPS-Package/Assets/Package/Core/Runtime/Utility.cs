@@ -152,6 +152,15 @@ namespace Plerion.VPS
             );
         }
 
+        public static double4x4 FromTranslationRotation(PlerionClient.Model.Vector3 translation, PlerionClient.Model.Quaternion rotation)
+        {
+            return FromTranslationRotationScale(
+                new double3(translation.X, translation.Y, translation.Z),
+                new quaternion((float)rotation.X, (float)rotation.Y, (float)rotation.Z, (float)rotation.W),
+                new double3(1.0, 1.0, 1.0)
+            );
+        }
+
         public static double4x4 FromTranslationRotation(double3 translation, quaternion rotation)
         {
             return FromTranslationRotationScale(translation, rotation, new double3(1.0, 1.0, 1.0));

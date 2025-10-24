@@ -219,8 +219,8 @@ namespace Plerion.VPS
             );
 
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
-            var estimatedCameraPosition = localizationResult.Value.Position.ToUnityVector3();
-            var estimatedCameraRotation = localizationResult.Value.Rotation.ToUnityQuaternion();
+            var estimatedCameraPosition = localizationResult.Transform.Position.ToUnityVector3();
+            var estimatedCameraRotation = localizationResult.Transform.Rotation.ToUnityQuaternion();
 
             EstimatedFloorHeight = cameraPosition.y - estimatedCameraPosition.y - scanneraOriginHeightOffset;
 
@@ -242,7 +242,7 @@ namespace Plerion.VPS
                 estimatedCameraRotation
             );
 
-            var mapEcefTransform = default(double4x4); /*Double4x4.FromTranslationRotation(localizationResult.MapEcefPosition, localizationResult.MapEcefRotation);*/ //TODO EP: Restore once we get the MapEcefPosition and MapEcefRotation
+            var mapEcefTransform = Double4x4.FromTranslationRotation(localizationResult.MapTransform.Position, localizationResult.MapTransform.Rotation); //TODO EP: Restore once we get the MapEcefPosition and MapEcefRotation
             var cameraEstimateEcefTransform = math.mul(mapEcefTransform, estimateCameraTransformMapSpace);
 
             SetUnityWorldToEcefTransform(math.mul(cameraEstimateEcefTransform, math.inverse(cameraTransformLocalSpace)));

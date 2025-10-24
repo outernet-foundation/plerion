@@ -101,7 +101,9 @@ namespace Outernet.Client
             var runtimeHandles = new GameObject("RuntimeHandles", typeof(AuthoringTools.RuntimeHandles));
             runtimeHandles.transform.SetParent(sceneViewRoot.transform);
 #endif
-            VisualPositioningSystem.Initialize("outernet", "password");
+            VisualPositioningSystem.Initialize("user", "password");
+            Auth.username = "user";
+            Auth.password = "password";
             App.state.loggedIn.ExecuteSet(true);
             //TODO EP: Add login to App.API fields
             Destroy(this);
