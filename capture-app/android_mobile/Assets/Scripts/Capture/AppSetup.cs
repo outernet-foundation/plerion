@@ -1,6 +1,7 @@
 using UnityEngine;
 using FofX.Stateful;
 using Nessle;
+using Cysharp.Threading.Tasks;
 
 namespace PlerionClient.Client
 {
@@ -13,6 +14,8 @@ namespace PlerionClient.Client
 
         private void Awake()
         {
+            UniTaskScheduler.UnobservedTaskException += Debug.LogException;
+
             Application.targetFrameRate = 120;
             UIBuilder.primitives = uiPrimitives;
 
