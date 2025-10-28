@@ -677,6 +677,20 @@ paths:
           type: array
           nullable: true
         style: form
+      - description: Optional list of Reconstruction Ids to filter by
+        explode: true
+        in: query
+        name: reconstruction_ids
+        required: false
+        schema:
+          items:
+            format: uuid
+            type: string
+            x-schema-name: get_localization_maps_param_reconstruction_ids_item
+            nullable: false
+          type: array
+          nullable: true
+        style: form
       responses:
         "200":
           content:

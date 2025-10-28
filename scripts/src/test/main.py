@@ -12,7 +12,7 @@ from .curl import curl
 from .visualize import generate_visualization
 
 API_BASE_URL = "https://desktop-otd3rch-api.outernetfoundation.org"
-CAPTURE_ID = "24e897fe-238c-4cc5-8a6d-5dd5d8f7ac64"  # TODO: replace
+CAPTURE_ID = "1958d343-0912-4a9f-ac26-871fa4bf773f"  # TODO: replace
 SCRIPT_DIR = Path(__file__).parent
 TEST_IMAGE_PATH = SCRIPT_DIR / "test_image.jpg"
 OUTPUT_HTML_PATH = SCRIPT_DIR / "vls_test_result.html"
@@ -123,7 +123,7 @@ def main() -> None:
 
     print("Localizing test image")
     camera_json = json.dumps(intrinsics)
-    localization_result: dict[UUID, Transform] = curl(
+    localization_result = curl(
         "POST",
         f"{API_BASE_URL}/localization_sessions/{session_id}/localization",
         form_data={"image": f"@{TEST_IMAGE_PATH}", "camera": camera_json},
@@ -141,8 +141,9 @@ def main() -> None:
     )
 
     print(f"Generating visualization → {OUTPUT_HTML_PATH}")
+    localization_dict: dict[UUID, Transform] = {loc["id"]: loc["transform"] for loc in localization_result}
     html = generate_visualization(
-        point_cloud, reconstruction_image_poses, localization_result[reconstruction_id], intrinsics
+        point_cloud, reconstruction_image_poses, localization_dict[reconstruction_id], intrinsics
     )
 
     OUTPUT_HTML_PATH.parent.mkdir(parents=True, exist_ok=True)

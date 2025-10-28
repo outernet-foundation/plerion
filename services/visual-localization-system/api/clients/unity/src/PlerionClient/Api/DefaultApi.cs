@@ -482,8 +482,9 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <returns>List&lt;LocalizationMapRead&gt;</returns>
-        List<LocalizationMapRead> GetLocalizationMaps(List<Guid>? ids = default);
+        List<LocalizationMapRead> GetLocalizationMaps(List<Guid>? ids = default, List<Guid>? reconstructionIds = default);
 
         /// <summary>
         /// Get Localization Maps
@@ -493,8 +494,9 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;LocalizationMapRead&gt;</returns>
-        ApiResponse<List<LocalizationMapRead>> GetLocalizationMapsWithHttpInfo(List<Guid>? ids = default);
+        ApiResponse<List<LocalizationMapRead>> GetLocalizationMapsWithHttpInfo(List<Guid>? ids = default, List<Guid>? reconstructionIds = default);
         /// <summary>
         /// Get Localization Session Status
         /// </summary>
@@ -1531,9 +1533,10 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;LocalizationMapRead&gt;</returns>
-        System.Threading.Tasks.Task<List<LocalizationMapRead>> GetLocalizationMapsAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<LocalizationMapRead>> GetLocalizationMapsAsync(List<Guid>? ids = default, List<Guid>? reconstructionIds = default, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get Localization Maps
@@ -1543,9 +1546,10 @@ namespace PlerionClient.Api
         /// </remarks>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;LocalizationMapRead&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<LocalizationMapRead>>> GetLocalizationMapsWithHttpInfoAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<LocalizationMapRead>>> GetLocalizationMapsWithHttpInfoAsync(List<Guid>? ids = default, List<Guid>? reconstructionIds = default, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Localization Session Status
         /// </summary>
@@ -5128,10 +5132,11 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <returns>List&lt;LocalizationMapRead&gt;</returns>
-        public List<LocalizationMapRead> GetLocalizationMaps(List<Guid>? ids = default)
+        public List<LocalizationMapRead> GetLocalizationMaps(List<Guid>? ids = default, List<Guid>? reconstructionIds = default)
         {
-            PlerionClient.Client.ApiResponse<List<LocalizationMapRead>> localVarResponse = GetLocalizationMapsWithHttpInfo(ids);
+            PlerionClient.Client.ApiResponse<List<LocalizationMapRead>> localVarResponse = GetLocalizationMapsWithHttpInfo(ids, reconstructionIds);
             return localVarResponse.Data;
         }
 
@@ -5140,8 +5145,9 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <returns>ApiResponse of List&lt;LocalizationMapRead&gt;</returns>
-        public PlerionClient.Client.ApiResponse<List<LocalizationMapRead>> GetLocalizationMapsWithHttpInfo(List<Guid>? ids = default)
+        public PlerionClient.Client.ApiResponse<List<LocalizationMapRead>> GetLocalizationMapsWithHttpInfo(List<Guid>? ids = default, List<Guid>? reconstructionIds = default)
         {
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
 
@@ -5162,6 +5168,10 @@ namespace PlerionClient.Api
             if (ids != null)
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+            }
+            if (reconstructionIds != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "reconstruction_ids", reconstructionIds));
             }
 
 
@@ -5182,11 +5192,12 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;LocalizationMapRead&gt;</returns>
-        public async System.Threading.Tasks.Task<List<LocalizationMapRead>> GetLocalizationMapsAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<LocalizationMapRead>> GetLocalizationMapsAsync(List<Guid>? ids = default, List<Guid>? reconstructionIds = default, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionClient.Client.ApiResponse<List<LocalizationMapRead>> localVarResponse = await GetLocalizationMapsWithHttpInfoAsync(ids, cancellationToken).ConfigureAwait(false);
+            PlerionClient.Client.ApiResponse<List<LocalizationMapRead>> localVarResponse = await GetLocalizationMapsWithHttpInfoAsync(ids, reconstructionIds, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -5195,9 +5206,10 @@ namespace PlerionClient.Api
         /// </summary>
         /// <exception cref="PlerionClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="ids">Optional list of Ids to filter by (optional)</param>
+        /// <param name="reconstructionIds">Optional list of Reconstruction Ids to filter by (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;LocalizationMapRead&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<LocalizationMapRead>>> GetLocalizationMapsWithHttpInfoAsync(List<Guid>? ids = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionClient.Client.ApiResponse<List<LocalizationMapRead>>> GetLocalizationMapsWithHttpInfoAsync(List<Guid>? ids = default, List<Guid>? reconstructionIds = default, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionClient.Client.RequestOptions localVarRequestOptions = new PlerionClient.Client.RequestOptions();
@@ -5220,6 +5232,10 @@ namespace PlerionClient.Api
             if (ids != null)
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+            }
+            if (reconstructionIds != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionClient.Client.ClientUtils.ParameterToMultiMap("multi", "reconstruction_ids", reconstructionIds));
             }
 
 

@@ -90,12 +90,23 @@ async def delete_localization_maps(
 @router.get("")
 async def get_localization_maps(
     ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
+    reconstruction_ids: Optional[list[UUID]] = Query(
+        None, description="Optional list of Reconstruction Ids to filter by"
+    ),
     session: AsyncSession = Depends(get_session),
 ) -> list[LocalizationMapRead]:
+    if ids and reconstruction_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot filter by both ids and reconstruction_ids"
+        )
+
     query = select(LocalizationMap)
 
     if ids:
         query = query.where(LocalizationMap.id.in_(ids))
+
+    if reconstruction_ids:
+        query = query.where(LocalizationMap.reconstruction_id.in_(reconstruction_ids))
 
     result = await session.execute(query)
 

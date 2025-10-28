@@ -184,7 +184,9 @@ async def localize_image(
         raise HTTPException(status_code=r.status_code, detail=r.text)
 
     localizer_response: dict[UUID, Transform] = r.json()
-    maps = await get_localization_maps(ids=[id for id in localizer_response.keys()], session=session)
+    maps = await get_localization_maps(
+        reconstruction_ids=[id for id in localizer_response.keys()], ids=None, session=session
+    )
 
     return [
         MapLocalization(

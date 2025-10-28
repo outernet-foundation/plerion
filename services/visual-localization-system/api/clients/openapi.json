@@ -1042,6 +1042,22 @@
               "nullable": true
             },
             "description": "Optional list of Ids to filter by"
+          },
+          {
+            "name": "reconstruction_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid",
+                "x-schema-name": "get_localization_maps_param_reconstruction_ids_item",
+                "nullable": false
+              },
+              "nullable": true
+            },
+            "description": "Optional list of Reconstruction Ids to filter by"
           }
         ],
         "responses": {
