@@ -257,9 +257,9 @@ namespace Outernet.Client.AuthoringTools
     public class UpdateMapLocationsAction : ObservableNodeAction<ClientState>
     {
         private double4x4 _ecefToLocalMatrix;
-        private SceneMap.Props[] _toUpdate;
+        private AuthoringToolsMap.Props[] _toUpdate;
 
-        public UpdateMapLocationsAction(double4x4 ecefToLocalMatrix, SceneMap.Props[] toUpdate)
+        public UpdateMapLocationsAction(double4x4 ecefToLocalMatrix, AuthoringToolsMap.Props[] toUpdate)
         {
             _ecefToLocalMatrix = ecefToLocalMatrix;
             _toUpdate = toUpdate;

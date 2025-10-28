@@ -48,28 +48,26 @@ namespace Plerion.VPS
                     {
                         foreach (var map in _mapsByID.Values)
                             Destroy(map.gameObject);
-
-                        await UniTask.WaitForSeconds(10, cancellationToken: cancellationToken);
                     }
-
-                    var removedMaps = _mapsByID.Keys.Where(x => !maps.Any(y => y.id == x)).ToArray();
-                    foreach (var removedMap in removedMaps)
+                    else
                     {
-                        Destroy(_mapsByID[removedMap].gameObject);
-                        _mapsByID.Remove(removedMap);
-                    }
+                        var removedMaps = _mapsByID.Keys.Where(x => !maps.Any(y => y.id == x)).ToArray();
+                        foreach (var removedMap in removedMaps)
+                        {
+                            Destroy(_mapsByID[removedMap].gameObject);
+                            _mapsByID.Remove(removedMap);
+                        }
 
-                    var addedMaps = maps.Where(x => !_mapsByID.ContainsKey(x.id)).ToArray();
-                    foreach (var addedMap in addedMaps)
-                    {
-                        var local = VisualPositioningSystem.EcefToUnityWorld(addedMap.ecefPosition, addedMap.ecefRotation);
-                        var mapView = Instantiate(mapRendererPrefab, local.position, local.rotation);
-                        mapView.gameObject.name = addedMap.name;
-                        mapView.Load(addedMap.id);
-                        _mapsByID.Add(addedMap.id, mapView);
+                        var addedMaps = maps.Where(x => !_mapsByID.ContainsKey(x.id)).ToArray();
+                        foreach (var addedMap in addedMaps)
+                        {
+                            var local = VisualPositioningSystem.EcefToUnityWorld(addedMap.ecefPosition, addedMap.ecefRotation);
+                            var mapView = Instantiate(mapRendererPrefab, local.position, local.rotation);
+                            mapView.gameObject.name = addedMap.name;
+                            mapView.Load(addedMap.id);
+                            _mapsByID.Add(addedMap.id, mapView);
+                        }
                     }
-
-                    await UniTask.WaitForSeconds(10, cancellationToken: cancellationToken);
                 }
                 catch (Exception exc)
                 {
@@ -78,6 +76,8 @@ namespace Plerion.VPS
 
                     Log.Error(LogGroup.MapVisualization, exc);
                 }
+
+                await UniTask.WaitForSeconds(10, cancellationToken: cancellationToken);
             }
         }
     }

@@ -15,6 +15,7 @@ using FofX.Stateful;
 
 using Plerion.VPS;
 using TMPro;
+using UnityEditor.VersionControl;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -103,8 +104,7 @@ namespace Outernet.Client.AuthoringTools
                     );
                 },
                 validate: () =>
-                    App.state.authoringTools.selectedObjects.count > 0 &&
-                    App.state.authoringTools.selectedObjects.All(CanReparent),
+                    App.state.authoringTools.selectedObjects.count > 0,
                 commandKeys: new Key[][]{
                     new Key[] { Key.Delete },
                     new Key[] { Key.Backspace }
@@ -181,7 +181,7 @@ namespace Outernet.Client.AuthoringTools
 
             App.state.authoringTools.nodeGroups.Each(x => SetupGroupView(x.value));
             App.state.nodes.Each(x => SetupNodeView(x.value));
-            App.state.maps.Each(x => SetupMapView(x.value));
+            App.state.authoringTools.maps.Each(x => SetupMapView(x.value));
 
             Bindings.Observer(
                 _ =>
@@ -431,7 +431,7 @@ namespace Outernet.Client.AuthoringTools
                 ", ",
                 App.state.authoringTools.selectedObjects
                     .Where(CanReparent)
-                    .Select(x => App.state.TryGetName(x, out var name) ? name.value : null)
+                    .Select(x => App.state.authoringTools.TryGetName(x, out var name) ? name.value : null)
             );
         }
 
@@ -674,6 +674,7 @@ namespace Outernet.Client.AuthoringTools
         private class AddScanDialogProps : Dialog.Props
         {
             public ObservablePrimitive<string> scanName { get; private set; }
+            public ObservablePrimitive<string> error { get; private set; }
 
             public AddScanDialogProps(string scanName = default, string title = default, DialogStatus status = default, bool allowCancel = default, float minimumWidth = 500f)
                 : base(title, status, allowCancel, minimumWidth)
@@ -692,13 +693,29 @@ namespace Outernet.Client.AuthoringTools
                         .Alignment(TextAnchor.LowerRight)
                         .WithChildren(
                             UIBuilder.Button("Cancel", () => props.status.ExecuteSet(DialogStatus.Canceled)),
-                            UIBuilder.Button("Add Scan", () => props.status.ExecuteSet(DialogStatus.Complete))
-                                .WithBinding(x => Bindings.Observer(
-                                    _ => x.button.interactable = props.scanName.value != null,
-                                    ObservationScope.Self,
-                                    props.scanName
-                                ))
-                        )
+                            UIBuilder.Button("Add Scan", async () =>
+                            {
+                                try
+                                {
+                                    await ImportScan(props.scanName.value);
+                                    props.status.ScheduleSet(DialogStatus.Complete);
+                                }
+                                catch (Exception exc)
+                                {
+                                    props.error.ScheduleSet(exc.Message);
+                                }
+                            })
+                            .WithBinding(x => Bindings.Observer(
+                                _ => x.button.interactable = props.scanName.value != null,
+                                ObservationScope.Self,
+                                props.scanName
+                            ))
+                        ),
+                    UIBuilder.Text(props.error).Color(Color.red).WithBinding(x => Bindings.Observer(
+                        _ => x.gameObject.SetActive(!string.IsNullOrEmpty(props.error.value)),
+                        ObservationScope.Self,
+                        props.error
+                    ))
                 ),
                 binding: props => Bindings.Compose(
                     props.status.OnChange(x =>
@@ -719,29 +736,38 @@ namespace Outernet.Client.AuthoringTools
                     Camera.main.transform.rotation.Flatten()
                 );
 
-                var maps = await App.API.GetReconstructionsAsync(captureSessionName: scanName);
+                var reconstructions = await App.API.GetReconstructionsAsync(captureSessionName: scanName);
 
-                if (maps.Count == 0)
+                if (reconstructions.Count == 0)
                 {
-                    Debug.LogError($"Map {scanName} not found.");
+                    Debug.LogError($"{scanName} not found.");
                     return;
                 }
 
-                var map = maps[0];
-                var imagePoses = await App.API.GetReconstructionImagePosesAsync(map.Id);
+                var reconstruction = reconstructions[0];
+                Guid exsistingMap = Guid.Empty;
+
+                try
+                {
+                    exsistingMap = await App.API.GetReconstructionLocalizationMapAsync(reconstruction.Id);
+                }
+                catch (System.Exception) { }
+
+                if (exsistingMap != Guid.Empty || App.state.authoringTools.maps.Any(x => x.value.reconstructionID.value == reconstruction.Id))
+                    throw new Exception("Localization map already registered.");
 
                 App.ExecuteActionOrDelay(new AddOrUpdateMapAction(
-                    map.Id,
+                    Guid.NewGuid(),
                     scanName,
                     newMapTransform.position,
                     newMapTransform.rotation,
                     Lighting.Day,
-                    imagePoses.Select(x => x.Position.ToUnityVector3()).ToArray()
+                    reconstruction.Id
                 ));
             }
             catch (Exception exception)
             {
-                Debug.LogError(exception);
+                Log.Error(LogGroup.Default, exception, "Encountered an error importing scan.");
             }
         }
 

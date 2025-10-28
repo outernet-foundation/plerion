@@ -166,25 +166,24 @@ namespace Outernet.Client.AuthoringTools
                 )
             );
 
-            (LocalizationMapRead, UnityEngine.Vector3[])[] maps = default;
+            List<LocalizationMapRead> maps = default;
 
 #if MAP_REGISTRATION_TOOLS_ENABLED
-            maps = await GetLocalizationMapsWithInputPositions();
+            maps = await App.API.GetLocalizationMapsAsync();
 
             // TODO EP: Re-enable this when we get this endpoint
-            // await App.API.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
-            //     .ContinueWith(x => maps = x);
+            // maps = await App.API.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition);
 #else
             List<NodeRead> nodes = null;
             List<GroupRead> nodeGroups = null;
 
             await UniTask.WhenAll(
-                GetLocalizationMapsWithInputPositions()
-                    .ContinueWith(x => maps = x),
 
+                App.API.GetLocalizationMapsAsync().AsUniTask().ContinueWith(x => maps = x),
+                
                 // TODO EP: Re-enable this when we get this endpoint
-                // PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
-                //     .ContinueWith(x => maps = x),
+                // await App.API.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
+                //     .ContinueWith(x => maps = x);
 
                 App.API.GetNodesAsync().AsUniTask()
                     .ContinueWith(x =>
@@ -220,20 +219,6 @@ namespace Outernet.Client.AuthoringTools
             Destroy(dialog.gameObject);
 
             App.ExecuteActionOrDelay(new SetLocationContentLoadedAction(true));
-        }
-
-        private async UniTask<(LocalizationMapRead, UnityEngine.Vector3[])[]> GetLocalizationMapsWithInputPositions()
-        {
-            var maps = await App.API.GetLocalizationMapsAsync();
-            var result = new (LocalizationMapRead, UnityEngine.Vector3[])[maps.Count];
-
-            await Task.WhenAll(maps.Select(
-                map => App.API
-                    .GetLocalizationMapPointsAsync(map.Id)
-                    .ContinueWith(points => result[maps.IndexOf(map)] = (map, points.Result.Select(x => x.Position.ToUnityVector3()).ToArray()))
-            ));
-
-            return result;
         }
 
         private async UniTask<List<GroupRead>> GetNodeGroupsRecursive(List<NodeRead> nodes, CancellationToken cancellationToken = default)

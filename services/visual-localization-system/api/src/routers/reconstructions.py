@@ -110,7 +110,7 @@ async def get_reconstruction(id: UUID, session: AsyncSession = Depends(get_sessi
 
 
 @router.get("/{id}/localization_map")
-async def get_reconstruction_localization_map(id: UUID, session: AsyncSession = Depends(get_session)) -> UUID | None:
+async def get_reconstruction_localization_map(id: UUID, session: AsyncSession = Depends(get_session)) -> UUID:
     row = await session.get(Reconstruction, id)
 
     if not row:
@@ -118,7 +118,14 @@ async def get_reconstruction_localization_map(id: UUID, session: AsyncSession = 
 
     result = await session.execute(select(LocalizationMap.id).where(LocalizationMap.reconstruction_id == id))
 
-    return result.scalar_one_or_none()
+    localization_map = result.scalar_one_or_none()
+
+    if localization_map is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Localization map for reconstruction with id {id} not found"
+        )
+
+    return localization_map
 
 
 @router.get("/{id}/status")

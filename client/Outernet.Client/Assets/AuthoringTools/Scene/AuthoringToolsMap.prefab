@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 8264571476839269261}
   - component: {fileID: 5674913627146853103}
   m_Layer: 0
-  m_Name: SceneMap
+  m_Name: AuthoringToolsMap
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

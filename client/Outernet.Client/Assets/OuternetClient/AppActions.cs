@@ -109,17 +109,17 @@ namespace Outernet.Client
 
     public class SetMapsAction : ObservableNodeAction<ClientState>
     {
-        private (LocalizationMapRead map, Vector3[] localInputImagePositions)[] _maps;
+        private LocalizationMapRead[] _maps;
 
-        public SetMapsAction((LocalizationMapRead map, Vector3[] localInputImagePositions)[] maps)
+        public SetMapsAction(LocalizationMapRead[] maps)
         {
             _maps = maps;
         }
 
         public override void Execute(ClientState target)
         {
-            var newMapsByID = _maps.ToDictionary(x => x.map.Id);
-            var oldMapsByID = target.maps.ToDictionary(x => x.key, x => x.value);
+            var newMapsByID = _maps.ToDictionary(x => x.Id);
+            var oldMapsByID = target.authoringTools.maps.ToDictionary(x => x.key, x => x.value);
 
             foreach (var toRemove in oldMapsByID.Where(x => !newMapsByID.ContainsKey(x.Key)))
                 new DestroySceneObjectAction(toRemove.Key).Execute(target);
@@ -127,12 +127,12 @@ namespace Outernet.Client
             foreach (var toUpdate in newMapsByID.Select(x => x.Value))
             {
                 new AddOrUpdateMapAction(
-                    uuid: toUpdate.map.Id,
-                    name: toUpdate.map.Name,
-                    position: new double3() { x = toUpdate.map.PositionX, y = toUpdate.map.PositionY, z = toUpdate.map.PositionZ },
-                    rotation: new Quaternion((float)toUpdate.map.RotationX, (float)toUpdate.map.RotationY, (float)toUpdate.map.RotationZ, (float)toUpdate.map.RotationW),
-                    lighting: (Lighting)toUpdate.map.Lighting,
-                    localInputImagePositions: toUpdate.localInputImagePositions
+                    uuid: toUpdate.Id,
+                    name: toUpdate.Name,
+                    position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
+                    rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW),
+                    lighting: (Lighting)toUpdate.Lighting,
+                    reconstructionID: toUpdate.ReconstructionId
                 ).Execute(target);
             }
         }
@@ -145,7 +145,7 @@ namespace Outernet.Client
         private double3 _position;
         private Quaternion _rotation;
         private Lighting _lighting;
-        private Vector3[] _localInputImagePositions;
+        private Guid _reconstructionID;
 
         public AddOrUpdateMapAction(
             Guid uuid,
@@ -153,14 +153,14 @@ namespace Outernet.Client
             double3 position = default,
             Quaternion rotation = default,
             Lighting lighting = default,
-            Vector3[] localInputImagePositions = default)
+            Guid reconstructionID = default)
         {
             _uuid = uuid;
             _name = name;
             _position = position;
             _rotation = rotation;
             _lighting = lighting;
-            _localInputImagePositions = localInputImagePositions;
+            _reconstructionID = reconstructionID;
         }
 
         public override void Execute(ClientState target)
@@ -169,18 +169,18 @@ namespace Outernet.Client
             transform.position.value = _position;
             transform.rotation.value = _rotation;
 
-            var map = target.maps.GetOrAdd(_uuid);
+            var map = target.authoringTools.maps.GetOrAdd(_uuid);
             map.name.value = _name;
             map.lighting.value = _lighting;
-            map.localInputImagePositions.SetValue(_localInputImagePositions);
+            map.reconstructionID.value = _reconstructionID;
         }
     }
 
     public class SetNodesAction : ObservableNodeAction<ClientState>
     {
-        private PlerionClient.Model.NodeRead[] _nodes;
+        private NodeRead[] _nodes;
 
-        public SetNodesAction(PlerionClient.Model.NodeRead[] nodes)
+        public SetNodesAction(NodeRead[] nodes)
         {
             _nodes = nodes;
         }

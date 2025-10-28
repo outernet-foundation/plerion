@@ -7,6 +7,7 @@ using FofX.Stateful;
 
 using Outernet.Client.Location;
 using Plerion.VPS;
+using UnityEngine.UIElements;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -17,7 +18,7 @@ namespace Outernet.Client.AuthoringTools
         private static AuthoringToolsSceneViewManager _instance;
 
         private Dictionary<Guid, AuthoringToolsNode> _nodes = new Dictionary<Guid, AuthoringToolsNode>();
-        private Dictionary<Guid, SceneMap> _maps = new Dictionary<Guid, SceneMap>();
+        private Dictionary<Guid, AuthoringToolsMap> _maps = new Dictionary<Guid, AuthoringToolsMap>();
 
         private void Awake()
         {
@@ -34,35 +35,25 @@ namespace Outernet.Client.AuthoringTools
 
             _instance = this;
 
-            App.state.maps.Each(kvp => SetupMap(kvp.value));
+            App.state.authoringTools.maps.Each(kvp => SetupMap(kvp.value));
             App.state.nodes.Each(kvp => SetupNode(kvp.value));
         }
 
         private IDisposable SetupMap(MapState map)
         {
             var transform = App.state.transforms[map.uuid];
-
-            var view = Instantiate(AuthoringToolsPrefabs.SceneMap, sceneRoot);
-            view.Setup(sceneObjectID: map.uuid, mapID: map.uuid);
-            view.AddBinding(
-                Bindings.BindECEFTransform(transform.position, transform.rotation, view.props.position, view.props.rotation),
-                view.props.name.From(map.name),
-                view.props.bounds.From(transform.bounds),
-                view.props.localInputImagePositions.Derive(
-                    _ => view.props.localInputImagePositions.SetValue(
-                        map.localInputImagePositions
-                            .Where((x, i) => i % 3 == 0)
-                            .Select(x => new Vector3(-(float)x.x, -(float)x.y, -(float)x.z))
-                            .ToArray()
-                    ),
-                    ObservationScope.All,
-                    map.localInputImagePositions
-                ),
-                Bindings.OnRelease(() => _maps.Remove(map.uuid))
+            var instance = AuthoringToolsMap.Create(
+                sceneObjectID: map.uuid,
+                bind: props => Bindings.Compose(
+                    Bindings.BindECEFTransform(transform.position, transform.rotation, props.position, props.rotation),
+                    props.name.From(map.name),
+                    props.reconstructionID.From(map.reconstructionID),
+                    Bindings.OnRelease(() => _maps.Remove(map.uuid))
+                )
             );
 
-            _maps.Add(map.uuid, view);
-            return view;
+            _maps.Add(map.uuid, instance);
+            return instance;
         }
 
         private IDisposable SetupNode(NodeState node)
@@ -73,7 +64,6 @@ namespace Outernet.Client.AuthoringTools
                 parent: sceneRoot,
                 bind: props => Bindings.Compose(
                     Bindings.BindECEFTransform(transform.position, transform.rotation, props.position, props.rotation),
-                    props.bounds.BindTo(transform.bounds),
                     props.visible.From(node.visible),
                     props.link.From(node.link),
                     props.linkType.From(node.linkType),

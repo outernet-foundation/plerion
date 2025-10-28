@@ -15,7 +15,7 @@ namespace Outernet.Client.AuthoringTools
         public static AuthoringToolsSceneViewManager SceneViewManager => _instance._sceneViewManager;
         public static Scrim Scrim => _instance._scrim;
         public static LoginScreen LoginScreen => _instance._loginScreen;
-        public static SceneMap SceneMap => _instance._sceneMap;
+        public static AuthoringToolsMap SceneMap => _instance._sceneMap;
         public static AuthoringToolsNode AuthoringToolsNode => _instance._authoringToolsNode;
         public static Color SelectedColor => _instance._selectedColor;
         public static TextMeshProUGUI Text => _instance._text;
@@ -76,7 +76,7 @@ namespace Outernet.Client.AuthoringTools
 
         [Header("Scene")]
         [SerializeField]
-        private SceneMap _sceneMap;
+        private AuthoringToolsMap _sceneMap;
 
         [SerializeField]
         private AuthoringToolsNode _authoringToolsNode;

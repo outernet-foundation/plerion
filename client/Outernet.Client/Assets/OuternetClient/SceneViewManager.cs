@@ -81,7 +81,6 @@ namespace Outernet.Client
                 position: localTransform.position,
                 rotation: localTransform.rotation,
                 bind: props => Bindings.Compose(
-                    props.bounds.From(transform.bounds),
                     props.link.From(node.link),
                     props.linkType.From(node.linkType),
                     props.label.From(node.label),

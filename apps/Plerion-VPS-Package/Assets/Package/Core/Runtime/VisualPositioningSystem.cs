@@ -212,7 +212,6 @@ namespace Plerion.VPS
             if (cameraImage.pixelBuffer == null)
                 return;
 
-            // TODO EP: We will need this result to contain the actual map transform.
             var localizationResults = await api.LocalizeImageAsync(
                 localizationSession.Id,
                 new FileParameter(new MemoryStream(cameraImage.pixelBuffer))
@@ -242,7 +241,7 @@ namespace Plerion.VPS
                 estimatedCameraRotation
             );
 
-            var mapEcefTransform = Double4x4.FromTranslationRotation(localizationResult.MapTransform.Position, localizationResult.MapTransform.Rotation); //TODO EP: Restore once we get the MapEcefPosition and MapEcefRotation
+            var mapEcefTransform = Double4x4.FromTranslationRotation(localizationResult.MapTransform.Position, localizationResult.MapTransform.Rotation);
             var cameraEstimateEcefTransform = math.mul(mapEcefTransform, estimateCameraTransformMapSpace);
 
             SetUnityWorldToEcefTransform(math.mul(cameraEstimateEcefTransform, math.inverse(cameraTransformLocalSpace)));
