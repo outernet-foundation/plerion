@@ -493,7 +493,7 @@ paths:
             application/json:
               schema:
                 format: uuid
-                nullable: true
+                title: Response Get Reconstruction Localization Map
                 type: string
           description: Successful Response
         "422":

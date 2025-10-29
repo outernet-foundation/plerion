@@ -38,9 +38,11 @@ namespace Plerion.VPS
         {
             while (!cancellationToken.IsCancellationRequested)
             {
+                await UniTask.WaitUntil(() => VisualPositioningSystem.LocalizationSessionActive, cancellationToken: cancellationToken);
+
                 try
                 {
-                    var maps = await VisualPositioningSystem.GetLocalizationMapsAsync(includePoints: false);
+                    var maps = await VisualPositioningSystem.GetLoadedLocalizationMapsAsync(includePoints: false);
 
                     await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
 
@@ -61,6 +63,7 @@ namespace Plerion.VPS
                         var addedMaps = maps.Where(x => !_mapsByID.ContainsKey(x.id)).ToArray();
                         foreach (var addedMap in addedMaps)
                         {
+                            Debug.Log($"EP: Adding map {addedMap.id} with position {addedMap.ecefPosition.x}, {addedMap.ecefPosition.y}, {addedMap.ecefPosition.z}");
                             var local = VisualPositioningSystem.EcefToUnityWorld(addedMap.ecefPosition, addedMap.ecefRotation);
                             var mapView = Instantiate(mapRendererPrefab, local.position, local.rotation);
                             mapView.gameObject.name = addedMap.name;

@@ -85,7 +85,7 @@ namespace Plerion.VPS.MagicLeap
             }
         };
 
-        public static event Action<CameraImage?> onFrameReceived;
+        public static event Action<byte[]> onFrameReceived;
 
         public static void Initialize()
         {
@@ -161,15 +161,7 @@ namespace Plerion.VPS.MagicLeap
 
             Marshal.Copy(data, pixelBuffer, 0, size);
 
-            onFrameReceived.Invoke(new CameraImage
-            {
-                imageWidth = width,
-                imageHeight = height,
-                pixelBuffer = pixelBuffer,
-                focalLength = MLConvert.ToUnity(mLCameraIntrinsicCalibrationParameters.FocalLength),
-                principalPoint = MLConvert.ToUnity(mLCameraIntrinsicCalibrationParameters.PrincipalPoint),
-                cameraOrientation = Quaternion.Euler(0f, 0f, 180.0f)
-            });
+            onFrameReceived.Invoke(pixelBuffer);
         }
 
         static void Check(MLResult.Code code, string functionName)

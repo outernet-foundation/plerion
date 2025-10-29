@@ -8,14 +8,14 @@ namespace Plerion.VPS.MagicLeap
     public class MagicLeapCameraProvider : ICameraProvider
     {
         public bool manageCameraEnabledState;
-        private TaskCompletionSource<CameraImage?> _taskCompletionSource;
+        private TaskCompletionSource<byte[]> _taskCompletionSource;
 
         public MagicLeapCameraProvider(bool manageCameraEnabledState = true)
         {
             this.manageCameraEnabledState = manageCameraEnabledState;
         }
 
-        private void HandleFrameReceived(CameraImage? cameraImage)
+        private void HandleFrameReceived(byte[] cameraImage)
         {
             _taskCompletionSource?.TrySetResult(cameraImage);
             _taskCompletionSource = null;
@@ -42,11 +42,11 @@ namespace Plerion.VPS.MagicLeap
             _taskCompletionSource = null;
         }
 
-        public UniTask<CameraImage?> GetFrame()
+        public UniTask<byte[]> GetFrame()
         {
             if (_taskCompletionSource == null)
             {
-                _taskCompletionSource = new TaskCompletionSource<CameraImage?>();
+                _taskCompletionSource = new TaskCompletionSource<byte[]>();
                 MagicLeapCamera.onFrameReceived += HandleFrameReceived;
             }
 

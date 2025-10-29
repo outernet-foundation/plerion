@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 
@@ -7,6 +8,6 @@ namespace Plerion.VPS
     {
         void Start();
         void Stop();
-        UniTask<CameraImage?> GetFrame();
+        UniTask<byte[]> GetFrameJPG();
     }
 }

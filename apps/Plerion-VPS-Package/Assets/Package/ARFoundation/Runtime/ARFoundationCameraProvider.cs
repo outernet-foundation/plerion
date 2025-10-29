@@ -1,5 +1,8 @@
-using System.Threading.Tasks;
+using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
+
+using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
@@ -10,7 +13,7 @@ namespace Plerion.VPS.ARFoundation
     {
         public ARCameraManager cameraManager;
         public bool manageCameraEnabledState;
-        private TaskCompletionSource<CameraImage?> _taskCompletionSource;
+        private CancellationTokenSource _cancellationTokenSource;
 
         public ARFoundationCameraProvider(ARCameraManager cameraManager, bool manageCameraEnabledState = true)
         {
@@ -25,73 +28,75 @@ namespace Plerion.VPS.ARFoundation
         {
             if (manageCameraEnabledState)
                 cameraManager.enabled = true;
+
+            _cancellationTokenSource = new CancellationTokenSource();
         }
 
         public void Stop()
         {
-            cameraManager.frameReceived -= OnFrameReceived;
-
             if (manageCameraEnabledState)
                 cameraManager.enabled = false;
 
-            _taskCompletionSource?.TrySetCanceled();
-            _taskCompletionSource = null;
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
         }
 
-        public UniTask<CameraImage?> GetFrame()
+        public UniTask<byte[]> GetFrameJPG()
+            => GetFrameJPG(_cancellationTokenSource.Token);
+
+        public async UniTask<byte[]> GetFrameJPG(CancellationToken cancellationToken = default)
         {
-            if (_taskCompletionSource == null)
+            bool frameReceived = false;
+            Action<ARCameraFrameEventArgs> receivedFrame = args => frameReceived = true;
+            cameraManager.frameReceived += receivedFrame;
+
+            cancellationToken.Register(() => cameraManager.frameReceived -= receivedFrame);
+
+            XRCpuImage cpuImage = default;
+
+            while (!cancellationToken.IsCancellationRequested)
             {
-                _taskCompletionSource = new TaskCompletionSource<CameraImage?>();
-                cameraManager.frameReceived += OnFrameReceived;
+                await UniTask.WaitUntil(() => frameReceived, cancellationToken: cancellationToken);
+                await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
+                if (cameraManager.TryAcquireLatestCpuImage(out cpuImage))
+                    break;
             }
 
-            return _taskCompletionSource.Task.AsUniTask();
+            cancellationToken.ThrowIfCancellationRequested();
+
+            cameraManager.frameReceived -= receivedFrame;
+            var result = await ConvertToJPG(cpuImage);
+            cpuImage.Dispose();
+
+            return result;
         }
 
-        private void OnFrameReceived(ARCameraFrameEventArgs args)
+        private static async UniTask<byte[]> ConvertToJPG(XRCpuImage cpuImage, bool flipped = false)
         {
-            if (!cameraManager.TryAcquireLatestCpuImage(out XRCpuImage image) ||
-                !cameraManager.TryGetIntrinsics(out XRCameraIntrinsics intrinsics))
-            {
-                return;
-            }
+            var conversion = new XRCpuImage.ConversionParams(
+                cpuImage,
+                TextureFormat.RGBA32,
+                // Mirror the image on the X axis to match the display orientation
+                flipped ? XRCpuImage.Transformation.MirrorX : XRCpuImage.Transformation.None
+            );
 
-            var pixelBuffer = image.GetPlane(0).data.ToArray();
-            var width = image.width;
-            var height = image.height;
+            int byteCount = cpuImage.GetConvertedDataSize(conversion);
+            using var pixelBuffer = new NativeArray<byte>(byteCount, Allocator.TempJob);
+            cpuImage.Convert(conversion, pixelBuffer);
 
-            image.Dispose();
+            var texture = new Texture2D(
+                conversion.outputDimensions.x,
+                conversion.outputDimensions.y,
+                TextureFormat.RGBA32,
+                false);
 
-            float angle;
-            switch (Screen.orientation)
-            {
-                case ScreenOrientation.Portrait:
-                    angle = 90f;
-                    break;
-                case ScreenOrientation.LandscapeLeft:
-                    angle = 180f;
-                    break;
-                case ScreenOrientation.LandscapeRight:
-                    angle = 0f;
-                    break;
-                case ScreenOrientation.PortraitUpsideDown:
-                    angle = -90f;
-                    break;
-                default:
-                    angle = 0f;
-                    break;
-            }
+            texture.LoadRawTextureData(pixelBuffer);
+            texture.Apply(false, false);
+            byte[] jpgBytes = texture.EncodeToJPG();
+            UnityEngine.Object.Destroy(texture);
 
-            _taskCompletionSource.TrySetResult(new CameraImage
-            {
-                imageWidth = width,
-                imageHeight = height,
-                pixelBuffer = pixelBuffer,
-                focalLength = intrinsics.focalLength,
-                principalPoint = intrinsics.principalPoint,
-                cameraOrientation = Quaternion.Euler(0f, 0f, angle),
-            });
+            return jpgBytes;
         }
     }
 }

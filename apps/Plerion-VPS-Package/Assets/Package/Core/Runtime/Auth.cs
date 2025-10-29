@@ -23,9 +23,7 @@ namespace Plerion.VPS
             public string error_description;
         }
 
-        public static string TokenUrl
-            => "https://elliot-laptop-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token"; //TODO EP: Replace this with the proper token url
-
+        public static string url = "https://elliot-laptop-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token"; //TODO EP: Replace this with the proper token url
         public static readonly string client_id = "plerion-api";
         public static string username;
         public static string password;
@@ -53,7 +51,7 @@ namespace Plerion.VPS
             form.AddField("username", username);
             form.AddField("password", password);
 
-            var url = TokenUrl;
+            var url = Auth.url;
             Debug.Log($"Logging in to {url} as {username}");
             using var req = UnityWebRequest.Post(url, form);
             var op = req.SendWebRequest();
@@ -89,7 +87,7 @@ namespace Plerion.VPS
                 form.AddField("client_id", client_id);
                 form.AddField("refresh_token", tokenResponse.refresh_token);
 
-                using var req = UnityWebRequest.Post(TokenUrl, form);
+                using var req = UnityWebRequest.Post(url, form);
                 var op = req.SendWebRequest();
                 while (!op.isDone) await Task.Yield();
 

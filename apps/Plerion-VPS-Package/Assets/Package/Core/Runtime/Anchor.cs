@@ -15,6 +15,7 @@ namespace Plerion.VPS
                 if (Equals(_ecefPosition, value))
                     return;
 
+                Debug.Log($"EP: Setting ECEF position to {value.x}, {value.y}, {value.z}");
                 _ecefPosition = value;
                 HandleReferenceFrameChanged();
             }
@@ -58,6 +59,7 @@ namespace Plerion.VPS
             _lastKnownPosition = transform.position;
             _lastKnownRotation = transform.rotation;
 
+            Debug.Log($"EP: Setting ECEF position to {ecef.position.x}, {ecef.position.y}, {ecef.position.z}");
             _ecefPosition = ecef.position;
             _ecefRotation = ecef.rotation;
 
@@ -86,6 +88,8 @@ namespace Plerion.VPS
                 var ecef = VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);
                 _lastKnownPosition = transform.position;
                 _lastKnownRotation = transform.rotation;
+
+                Debug.Log($"EP: Setting ECEF position to {ecef.position.x}, {ecef.position.y}, {ecef.position.z}");
                 _ecefPosition = ecef.position;
                 _ecefRotation = ecef.rotation;
             }

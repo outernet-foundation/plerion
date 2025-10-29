@@ -23,6 +23,8 @@ namespace Plerion.VPS
 
         public static void Start()
         {
+            Debug.Log("EP: Starting camera localization");
+
             if (Enabled)
                 return;
 
@@ -31,6 +33,8 @@ namespace Plerion.VPS
 
             Enabled = true;
 
+            _cameraProvider.Start();
+
             _cancellationTokenSource = new CancellationTokenSource();
             ExecuteCameraLocalization(_cancellationTokenSource.Token).Forget();
         }
@@ -38,6 +42,8 @@ namespace Plerion.VPS
         public static void Stop()
         {
             Enabled = false;
+
+            _cameraProvider.Stop();
 
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
@@ -52,17 +58,17 @@ namespace Plerion.VPS
             {
                 try
                 {
-                    var cameraImage = await _cameraProvider.GetFrame();
+                    var cameraImage = await _cameraProvider.GetFrameJPG();
 
                     if (cancellationToken.IsCancellationRequested)
                         break;
 
                     await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
 
-                    if (cameraImage.HasValue)
+                    if (cameraImage != null)
                     {
                         await VisualPositioningSystem.LocalizeFromCameraImage(
-                            cameraImage.Value,
+                            cameraImage,
                             Camera.main.transform.position,
                             Camera.main.transform.rotation
                         );

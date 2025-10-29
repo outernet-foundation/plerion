@@ -14,6 +14,12 @@ using PlerionClient.Api;
 using System.Threading.Tasks;
 using System.Net.Http;
 
+using CameraModel = PlerionClient.Model.Camera;
+using GenericParamsIntrinsics = PlerionClient.Model.GenericParamsIntrinsics;
+using PinholeIntrinsics = PlerionClient.Model.PinholeIntrinsics;
+using OpenCVRadTanIntrinsics = PlerionClient.Model.OpenCVRadTanIntrinsics;
+using LocalizationSession = PlerionClient.Model.LocalizationSessionRead;
+
 namespace Plerion.VPS
 {
     public static class VisualPositioningSystem
@@ -41,6 +47,7 @@ namespace Plerion.VPS
         public static float? DetectedFloorHeight = null;
         public static float? EstimatedFloorHeight { get; private set; } = null;
         public static float? FloorHeight => EstimatedFloorHeight ?? DetectedFloorHeight;
+        public static bool LocalizationSessionActive => localizationSession != null;
 
         // Do we need these if we're not doing estimate history?
         // public static float RansacPositionInlierThreshold = 0.05f;
@@ -56,24 +63,40 @@ namespace Plerion.VPS
         private static DefaultApi api;
         private static CancellationTokenSource startSessionTokenSource = new CancellationTokenSource();
         private static Task startSessionTask;
-        private static PlerionClient.Model.LocalizationSessionRead localizationSession;
+        private static LocalizationSession localizationSession;
 
         private static double4x4 unityWorldToEcefTransform = double4x4.identity;
         private static double4x4 ecefToUnityWorldTransform = math.inverse(double4x4.identity);
 
-        private static async Task StartSessionInternal(CancellationToken cancellationToken = default)
+        private static async Task StartSessionInternal(CameraModel cameraIntrinsics, CancellationToken cancellationToken = default)
         {
-            PlerionClient.Model.LocalizationSessionRead session = default;
+            LocalizationSession session = default;
 
             try
             {
                 session = await api.CreateLocalizationSessionAsync(cancellationToken);
+
+                while (true)
+                {
+                    var status = await api.GetLocalizationSessionStatusAsync(session.Id, cancellationToken);
+
+                    if (status == "\"failed\"" || status == "\"exited\"")
+                        throw new Exception("Session failed to start.");
+
+                    if (status == "\"ready\"")
+                        break;
+
+                    await UniTask.WaitForSeconds(1, cancellationToken: cancellationToken);
+                }
+
+                await api.SetLocalizationSessionCameraIntrinsicsAsync(session.Id, cameraIntrinsics, cancellationToken);
+
                 await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
             }
             catch (Exception exc)
             {
                 if (session != null)
-                    api.DeleteLocalizationSessionAsync(session.Id);
+                    api.DeleteLocalizationSessionAsync(session.Id).AsUniTask().Forget();
 
                 throw exc;
             }
@@ -97,7 +120,19 @@ namespace Plerion.VPS
             );
         }
 
-        public static UniTask StartLocalizationSession()
+        // public static UniTask StartGenericLocalizationSession(int width, int height, List<double> varParams)
+        //     => StartLocalizationSessionWithCamera(new CameraModel(
+        //         new GenericParamsIntrinsics(GenericParamsIntrinsics.ModelEnum.GENERIC, width, height, varParams)
+        //     ));
+
+        // public static UniTask StartOpenCVLocalizationSession(int width, int height, double fx, double fy, double cx, double cy, double k1, double k2, double p1, double p2, double? k3)
+        //     => StartLocalizationSessionWithCamera(new CameraModel(new OpenCVRadTanIntrinsics(
+        //         OpenCVRadTanIntrinsics.ModelEnum.OPENCV,
+        //         width, height, fx, fy, cx, cy,
+        //         k1, k2, p1, p2, k3
+        //     )));
+
+        public static UniTask StartLocalizationSession(CameraIntrinsics intrinsics)
         {
             if (localizationSession != null)
                 return UniTask.CompletedTask;
@@ -107,18 +142,25 @@ namespace Plerion.VPS
 
             startSessionTokenSource?.Dispose();
             startSessionTokenSource = new CancellationTokenSource();
-            startSessionTask = StartSessionInternal(startSessionTokenSource.Token);
+            startSessionTask = StartSessionInternal(new CameraModel(new PinholeIntrinsics(
+                model: PinholeIntrinsics.ModelEnum.PINHOLE,
+                width: intrinsics.resolution.x,
+                height: intrinsics.resolution.y,
+                fx: intrinsics.focalLength.x,
+                fy: intrinsics.focalLength.y,
+                cx: intrinsics.principlePoint.x,
+                cy: intrinsics.principlePoint.y
+            )), startSessionTokenSource.Token);
 
             return startSessionTask.AsUniTask();
         }
 
-        public static async UniTask LoadLocalizationMaps(params Guid[] maps)
+        public static UniTask LoadLocalizationMaps(params Guid[] maps)
+            => LoadLocalizationMaps(maps.ToList());
+
+        public static async UniTask LoadLocalizationMaps(List<Guid> maps)
         {
-            await api.LoadLocalizationMapsAsync(
-                localizationSession.Id,
-                maps.ToList(),
-                startSessionTokenSource.Token
-            );
+            await api.LoadLocalizationMapsAsync(localizationSession.Id, maps);
         }
 
         public static void StopLocalizationSession()
@@ -207,44 +249,111 @@ namespace Plerion.VPS
             return (ecefTransformMatrix.Position(), ecefTransformMatrix.Rotation());
         }
 
-        public static async UniTask LocalizeFromCameraImage(CameraImage cameraImage, Vector3 cameraPosition, Quaternion cameraRotation)
+        public static async UniTask LocalizeFromCameraImage(byte[] image, Vector3 cameraPosition, Quaternion cameraRotation)
         {
-            if (cameraImage.pixelBuffer == null)
+            if (image == null)
                 return;
 
             var localizationResults = await api.LocalizeImageAsync(
                 localizationSession.Id,
-                new FileParameter(new MemoryStream(cameraImage.pixelBuffer))
+                new FileParameter(new MemoryStream(image))
             );
 
+            if (localizationResults.Count == 0)
+            {
+                Debug.Log("EP: LOCALIZATION FAILED");
+                return; //localization failed
+            }
+
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
+
+            Debug.Log($"EP: GOT LOCALIZATION {localizationResult.Transform.Position} {localizationResult.Transform.Rotation}");
+
             var estimatedCameraPosition = localizationResult.Transform.Position.ToUnityVector3();
             var estimatedCameraRotation = localizationResult.Transform.Rotation.ToUnityQuaternion();
 
-            EstimatedFloorHeight = cameraPosition.y - estimatedCameraPosition.y - scanneraOriginHeightOffset;
+            // EstimatedFloorHeight = cameraPosition.y - estimatedCameraPosition.y - scanneraOriginHeightOffset;
 
-            // Up is always up
-            cameraRotation = Quaternion.LookRotation(Vector3.Cross(cameraRotation * Vector3.right, Vector3.up), Vector3.up);
-            estimatedCameraRotation = Quaternion.LookRotation(Vector3.Cross(estimatedCameraRotation * Vector3.right, Vector3.up), Vector3.up);
+            // // Up is always up
+            // cameraRotation = Quaternion.LookRotation(Vector3.Cross(cameraRotation * Vector3.right, Vector3.up), Vector3.up);
+            // estimatedCameraRotation = Quaternion.LookRotation(Vector3.Cross(estimatedCameraRotation * Vector3.right, Vector3.up), Vector3.up);
 
-            // The ground is always the ground
-            if (FloorHeight != null)
-                estimatedCameraPosition.y = -FloorHeight.Value + cameraPosition.y - scanneraOriginHeightOffset;
+            // // The ground is always the ground
+            // if (FloorHeight != null)
+            //     estimatedCameraPosition.y = -FloorHeight.Value + cameraPosition.y - scanneraOriginHeightOffset;
 
             var cameraTransformLocalSpace = Double4x4.FromTranslationRotation(
-                -cameraPosition, // See note in EcefTransform.cs
+                cameraPosition,
                 cameraRotation
             );
 
             var estimateCameraTransformMapSpace = Double4x4.FromTranslationRotation(
-                -estimatedCameraPosition, // See note in EcefTransform.cs
+                estimatedCameraPosition,
                 estimatedCameraRotation
             );
 
             var mapEcefTransform = Double4x4.FromTranslationRotation(localizationResult.MapTransform.Position, localizationResult.MapTransform.Rotation);
             var cameraEstimateEcefTransform = math.mul(mapEcefTransform, estimateCameraTransformMapSpace);
 
+            Debug.Log($"EP: SETTING UNITY WORLD TO ECEF TRANSFORM");
+
             SetUnityWorldToEcefTransform(math.mul(cameraEstimateEcefTransform, math.inverse(cameraTransformLocalSpace)));
+        }
+
+        public static async UniTask<MapData[]> GetLoadedLocalizationMapsAsync(bool includePoints = false, CancellationToken cancellationToken = default)
+        {
+            var maps = await api.GetLocalizationMapsAsync(cancellationToken: cancellationToken);
+
+            if (maps == null || maps.Count == 0)
+                return new MapData[0];
+
+            var loadedMaps = new List<PlerionClient.Model.LocalizationMapRead>();
+
+            await UniTask.WhenAll(maps.Select(map => api
+                .GetMapLoadStatusAsync(localizationSession.Id, map.Id, cancellationToken)
+                .AsUniTask()
+                .ContinueWith(x =>
+                {
+                    if (x == "\"ready\"")
+                        loadedMaps.Add(map);
+                })
+            ));
+
+            if (loadedMaps.Count == 0)
+                return new MapData[0];
+
+            if (!includePoints)
+            {
+                return loadedMaps.Select(x => new MapData()
+                {
+                    id = x.Id,
+                    name = x.Name,
+                    ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
+                    ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationZ)
+                }).ToArray();
+            }
+
+            var mapsByID = loadedMaps.ToDictionary(x => x.Id, x => new MapData()
+            {
+                id = x.Id,
+                name = x.Name,
+                ecefPosition = new double3(x.PositionX, x.PositionY, x.RotationZ),
+                ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationZ)
+            });
+
+            await UniTask.WhenAll(
+                loadedMaps.Select(map => api
+                    .GetLocalizationMapPointsAsync(map.Id, cancellationToken: cancellationToken)
+                    .AsUniTask()
+                    .ContinueWith(points => mapsByID[map.Id].points = points.Select(x => new Point()
+                    {
+                        position = x.Position.ToUnityVector3(),
+                        color = x.Color.ToUnityColor(),
+                    }).ToArray())
+                )
+            );
+
+            return mapsByID.Values.ToArray();
         }
 
         public static async UniTask<MapData[]> GetLocalizationMapsAsync(bool includePoints = false, CancellationToken cancellationToken = default)
@@ -309,5 +418,12 @@ namespace Plerion.VPS
     {
         public Color color;
         public Vector3 position;
+    }
+
+    public struct CameraIntrinsics
+    {
+        public Vector2Int resolution;
+        public Vector2 focalLength;
+        public Vector2 principlePoint;
     }
 }
