@@ -25,20 +25,6 @@ namespace Plerion.VPS
 {
     public static class VisualPositioningSystem
     {
-        static class Handedness
-        {
-            // Flip Z to go between right-handed (COLMAP/ECEF) and Unity left-handed.
-            public static readonly double4x4 zFlip = new double4x4(
-                1, 0, 0, 0,
-                0, 1, 0, 0,
-                0, 0, -1, 0,
-                0, 0, 0, 1
-            );
-
-            // Conjugate a 4x4 by the Z flip: LH = F * RH * F  (and vice-versa; same op).
-            public static double4x4 ToUnityLeftHanded(double4x4 rightHandedMatrix)
-                => math.mul(zFlip, math.mul(rightHandedMatrix, zFlip));
-        }
 
         private class KeycloakHttpHandler : DelegatingHandler
         {
@@ -265,6 +251,22 @@ namespace Plerion.VPS
                     Double4x4.FromTranslationRotation(cameraPosition, cameraRotation)
                 );
         }
+
+        static class Handedness
+        {
+            // Flip Z to go between right-handed (COLMAP/ECEF) and Unity left-handed.
+            public static readonly double4x4 zFlip = new double4x4(
+                1, 0, 0, 0,
+                0, 1, 0, 0,
+                0, 0, -1, 0,
+                0, 0, 0, 1
+            );
+
+            // Conjugate a 4x4 by the Z flip: LH = F * RH * F  (and vice-versa; same op).
+            public static double4x4 ToUnityLeftHanded(double4x4 rightHandedMatrix)
+                => math.mul(zFlip, math.mul(rightHandedMatrix, zFlip));
+        }
+
 
         public static (double4x4 unity_from_ecef_transform_left_handed,
                        double4x4 ecef_from_unity_transform_left_handed)
