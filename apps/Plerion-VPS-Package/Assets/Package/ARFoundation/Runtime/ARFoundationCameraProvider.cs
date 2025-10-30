@@ -66,7 +66,7 @@ namespace Plerion.VPS.ARFoundation
             cancellationToken.ThrowIfCancellationRequested();
 
             cameraManager.frameReceived -= receivedFrame;
-            var result = await ConvertToJPG(cpuImage);
+            var result = await ConvertToJPG(cpuImage, flipped: false);
             cpuImage.Dispose();
 
             return result;
@@ -89,7 +89,8 @@ namespace Plerion.VPS.ARFoundation
                 conversion.outputDimensions.x,
                 conversion.outputDimensions.y,
                 TextureFormat.RGBA32,
-                false);
+                false
+            );
 
             texture.LoadRawTextureData(pixelBuffer);
             texture.Apply(false, false);

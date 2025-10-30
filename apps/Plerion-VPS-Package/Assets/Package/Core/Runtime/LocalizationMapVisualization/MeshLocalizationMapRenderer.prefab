@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 5694606027210937570}
   - component: {fileID: 2906203855717684229}
   - component: {fileID: 2733253158488810719}
-  - component: {fileID: 2838187208574066863}
+  - component: {fileID: 5897280306874441816}
   m_Layer: 0
-  m_Name: LocalizationMapRenderer
+  m_Name: MeshLocalizationMapRenderer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -110,10 +110,10 @@ MonoBehaviour:
       y: 0
       z: 0
       w: 1
-  _lastKnownPosition: {x: 0, y: 0, z: 0}
+  _lastKnownPosition: {x: -1333842.5, y: 4654250.5, z: -4138152.5}
   _lastKnownRotation: {x: 0, y: 0, z: 0, w: 1}
   _positionInitialized: 1
---- !u!114 &2838187208574066863
+--- !u!114 &5897280306874441816
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -122,7 +122,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1628050442463339716}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cc808126413b3424cb7de75202495351, type: 3}
+  m_Script: {fileID: 11500000, guid: a5c663345fdcd91459717875a98b8de0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   shaderColorProperty: _PointColor

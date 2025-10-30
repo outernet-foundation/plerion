@@ -35,10 +35,10 @@ namespace Plerion.VPS
             }
         }
 
-        const int estimateHistorySize = 128;
+        // const int estimateHistorySize = 128;
 
         // The height above the ground of the blk2go camera array at during scan initialization
-        const float scanneraOriginHeightOffset = 0.15f;
+        // const float scanneraOriginHeightOffset = 0.15f;
 
         public static bool FallbackToMostRecentEstimate = false;
         public static bool DiscardBelowAverageConfidenceEstimates = false;
@@ -232,7 +232,7 @@ namespace Plerion.VPS
                 // space happens to be a position inversion. ¯\_(ツ)_/¯ 
                 //
                 // Apologies to the poor soul (probably me) who has to maintain this code in the future.
-                -localTransformMatrix.Position().ToFloats(),
+                localTransformMatrix.Position().ToFloats(),
                 localTransformMatrix.Rotation()
             );
         }
@@ -241,7 +241,7 @@ namespace Plerion.VPS
         {
             var localTransformMatrix = Double4x4.FromTranslationRotation(
                 // See above
-                -position.ToDoubles(),
+                position.ToDoubles(),
                 rotation
             );
 
@@ -329,7 +329,7 @@ namespace Plerion.VPS
                     id = x.Id,
                     name = x.Name,
                     ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
-                    ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationZ)
+                    ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
                 }).ToArray();
             }
 
@@ -337,21 +337,11 @@ namespace Plerion.VPS
             {
                 id = x.Id,
                 name = x.Name,
-                ecefPosition = new double3(x.PositionX, x.PositionY, x.RotationZ),
-                ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationZ)
+                ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
+                ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
             });
 
-            await UniTask.WhenAll(
-                loadedMaps.Select(map => api
-                    .GetLocalizationMapPointsAsync(map.Id, cancellationToken: cancellationToken)
-                    .AsUniTask()
-                    .ContinueWith(points => mapsByID[map.Id].points = points.Select(x => new Point()
-                    {
-                        position = x.Position.ToUnityVector3(),
-                        color = x.Color.ToUnityColor(),
-                    }).ToArray())
-                )
-            );
+            await UniTask.WhenAll(loadedMaps.Select(map => GetLocalizationMapPointsAsync(map.Id, cancellationToken: cancellationToken)));
 
             return mapsByID.Values.ToArray();
         }
@@ -366,8 +356,8 @@ namespace Plerion.VPS
                 {
                     id = x.Id,
                     name = x.Name,
-                    ecefPosition = new double3(x.PositionX, x.PositionY, x.RotationZ),
-                    ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationZ)
+                    ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
+                    ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
                 }).ToArray();
             }
 
@@ -375,21 +365,11 @@ namespace Plerion.VPS
             {
                 id = x.Id,
                 name = x.Name,
-                ecefPosition = new double3(x.PositionX, x.PositionY, x.RotationZ),
-                ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationZ)
+                ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
+                ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
             });
 
-            await UniTask.WhenAll(
-                maps.Select(map => api
-                    .GetLocalizationMapPointsAsync(map.Id, cancellationToken: cancellationToken)
-                    .AsUniTask()
-                    .ContinueWith(points => mapsByID[map.Id].points = points.Select(x => new Point()
-                    {
-                        position = x.Position.ToUnityVector3(),
-                        color = x.Color.ToUnityColor(),
-                    }).ToArray())
-                )
-            );
+            await UniTask.WhenAll(maps.Select(map => GetLocalizationMapPointsAsync(map.Id, cancellationToken: cancellationToken)));
 
             return mapsByID.Values.ToArray();
         }
@@ -399,7 +379,7 @@ namespace Plerion.VPS
             var points = await api.GetLocalizationMapPointsAsync(mapID, cancellationToken);
             return points.Select(x => new Point()
             {
-                position = x.Position.ToUnityVector3(),
+                position = new Vector3((float)x.Position.X, -(float)x.Position.Y, (float)x.Position.Z),
                 color = x.Color.ToUnityColor(),
             }).ToArray();
         }
