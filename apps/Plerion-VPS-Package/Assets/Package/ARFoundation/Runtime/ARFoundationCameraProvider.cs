@@ -66,7 +66,7 @@ namespace Plerion.VPS.ARFoundation
             cancellationToken.ThrowIfCancellationRequested();
 
             cameraManager.frameReceived -= receivedFrame;
-            var result = await ConvertToJPG(cpuImage, flipped: false);
+            var result = await ConvertToJPG(cpuImage, flipped: true);
             cpuImage.Dispose();
 
             return result;

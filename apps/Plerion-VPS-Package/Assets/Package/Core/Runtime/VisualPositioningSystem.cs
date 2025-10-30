@@ -47,7 +47,7 @@ namespace Plerion.VPS
         public static float? DetectedFloorHeight = null;
         public static float? EstimatedFloorHeight { get; private set; } = null;
         public static float? FloorHeight => EstimatedFloorHeight ?? DetectedFloorHeight;
-        public static bool LocalizationSessionActive => localizationSession != null;
+        public static bool LocalizationSessionActive => localizationSessionId != Guid.Empty;
 
         // Do we need these if we're not doing estimate history?
         // public static float RansacPositionInlierThreshold = 0.05f;
@@ -63,7 +63,7 @@ namespace Plerion.VPS
         private static DefaultApi api;
         private static CancellationTokenSource startSessionTokenSource = new CancellationTokenSource();
         private static Task startSessionTask;
-        private static LocalizationSession localizationSession;
+        public static Guid localizationSessionId = Guid.Empty;
 
         private static double4x4 unityWorldToEcefTransform = double4x4.identity;
         private static double4x4 ecefToUnityWorldTransform = math.inverse(double4x4.identity);
@@ -101,7 +101,7 @@ namespace Plerion.VPS
                 throw exc;
             }
 
-            localizationSession = session;
+            localizationSessionId = session.Id;
         }
 
         public static void Initialize(string username, string password)
@@ -134,7 +134,7 @@ namespace Plerion.VPS
 
         public static UniTask StartLocalizationSession(CameraIntrinsics intrinsics)
         {
-            if (localizationSession != null)
+            if (localizationSessionId != Guid.Empty)
                 return UniTask.CompletedTask;
 
             if (startSessionTask != null && !startSessionTask.IsCompleted)
@@ -160,7 +160,7 @@ namespace Plerion.VPS
 
         public static async UniTask LoadLocalizationMaps(List<Guid> maps)
         {
-            await api.LoadLocalizationMapsAsync(localizationSession.Id, maps);
+            await api.LoadLocalizationMapsAsync(localizationSessionId, maps);
         }
 
         public static void StopLocalizationSession()
@@ -169,10 +169,10 @@ namespace Plerion.VPS
             startSessionTokenSource?.Dispose();
             startSessionTokenSource = null;
 
-            if (localizationSession != null)
+            if (localizationSessionId != Guid.Empty)
             {
-                api.DeleteLocalizationSessionAsync(localizationSession.Id);
-                localizationSession = null;
+                api.DeleteLocalizationSessionAsync(localizationSessionId);
+                localizationSessionId = Guid.Empty;
             }
         }
 
@@ -232,7 +232,7 @@ namespace Plerion.VPS
                 // space happens to be a position inversion. ¯\_(ツ)_/¯ 
                 //
                 // Apologies to the poor soul (probably me) who has to maintain this code in the future.
-                localTransformMatrix.Position().ToFloats(),
+                -localTransformMatrix.Position().ToFloats(),
                 localTransformMatrix.Rotation()
             );
         }
@@ -241,7 +241,7 @@ namespace Plerion.VPS
         {
             var localTransformMatrix = Double4x4.FromTranslationRotation(
                 // See above
-                position.ToDoubles(),
+                -position.ToDoubles(),
                 rotation
             );
 
@@ -255,7 +255,7 @@ namespace Plerion.VPS
                 return;
 
             var localizationResults = await api.LocalizeImageAsync(
-                localizationSession.Id,
+                localizationSessionId,
                 new FileParameter(new MemoryStream(image))
             );
 
@@ -292,7 +292,11 @@ namespace Plerion.VPS
                 estimatedCameraRotation
             );
 
-            var mapEcefTransform = Double4x4.FromTranslationRotation(localizationResult.MapTransform.Position, localizationResult.MapTransform.Rotation);
+            var mapEcefTransform = Double4x4.FromTranslationRotation(
+                localizationResult.MapTransform.Position,
+                localizationResult.MapTransform.Rotation
+            );
+
             var cameraEstimateEcefTransform = math.mul(mapEcefTransform, estimateCameraTransformMapSpace);
 
             Debug.Log($"EP: SETTING UNITY WORLD TO ECEF TRANSFORM");
@@ -310,7 +314,7 @@ namespace Plerion.VPS
             var loadedMaps = new List<PlerionClient.Model.LocalizationMapRead>();
 
             await UniTask.WhenAll(maps.Select(map => api
-                .GetMapLoadStatusAsync(localizationSession.Id, map.Id, cancellationToken)
+                .GetMapLoadStatusAsync(localizationSessionId, map.Id, cancellationToken)
                 .AsUniTask()
                 .ContinueWith(x =>
                 {
@@ -379,7 +383,7 @@ namespace Plerion.VPS
             var points = await api.GetLocalizationMapPointsAsync(mapID, cancellationToken);
             return points.Select(x => new Point()
             {
-                position = new Vector3((float)x.Position.X, -(float)x.Position.Y, (float)x.Position.Z),
+                position = x.Position.ToUnityVector3(),
                 color = x.Color.ToUnityColor(),
             }).ToArray();
         }

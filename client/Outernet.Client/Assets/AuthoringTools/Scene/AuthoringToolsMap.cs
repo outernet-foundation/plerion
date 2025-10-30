@@ -13,7 +13,6 @@ using System.Collections.Generic;
 
 namespace Outernet.Client.AuthoringTools
 {
-    [RequireComponent(typeof(LocalizationMapRenderer))]
     public class AuthoringToolsMap : Control<AuthoringToolsMap.Props>, IPointerClickHandler
     {
         public class Props : ObservableObject
@@ -36,14 +35,9 @@ namespace Outernet.Client.AuthoringTools
             }
         }
 
-        private LocalizationMapRenderer _mapRenderer;
+        public LocalizationMapRenderer mapRenderer;
         private TaskHandle _loadPointsTask = TaskHandle.Complete;
         private List<Vector3> _localInputPositions = new List<Vector3>();
-
-        private void Awake()
-        {
-            _mapRenderer = GetComponent<LocalizationMapRenderer>();
-        }
 
         private void Update()
         {
@@ -94,11 +88,11 @@ namespace Outernet.Client.AuthoringTools
 
                         await UniTask.SwitchToMainThread(cancellationToken: token);
 
-                        _localInputPositions.AddRange(localInputPositions.Select(x => x.Position.ToUnityVector3()));
+                        _localInputPositions.AddRange(localInputPositions.Select(x => new Vector3((float)x.Position.X, -(float)x.Position.Y, (float)x.Position.Z)));
 
-                        _mapRenderer.Load(points.Select(x => new Point()
+                        mapRenderer.Load(points.Select(x => new Point()
                         {
-                            position = x.Position.ToUnityVector3(),
+                            position = new Vector3((float)x.Position.X, -(float)x.Position.Y, (float)x.Position.Z),
                             color = x.Color.ToUnityColor()
                         }).ToArray());
                     });
