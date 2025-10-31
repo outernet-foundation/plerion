@@ -15,11 +15,8 @@ using System.Threading.Tasks;
 using System.Net.Http;
 
 using CameraModel = PlerionClient.Model.Camera;
-using GenericParamsIntrinsics = PlerionClient.Model.GenericParamsIntrinsics;
 using PinholeIntrinsics = PlerionClient.Model.PinholeIntrinsics;
-using OpenCVRadTanIntrinsics = PlerionClient.Model.OpenCVRadTanIntrinsics;
 using LocalizationSession = PlerionClient.Model.LocalizationSessionRead;
-using Unity.Profiling;
 
 namespace Plerion.VPS
 {
@@ -76,7 +73,7 @@ namespace Plerion.VPS
         private static double4x4 unity_from_ecef_transform_left_handed = double4x4.identity;
         private static double4x4 ecef_from_unity_transform_left_handed = math.inverse(double4x4.identity);
 
-        private static async Task StartSessionInternal(CameraModel cameraIntrinsics, CancellationToken cancellationToken = default)
+        private static async Task StartSessionInternal(CancellationToken cancellationToken = default)
         {
             LocalizationSession session = default;
 
@@ -97,8 +94,6 @@ namespace Plerion.VPS
                     await UniTask.WaitForSeconds(1, cancellationToken: cancellationToken);
                 }
 
-                await api.SetLocalizationSessionCameraIntrinsicsAsync(session.Id, cameraIntrinsics, cancellationToken);
-
                 await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
             }
             catch (Exception exc)
@@ -110,6 +105,23 @@ namespace Plerion.VPS
             }
 
             localizationSessionId = session.Id;
+        }
+
+        public static async UniTask SetLocalizationSessionCameraIntrinsicsAsync(CameraIntrinsics intrinsics, CancellationToken cancellationToken = default)
+        {
+            await api.SetLocalizationSessionCameraIntrinsicsAsync(
+                localizationSessionId,
+                new CameraModel(new PinholeIntrinsics(
+                    model: PinholeIntrinsics.ModelEnum.PINHOLE,
+                    width: intrinsics.resolution.x,
+                    height: intrinsics.resolution.y,
+                    fx: intrinsics.focalLength.x,
+                    fy: intrinsics.focalLength.y,
+                    cx: intrinsics.principalPoint.x,
+                    cy: intrinsics.principalPoint.y
+                )),
+                cancellationToken
+            );
         }
 
         //TODO EP: Replace with proper URLs when deploying
@@ -128,19 +140,7 @@ namespace Plerion.VPS
             );
         }
 
-        // public static UniTask StartGenericLocalizationSession(int width, int height, List<double> varParams)
-        //     => StartLocalizationSessionWithCamera(new CameraModel(
-        //         new GenericParamsIntrinsics(GenericParamsIntrinsics.ModelEnum.GENERIC, width, height, varParams)
-        //     ));
-
-        // public static UniTask StartOpenCVLocalizationSession(int width, int height, double fx, double fy, double cx, double cy, double k1, double k2, double p1, double p2, double? k3)
-        //     => StartLocalizationSessionWithCamera(new CameraModel(new OpenCVRadTanIntrinsics(
-        //         OpenCVRadTanIntrinsics.ModelEnum.OPENCV,
-        //         width, height, fx, fy, cx, cy,
-        //         k1, k2, p1, p2, k3
-        //     )));
-
-        public static UniTask StartLocalizationSession(CameraIntrinsics intrinsics)
+        public static UniTask StartLocalizationSession()
         {
             if (localizationSessionId != Guid.Empty)
                 return UniTask.CompletedTask;
@@ -150,15 +150,7 @@ namespace Plerion.VPS
 
             startSessionTokenSource?.Dispose();
             startSessionTokenSource = new CancellationTokenSource();
-            startSessionTask = StartSessionInternal(new CameraModel(new PinholeIntrinsics(
-                model: PinholeIntrinsics.ModelEnum.PINHOLE,
-                width: intrinsics.resolution.x,
-                height: intrinsics.resolution.y,
-                fx: intrinsics.focalLength.x,
-                fy: intrinsics.focalLength.y,
-                cx: intrinsics.principlePoint.x,
-                cy: intrinsics.principlePoint.y
-            )), startSessionTokenSource.Token);
+            startSessionTask = StartSessionInternal(startSessionTokenSource.Token);
 
             return startSessionTask.AsUniTask();
         }
@@ -419,6 +411,6 @@ namespace Plerion.VPS
     {
         public Vector2Int resolution;
         public Vector2 focalLength;
-        public Vector2 principlePoint;
+        public Vector2 principalPoint;
     }
 }

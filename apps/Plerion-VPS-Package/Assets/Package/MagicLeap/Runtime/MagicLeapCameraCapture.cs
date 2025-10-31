@@ -78,14 +78,14 @@ namespace Plerion.VPS.MagicLeap
                     CaptureType = CaptureType.Video,
                     Width = 3840,
                     Height = 2160,
-                    OutputFormat = OutputFormat.YUV_420_888,
+                    OutputFormat = OutputFormat.JPEG, // TODO EP: Check if this can really just be JPEG- was set to YUV_420_888
                     MediaRecorderSurfaceHandle = ulong.MaxValue
                 },
                 default,
             }
         };
 
-        public static event Action<byte[]> onFrameReceived;
+        public static event Action<byte[], MLCameraIntrinsicCalibrationParameters> onFrameReceived;
 
         public static void Initialize()
         {
@@ -161,7 +161,7 @@ namespace Plerion.VPS.MagicLeap
 
             Marshal.Copy(data, pixelBuffer, 0, size);
 
-            onFrameReceived.Invoke(pixelBuffer);
+            onFrameReceived.Invoke(pixelBuffer, mLCameraIntrinsicCalibrationParameters);
         }
 
         static void Check(MLResult.Code code, string functionName)
