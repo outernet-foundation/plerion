@@ -7,6 +7,12 @@ using FofX.Stateful;
 using Unity.Mathematics;
 using System.Collections.Generic;
 
+using Plerion.VPS;
+using PlerionClient.Model;
+
+using Vector3 = UnityEngine.Vector3;
+using Quaternion = UnityEngine.Quaternion;
+
 namespace Outernet.Client
 {
     public class SetPrimitiveValueAction<T> : ObservableNodeAction<ObservablePrimitive<T>>
@@ -103,9 +109,9 @@ namespace Outernet.Client
 
     public class SetMapsAction : ObservableNodeAction<ClientState>
     {
-        private PlerionClient.Model.LocalizationMapRead[] _maps;
+        private LocalizationMapRead[] _maps;
 
-        public SetMapsAction(PlerionClient.Model.LocalizationMapRead[] maps)
+        public SetMapsAction(LocalizationMapRead[] maps)
         {
             _maps = maps;
         }
@@ -113,7 +119,7 @@ namespace Outernet.Client
         public override void Execute(ClientState target)
         {
             var newMapsByID = _maps.ToDictionary(x => x.Id);
-            var oldMapsByID = target.maps.ToDictionary(x => x.key, x => x.value);
+            var oldMapsByID = target.authoringTools.maps.ToDictionary(x => x.key, x => x.value);
 
             foreach (var toRemove in oldMapsByID.Where(x => !newMapsByID.ContainsKey(x.Key)))
                 new DestroySceneObjectAction(toRemove.Key).Execute(target);
@@ -121,76 +127,60 @@ namespace Outernet.Client
             foreach (var toUpdate in newMapsByID.Select(x => x.Value))
             {
                 new AddOrUpdateMapAction(
-                    id: toUpdate.Id,
+                    uuid: toUpdate.Id,
                     name: toUpdate.Name,
                     position: new double3() { x = toUpdate.PositionX, y = toUpdate.PositionY, z = toUpdate.PositionZ },
                     rotation: new Quaternion((float)toUpdate.RotationX, (float)toUpdate.RotationY, (float)toUpdate.RotationZ, (float)toUpdate.RotationW),
-                    lighting: (Shared.Lighting)toUpdate.Lighting,
-                    color: toUpdate.Color
-                // UNDO TYLER
-                // localInputImagePositions: ParsePoints(toUpdate.Points)
+                    lighting: (Lighting)toUpdate.Lighting,
+                    reconstructionID: toUpdate.ReconstructionId
                 ).Execute(target);
             }
-        }
-
-        private double3[] ParsePoints(List<double> flatPoints)
-        {
-            var result = new double3[flatPoints.Count / 3];
-            for (int i = 0; i < flatPoints.Count; i += 3)
-                result[i / 3] = new double3(flatPoints[i], flatPoints[i + 1], flatPoints[i + 2]);
-
-            return result;
         }
     }
 
     public class AddOrUpdateMapAction : ObservableNodeAction<ClientState>
     {
-        private Guid _id;
+        private Guid _uuid;
         private string _name;
         private double3 _position;
         private Quaternion _rotation;
-        private Shared.Lighting _lighting;
-        private long _color;
-        private double3[] _localInputImagePositions;
+        private Lighting _lighting;
+        private Guid _reconstructionID;
 
         public AddOrUpdateMapAction(
-            Guid id,
+            Guid uuid,
             string name = default,
             double3 position = default,
             Quaternion rotation = default,
-            Shared.Lighting lighting = default,
-            long color = default,
-            double3[] localInputImagePositions = default)
+            Lighting lighting = default,
+            Guid reconstructionID = default)
         {
-            _id = id;
+            _uuid = uuid;
             _name = name;
             _position = position;
             _rotation = rotation;
             _lighting = lighting;
-            _color = color;
-            _localInputImagePositions = localInputImagePositions;
+            _reconstructionID = reconstructionID;
         }
 
         public override void Execute(ClientState target)
         {
-            var map = target.maps.GetOrAdd(_id);
-            var transform = target.transforms.GetOrAdd(_id);
-
-            map.name.value = _name;
-            map.lighting.value = _lighting;
-            map.color.value = _color;
-            map.localInputImagePositions.SetValue(_localInputImagePositions);
-
+            var transform = target.transforms.GetOrAdd(_uuid);
             transform.position.value = _position;
             transform.rotation.value = _rotation;
+
+            var map = target.authoringTools.maps.GetOrAdd(_uuid);
+            map.name.value = _name;
+            map.lighting.value = _lighting;
+            map.reconstructionID.value = _reconstructionID;
         }
     }
 
     public class SetNodesAction : ObservableNodeAction<ClientState>
     {
-        private PlerionClient.Model.NodeRead[] _nodes;
+        private NodeRead[] _nodes;
 
-        public SetNodesAction(PlerionClient.Model.NodeRead[] nodes)
+        public SetNodesAction(NodeRead[] nodes)
         {
             _nodes = nodes;
         }
@@ -455,6 +445,54 @@ namespace Outernet.Client
                 if (node.value.layer.value == _layer)
                     node.value.layer.value = Guid.Empty;
             }
+        }
+    }
+
+    public class SetLayersAction : ObservableNodeAction<ClientState>
+    {
+        private PlerionClient.Model.LayerRead[] _layers;
+
+        public SetLayersAction(PlerionClient.Model.LayerRead[] layers)
+        {
+            _layers = layers;
+        }
+
+        public override void Execute(ClientState target)
+        {
+            var newLayersByID = _layers.ToDictionary(x => x.Id);
+            var oldLayersByID = target.layers.ToDictionary(x => x.key, x => x.value);
+
+            foreach (var toRemove in oldLayersByID.Where(x => !newLayersByID.ContainsKey(x.Key)))
+                new DestroySceneObjectAction(toRemove.Key).Execute(target);
+
+            foreach (var toUpdate in newLayersByID.Select(x => x.Value))
+            {
+                new AddOrUpdateLayerAction(
+                    id: toUpdate.Id,
+                    name: toUpdate.Name
+                ).Execute(target);
+            }
+        }
+    }
+
+    public class AddOrUpdateLayerAction : ObservableNodeAction<ClientState>
+    {
+        private Guid _id;
+        private string _name;
+
+        public AddOrUpdateLayerAction(
+            Guid id,
+            string name = default
+        )
+        {
+            _id = id;
+            _name = name;
+        }
+
+        public override void Execute(ClientState target)
+        {
+            var layer = target.layers.GetOrAdd(_id);
+            layer.layerName.value = _name;
         }
     }
 }

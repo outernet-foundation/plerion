@@ -729,11 +729,9 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": [
-                    "string",
-                    "null"
-                  ],
-                  "format": "uuid"
+                  "type": "string",
+                  "format": "uuid",
+                  "title": "Response Get Reconstruction Localization Map"
                 }
               }
             }

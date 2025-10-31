@@ -13,6 +13,12 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
+using PlerionClient.Model;
+using Plerion.VPS;
+
+using Vector3 = UnityEngine.Vector3;
+using Quaternion = UnityEngine.Quaternion;
+using Color = UnityEngine.Color;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -56,7 +62,7 @@ namespace Outernet.Client.AuthoringTools
 
             pos /= count;
 
-            var localTransform = LocalizedReferenceFrame.EcefToLocal(pos, rot);
+            var localTransform = VisualPositioningSystem.EcefToUnityWorld(pos, rot);
 
             position = localTransform.position;
             rotation = count == 1 ? localTransform.rotation : Quaternion.identity;
@@ -156,29 +162,60 @@ namespace Outernet.Client.AuthoringTools
             return primitive.value;
         }
 
-        public static PlerionClient.Model.GroupBatchUpdate ToGroupModel(Guid sceneObjectID)
+        public static GroupCreate ToGroupCreate(Guid sceneObjectID)
         {
             var group = App.state.authoringTools.nodeGroups[sceneObjectID];
 
-            return new PlerionClient.Model.GroupBatchUpdate(
-                id: group.id)
+            return new GroupCreate(group.name.value)
+            {
+                Id = group.id,
+                ParentId = group.parentID.value
+            };
+        }
+
+        public static GroupBatchUpdate ToGroupUpdate(Guid sceneObjectID)
+        {
+            var group = App.state.authoringTools.nodeGroups[sceneObjectID];
+
+            return new GroupBatchUpdate(id: group.id)
             {
                 Name = group.name.value,
                 ParentId = group.parentID.value
             };
         }
 
-        public static PlerionClient.Model.LocalizationMapBatchUpdate ToMapRecord(Guid sceneObjectID)
+        public static LocalizationMapCreate ToMapCreate(Guid sceneObjectID)
         {
-            var map = App.state.maps[sceneObjectID];
+            var map = App.state.authoringTools.maps[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];
 
-            return new PlerionClient.Model.LocalizationMapBatchUpdate(
-                id: map.id)
+            return new LocalizationMapCreate(
+                reconstructionId: map.reconstructionID.value,
+                positionX: transform.position.value.x,
+                positionY: transform.position.value.y,
+                positionZ: transform.position.value.z,
+                rotationX: transform.rotation.value.x,
+                rotationY: transform.rotation.value.y,
+                rotationZ: transform.rotation.value.z,
+                rotationW: transform.rotation.value.w,
+                color: 0 //TODO EP: What should this value be? Do we even want to use it if we're going to use the colors from the point cloud?
+            )
+            {
+                Lighting = (int)map.lighting.value,
+                Name = map.name.value,
+                Active = true,
+            };
+        }
+
+        public static LocalizationMapBatchUpdate ToMapUpdate(Guid sceneObjectID)
+        {
+            var map = App.state.authoringTools.maps[sceneObjectID];
+            var transform = App.state.transforms[sceneObjectID];
+
+            return new LocalizationMapBatchUpdate(id: map.uuid)
             {
                 Name = map.name.value,
                 Lighting = (int)map.lighting.value,
-                Color = (int)map.color.value,
                 Active = true,
                 PositionX = transform.position.value.x,
                 PositionY = transform.position.value.y,
@@ -186,26 +223,46 @@ namespace Outernet.Client.AuthoringTools
                 RotationX = transform.rotation.value.x,
                 RotationY = transform.rotation.value.y,
                 RotationZ = transform.rotation.value.z,
-                RotationW = transform.rotation.value.w,
-                // UNDO TYLER
-                // Points = map.localInputImagePositions.SelectMany(EnumerateComponents).ToList()
+                RotationW = transform.rotation.value.w
             };
         }
 
-        public static IEnumerable<double> EnumerateComponents(double3 value)
-        {
-            yield return value.x;
-            yield return value.y;
-            yield return value.z;
-        }
-
-        public static PlerionClient.Model.NodeBatchUpdate ToNodeModel(Guid sceneObjectID)
+        public static NodeCreate ToNodeCreate(Guid sceneObjectID)
         {
             var node = App.state.nodes[sceneObjectID];
             var transform = App.state.transforms[sceneObjectID];
 
-            return new PlerionClient.Model.NodeBatchUpdate(
-                id: node.id)
+            return new NodeCreate(
+                name: node.name.value,
+                positionX: transform.position.value.x,
+                positionY: transform.position.value.y,
+                positionZ: transform.position.value.z,
+                rotationX: transform.rotation.value.x,
+                rotationY: transform.rotation.value.y,
+                rotationZ: transform.rotation.value.z,
+                rotationW: transform.rotation.value.w
+            )
+            {
+                Id = node.id,
+                Active = true,
+                Link = node.link.value,
+                LinkType = (int)node.linkType.value,
+                Label = node.label.value,
+                LabelType = (int)node.labelType.value,
+                LabelScale = node.labelScale.value,
+                LabelWidth = node.labelWidth.value,
+                LabelHeight = node.labelHeight.value,
+                LayerId = node.layer.value,
+                ParentId = node.parentID.value
+            };
+        }
+
+        public static NodeBatchUpdate ToNodeUpdate(Guid sceneObjectID)
+        {
+            var node = App.state.nodes[sceneObjectID];
+            var transform = App.state.transforms[sceneObjectID];
+
+            return new NodeBatchUpdate(id: node.id)
             {
                 Name = node.name.value,
                 Active = true,
@@ -228,10 +285,16 @@ namespace Outernet.Client.AuthoringTools
             };
         }
 
-        public static PlerionClient.Model.LayerBatchUpdate ToLayerModel(Guid sceneObjectID)
+        public static LayerCreate ToLayerCreate(Guid sceneObjectID)
         {
             var layer = App.state.layers[sceneObjectID];
-            return new PlerionClient.Model.LayerBatchUpdate(layer.id)
+            return new LayerCreate(layer.layerName.value) { Id = layer.id };
+        }
+
+        public static LayerBatchUpdate ToLayerUpdate(Guid sceneObjectID)
+        {
+            var layer = App.state.layers[sceneObjectID];
+            return new LayerBatchUpdate(layer.id)
             {
                 Name = layer.layerName.value
             };

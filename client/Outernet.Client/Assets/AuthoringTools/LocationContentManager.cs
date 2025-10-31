@@ -16,6 +16,8 @@ using CesiumForUnity;
 using PlerionClient.Model;
 using PlerionClient.Api;
 using PlerionClient.Client;
+using Plerion.VPS;
+using System.Threading.Tasks;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -27,7 +29,12 @@ namespace Outernet.Client.AuthoringTools
 
         private void Awake()
         {
-            App.RegisterObserver(HandleLocationChanged, App.state.authoringTools.location, App.state.authoringTools.settings.nodeFetchRadius);
+            App.RegisterObserver(
+                HandleLocationChanged,
+                App.state.loggedIn,
+                App.state.authoringTools.location,
+                App.state.authoringTools.settings.nodeFetchRadius
+            );
         }
 
         private void OnDestroy()
@@ -37,6 +44,9 @@ namespace Outernet.Client.AuthoringTools
 
         private void HandleLocationChanged(NodeChangeEventArgs args)
         {
+            if (!App.state.loggedIn.value)
+                return;
+
             _updateLocationAndContentTask.Cancel();
 
             if (_loadedLocation.Equals(App.state.authoringTools.location.value) &&
@@ -149,38 +159,62 @@ namespace Outernet.Client.AuthoringTools
             var height = heights[0];
             var ecefCoordinates = CesiumWgs84Ellipsoid.LongitudeLatitudeHeightToEarthCenteredEarthFixed(new double3(longitude, latitude, height));
 
-            LocalizedReferenceFrame.SetTargetLocalToEcefTransform(
+            VisualPositioningSystem.SetUnityWorldToEcefTransform(
                 Double4x4.FromTranslationRotation(
                     ecefCoordinates,
                     Client.Utility.GetEUNRotationFromECEFPosition(ecefCoordinates)
-                ),
-                smoothTransition: false
+                )
             );
 
-            List<LocalizationMapRead> maps = null;
+            List<LocalizationMapRead> maps = default;
+
+#if MAP_REGISTRATION_TOOLS_ENABLED
+            maps = await App.API.GetLocalizationMapsAsync();
+
+            // TODO EP: Re-enable this when we get this endpoint
+            // maps = await App.API.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition);
+#else
             List<NodeRead> nodes = null;
             List<GroupRead> nodeGroups = null;
 
             await UniTask.WhenAll(
-                PlerionAPI.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
-                    .ContinueWith(x => maps = x),
 
-                PlerionAPI.GetNodes(new double3[] { ecefCoordinates }, radius, 9999)
+                App.API.GetLocalizationMapsAsync().AsUniTask().ContinueWith(x => maps = x),
+                
+                // TODO EP: Re-enable this when we get this endpoint
+                // await App.API.GetMapsWithinRadiusAsync(latitude, longitude, height, radius, Settings.lightingCondition)
+                //     .ContinueWith(x => maps = x);
+
+                App.API.GetNodesAsync().AsUniTask()
                     .ContinueWith(x =>
                     {
                         nodes = x;
-                        return GetNodeGroupsRecursive(x, cancellationToken);
+                        return GetNodeGroupsRecursive(x);
                     })
                     .ContinueWith(x => nodeGroups = x)
+
+                // TODO EP: Re-enable this when we get this endpoint
+                // PlerionAPI.GetNodesNearPositionsAsync(new double3[] { ecefCoordinates }, radius, 9999)
+                //     .ContinueWith(x =>
+                //     {
+                //         nodes = x;
+                //         return GetNodeGroupsRecursive(x, cancellationToken);
+                //     })
+                //     .ContinueWith(x => nodeGroups = x)
             );
+#endif
 
             await UniTask.SwitchToMainThread(cancellationToken);
 
+#if MAP_REGISTRATION_TOOLS_ENABLED
+            App.ExecuteActionOrDelay(new SetMapsAction(maps.ToArray()));
+#else
             App.ExecuteActionOrDelay(
                 new SetMapsAction(maps.ToArray()),
                 new SetNodesAction(nodes.ToArray()),
                 new SetNodeGroupsAction(nodeGroups.ToArray())
             );
+#endif
 
             Destroy(dialog.gameObject);
 
@@ -191,7 +225,7 @@ namespace Outernet.Client.AuthoringTools
         {
             var groups = new List<GroupRead>();
 
-            var directGroups = await PlerionAPI.api.GetGroupsAsync(
+            var directGroups = await App.API.GetGroupsAsync(
                 nodes.Where(x => x.ParentId.HasValue)
                     .Select(x => x.ParentId.Value)
                     .Distinct()
@@ -204,7 +238,7 @@ namespace Outernet.Client.AuthoringTools
 
             while (groups.Any(x => x.ParentId.HasValue && !groups.Any(y => y.Id == x.ParentId)))
             {
-                var recursiveGroups = await PlerionAPI.api.GetGroupsAsync(
+                var recursiveGroups = await App.API.GetGroupsAsync(
                     groups.Where(x => x.ParentId.HasValue && !groups.Any(y => y.Id == x.ParentId))
                         .Select(x => x.ParentId.Value)
                         .Distinct()

@@ -7,13 +7,15 @@ using UnityEngine;
 using FofX.Stateful;
 
 using Outernet.Client.AuthoringTools;
+using Plerion.VPS;
 
 namespace Outernet.Client
 {
     public class ClientState : ObservableObject
     {
+        public ObservablePrimitive<bool> loggedIn { get; private set; }
+        public ObservablePrimitive<double2> roughGrainedLocation { get; private set; }
         public ObservableDictionary<Guid, NodeState> nodes { get; private set; }
-        public ObservableDictionary<Guid, MapState> maps { get; private set; }
         public ObservableDictionary<Guid, TransformState> transforms { get; private set; }
         public ObservableDictionary<Guid, LayerState> layers { get; private set; }
 
@@ -31,32 +33,6 @@ namespace Outernet.Client
                 ObservationScope.Self,
                 ecefToLocalMatrix
             );
-        }
-
-        public bool TryGetName(Guid id, out ObservablePrimitive<string> name)
-        {
-            if (nodes.TryGetValue(id, out var node))
-            {
-                name = node.name;
-                return true;
-            }
-
-            if (maps.TryGetValue(id, out var map))
-            {
-                name = map.name;
-                return true;
-            }
-
-#if AUTHORING_TOOLS_ENABLED
-            if (authoringTools.nodeGroups.TryGetValue(id, out var group))
-            {
-                name = group.name;
-                return true;
-            }
-#endif
-
-            name = default;
-            return false;
         }
     }
 
@@ -113,12 +89,6 @@ namespace Outernet.Client
 
         protected override void PostInitializeInternal()
         {
-            context.RegisterObserver(
-                AwaitTransform,
-                new ObserverParameters() { scope = ObservationScope.Self, isDerived = true },
-                _clientState.transforms
-            );
-
             visible.RegisterDerived(
                 _ => visible.value = _clientState.settings.visibleLayers.Contains(layer.value),
                 ObservationScope.Self,
@@ -126,100 +96,22 @@ namespace Outernet.Client
                 _clientState.settings.visibleLayers
             );
         }
-
-        protected override void DisposeInternal()
-        {
-            context.DeregisterObserver(AwaitTransform);
-        }
-
-        private void AwaitTransform(NodeChangeEventArgs args)
-        {
-            if (!_clientState.transforms.TryGetValue(id, out var transform))
-                return;
-
-            context.DeregisterObserver(AwaitTransform);
-            transform.bounds.RegisterDerived(
-                _ => transform.bounds.value = new Bounds(
-                    new Vector3(0, 0, -0.5f) * labelScale.value,
-                    new Vector3(
-                        labelWidth.value,
-                        labelHeight.value,
-                        1f
-                    ) * labelScale.value
-                ),
-                ObservationScope.Self,
-                labelWidth,
-                labelHeight,
-                labelScale
-            );
-        }
     }
 
     public class MapState : ObservableObject, IKeyedObservableNode<Guid>
     {
-        public Guid id { get; private set; }
-        public ObservablePrimitive<string> name { get; private set; }
-        public ObservablePrimitive<Shared.Lighting> lighting { get; private set; }
-        public ObservablePrimitive<long> color { get; private set; }
+        public Guid uuid { get; private set; }
 
         [HideInInspectorUI]
-        public ObservablePrimitiveArray<double3> localInputImagePositions { get; private set; }
+        public ObservablePrimitive<int> id { get; private set; }
+
+        [HideInInspectorUI]
+        public ObservablePrimitive<Guid> reconstructionID { get; private set; }
+        public ObservablePrimitive<string> name { get; private set; }
+        public ObservablePrimitive<Lighting> lighting { get; private set; }
 
         void IKeyedObservableNode<Guid>.AssignKey(Guid key)
-            => id = key;
-
-        private ClientState _clientState => root as ClientState;
-
-        protected override void PostInitializeInternal()
-        {
-            context.RegisterObserver(
-                AwaitTransform,
-                new ObserverParameters() { scope = ObservationScope.Self, isDerived = true },
-                _clientState.transforms
-            );
-        }
-
-        protected override void DisposeInternal()
-        {
-            context.DeregisterObserver(AwaitTransform);
-        }
-
-        private void AwaitTransform(NodeChangeEventArgs args)
-        {
-            if (!_clientState.transforms.TryGetValue(id, out var transform))
-                return;
-
-            context.DeregisterObserver(AwaitTransform);
-            transform.bounds.RegisterDerived(
-                _ =>
-                {
-                    if (localInputImagePositions.count == 0)
-                    {
-                        transform.bounds.value = default;
-                        return;
-                    }
-
-                    var min = new Vector3(
-                        -(float)localInputImagePositions.Select(x => x.x).Min(),
-                        -(float)localInputImagePositions.Select(x => x.y).Min(),
-                        -(float)localInputImagePositions.Select(x => x.z).Min()
-                    );
-
-                    var max = new Vector3(
-                        -(float)localInputImagePositions.Select(x => x.x).Max(),
-                        -(float)localInputImagePositions.Select(x => x.y).Max(),
-                        -(float)localInputImagePositions.Select(x => x.z).Max()
-                    );
-
-                    transform.bounds.value = new Bounds(
-                        (min + max) / 2f,
-                        max - min
-                    );
-                },
-                ObservationScope.Self,
-                localInputImagePositions
-            );
-        }
+            => uuid = key;
     }
 
     public class TransformState : ObservableObject, IKeyedObservableNode<Guid>
@@ -231,8 +123,6 @@ namespace Outernet.Client
 
         [InspectorType(typeof(ECEFRotationInspector), LabelType.Adaptive)]
         public ObservablePrimitive<Quaternion> rotation { get; private set; }
-
-        public ObservablePrimitive<Bounds> bounds { get; private set; }
 
         void IKeyedObservableNode<Guid>.AssignKey(Guid key)
             => id = key;

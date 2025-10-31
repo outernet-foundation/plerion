@@ -23,7 +23,7 @@
       "dependencies": {
         "com.fofx.observething": "1.0.0"
       },
-      "hash": "5a0b7ed93d320ffe71de627b708d4ed09d22ca4b"
+      "hash": "246f76c995ef44a1f48b5ea13397581bebc00d4b"
     },
     "com.fofx.nessle.statefulextensions": {
       "version": "https://github.com/outernet-foundation/Nessle.git?path=Assets/Package/StatefulExtensions",

@@ -5,8 +5,9 @@ using FofX.Serialization;
 using Unity.Mathematics;
 using SimpleJSON;
 using Outernet.Client.AuthoringTools;
+using Plerion.VPS;
 
-#if AUTHORING_TOOLS_ENABLED
+#if AUTHORING_TOOLS_ENABLED || MAP_REGISTRATION_TOOLS_ENABLED
 using UnityEngine.InputSystem.UI;
 #endif
 
@@ -16,22 +17,18 @@ namespace Outernet.Client
     {
         public PrefabSystem prefabSystem;
         public SceneReferences sceneReferences;
+        public LocalizationMapVisualizer mapVisualizer;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Initialize()
         {
             Logger.Initialize();
 
-#if UNITY_EDITOR
-            var editorSettings = EditorSettings.GetOrCreateInstance();
-            Log.enabledLogGroups = editorSettings.enabledLogGroups;
-            Log.logLevel = editorSettings.logLevel;
-            Log.stackTraceLevel = editorSettings.stackTraceLevel;
-#else
-            Log.enabledLogGroups = ~LogGroup.None; // Enable all log groups
-            Log.logLevel = LogLevel.Info;
-            Log.stackTraceLevel = LogLevel.Warn;
-#endif
+            UnityEnv env = UnityEnv.GetOrCreateInstance();
+
+            Log.enabledLogGroups = env.enabledLogGroups;
+            Log.logLevel = env.logLevel;
+            Log.stackTraceLevel = env.stackTraceLevel;
         }
 
         private void Awake()
@@ -39,7 +36,7 @@ namespace Outernet.Client
             AddCustomSerializers();
             sceneReferences.Initialize();
 
-#if AUTHORING_TOOLS_ENABLED
+#if AUTHORING_TOOLS_ENABLED || MAP_REGISTRATION_TOOLS_ENABLED
             AuthoringTools.AuthoringToolsPrefabs.Initialize("AuthoringToolsPrefabs");
 
             Destroy(SceneReferences.XrOrigin);
@@ -49,21 +46,15 @@ namespace Outernet.Client
             var defaultRaycaster = camera.gameObject.AddComponent<AuthoringTools.DefaultRaycaster>();
 #endif
 
-            string plerionAPIBaseUrl = "https://api.outernetfoundation.org";
+            UnityEnv env = UnityEnv.GetOrCreateInstance();
 
-#if UNITY_EDITOR
-            var editorSettings = EditorSettings.GetOrCreateInstance();
-            App.environmentURL = editorSettings.environmentURL;
-            App.environmentSchema = editorSettings.environmentSchema;
+            Auth.tokenUrl = string.IsNullOrEmpty(env.serverPrefix) ?
+                "https://keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token" :
+                $"https://{env.serverPrefix}-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token";
 
-            if (editorSettings.overridePlerionBaseUrl)
-                plerionAPIBaseUrl = editorSettings.plerionAPIBaseUrl;
-#else
-            App.environmentURL = "http://34.196.34.28";
-            App.environmentSchema = "dev2";
-#endif
-
-            PlerionAPI.Initialize(plerionAPIBaseUrl);
+            App.environmentURL = env.environmentURL;
+            App.environmentSchema = env.environmentSchema;
+            App.serverPrefix = env.serverPrefix;
 
             Instantiate(prefabSystem, transform);
 
@@ -74,20 +65,28 @@ namespace Outernet.Client
 
             ConnectionManager.Initialize();
             PlaneDetector.Initialize().Forget();
-            LocalizedReferenceFrame.Initialize();
 
-#if !AUTHORING_TOOLS_ENABLED
+            gameObject.AddComponent<GPSManager>();
+
+#if !AUTHORING_TOOLS_ENABLED && !MAP_REGISTRATION_TOOLS_ENABLED
             SceneViewManager.Initialize();
-            Localizer.Initialize();
             TilesetManager.Initialize();
+            Instantiate(mapVisualizer);
 #else
-            var canvas = Instantiate(AuthoringTools.AuthoringToolsPrefabs.Canvas);
-            var systemMenu = Instantiate(AuthoringTools.AuthoringToolsPrefabs.SystemMenu, canvas.transform);
-
             gameObject.AddComponent<AuthoringTools.AuthoringToolsApp>();
-            Instantiate(AuthoringTools.AuthoringToolsPrefabs.UI, canvas.transform);
 
-            systemMenu.transform.SetAsLastSibling();
+            var canvas = Instantiate(AuthoringTools.AuthoringToolsPrefabs.Canvas);
+            var systemUI = Instantiate(AuthoringTools.AuthoringToolsPrefabs.SystemMenu, canvas.transform);
+            var mainUI =
+#if MAP_REGISTRATION_TOOLS_ENABLED
+            Instantiate(AuthoringTools.AuthoringToolsPrefabs.MapRegistrationUI, canvas.transform);
+#else
+            Instantiate(AuthoringTools.AuthoringToolsPrefabs.UI, canvas.transform);
+#endif
+
+            systemUI.transform.SetAsLastSibling();
+
+            Instantiate(AuthoringTools.AuthoringToolsPrefabs.LoginScreen, canvas.transform);
 
             gameObject.AddComponent<AuthoringTools.LocationContentManager>();
             gameObject.AddComponent<AuthoringTools.SettingsManager>();
@@ -106,19 +105,14 @@ namespace Outernet.Client
             var runtimeHandles = new GameObject("RuntimeHandles", typeof(AuthoringTools.RuntimeHandles));
             runtimeHandles.transform.SetParent(sceneViewRoot.transform);
 #endif
-            GetLayersAndPopulate();
+
+#if !MAP_REGISTRATION_TOOLS_ENABLED
+            VisualPositioningSystem.Initialize("user", "password");
+            Auth.username = "user";
+            Auth.password = "password";
+            App.state.loggedIn.ExecuteSet(true);
+#endif
             Destroy(this);
-        }
-
-        private async void GetLayersAndPopulate()
-        {
-            var layers = await PlerionAPI.api.GetLayersAsync();
-            await UniTask.SwitchToMainThread();
-
-            if (layers == null)
-                return;
-
-            App.ExecuteActionOrDelay(new SetLayersAction(layers.ToArray()));
         }
 
         private void AddCustomSerializers()

@@ -47,8 +47,6 @@ namespace Outernet.Client
 
         public void Terminate()
         {
-            GetComponent<SyncedAnchor>().Terminate();
-
             indicator.Terminate();
             PrefabSystem.Destroy(indicator);
 

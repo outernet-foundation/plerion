@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Linq;
+using System.Threading;
 
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -13,9 +13,9 @@ using Cysharp.Threading.Tasks;
 using FofX;
 using FofX.Stateful;
 
-using Outernet.Client.Location;
-
+using Plerion.VPS;
 using TMPro;
+using UnityEditor.VersionControl;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -45,7 +45,6 @@ namespace Outernet.Client.AuthoringTools
         private Dictionary<Guid, Foldout> _groupFoldouts = new Dictionary<Guid, Foldout>();
 
         private Guid _lastSelectedElement;
-        private List<Guid> _layersInOrder = new List<Guid>();
 
         private void Awake()
         {
@@ -72,7 +71,7 @@ namespace Outernet.Client.AuthoringTools
             //     "File/Add Scan",
             //     OpenAddScanDialog
             // );
-
+#if !MAP_REGISTRATION_TOOLS_ENABLED
             SystemMenu.AddMenuItem(
                 "Edit/Duplicate",
                 () =>
@@ -94,7 +93,7 @@ namespace Outernet.Client.AuthoringTools
                     Key.D
                 }
             );
-
+#endif
             SystemMenu.AddMenuItem(
                 "Edit/Delete",
                 () =>
@@ -105,14 +104,13 @@ namespace Outernet.Client.AuthoringTools
                     );
                 },
                 validate: () =>
-                    App.state.authoringTools.selectedObjects.count > 0 &&
-                    App.state.authoringTools.selectedObjects.All(CanReparent),
+                    App.state.authoringTools.selectedObjects.count > 0,
                 commandKeys: new Key[][]{
                     new Key[] { Key.Delete },
                     new Key[] { Key.Backspace }
                 }
             );
-
+#if !MAP_REGISTRATION_TOOLS_ENABLED
             SystemMenu.AddMenuItem(
                 "Create/Node",
                 CreateNewNode,
@@ -132,6 +130,17 @@ namespace Outernet.Client.AuthoringTools
                     Key.G
                 }
             );
+#endif
+
+            SystemMenu.AddMenuItem(
+                "Create/Map",
+                OpenAddScanDialog,
+                commandKeys: new Key[]
+                {
+                    Utility.GetPlatformCommandKey(),
+                    Key.M
+                }
+            );
 
             SystemMenu.AddMenuItem(
                 "Help/About",
@@ -144,8 +153,7 @@ namespace Outernet.Client.AuthoringTools
             );
 
             // Restore when we have scan upload functionality in place
-            // addScanButton.onClick.AddListener(OpenAddScanDialog);
-
+            addScanButton.onClick.AddListener(OpenAddScanDialog);
             addNodeButton.onClick.AddListener(CreateNewNode);
 
             App.state.authoringTools.settings.loaded.OnChange(loaded =>
@@ -173,7 +181,7 @@ namespace Outernet.Client.AuthoringTools
 
             App.state.authoringTools.nodeGroups.Each(x => SetupGroupView(x.value));
             App.state.nodes.Each(x => SetupNodeView(x.value));
-            App.state.maps.Each(x => SetupMapView(x.value));
+            App.state.authoringTools.maps.Each(x => SetupMapView(x.value));
 
             Bindings.Observer(
                 _ =>
@@ -336,7 +344,7 @@ namespace Outernet.Client.AuthoringTools
 
             view.AddBinding(
                 BindHierarchyElement(
-                    mapState.id,
+                    mapState.uuid,
                     view.gameObject,
                     toHighlight,
                     AuthoringToolsPrefabs.SelectedColor,
@@ -406,30 +414,6 @@ namespace Outernet.Client.AuthoringTools
             nodesScrollView.verticalNormalizedPosition = Mathf.Clamp01((targetY - viewportHeight) / (contentHeight - viewportHeight));
         }
 
-        private IEnumerable<Guid> MaskToLayers(List<Guid> layers, int mask)
-        {
-            for (int i = 0; i < layers.Count; i++)
-            {
-                if ((mask & (int)Mathf.Pow(2, i)) != 0)
-                    yield return layers[i];
-            }
-        }
-
-        private int LayersToMask(List<Guid> layers, IEnumerable<Guid> visibleLayers)
-        {
-            int result = 0;
-            foreach (var layer in visibleLayers)
-            {
-                int index = layers.IndexOf(layer);
-                if (index == -1)
-                    continue;
-
-                result += (int)Mathf.Pow(2, index);
-            }
-
-            return result;
-        }
-
         private void RevealInHierarchy(Guid obj)
         {
             if (App.state.authoringTools.TryGetParent(obj, out var parentID) &&
@@ -447,7 +431,7 @@ namespace Outernet.Client.AuthoringTools
                 ", ",
                 App.state.authoringTools.selectedObjects
                     .Where(CanReparent)
-                    .Select(x => App.state.TryGetName(x, out var name) ? name.value : null)
+                    .Select(x => App.state.authoringTools.TryGetName(x, out var name) ? name.value : null)
             );
         }
 
@@ -485,76 +469,11 @@ namespace Outernet.Client.AuthoringTools
             Utility.DisplayDialog(dialog);
         }
 
-        private void OpenAddScanDialog()
-        {
-            var dialog = Instantiate(addScanDialogPrefab);
-            dialog.Setup();
-            dialog.onCanceled.AddListener(() => Destroy(dialog.gameObject));
-            dialog.onComplete.AddListener((mapName, mapPath) =>
-            {
-                Destroy(dialog.gameObject);
-
-                var loadDialog = Instantiate(loadDialogPrefab);
-                loadDialog.Setup(allowCancel: true);
-
-                loadDialog.onFinishSelected.AddListener(() => Destroy(loadDialog.gameObject));
-                loadDialog.onCancelSelected.AddListener(() => _uploadScan.Cancel());
-
-                var progress = Progress.Create<(string description, float progress)>(
-                    progressUpdate => loadDialog.props.ScheduleAction(
-                        progressUpdate,
-                        (args, props) =>
-                        {
-                            props.description.value = args.description;
-                            props.progress.value = args.progress;
-                            props.isDone.value = args.progress == 1f;
-                        }
-                    )
-                );
-
-                _uploadScan = TaskHandle.Execute(
-                    async _ =>
-                    {
-                        await UploadScan(mapName, mapPath, progress);
-                        await UniTask.SwitchToMainThread();
-                        Destroy(loadDialog.gameObject);
-                    }
-                );
-
-                Utility.DisplayDialog(loadDialog);
-            });
-
-            Utility.DisplayDialog(dialog);
-        }
-
-        private async UniTask UploadScan(string scanName, string scanPath, IProgress<(string description, float progress)> progress, CancellationToken token = default)
-        {
-            progress.Report(new("Converting file", 0.1f));
-
-            // TODO: actually process file here
-            await UniTask.Delay(UnityEngine.Random.Range(100, 500));
-            token.ThrowIfCancellationRequested();
-
-            progress.Report(new("Uploading file", 0.3f));
-
-            // TODO: actually upload here
-            await UniTask.Delay(UnityEngine.Random.Range(500, 1300));
-            token.ThrowIfCancellationRequested();
-
-            progress.Report(new("Processing file", 0.7f));
-
-            // TODO: actually await map here
-            await UniTask.Delay(UnityEngine.Random.Range(800, 1500));
-            token.ThrowIfCancellationRequested();
-
-            progress.Report(new("Done!", 1f));
-        }
-
         private void CreateNewNode()
         {
             UndoRedoManager.RegisterUndo("Create Node");
 
-            var newNodeTransform = LocalizedReferenceFrame.LocalToEcef(
+            var newNodeTransform = VisualPositioningSystem.UnityWorldToEcef(
                 Camera.main.transform.position + (Camera.main.transform.forward * 3f),
                 Camera.main.transform.rotation.Flatten()
             );
@@ -752,12 +671,113 @@ namespace Outernet.Client.AuthoringTools
             );
         }
 
+        private class AddScanDialogProps : Dialog.Props
+        {
+            public ObservablePrimitive<string> scanName { get; private set; }
+            public ObservablePrimitive<string> error { get; private set; }
+
+            public AddScanDialogProps(string scanName = default, string title = default, DialogStatus status = default, bool allowCancel = default, float minimumWidth = 500f)
+                : base(title, status, allowCancel, minimumWidth)
+            {
+                this.scanName = new ObservablePrimitive<string>(scanName);
+            }
+        }
+
+        private void OpenAddScanDialog()
+        {
+            Dialogs.Show(
+                props: new AddScanDialogProps(title: "Add Scan", allowCancel: true),
+                constructControls: props => UIBuilder.VerticalLayout(
+                    UIBuilder.AdaptivePropertyLabel("Scan Name", UIBuilder.InputField(props.scanName)),
+                    UIBuilder.HorizontalLayout()
+                        .Alignment(TextAnchor.LowerRight)
+                        .WithChildren(
+                            UIBuilder.Button("Cancel", () => props.status.ExecuteSet(DialogStatus.Canceled)),
+                            UIBuilder.Button("Add Scan", async () =>
+                            {
+                                try
+                                {
+                                    await ImportScan(props.scanName.value);
+                                    props.status.ScheduleSet(DialogStatus.Complete);
+                                }
+                                catch (Exception exc)
+                                {
+                                    props.error.ScheduleSet(exc.Message);
+                                }
+                            })
+                            .WithBinding(x => Bindings.Observer(
+                                _ => x.button.interactable = props.scanName.value != null,
+                                ObservationScope.Self,
+                                props.scanName
+                            ))
+                        ),
+                    UIBuilder.Text(props.error).Color(Color.red).WithBinding(x => Bindings.Observer(
+                        _ => x.gameObject.SetActive(!string.IsNullOrEmpty(props.error.value)),
+                        ObservationScope.Self,
+                        props.error
+                    ))
+                ),
+                binding: props => Bindings.Compose(
+                    props.status.OnChange(x =>
+                    {
+                        if (x == DialogStatus.Complete)
+                            ImportScan(props.scanName.value).Forget();
+                    })
+                )
+            );
+        }
+
+        public async UniTask ImportScan(string scanName)
+        {
+            try
+            {
+                var newMapTransform = VisualPositioningSystem.UnityWorldToEcef(
+                    Camera.main.transform.position + (Camera.main.transform.forward * 3f),
+                    Camera.main.transform.rotation.Flatten()
+                );
+
+                var reconstructions = await App.API.GetReconstructionsAsync(captureSessionName: scanName);
+
+                if (reconstructions.Count == 0)
+                {
+                    Debug.LogError($"{scanName} not found.");
+                    return;
+                }
+
+                var reconstruction = reconstructions[0];
+                Guid exsistingMap = Guid.Empty;
+
+                try
+                {
+                    exsistingMap = await App.API.GetReconstructionLocalizationMapAsync(reconstruction.Id);
+                }
+                catch (System.Exception) { }
+
+                if (exsistingMap != Guid.Empty || App.state.authoringTools.maps.Any(x => x.value.reconstructionID.value == reconstruction.Id))
+                    throw new Exception("Localization map already registered.");
+
+                App.ExecuteActionOrDelay(new AddOrUpdateMapAction(
+                    Guid.NewGuid(),
+                    scanName,
+                    newMapTransform.position,
+                    newMapTransform.rotation,
+                    Lighting.Day,
+                    reconstruction.Id
+                ));
+            }
+            catch (Exception exception)
+            {
+                Log.Error(LogGroup.Default, exception, "Encountered an error importing scan.");
+            }
+        }
+
         private void OpenUserSettings()
         {
             Dialogs.Show(
                 title: "Settings",
                 constructControls: props => UIBuilder.VerticalLayout(
                     UIBuilder.AdaptivePropertyLabel("Content Radius", UIBuilder.FloatField(App.state.authoringTools.settings.nodeFetchRadius)),
+#if !MAP_REGISTRATION_TOOLS_ENABLED
                     UIBuilder.HorizontalLayout(
                         UIBuilder.Text("Layers"),
                         UIBuilder.FlexibleSpace(flexibleWidth: true),
@@ -802,6 +822,7 @@ namespace Outernet.Client.AuthoringTools
                                     }
                                 ))
                         ),
+#endif
                     UIBuilder.HorizontalLayout()
                         .Alignment(TextAnchor.LowerRight)
                         .WithChildren(

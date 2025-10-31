@@ -34,19 +34,6 @@ namespace Outernet.Client.Location
         {
             try
             {
-                var geolocations = await PlerionAPI.GetWifiGeolocation(
-                    wifiAccessPoints.Select(accessPoint => accessPoint.macAddress).ToArray());
-
-                // Temporary hack, we currently assume that PlerionAPI.GetWifiGeolocation returns at 
-                // most one geolocation for a give set of wifi access points.
-                if (geolocations.Count() != 0)
-                {
-                    Log.Info(LogGroup.Localizer, "Using cached geolocation: {Bssid} ({Latitude}, {Longitude})",
-                        geolocations[0].bssid, geolocations[0].latitude, geolocations[0].longitude);
-
-                    return (geolocations[0].latitude, geolocations[0].longitude, 0.0f);
-                }
-
                 var googleAPIResponse = await RestClient.Post<GeolocationRequest, GeolocationResponse>(
                     googleGeolocationApiUrl,
                     new GeolocationRequest { wifiAccessPoints = wifiAccessPoints });

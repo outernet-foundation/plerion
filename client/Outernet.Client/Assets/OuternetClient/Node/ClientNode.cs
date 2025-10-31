@@ -1,9 +1,6 @@
 using System;
 using UnityEngine;
-using FofX.Stateful;
 using UnityEngine.XR.Interaction.Toolkit.Interactables;
-using System.Collections.Generic;
-using Unity.VisualScripting.Antlr3.Runtime;
 
 namespace Outernet.Client
 {
@@ -107,7 +104,6 @@ namespace Outernet.Client
                 labelDimensions,
                 position,
                 rotation,
-                bounds,
                 visible,
                 exhibitOpen,
                 exhibitPosition,

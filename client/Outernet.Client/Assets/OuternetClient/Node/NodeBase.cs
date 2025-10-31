@@ -22,7 +22,6 @@ namespace Outernet.Client
         public ObservablePrimitive<Vector2> labelDimensions { get; private set; }
         public ObservablePrimitive<Vector3> position { get; set; }
         public ObservablePrimitive<Quaternion> rotation { get; set; }
-        public ObservablePrimitive<Bounds> bounds { get; private set; }
         public ObservablePrimitive<bool> visible { get; private set; }
 
         public ObservablePrimitive<bool> hoveredLocally { get; private set; }
@@ -49,7 +48,6 @@ namespace Outernet.Client
             Vector2 labelDimensions = default,
             Vector3 position = default,
             Quaternion? rotation = default,
-            Bounds bounds = default,
             bool visible = default,
             bool exhibitOpen = default,
             Vector3 exhibitPosition = default,
@@ -68,7 +66,6 @@ namespace Outernet.Client
             this.labelDimensions = new ObservablePrimitive<Vector2>(labelDimensions);
             this.position = new ObservablePrimitive<Vector3>(position);
             this.rotation = new ObservablePrimitive<Quaternion>(rotation ?? Quaternion.identity);
-            this.bounds = new ObservablePrimitive<Bounds>(bounds);
             this.visible = new ObservablePrimitive<bool>(visible);
             this.exhibitOpen = new ObservablePrimitive<bool>(exhibitOpen);
             this.exhibitPosition = new ObservablePrimitive<Vector3>(exhibitPosition);
@@ -116,8 +113,21 @@ namespace Outernet.Client
             AddBinding(
                 props.position.OnChange(x => transform.position = x),
                 props.rotation.OnChange(x => transform.rotation = x),
-                _collider.BindBounds(props.bounds),
                 props.labelType.OnChange(HandleLabelTypeChanged),
+                Bindings.Observer(
+                    _ =>
+                    {
+                        _collider.center = new Vector3(0, 0, -0.5f) * props.labelScale.value;
+                        _collider.size = new Vector3(
+                            props.labelDimensions.value.x,
+                            props.labelDimensions.value.y,
+                            1f
+                        ) * props.labelScale.value;
+                    },
+                    new ObserverParameters() { scope = ObservationScope.Self },
+                    props.labelScale,
+                    props.labelDimensions
+                ),
                 gameObject.BindActive(props.visible)
             );
         }

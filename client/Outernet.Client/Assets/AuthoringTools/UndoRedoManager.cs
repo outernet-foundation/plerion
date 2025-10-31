@@ -58,8 +58,8 @@ namespace Outernet.Client.AuthoringTools
             App.RegisterObserver(
                 HandleAuthoringToolStateChanged,
                 App.state.nodes,
-                App.state.maps,
                 App.state.transforms,
+                App.state.authoringTools.maps,
                 App.state.authoringTools.nodeGroups,
                 App.state.authoringTools.selectedObjects
             );

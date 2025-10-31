@@ -3,6 +3,7 @@ using Outernet.Shared;
 using Outernet.Client.Location;
 using System;
 using R3;
+using Plerion.VPS;
 
 namespace Outernet.Client
 {
@@ -113,7 +114,6 @@ namespace Outernet.Client
         private void Terminate()
         {
             settingsMenu.Terminate();
-            syncedAnchor.Terminate();
             subscriptions.Dispose();
 
             PrefabSystem.Destroy(this);
@@ -126,7 +126,7 @@ namespace Outernet.Client
                 animationTime += Time.fixedDeltaTime;
                 float t = animationTime / animationDuration;
 
-                var settingsMenuTransform = LocalizedReferenceFrame.EcefToLocal(
+                var settingsMenuTransform = VisualPositioningSystem.EcefToUnityWorld(
                     new Unity.Mathematics.double3(
                         userRecord.settingsMenuGeoPose.ecefPosition.Value.x,
                         userRecord.settingsMenuGeoPose.ecefPosition.Value.y,

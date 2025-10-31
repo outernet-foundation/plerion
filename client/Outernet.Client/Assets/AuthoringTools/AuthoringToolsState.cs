@@ -12,6 +12,7 @@ namespace Outernet.Client.AuthoringTools
         public ObservablePrimitive<double2?> location { get; private set; }
         public ObservablePrimitive<bool> locationContentLoaded { get; private set; }
 
+        public ObservableDictionary<Guid, MapState> maps { get; private set; }
         public ObservableDictionary<Guid, NodeGroupState> nodeGroups { get; private set; }
 
         public ObservableDictionary<Guid, ObservableSet<Guid>> childByGroup { get; private set; }
@@ -27,7 +28,7 @@ namespace Outernet.Client.AuthoringTools
                 var clientState = root as ClientState;
 
                 yield return clientState.nodes;
-                yield return clientState.maps;
+                yield return maps;
                 yield return nodeGroups;
                 yield return clientState.transforms;
             }
@@ -74,6 +75,32 @@ namespace Outernet.Client.AuthoringTools
             context.RegisterObserver(observer, new ObserverParameters() { isDerived = true }, parentID);
 
             return Bindings.OnRelease(() => context.DeregisterObserver(observer));
+        }
+
+        public bool TryGetName(Guid id, out ObservablePrimitive<string> name)
+        {
+            if (clientState.nodes.TryGetValue(id, out var node))
+            {
+                name = node.name;
+                return true;
+            }
+
+            if (maps.TryGetValue(id, out var map))
+            {
+                name = map.name;
+                return true;
+            }
+
+#if AUTHORING_TOOLS_ENABLED && !MAP_REGISTRATION_TOOLS_ENABLED
+            if (authoringTools.nodeGroups.TryGetValue(id, out var group))
+            {
+                name = group.name;
+                return true;
+            }
+#endif
+
+            name = default;
+            return false;
         }
 
         public IEnumerable<TransformState> SelectedTransforms()

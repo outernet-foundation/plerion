@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 
 using Outernet.Client.Location;
 using FofX.Stateful;
+using Plerion.VPS;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -126,7 +127,7 @@ namespace Outernet.Client.AuthoringTools
                             logLevel: FofX.LogLevel.Trace,
                             App.state.authoringTools.SelectedTransforms().Select(transform =>
                             {
-                                var objTransform = LocalizedReferenceFrame.EcefToLocal(
+                                var objTransform = VisualPositioningSystem.EcefToUnityWorld(
                                     transform.position.value,
                                     transform.rotation.value
                                 );
@@ -137,7 +138,7 @@ namespace Outernet.Client.AuthoringTools
                                 objTransform.position = curMatrix.MultiplyPoint(objTransform.position);
                                 objTransform.rotation = props.rotation.value * objTransform.rotation;
 
-                                var ecefTransform = LocalizedReferenceFrame.LocalToEcef(objTransform.position, objTransform.rotation);
+                                var ecefTransform = VisualPositioningSystem.UnityWorldToEcef(objTransform.position, objTransform.rotation);
 
                                 return new SetSceneObjectTransformAction(transform.id, ecefTransform.position, ecefTransform.rotation);
                             }
