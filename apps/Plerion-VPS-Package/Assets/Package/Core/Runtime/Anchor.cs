@@ -7,37 +7,37 @@ namespace Plerion.VPS
     [ExecuteInEditMode]
     public class Anchor : MonoBehaviour
     {
-        public double3 ecefPosition
-        {
-            get => _ecefPosition;
-            set
-            {
-                if (Equals(_ecefPosition, value))
-                    return;
+        // public double3 ecefPosition
+        // {
+        //     get => _ecefPosition;
+        //     set
+        //     {
+        //         if (Equals(_ecefPosition, value))
+        //             return;
 
-                _ecefPosition = value;
-                SetEcefTransform(_ecefPosition, _ecefRotation);
-            }
-        }
+        //         _ecefPosition = value;
+        //         SetEcefTransform(_ecefPosition, _ecefRotation);
+        //     }
+        // }
 
-        public quaternion ecefRotation
-        {
-            get => _ecefRotation;
-            set
-            {
-                if (Equals(_ecefRotation, value))
-                    return;
+        // public quaternion ecefRotation
+        // {
+        //     get => _ecefRotation;
+        //     set
+        //     {
+        //         if (Equals(_ecefRotation, value))
+        //             return;
 
-                _ecefRotation = value;
-                SetEcefTransform(_ecefPosition, _ecefRotation);
-            }
-        }
-
-        [SerializeField, HideInInspector]
-        private double3 _ecefPosition;
+        //         _ecefRotation = value;
+        //         SetEcefTransform(_ecefPosition, _ecefRotation);
+        //     }
+        // }
 
         [SerializeField, HideInInspector]
-        private quaternion _ecefRotation;
+        public float3 ecefPosition;
+
+        [SerializeField, HideInInspector]
+        public quaternion ecefRotation;
 
         [SerializeField, HideInInspector]
         private Vector3 _lastKnownPosition;
@@ -56,7 +56,7 @@ namespace Plerion.VPS
             if (!Application.isPlaying && _positionInitialized)
                 return;
 
-            var ecef = VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);
+            var ecef = VisualPositioningSystem.ColmapWorldFromUnityWorld(transform.position, transform.rotation);
 
             _lastKnownPosition = transform.position;
             _lastKnownRotation = transform.rotation;
@@ -65,8 +65,8 @@ namespace Plerion.VPS
             _targetRotation = transform.rotation;
 
             Debug.Log($"EP: Setting ECEF position to {ecef.position.x}, {ecef.position.y}, {ecef.position.z}");
-            _ecefPosition = ecef.position;
-            _ecefRotation = ecef.rotation;
+            ecefPosition = ecef.position;
+            ecefRotation = ecef.rotation;
 
             _positionInitialized = true;
         }
@@ -76,7 +76,7 @@ namespace Plerion.VPS
             VisualPositioningSystem.OnEcefToUnityWorldTransformUpdated +=
                 HandleReferenceFrameChanged;
 
-            SetEcefTransform(_ecefPosition, _ecefRotation);
+            // SetEcefTransform(_ecefPosition, _ecefRotation);
         }
 
         private void OnDisable()
@@ -87,64 +87,65 @@ namespace Plerion.VPS
 
         private void LateUpdate()
         {
-            if (transform.position != _lastKnownPosition ||
-                transform.rotation != _lastKnownRotation)
-            {
-                _lastKnownPosition = transform.position;
-                _lastKnownRotation = transform.rotation;
+            // if (transform.position != _lastKnownPosition ||
+            //     transform.rotation != _lastKnownRotation)
+            // {
+            //     _lastKnownPosition = transform.position;
+            //     _lastKnownRotation = transform.rotation;
 
-                _targetPosition = transform.position;
-                _targetRotation = transform.rotation;
+            //     _targetPosition = transform.position;
+            //     _targetRotation = transform.rotation;
 
-                var ecef = VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);
-                _ecefPosition = ecef.position;
-                _ecefRotation = ecef.rotation;
+            //     var ecef = VisualPositioningSystem.UnityWorldToEcef(transform.position, transform.rotation);
+            //     _ecefPosition = ecef.position;
+            //     _ecefRotation = ecef.rotation;
 
-                Debug.Log($"EP: Set ECEF position to {ecef.position.x}, {ecef.position.y}, {ecef.position.z}");
-            }
+            //     Debug.Log($"EP: Set ECEF position to {ecef.position.x}, {ecef.position.y}, {ecef.position.z}");
+            // }
 
-            if (Application.isPlaying)
-            {
-                transform.position = Vector3.Lerp(transform.position, _targetPosition, Time.deltaTime);
-                transform.rotation = Quaternion.Lerp(transform.rotation, _targetRotation, Time.deltaTime * 5);
+            // if (Application.isPlaying)
+            // {
+            //     transform.position = Vector3.Lerp(transform.position, _targetPosition, Time.deltaTime);
+            //     transform.rotation = Quaternion.Lerp(transform.rotation, _targetRotation, Time.deltaTime * 5);
 
-                _lastKnownPosition = transform.position;
-                _lastKnownRotation = transform.rotation;
-            }
-            else
-            {
-                _lastKnownPosition = _targetPosition;
-                _lastKnownRotation = _targetRotation;
+            //     _lastKnownPosition = transform.position;
+            //     _lastKnownRotation = transform.rotation;
+            // }
+            // else
+            // {
+            //     _lastKnownPosition = _targetPosition;
+            //     _lastKnownRotation = _targetRotation;
 
-                transform.position = _targetPosition;
-                transform.rotation = _targetRotation;
-            }
+            //     transform.position = _targetPosition;
+            //     transform.rotation = _targetRotation;
+            // }
         }
 
         private void HandleReferenceFrameChanged()
         {
-            var local = VisualPositioningSystem.EcefToUnityWorld(ecefPosition, ecefRotation);
-            _targetPosition = local.position;
-            _targetRotation = local.rotation;
-        }
-
-        public void SetEcefTransform(double3 ecefPosition, quaternion ecefRotation)
-        {
-            _ecefPosition = ecefPosition;
-            _ecefRotation = ecefRotation;
-
-            Debug.Log($"EP: Set ECEF position to {ecefPosition.x}, {ecefPosition.y}, {ecefPosition.z}");
-
-            var local = VisualPositioningSystem.EcefToUnityWorld(ecefPosition, ecefRotation);
-
+            var local = VisualPositioningSystem.UnityWorldFromColmapWorld(ecefPosition, ecefRotation);
             transform.position = local.position;
             transform.rotation = local.rotation;
-
-            _lastKnownPosition = local.position;
-            _lastKnownRotation = local.rotation;
-
-            _targetPosition = local.position;
-            _targetRotation = local.rotation;
         }
+
+        // public void SetEcefTransform(double3 ecefPosition, quaternion ecefRotation)
+        // {
+        //     _ecefPosition = ecefPosition;
+        //          = ecefRotation;
+
+        //     Debug.Log($"EP: Set ECEF position to {ecefPosition.x}, {ecefPosition.y}, {ecefPosition.z}");
+
+        //     var local = VisualPositioningSystem.EcefToUnityWorld(ecefPosition, ecefRotation);
+
+        //     transform.position = local.position;
+        //     transform.rotation = local.rotation;
+
+        //     // _lastKnownPosition = local.position;
+        //     // _lastKnownRotation = local.rotation;
+
+        //     // _targetPosition = local.position;
+        //     // _targetRotation = local.rotation;
+        // }
+
     }
 }

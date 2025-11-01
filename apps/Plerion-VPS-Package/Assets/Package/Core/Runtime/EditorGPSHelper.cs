@@ -74,10 +74,10 @@ namespace Plerion.VPS
 
             var ecefPosition = Utility.LlhToEcefPosition(editorLatitude, editorLongitude, editorHeight);
 
-            VisualPositioningSystem.SetUnityWorldToEcefTransform(
-                ecefPosition,
-                Utility.EcefPositionToEunRotation(ecefPosition) * Quaternion.AngleAxis(editorRotation, Vector3.up)
-            );
+            // VisualPositioningSystem.SetUnityWorldToEcefTransform(
+            //     ecefPosition,
+            //     Utility.EcefPositionToEunRotation(ecefPosition) * Quaternion.AngleAxis(editorRotation, Vector3.up)
+            // );
         }
     }
 }

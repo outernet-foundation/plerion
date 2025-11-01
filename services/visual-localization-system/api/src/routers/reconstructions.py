@@ -8,8 +8,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
 from models.public_dtos import ReconstructionCreate, ReconstructionRead, reconstruction_from_dto, reconstruction_to_dto
 from models.public_tables import CaptureSession, LocalizationMap, Reconstruction
-from numpy import array
-from scipy.spatial.transform import Rotation  # ensure this import exists
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -203,17 +201,23 @@ async def get_reconstruction_image_poses(id: UUID, session: AsyncSession = Depen
         qw, qx, qy, qz = map(float, parts[1:5])
         tx, ty, tz = map(float, parts[5:8])
 
-        # Convert from COLMAP world-from-camera to camera-from-world
-        camera_from_world = -Rotation.from_quat([qx, qy, qz, qw]).as_matrix().T @ array([tx, ty, tz], dtype=float)
+        # # Convert from COLMAP world-from-camera to camera-from-world
+        # camera_from_world = -Rotation.from_quat([qx, qy, qz, qw]).as_matrix().T @ array([tx, ty, tz], dtype=float)
+
+        # poses.append(
+        #     Transform(
+        #         position={
+        #             "x": float(camera_from_world[0]),
+        #             "y": float(camera_from_world[1]),
+        #             "z": float(camera_from_world[2]),
+        #         },
+        #         rotation={"w": qw, "x": -qx, "y": -qy, "z": -qz},
+        #     )
+        # )
 
         poses.append(
             Transform(
-                position={
-                    "x": float(camera_from_world[0]),
-                    "y": float(camera_from_world[1]),
-                    "z": float(camera_from_world[2]),
-                },
-                rotation={"w": qw, "x": -qx, "y": -qy, "z": -qz},
+                position={"x": float(tx), "y": float(ty), "z": float(tz)}, rotation={"w": qw, "x": qx, "y": qy, "z": qz}
             )
         )
 

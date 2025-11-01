@@ -121,7 +121,7 @@ async def unload_reconstruction(id: UUID):
 async def get_reconstruction_load_status(id: UUID) -> dict[str, str]:
     with _load_lock:
         if id not in _load_state:
-            raise HTTPException(status_code=404, detail="Reconstruction not found")
+            return {"status": LoadState.PENDING.value}
 
         if _load_state[id] == LoadState.FAILED:
             return {"status": _load_state[id].value, "error": _load_error[id]}

@@ -11,6 +11,8 @@ namespace Plerion.VPS
 {
     public class LocalizationMapVisualizer : MonoBehaviour
     {
+        public static LocalizationMapRenderer theMap;
+
         public LocalizationMapRenderer mapRendererPrefab;
 
         private Dictionary<Guid, LocalizationMapRenderer> _mapsByID =
@@ -64,8 +66,9 @@ namespace Plerion.VPS
                         foreach (var addedMap in addedMaps)
                         {
                             Debug.Log($"EP: Adding map {addedMap.id} with position {addedMap.ecefPosition.x}, {addedMap.ecefPosition.y}, {addedMap.ecefPosition.z}");
-                            var local = VisualPositioningSystem.EcefToUnityWorld(addedMap.ecefPosition, addedMap.ecefRotation);
+                            var local = VisualPositioningSystem.UnityWorldFromColmapWorld(new float3((float)addedMap.ecefPosition.x, (float)addedMap.ecefPosition.y, (float)addedMap.ecefPosition.z), addedMap.ecefRotation);
                             var mapView = Instantiate(mapRendererPrefab, local.position, local.rotation);
+                            theMap = mapView;
                             mapView.gameObject.name = addedMap.name;
                             mapView.Load(addedMap.id);
                             _mapsByID.Add(addedMap.id, mapView);

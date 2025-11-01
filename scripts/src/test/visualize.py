@@ -8,6 +8,30 @@ from common.classes import CameraIntrinsics, PinholeIntrinsics, PointCloudPoint,
 from scipy.spatial.transform import Rotation
 
 
+def _world_to_camera_extrinsics_to_camera_world_pose(pose_world_from_camera: Transform) -> Transform:
+    qw = float(pose_world_from_camera["rotation"]["w"])
+    qx = float(pose_world_from_camera["rotation"]["x"])
+    qy = float(pose_world_from_camera["rotation"]["y"])
+    qz = float(pose_world_from_camera["rotation"]["z"])
+    tx = float(pose_world_from_camera["position"]["x"])
+    ty = float(pose_world_from_camera["position"]["y"])
+    tz = float(pose_world_from_camera["position"]["z"])
+
+    R_cw = Rotation.from_quat([qx, qy, qz, qw])
+    R_wc = R_cw.inv()
+    Rm = cast(list[list[float]], R_wc.as_matrix().tolist())
+
+    Cx = -(Rm[0][0] * tx + Rm[0][1] * ty + Rm[0][2] * tz)
+    Cy = -(Rm[1][0] * tx + Rm[1][1] * ty + Rm[1][2] * tz)
+    Cz = -(Rm[2][0] * tx + Rm[2][1] * ty + Rm[2][2] * tz)
+
+    qx2, qy2, qz2, qw2 = R_wc.as_quat()
+    return {
+        "position": {"x": float(Cx), "y": float(Cy), "z": float(Cz)},
+        "rotation": {"w": float(qw2), "x": float(qx2), "y": float(qy2), "z": float(qz2)},
+    }
+
+
 def generate_visualization(
     point_cloud: Sequence[PointCloudPoint],
     reconstruction_image_poses: Sequence[Transform],
@@ -30,6 +54,8 @@ def generate_visualization(
         color="#aab2bf",  # axis tick/line color for dark mode
     )
 
+    localization = _world_to_camera_extrinsics_to_camera_world_pose(localization)
+
     localization_x, localization_y, localization_z = _frustum_coords(localization, intrinsics, size=0.6)
     recon_rx: list[float | None] = []
     recon_ry: list[float | None] = []
@@ -44,6 +70,11 @@ def generate_visualization(
     image_poses_x_all: list[float | None] = []
     image_poses_y_all: list[float | None] = []
     image_poses_z_all: list[float | None] = []
+
+    # convert COLMAP world->camera poses to camera->world for visualization
+    reconstruction_image_poses = [
+        _world_to_camera_extrinsics_to_camera_world_pose(p) for p in reconstruction_image_poses
+    ]
 
     for pose in reconstruction_image_poses:
         x_coords, y_coords, z_coords = _frustum_coords(pose, intrinsics, size=0.45)

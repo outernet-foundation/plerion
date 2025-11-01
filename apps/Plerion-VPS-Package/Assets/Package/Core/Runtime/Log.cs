@@ -6,6 +6,7 @@ namespace Plerion.VPS
 {
     public enum LogGroup
     {
+        Default,
         VisualPositioningSystem,
         CameraLocalization,
         Rest,

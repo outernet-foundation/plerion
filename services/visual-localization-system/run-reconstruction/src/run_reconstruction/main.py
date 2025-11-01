@@ -103,14 +103,17 @@ class Image:
         rig_id: str,
         camera: RigCamera,
         frame_rotation_world_to_camera: Rotation,
-        frame_position: ndarray,
+        frame_translation_world_to_camera: ndarray,
         png_buffer: bytes,
     ):
         self.name = f"{rig_id}/{camera['id']}/{frame_id}.jpg"
         self.rig_id = rig_id
         self.camera_id = camera["id"]
+
+        rig_R = Rotation.from_quat(camera["rotation"])
+        rig_t = array(camera["translation"], dtype=float)
         self.rotation = Rotation.from_quat(camera["rotation"]) * frame_rotation_world_to_camera
-        self.translation = self.rotation.apply(-frame_position) + camera["translation"]
+        self.translation = rig_R.apply(frame_translation_world_to_camera) + rig_t
 
         extrinsic_matrix = hstack((self.rotation.as_matrix(), self.translation.reshape(3, 1)))
         intrinsics_matrix = array(
@@ -191,9 +194,8 @@ def main():
     for rig in rigs:
         for line in _get_capture_object(f"{rig['id']}/frames.csv").decode("utf-8").splitlines()[1:]:  # Skip header
             frame_id, tx, ty, tz, qx, qy, qz, qw = line.strip().split(",")
-            frame_rotation_camera_to_world = Rotation.from_quat([float(qx), float(qy), float(qz), float(qw)])
-            frame_rotation_world_to_camera = frame_rotation_camera_to_world.inv()
-            frame_position = array([float(tx), float(ty), float(tz)], dtype=float)
+            frame_rotation_world_to_camera = Rotation.from_quat([float(qx), float(qy), float(qz), float(qw)])
+            frame_translation_world_to_camera = array([float(tx), float(ty), float(tz)], dtype=float)
 
             for camera in rig["cameras"]:
                 image = Image(
@@ -201,7 +203,7 @@ def main():
                     rig["id"],
                     camera,
                     frame_rotation_world_to_camera,
-                    frame_position,
+                    frame_translation_world_to_camera,
                     _get_capture_object(f"{rig['id']}/{camera['id']}/{frame_id}.jpg"),
                 )
                 images[image.name] = image
