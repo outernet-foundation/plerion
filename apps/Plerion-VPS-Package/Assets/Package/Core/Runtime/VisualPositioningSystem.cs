@@ -277,23 +277,9 @@ namespace Plerion.VPS
                 return new MapData[0];
 
             if (!includePoints)
-            {
-                return loadedMaps.Select(x => new MapData()
-                {
-                    id = x.Id,
-                    name = x.Name,
-                    ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
-                    ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
-                }).ToArray();
-            }
+                return loadedMaps.Select(ToMapData).ToArray();
 
-            var mapsByID = loadedMaps.ToDictionary(x => x.Id, x => new MapData()
-            {
-                id = x.Id,
-                name = x.Name,
-                ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
-                ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
-            });
+            var mapsByID = loadedMaps.ToDictionary(x => x.Id, x => ToMapData(x));
 
             await UniTask.WhenAll(loadedMaps.Select(map => GetLocalizationMapPointsAsync(map.Id, cancellationToken: cancellationToken)));
 
@@ -305,23 +291,9 @@ namespace Plerion.VPS
             var maps = await api.GetLocalizationMapsAsync(cancellationToken: cancellationToken);
 
             if (!includePoints)
-            {
-                return maps.Select(x => new MapData()
-                {
-                    id = x.Id,
-                    name = x.Name,
-                    ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
-                    ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
-                }).ToArray();
-            }
+                return maps.Select(ToMapData).ToArray();
 
-            var mapsByID = maps.ToDictionary(x => x.Id, x => new MapData()
-            {
-                id = x.Id,
-                name = x.Name,
-                ecefPosition = new double3(x.PositionX, x.PositionY, x.PositionZ),
-                ecefRotation = new quaternion((float)x.RotationX, (float)x.RotationY, (float)x.RotationZ, (float)x.RotationW)
-            });
+            var mapsByID = maps.ToDictionary(x => x.Id, x => ToMapData(x));
 
             await UniTask.WhenAll(maps.Select(map => GetLocalizationMapPointsAsync(map.Id, cancellationToken: cancellationToken)));
 
@@ -343,11 +315,24 @@ namespace Plerion.VPS
                 };
             }).ToArray();
         }
+
+        private static MapData ToMapData(PlerionClient.Model.LocalizationMapRead map)
+        {
+            return new MapData()
+            {
+                id = map.Id,
+                active = map.Active,
+                name = map.Name,
+                ecefPosition = new double3(map.PositionX, map.PositionY, map.PositionZ),
+                ecefRotation = new quaternion((float)map.RotationX, (float)map.RotationY, (float)map.RotationZ, (float)map.RotationW)
+            };
+        }
     }
 
     public class MapData
     {
         public Guid id;
+        public bool active;
         public string name;
         public double3 ecefPosition;
         public quaternion ecefRotation;

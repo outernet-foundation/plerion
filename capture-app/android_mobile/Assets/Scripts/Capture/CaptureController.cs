@@ -303,12 +303,6 @@ namespace PlerionClient.Client
                     );
                 }
             );
-
-            App.state.captures.ExecuteActionOrDelay(dict =>
-            {
-                var entry = dict.Add(Guid.NewGuid());
-                entry.name.value = "THIS IS THE TEST";
-            });
         }
 
         private async UniTask<List<ReconstructionRead>> GetReconstructionsForCaptures(List<Guid> captures)
@@ -478,6 +472,8 @@ namespace PlerionClient.Client
                     editableLabel.FlexibleWidth(true);
 
                     editableLabel.props.label.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
+                    editableLabel.props.label.style.textWrappingMode.From(TextWrappingModes.Normal);
+                    editableLabel.props.label.style.overflowMode.From(TextOverflowModes.Ellipsis);
                     editableLabel.props.inputField.placeholderText.text.From(DefaultRowLabel(capture.id));
                     editableLabel.props.inputField.onEndEdit.From(x => capture.name.ExecuteSetOrDelay(x));
                     editableLabel.AddBinding(capture.name.AsObservable().Subscribe(x => editableLabel.props.inputField.inputText.text.From(x.currentValue)));
