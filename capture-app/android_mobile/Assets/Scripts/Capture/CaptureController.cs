@@ -54,6 +54,7 @@ namespace PlerionClient.Client
 
         private IDisposable awaitReconstructionTasksStream;
         private Dictionary<Guid, TaskHandle> awaitReconstructionTasks = new Dictionary<Guid, TaskHandle>();
+        private IDisposable localizationMapActiveObserver;
 
         void Awake()
         {
@@ -108,6 +109,25 @@ namespace PlerionClient.Client
                         awaitReconstructionTasks.Clear();
                     }
                 );
+
+            localizationMapActiveObserver = App.state.captures
+                .AsObservable()
+                .CreateDynamic(kvp =>
+                {
+                    bool initializing = true;
+                    return kvp.Value.active.AsObservable().Subscribe(x =>
+                    {
+                        if (initializing)
+                        {
+                            initializing = false;
+                            return;
+                        }
+
+                        capturesApi.UpdateLocalizationMapAsync(kvp.Value.localizationMapId.value, new LocalizationMapUpdate() { Active = x.currentValue })
+                            .AsUniTask()
+                            .Forget();
+                    });
+                }).Subscribe();
         }
 
         void OnDestroy()
@@ -115,6 +135,7 @@ namespace PlerionClient.Client
             ui.Dispose();
             currentCaptureTask.Cancel();
             awaitReconstructionTasksStream.Dispose();
+            localizationMapActiveObserver.Dispose();
         }
 
         private void HandleCaptureStatusChanged(NodeChangeEventArgs args)
@@ -274,11 +295,20 @@ namespace PlerionClient.Client
                             }
 
                             if (entry.localizationMap != null)
+                            {
                                 state.localizationMapId.value = entry.localizationMap.Id;
+                                state.active.value = entry.localizationMap.Active;
+                            }
                         }
                     );
                 }
             );
+
+            App.state.captures.ExecuteActionOrDelay(dict =>
+            {
+                var entry = dict.Add(Guid.NewGuid());
+                entry.name.value = "THIS IS THE TEST";
+            });
         }
 
         private async UniTask<List<ReconstructionRead>> GetReconstructionsForCaptures(List<Guid> captures)
@@ -454,6 +484,7 @@ namespace PlerionClient.Client
                 }),
                 Text().Setup(text =>
                 {
+                    text.props.style.horizontalAlignment.From(HorizontalAlignmentOptions.Center);
                     text.props.text.From(capture.type.AsObservable());
                     text.props.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
                     text.MinHeight(25);
@@ -519,6 +550,17 @@ namespace PlerionClient.Client
                             CreateLocalizationMapAndAssignId(capture).Forget();
                         }
                     });
+                }),
+                Button().Setup(activeButton =>
+                {
+                    activeButton.MinWidth(75);
+                    activeButton.props.interactable.From(capture.localizationMapId.AsObservable().SelectDynamic(x => x != Guid.Empty));
+                    activeButton.LabelFrom(Observables.Combine(
+                        capture.active.AsObservable(),
+                        capture.localizationMapId.AsObservable(),
+                        (active, id) => id != Guid.Empty && active ? "Active" : "Inactive"
+                    ));
+                    activeButton.props.onClick.From(() => capture.active.ExecuteSetOrDelay(!capture.active.value));
                 })
             ));
         }
