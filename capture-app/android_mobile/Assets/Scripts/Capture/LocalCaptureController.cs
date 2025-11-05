@@ -17,6 +17,8 @@ using Unity.Mathematics;
 public static class LocalCaptureController
 {
     static ARCameraManager cameraManager;
+    static ARAnchorManager anchorManager;
+    static ARAnchor captureAnchor;
     static float captureIntervalSeconds;
     static XRCameraConfiguration? bestConfig = null;
 
@@ -60,6 +62,7 @@ public static class LocalCaptureController
         Directory.CreateDirectory(recordingsRoot); // ensure root exists
 
         cameraManager = UnityEngine.Object.FindObjectOfType<ARCameraManager>();
+        anchorManager = UnityEngine.Object.FindObjectOfType<ARAnchorManager>();
         captureIntervalSeconds = requestedCaptureIntervalSeconds;
 
         Application.targetFrameRate = 30;
@@ -71,6 +74,8 @@ public static class LocalCaptureController
         await UniTask.WaitUntil(
             () => ARSession.state == ARSessionState.SessionTracking,
             cancellationToken: cancellationToken);
+
+        captureAnchor = (await anchorManager.TryAddAnchorAsync(new Pose(cameraManager.transform.position, cameraManager.transform.rotation))).value;
 
         foreach (var config in cameraManager.GetConfigurations(Allocator.Temp))
         {
@@ -126,6 +131,17 @@ public static class LocalCaptureController
 
     static void OnCameraFrameReceived(ARCameraFrameEventArgs args)
     {
+        // Don't capture if we lost tracking of the capture anchor
+        if (captureAnchor.trackingState != TrackingState.Tracking)
+        {
+            Debug.LogWarning("Capture anchor lost tracking; skipping frame.");
+            return;
+        }
+
+        // Throttle capture to the requested interval.
+        if (Time.time < nextCaptureTime) return;
+        nextCaptureTime = Time.time + captureIntervalSeconds;
+
         // sometimes the camera image itself is flipped, so we might need to un-flip it
         var flipped = true; // TODO figure out how to detect this properly
 
@@ -177,18 +193,18 @@ public static class LocalCaptureController
             first_frame = false;
         }
 
-        // Throttle capture to the requested interval.
-        if (Time.time < nextCaptureTime) return;
-        nextCaptureTime = Time.time + captureIntervalSeconds;
-
         // Acquire the latest CPU image.
         if (!cameraManager.TryAcquireLatestCpuImage(out var cpuImage)) return;
 
         long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
+        // Compute camera pose relative to the capture anchor
+        var framePosition = captureAnchor.transform.InverseTransformPoint(cameraManager.transform.position);
+        var frameRotation = Quaternion.Inverse(captureAnchor.transform.rotation) * cameraManager.transform.rotation;
+
         // Convert from world-from-camera to camera-from-world (COLMAP expects the latter for pose priors)
-        float3x3 rotationCameraFromWorld_unity = math.transpose(new float3x3(cameraManager.transform.rotation));
-        float3 translationCameraFromWorld_unity = -math.mul(rotationCameraFromWorld_unity, new float3(cameraManager.transform.position));
+        float3x3 rotationCameraFromWorld_unity = math.transpose(new float3x3(frameRotation));
+        float3 translationCameraFromWorld_unity = -math.mul(rotationCameraFromWorld_unity, new float3(framePosition));
 
         // Change basis from Unity to OpenCV
         var (rotationCameraFromWorld_openCV, translationCameraFromWorld_openCV) =
