@@ -44,6 +44,9 @@ namespace PlerionClient.Client
         public ObservablePrimitive<string> name { get; private set; }
         public ObservablePrimitive<CaptureType> type { get; private set; }
         public ObservablePrimitive<CaptureUploadStatus> status { get; private set; }
+        public ObservablePrimitive<Guid> reconstructionId { get; private set; }
+        public ObservablePrimitive<Guid> localizationMapId { get; private set; }
+        public ObservablePrimitive<bool> active { get; private set; } = new ObservablePrimitive<bool>(true);
 
         void IKeyedObservableNode<Guid>.AssignKey(Guid key)
             => id = key;

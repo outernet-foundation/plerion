@@ -216,17 +216,33 @@ async def localize_image_against_reconstruction(map: Map, camera: Camera, image:
     #     pnp_result["cam_from_world"].translation,
     # ))
 
-    world_from_cam = pnp_result["cam_from_world"].inverse()
+    # world_from_cam = pnp_result["cam_from_world"].inverse()
 
     # return {
     #     "position": world_from_cam.translation.tolist(),
     #     "orientation": world_from_cam.rotation.quat[[3, 0, 1, 2]].tolist(),  # qw qx qy qz
     # }
 
-    position = world_from_cam.translation.tolist()
-    rotation = world_from_cam.rotation.quat[[3, 0, 1, 2]].tolist()  # qw qx qy qz
+    # position = world_from_cam.translation.tolist()
+    # rotation = world_from_cam.rotation.quat[[3, 0, 1, 2]].tolist()  # qw qx qy qz
+
+    # return Transform(
+    #     position=Vector3(x=position[0], y=position[1], z=position[2]),
+    #     rotation=Quaternion(w=rotation[0], x=rotation[1], y=rotation[2], z=rotation[3]),  # qw qx qy qz
+    # )
+
+    print("Pose estimation succeeded, returning cam_from_world")
 
     return Transform(
-        position=Vector3(x=position[0], y=position[1], z=position[2]),
-        rotation=Quaternion(w=rotation[0], x=rotation[1], y=rotation[2], z=rotation[3]),  # qw qx qy qz
+        position=Vector3(
+            x=float(pnp_result["cam_from_world"].translation[0]),
+            y=float(pnp_result["cam_from_world"].translation[1]),
+            z=float(pnp_result["cam_from_world"].translation[2]),
+        ),
+        rotation=Quaternion(
+            x=float(pnp_result["cam_from_world"].rotation.quat[0]),
+            y=float(pnp_result["cam_from_world"].rotation.quat[1]),
+            z=float(pnp_result["cam_from_world"].rotation.quat[2]),
+            w=float(pnp_result["cam_from_world"].rotation.quat[3]),
+        ),
     )

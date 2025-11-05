@@ -11,6 +11,7 @@ using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
 using static RigConfig;
+using Unity.Mathematics;
 
 public static class LocalCaptureController
 {
@@ -107,6 +108,7 @@ public static class LocalCaptureController
 
     static void OnCameraFrameReceived(ARCameraFrameEventArgs args)
     {
+        // sometimes the camera image itself is flipped, so we might need to un-flip it
         var flipped = true; // TODO figure out how to detect this properly
 
         // Write config.json once
@@ -169,29 +171,40 @@ public static class LocalCaptureController
 
         long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        var framePosition = cameraManager.transform.position - startingPosition;
-        var frameRotation = cameraManager.transform.rotation * Quaternion.Inverse(startingRotation);
+        // Convert from world-from-camera to camera-from-world (COLMAP expects the latter for pose priors)
+        float3x3 rotationCameraFromWorld_unity = math.transpose(new float3x3(cameraManager.transform.rotation));
+        float3 translationCameraFromWorld_unity = -math.mul(rotationCameraFromWorld_unity, new float3(cameraManager.transform.position));
 
-        // Convert from Unity world to CV world (right-handed, +X right, +Y down, +Z forward)
-        var forward = frameRotation * Vector3.forward;
-        var up = frameRotation * Vector3.up;
-        var rotationCV = Quaternion.LookRotation(new Vector3(forward.x, -forward.y, forward.z), new Vector3(up.x, -up.y, up.z));
-        var positionCV = new Vector3(framePosition.x, -framePosition.y, framePosition.z);
+        // Change basis from Unity to OpenCV
+        var (rotationCameraFromWorld_openCV, translationCameraFromWorld_openCV) =
+            OpenCVFromUnity(rotationCameraFromWorld_unity, translationCameraFromWorld_unity);
 
-        // Write pose row in canonical CV frame: timestamp, tx,ty,tz, qx,qy,qz,qw
-        lock (inputOutputLock)
-        {
-            poseWriter.WriteLine(string.Format(
-                CultureInfo.InvariantCulture,
-                "{0},{1},{2},{3},{4},{5},{6},{7}",
-                timestampMilliseconds,
-                positionCV.x, positionCV.y, positionCV.z,
-                rotationCV.x, rotationCV.y, rotationCV.z, rotationCV.w));
-        }
+        // Write pose prior
+        var quaternionCameraFromWorld_openCV = new quaternion(rotationCameraFromWorld_openCV);
+        poseWriter.WriteLine(string.Format(
+            CultureInfo.InvariantCulture,
+            "{0},{1},{2},{3},{4},{5},{6},{7}",
+            timestampMilliseconds,
+            translationCameraFromWorld_openCV.x, translationCameraFromWorld_openCV.y, translationCameraFromWorld_openCV.z,
+            quaternionCameraFromWorld_openCV.value.x, quaternionCameraFromWorld_openCV.value.y,
+            quaternionCameraFromWorld_openCV.value.z, quaternionCameraFromWorld_openCV.value.w));
 
-        // Save the jpg off-thread.
+        // Save jpeg
         SaveImageAsync(cpuImage, flipped, Path.Combine(sessionDirectory, "rig0", "camera0", $"{timestampMilliseconds}.jpg")).Forget();
     }
+
+    static float3x3 basisOpenCV = new float3x3(
+        new float3(1f, 0f, 0f),
+        new float3(0f, -1f, 0f),
+        new float3(0f, 0f, 1f)
+    );
+    static float3x3 basisUnity = float3x3.identity;
+    static float3x3 basisChangeUnityFromOpenCV = math.mul(math.transpose(basisUnity), basisOpenCV);
+    static float3x3 basisChangeOpenCVFromUnity = math.transpose(basisChangeUnityFromOpenCV);
+    public static (float3x3, float3) UnityFromOpenCV(float3x3 rotation, float3 translation)
+        => (math.mul(basisChangeUnityFromOpenCV, math.mul(rotation, basisChangeOpenCVFromUnity)), math.mul(basisChangeUnityFromOpenCV, translation));
+    public static (float3x3, float3) OpenCVFromUnity(float3x3 rotation, float3 translation)
+        => (math.mul(basisChangeOpenCVFromUnity, math.mul(rotation, basisChangeUnityFromOpenCV)), math.mul(basisChangeOpenCVFromUnity, translation));
 
     static async UniTask SaveImageAsync(
         XRCpuImage cpuImage,

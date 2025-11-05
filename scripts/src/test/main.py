@@ -12,7 +12,7 @@ from .curl import curl
 from .visualize import generate_visualization
 
 API_BASE_URL = "https://desktop-otd3rch-api.outernetfoundation.org"
-CAPTURE_ID = "1958d343-0912-4a9f-ac26-871fa4bf773f"  # TODO: replace
+CAPTURE_ID = "1462ba30-0f8d-4988-a63c-2bb81e1cc92d"  # TODO: replace
 SCRIPT_DIR = Path(__file__).parent
 TEST_IMAGE_PATH = SCRIPT_DIR / "test_image.jpg"
 OUTPUT_HTML_PATH = SCRIPT_DIR / "vls_test_result.html"
@@ -24,7 +24,7 @@ intrinsics: CameraIntrinsics = {
     "height": 480,
     "fx": 461.35528564453127,
     "fy": 460.8520812988281,
-    "cx": 318.46484375,
+    "cx": 320.53515625,
     "cy": 239.83949279785157,
 }
 
@@ -57,10 +57,11 @@ def main() -> None:
             if status == "failed" or status == "exited":
                 raise RuntimeError("Reconstruction failed")
 
-    localization_map_id: UUID | None = curl(
-        "GET", f"{API_BASE_URL}/reconstructions/{reconstruction_id}/localization_map"
-    )
+    # localization_map_id: UUID | None = curl(
+    #     "GET", f"{API_BASE_URL}/reconstructions/{reconstruction_id}/localization_map"
+    # )
 
+    localization_map_id: UUID | None = None  # force creating a new map each time for testing
     if localization_map_id is not None:
         print(f"Using existing localization map {localization_map_id} for capture {CAPTURE_ID}")
     else:

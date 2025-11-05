@@ -4,48 +4,48 @@ using UnityEngine;
 
 namespace Outernet.Client
 {
-    public static class ExtensionMethods
-    {
-        public static Matrix4x4 SwitchHandedness(this ref Matrix4x4 b)
-        {
-            Matrix4x4 identity = Matrix4x4.identity;
-            identity.m00 = -1f;
-            b = identity * b * identity;
-            return b;
-        }
+    // public static class ExtensionMethods
+    // {
+    //     public static Matrix4x4 SwitchHandedness(this ref Matrix4x4 b)
+    //     {
+    //         Matrix4x4 identity = Matrix4x4.identity;
+    //         identity.m00 = -1f;
+    //         b = identity * b * identity;
+    //         return b;
+    //     }
 
-        public static double4x4 SwitchHandedness(this ref double4x4 b)
-        {
-            double4x4 identity = double4x4.identity;
-            identity.c0.x = -1.0;
-            b = math.mul(identity, math.mul(b, identity));
-            return b;
-        }
+    //     public static double4x4 SwitchHandedness(this ref double4x4 b)
+    //     {
+    //         double4x4 identity = double4x4.identity;
+    //         identity.c0.x = -1.0;
+    //         b = math.mul(identity, math.mul(b, identity));
+    //         return b;
+    //     }
 
-        public static Quaternion SwitchHandedness(this ref Quaternion b)
-        {
-            Matrix4x4 b2 = Matrix4x4.Rotate(b);
-            b2.SwitchHandedness();
-            b = b2.rotation;
-            return b;
-        }
+    //     public static Quaternion SwitchHandedness(this ref Quaternion b)
+    //     {
+    //         Matrix4x4 b2 = Matrix4x4.Rotate(b);
+    //         b2.SwitchHandedness();
+    //         b = b2.rotation;
+    //         return b;
+    //     }
 
-        public static Vector3 SwitchHandedness(this ref Vector3 b)
-        {
-            Matrix4x4 b2 = Matrix4x4.TRS(b, Quaternion.identity, Vector3.one);
-            b2.SwitchHandedness();
-            b = b2.GetColumn(3);
-            return b;
-        }
+    //     public static Vector3 SwitchHandedness(this ref Vector3 b)
+    //     {
+    //         Matrix4x4 b2 = Matrix4x4.TRS(b, Quaternion.identity, Vector3.one);
+    //         b2.SwitchHandedness();
+    //         b = b2.GetColumn(3);
+    //         return b;
+    //     }
 
-        public static double3 SwitchHandedness(this ref double3 b)
-        {
-            double4x4 b2 = Double4x4.FromTranslationRotation(b, quaternion.identity);
-            b2.SwitchHandedness();
-            b = new double3(b2.c3.x, b2.c3.y, b2.c3.z);
-            return b;
-        }
-    }
+    //     public static double3 SwitchHandedness(this ref double3 b)
+    //     {
+    //         double4x4 b2 = Double4x4.FromTranslationRotation(b, quaternion.identity);
+    //         b2.SwitchHandedness();
+    //         b = new double3(b2.c3.x, b2.c3.y, b2.c3.z);
+    //         return b;
+    //     }
+    // }
 
     public static class Double4x4
     {
