@@ -151,5 +151,8 @@ namespace Plerion.VPS
         }
 
         public static double3 Position(this double4x4 matrix) => matrix.c3.xyz;
+
+        public static quaternion Rotation(this double4x4 matrix)
+            => new quaternion(new float3x3(math.normalize(matrix.c0.xyz).ToFloats(), math.normalize(matrix.c1.xyz).ToFloats(), math.normalize(matrix.c2.xyz).ToFloats()));
     }
 }

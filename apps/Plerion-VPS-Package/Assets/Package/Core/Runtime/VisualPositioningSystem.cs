@@ -271,15 +271,7 @@ namespace Plerion.VPS
 
         public static (Vector3 position, Quaternion rotation) EcefToUnityWorld(double3 ecefPosition, quaternion ecefRotation)
         {
-            var (rot, pos) = UnityFromEcef(
-                new float3x3(ecefRotation),
-                new double3(
-                    ecefPosition.x,
-                    ecefPosition.y,
-                    ecefPosition.z
-                )
-            );
-
+            var (rot, pos) = UnityFromEcef(new float3x3(ecefRotation), ecefPosition);
             var ecefTransform = Double4x4.FromTranslationRotation(pos, new quaternion(new float3x3(rot)));
             var unityTransform = math.mul(ecefToUnityTransform, ecefTransform);
             return (unityTransform.Position().ToFloats(), unityTransform.Rotation());
