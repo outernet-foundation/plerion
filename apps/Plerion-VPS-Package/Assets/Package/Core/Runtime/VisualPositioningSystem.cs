@@ -50,6 +50,29 @@ namespace Plerion.VPS
         private static Task startSessionTask;
         public static Guid localizationSessionId = Guid.Empty;
 
+        private static double4x4 ecefToUnityTransform = new float4x4(quaternion.identity, new float3());
+        private static double4x4 unityToEcefTransform = math.inverse(ecefToUnityTransform);
+
+        private static readonly float3x3 basisUnity = float3x3.identity;
+
+        private static readonly float3x3 basisOpenCV = new float3x3(
+            1f, 0f, 0f,
+            0f, -1f, 0f,
+            0f, 0f, 1f
+        );
+
+        private static readonly float3x3 basisEcef = new float3x3(
+            1f, 0f, 0f,
+            0f, -1f, 0f,
+            0f, 0f, 1f
+        );
+
+        private static readonly float3x3 basisChangeUnityFromOpenCV = math.mul(math.transpose(basisUnity), basisOpenCV);
+        private static readonly float3x3 basisChangeOpenCVFromUnity = math.transpose(basisChangeUnityFromOpenCV);
+
+        private static readonly double3x3 basisChangeUnityFromEcef = math.mul(math.transpose(basisUnity), basisEcef);
+        private static readonly double3x3 basisChangeEcefFromUnity = math.transpose(basisChangeUnityFromEcef);
+
         private static async Task StartSessionInternal(CameraModel cameraIntrinsics, CancellationToken cancellationToken = default)
         {
             LocalizationSession session = default;
@@ -89,16 +112,16 @@ namespace Plerion.VPS
         //TODO EP: Replace with proper URLs when deploying
         public static void Initialize(string username, string password)
         {
-            Auth.url = "https://desktop-otd3rch-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token";
+            Auth.url = "https://elliot-laptop-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token";
             Auth.username = username;
             Auth.password = password;
 
             api = new DefaultApi(
                 new HttpClient(new KeycloakHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
-                    BaseAddress = new Uri("https://desktop-otd3rch-api.outernetfoundation.org")
+                    BaseAddress = new Uri("https://elliot-laptop-api.outernetfoundation.org")
                 },
-                "https://desktop-otd3rch-api.outernetfoundation.org"
+                "https://elliot-laptop-api.outernetfoundation.org"
             );
         }
 
@@ -165,7 +188,7 @@ namespace Plerion.VPS
 
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
 
-            unityWorldFromColmapWorld = BuildUnityWorldFromColmapWorldTransform(
+            var unityWorldFromColmap = BuildUnityWorldFromColmapWorldTransform(
                 colmapRotationCameraFromWorld: new quaternion(
                     (float)localizationResult.Transform.Rotation.X,
                     (float)localizationResult.Transform.Rotation.Y,
@@ -190,23 +213,29 @@ namespace Plerion.VPS
                 )
             );
 
+            var (mapRotation, mapPosition) = UnityFromEcef(
+                new float3x3(new quaternion(
+                    (float)localizationResult.MapTransform.Rotation.X,
+                    (float)localizationResult.MapTransform.Rotation.Y,
+                    (float)localizationResult.MapTransform.Rotation.Z,
+                    (float)localizationResult.MapTransform.Rotation.W
+                )),
+                new double3(
+                    localizationResult.MapTransform.Position.X,
+                    localizationResult.MapTransform.Position.Y,
+                    localizationResult.MapTransform.Position.Z
+                )
+            );
+
+            var ecefFromColmapWorldMatrix = Double4x4.FromTranslationRotation(mapPosition, new quaternion(new float3x3(mapRotation)));
+            var colmapWorldFromEcefMatrix = math.inverse(ecefFromColmapWorldMatrix);
+            var unityWorldFromEcefMatrix = math.mul(unityWorldFromColmap, colmapWorldFromEcefMatrix);
+
+            ecefToUnityTransform = unityWorldFromEcefMatrix;
+            unityToEcefTransform = math.inverse(ecefToUnityTransform);
+
             OnEcefToUnityWorldTransformUpdated?.Invoke();
         }
-
-        static float4x4 unityWorldFromColmapWorld = float4x4.identity;
-
-        static float3x3 basisOpenCV = new float3x3(
-            new float3(1f, 0f, 0f),
-            new float3(0f, -1f, 0f),
-            new float3(0f, 0f, 1f)
-        );
-        static float3x3 basisUnity = float3x3.identity;
-        static float3x3 basisChangeUnityFromOpenCV = math.mul(math.transpose(basisUnity), basisOpenCV);
-        static float3x3 basisChangeOpenCVFromUnity = math.transpose(basisChangeUnityFromOpenCV);
-        public static (float3x3, float3) UnityFromOpenCV(float3x3 rotation, float3 translation)
-            => (math.mul(basisChangeUnityFromOpenCV, math.mul(rotation, basisChangeOpenCVFromUnity)), math.mul(basisChangeUnityFromOpenCV, translation));
-        public static (float3x3, float3) OpenCVFromUnity(float3x3 rotation, float3 translation)
-            => (math.mul(basisChangeOpenCVFromUnity, math.mul(rotation, basisChangeUnityFromOpenCV)), math.mul(basisChangeOpenCVFromUnity, translation));
 
         public static float4x4 BuildUnityWorldFromColmapWorldTransform(
             quaternion colmapRotationCameraFromWorld,
@@ -231,28 +260,62 @@ namespace Plerion.VPS
             );
         }
 
-        public static (Vector3 position, Quaternion rotation) UnityWorldFromColmapWorld(float3 position, quaternion rotation)
+        private static (float3x3, float3) UnityFromOpenCV(float3x3 rotation, float3 translation)
+            => (math.mul(basisChangeUnityFromOpenCV, math.mul(rotation, basisChangeOpenCVFromUnity)), math.mul(basisChangeUnityFromOpenCV, translation));
+
+        // private static (float3x3, float3) OpenCVFromUnity(float3x3 rotation, float3 translation)
+        //     => (math.mul(basisChangeOpenCVFromUnity, math.mul(rotation, basisChangeUnityFromOpenCV)), math.mul(basisChangeOpenCVFromUnity, translation));
+
+        private static (double3x3, double3) UnityFromEcef(double3x3 rotation, double3 translation)
+            => (math.mul(basisChangeUnityFromEcef, math.mul(rotation, basisChangeEcefFromUnity)), math.mul(basisChangeUnityFromEcef, translation));
+
+        public static (Vector3 position, Quaternion rotation) EcefToUnityWorld(double3 ecefPosition, quaternion ecefRotation)
         {
-            // Change basis from OpenCV to Unity
-            var rotationMatrix = new float3x3(rotation);
-            var (rotationMatrix_unityBasis, position_unityBasis) = UnityFromOpenCV(rotationMatrix, position);
-
-            // Apply similarity transform to get unity world transform
-            float4x4 unityTransform = math.mul(unityWorldFromColmapWorld, new float4x4(rotationMatrix_unityBasis, position_unityBasis));
-
-            // Extract the rotation
-            var unityRotation = new quaternion(new float3x3(unityTransform.c0.xyz, unityTransform.c1.xyz, unityTransform.c2.xyz));
-
-            return (
-                new Vector3(unityTransform.c3.x, unityTransform.c3.y, unityTransform.c3.z),
-                new Quaternion(unityRotation.value.x, unityRotation.value.y, unityRotation.value.z, unityRotation.value.w)
+            var (rot, pos) = UnityFromEcef(
+                new float3x3(ecefRotation),
+                new double3(
+                    ecefPosition.x,
+                    ecefPosition.y,
+                    ecefPosition.z
+                )
             );
+
+            var ecefTransform = Double4x4.FromTranslationRotation(pos, new quaternion(new float3x3(rot)));
+            var unityTransform = math.mul(ecefToUnityTransform, ecefTransform);
+            return (unityTransform.Position().ToFloats(), unityTransform.Rotation());
         }
 
-        public static (float3 position, quaternion rotation) ColmapWorldFromUnityWorld(Vector3 position, Quaternion rotation)
+        public static (double3 position, quaternion rotation) UnityWorldToEcef(Vector3 position, Quaternion rotation)
         {
-            return (float3.zero, new quaternion());
+            var unityTransform = Double4x4.FromTranslationRotation(position, rotation);
+            var ecefTransform = math.mul(unityToEcefTransform, unityTransform);
+            return (ecefTransform.Position(), ecefTransform.Rotation());
         }
+
+        // static float4x4 unityWorldFromColmapWorld = float4x4.identity;
+
+        // public static (Vector3 position, Quaternion rotation) UnityWorldFromColmapWorld(float3 position, quaternion rotation)
+        // {
+        //     // Change basis from OpenCV to Unity
+        //     var rotationMatrix = new float3x3(rotation);
+        //     var (rotationMatrix_unityBasis, position_unityBasis) = UnityFromOpenCV(rotationMatrix, position);
+
+        //     // Apply similarity transform to get unity world transform
+        //     float4x4 unityTransform = math.mul(unityWorldFromColmapWorld, new float4x4(rotationMatrix_unityBasis, position_unityBasis));
+
+        //     // Extract the rotation
+        //     var unityRotation = new quaternion(new float3x3(unityTransform.c0.xyz, unityTransform.c1.xyz, unityTransform.c2.xyz));
+
+        //     return (
+        //         new Vector3(unityTransform.c3.x, unityTransform.c3.y, unityTransform.c3.z),
+        //         new Quaternion(unityRotation.value.x, unityRotation.value.y, unityRotation.value.z, unityRotation.value.w)
+        //     );
+        // }
+
+        // public static (float3 position, quaternion rotation) ColmapWorldFromUnityWorld(Vector3 position, Quaternion rotation)
+        // {
+        //     return (float3.zero, new quaternion());
+        // }
 
         public static async UniTask<MapData[]> GetLoadedLocalizationMapsAsync(bool includePoints = false, CancellationToken cancellationToken = default)
         {
