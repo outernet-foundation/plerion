@@ -306,7 +306,7 @@ paths:
       tags:
       - Default
     put:
-      operationId: upload_capture_session_tar
+      operationId: get_upload_capture_session_tar_presigned_url
       parameters:
       - explode: false
         in: path
@@ -317,18 +317,12 @@ paths:
           title: Id
           type: string
         style: simple
-      requestBody:
-        content:
-          application/x-tar:
-            schema:
-              format: binary
-              type: string
-        required: true
       responses:
-        "307":
+        "200":
           content:
-            application/json:
-              schema: {}
+            text/plain; charset=utf-8:
+              schema:
+                type: string
           description: Successful Response
         "422":
           content:
@@ -336,7 +330,36 @@ paths:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
-      summary: Upload Capture Session Tar
+      summary: Get Upload Capture Session Tar Presigned Url
+      tags:
+      - Default
+  /capture_sessions/{id}/rig_config:
+    get:
+      operationId: get_capture_session_rig_config
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RigConfig"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Capture Session Rig Config
       tags:
       - Default
   /reconstructions:
@@ -400,7 +423,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/ReconstructionCreate"
+              $ref: "#/components/schemas/ReconstructionCreateWithOptions"
         required: true
       responses:
         "200":
@@ -474,6 +497,35 @@ paths:
       summary: Get Reconstruction
       tags:
       - Default
+  /reconstructions/{id}/manifest:
+    get:
+      operationId: get_reconstruction_manifest
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          title: Id
+          type: string
+        style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReconstructionManifest"
+          description: Successful Response
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HTTPValidationError"
+          description: Validation Error
+      summary: Get Reconstruction Manifest
+      tags:
+      - Default
   /reconstructions/{id}/localization_map:
     get:
       operationId: get_reconstruction_localization_map
@@ -523,6 +575,18 @@ paths:
           content:
             application/json:
               schema:
+                enum:
+                - queued
+                - pending
+                - downloading
+                - extracting_features
+                - matching_features
+                - reconstructing
+                - training_opq_matrix
+                - training_product_quantizer
+                - uploading
+                - succeeded
+                - failed
                 title: Response Get Reconstruction Status
                 type: string
           description: Successful Response
@@ -1162,8 +1226,7 @@ paths:
           content:
             application/json:
               schema:
-                title: Response Get Map Load Status
-                type: string
+                $ref: "#/components/schemas/LoadStateResponse"
           description: Successful Response
         "422":
           content:
@@ -1694,9 +1757,9 @@ components:
       title: CaptureSessionUpdate
     Color:
       example:
-        r: 5
-        b: 2
-        g: 5
+        r: 0
+        b: 1
+        g: 6
       properties:
         r:
           title: R
@@ -1718,27 +1781,127 @@ components:
       - Zed
       title: DeviceType
       type: string
-    GenericParamsIntrinsics:
+    FullOpenCVCamera:
       properties:
-        model:
-          enum:
-          - GENERIC
-          title: Model
-          type: string
         width:
           title: Width
           type: integer
         height:
           title: Height
           type: integer
+        mirroring:
+          enum:
+          - None
+          - X
+          - "Y"
+          title: Mirroring
+          type: string
+        rotation:
+          enum:
+          - None
+          - 90_CW
+          - "180"
+          - 90_CCW
+          title: Rotation
+          type: string
+        model:
+          enum:
+          - FULL_OPENCV
+          title: Model
+          type: string
+        fx:
+          title: Fx
+          type: number
+        fy:
+          title: Fy
+          type: number
+        cx:
+          title: Cx
+          type: number
+        cy:
+          title: Cy
+          type: number
+        k1:
+          title: K1
+          type: number
+        k2:
+          title: K2
+          type: number
+        p1:
+          title: P1
+          type: number
+        p2:
+          title: P2
+          type: number
+        k3:
+          title: K3
+          type: number
+        k4:
+          title: K4
+          type: number
+        k5:
+          title: K5
+          type: number
+        k6:
+          title: K6
+          type: number
+      required:
+      - cx
+      - cy
+      - fx
+      - fy
+      - height
+      - k1
+      - k2
+      - k3
+      - k4
+      - k5
+      - k6
+      - mirroring
+      - model
+      - p1
+      - p2
+      - rotation
+      - width
+      title: FullOpenCVCamera
+    GenericParamsIntrinsics:
+      properties:
+        width:
+          title: Width
+          type: integer
+        height:
+          title: Height
+          type: integer
+        mirroring:
+          enum:
+          - None
+          - X
+          - "Y"
+          title: Mirroring
+          type: string
+        rotation:
+          enum:
+          - None
+          - 90_CW
+          - "180"
+          - 90_CCW
+          title: Rotation
+          type: string
+        model:
+          enum:
+          - GENERIC
+          title: Model
+          type: string
         params:
           items:
             type: number
           type: array
       required:
       - height
+      - mirroring
       - model
       - params
+      - rotation
       - width
       title: GenericParamsIntrinsics
     GroupBatchUpdate:
@@ -1891,6 +2054,35 @@ components:
       - name
       - updated_at
       title: LayerRead
+    LoadState:
+      description: LoadState
+      enum:
+      - pending
+      - loading
+      - ready
+      - failed
+      title: LoadState
+      type: string
+    LoadStateResponse:
+      description: LoadStateResponse
+      example:
+        additional_properties:
+          key: ""
+        error: error
+        status: pending
+      properties:
+        status:
+          $ref: "#/components/schemas/LoadState"
+        error:
+          nullable: true
+          type: string
+        additional_properties:
+          additionalProperties: {}
+          default: {}
+          title: Additional Properties
+      required:
+      - status
+      title: LoadStateResponse
     LocalizationMapBatchUpdate:
       example:
         rotation_x: 5.637376656633329
@@ -2154,6 +2346,36 @@ components:
           nullable: true
           type: string
       title: LocalizationMapUpdate
+    LocalizationMetrics:
+      example:
+        image_coverage: 1.4658129805029452
+        depth_z_10th_percentile: 5.637376656633329
+        inlier_ratio: 0.8008281904610115
+        reprojection_error_median: 6.027456183070403
+        depth_z_90th_percentile: 5.962133916683182
+      properties:
+        inlier_ratio:
+          title: Inlier Ratio
+          type: number
+        reprojection_error_median:
+          title: Reprojection Error Median
+          type: number
+        image_coverage:
+          title: Image Coverage
+          type: number
+        depth_z_90th_percentile:
+          title: Depth Z 90Th Percentile
+          type: number
+        depth_z_10th_percentile:
+          title: Depth Z 10Th Percentile
+          type: number
+      required:
+      - depth_z_10th_percentile
+      - depth_z_90th_percentile
+      - image_coverage
+      - inlier_ratio
+      - reprojection_error_median
+      title: LocalizationMetrics
     LocalizationSessionRead:
       example:
         container_url: container_url
@@ -2185,25 +2407,31 @@ components:
       example:
         transform:
           rotation:
-            w: 0.8008281904610115
-            x: 6.027456183070403
-            "y": 1.4658129805029452
-            z: 5.962133916683182
-          position:
+            w: 5.962133916683182
             x: 0.8008281904610115
             "y": 6.027456183070403
             z: 1.4658129805029452
+          position:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        metrics:
+          image_coverage: 1.4658129805029452
+          depth_z_10th_percentile: 5.637376656633329
+          inlier_ratio: 0.8008281904610115
+          reprojection_error_median: 6.027456183070403
+          depth_z_90th_percentile: 5.962133916683182
         map_transform:
           rotation:
-            w: 0.8008281904610115
-            x: 6.027456183070403
-            "y": 1.4658129805029452
-            z: 5.962133916683182
-          position:
+            w: 5.962133916683182
             x: 0.8008281904610115
             "y": 6.027456183070403
             z: 1.4658129805029452
+          position:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
       properties:
         id:
           format: uuid
@@ -2213,34 +2441,43 @@ components:
           $ref: "#/components/schemas/Transform"
         map_transform:
           $ref: "#/components/schemas/Transform"
+        metrics:
+          $ref: "#/components/schemas/LocalizationMetrics"
       required:
       - id
       - map_transform
+      - metrics
       - transform
       title: MapLocalization
     MapLocalization-Output:
       example:
         transform:
           rotation:
-            w: 0.8008281904610115
-            x: 6.027456183070403
-            "y": 1.4658129805029452
-            z: 5.962133916683182
-          position:
+            w: 5.962133916683182
             x: 0.8008281904610115
             "y": 6.027456183070403
             z: 1.4658129805029452
+          position:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        metrics:
+          image_coverage: 1.4658129805029452
+          depth_z_10th_percentile: 5.637376656633329
+          inlier_ratio: 0.8008281904610115
+          reprojection_error_median: 6.027456183070403
+          depth_z_90th_percentile: 5.962133916683182
         map_transform:
           rotation:
-            w: 0.8008281904610115
-            x: 6.027456183070403
-            "y": 1.4658129805029452
-            z: 5.962133916683182
-          position:
+            w: 5.962133916683182
             x: 0.8008281904610115
             "y": 6.027456183070403
             z: 1.4658129805029452
+          position:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
       properties:
         id:
           format: uuid
@@ -2250,9 +2487,12 @@ components:
           $ref: "#/components/schemas/Transform"
         map_transform:
           $ref: "#/components/schemas/Transform"
+        metrics:
+          $ref: "#/components/schemas/LocalizationMetrics"
       required:
       - id
       - map_transform
+      - metrics
       - transform
       title: MapLocalization
     NodeBatchUpdate:
@@ -2538,19 +2778,34 @@ components:
       - rotation_z
       - updated_at
       title: NodeRead
-    OpenCVRadTanIntrinsics:
+    OpenCVCamera:
       properties:
-        model:
-          enum:
-          - OPENCV
-          title: Model
-          type: string
         width:
           title: Width
           type: integer
         height:
           title: Height
           type: integer
+        mirroring:
+          enum:
+          - None
+          - X
+          - "Y"
+          title: Mirroring
+          type: string
+        rotation:
+          enum:
+          - None
+          - 90_CW
+          - "180"
+          - 90_CCW
+          title: Rotation
+          type: string
+        model:
+          enum:
+          - OPENCV
+          title: Model
+          type: string
         fx:
           title: Fx
           type: number
@@ -2576,7 +2831,7 @@ components:
           title: P2
           type: number
         k3:
-          nullable: true
+          title: K3
           type: number
       required:
       - cx
@@ -2587,32 +2842,61 @@ components:
       - k1
       - k2
       - k3
+      - mirroring
       - model
       - p1
       - p2
+      - rotation
       - width
-      title: OpenCVRadTanIntrinsics
-    PinholeIntrinsics:
+      title: OpenCVCamera
+    OrchestrationStatus:
+      enum:
+      - queued
+      - pending
+      - running
+      - succeeded
+      - cancelled
+      - failed
+      title: OrchestrationStatus
+      type: string
+    PinholeCamera:
       example:
-        fx: 1.4658129805029452
-        fy: 5.962133916683182
-        cx: 5.637376656633329
-        cy: 2.3021358869347655
-        width: 0
+        fx: 2.027123023002322
+        fy: 4.145608029883936
+        cx: 7.386281948385884
+        cy: 1.2315135367772556
+        rotation: None
+        width: 9
         model: PINHOLE
-        height: 6
+        mirroring: None
+        height: 3
       properties:
-        model:
-          enum:
-          - PINHOLE
-          title: Model
-          type: string
         width:
           title: Width
           type: integer
         height:
           title: Height
           type: integer
+        mirroring:
+          enum:
+          - None
+          - X
+          - "Y"
+          title: Mirroring
+          type: string
+        rotation:
+          enum:
+          - None
+          - 90_CW
+          - "180"
+          - 90_CCW
+          title: Rotation
+          type: string
+        model:
+          enum:
+          - PINHOLE
+          title: Model
+          type: string
         fx:
           title: Fx
           type: number
@@ -2631,19 +2915,21 @@ components:
       - fx
       - fy
       - height
+      - mirroring
       - model
+      - rotation
       - width
-      title: PinholeIntrinsics
+      title: PinholeCamera
     PointCloudPoint:
       example:
         color:
-          r: 5
-          b: 2
-          g: 5
+          r: 0
+          b: 1
+          g: 6
         position:
-          x: 0.8008281904610115
-          "y": 6.027456183070403
-          z: 1.4658129805029452
+          x: 5.637376656633329
+          "y": 2.3021358869347655
+          z: 7.061401241503109
       properties:
         position:
           $ref: "#/components/schemas/Vector3"
@@ -2655,14 +2941,11 @@ components:
       title: PointCloudPoint
     Quaternion:
       example:
-        w: 0.8008281904610115
-        x: 6.027456183070403
-        "y": 1.4658129805029452
-        z: 5.962133916683182
+        w: 5.962133916683182
+        x: 0.8008281904610115
+        "y": 6.027456183070403
+        z: 1.4658129805029452
       properties:
-        w:
-          title: W
-          type: number
         x:
           title: X
           type: number
@@ -2671,6 +2954,9 @@ components:
           type: number
         z:
           title: Z
+          type: number
+        w:
+          title: W
           type: number
       required:
       - w
@@ -2681,6 +2967,7 @@ components:
     ReconstructionCreate:
       example:
         capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        orchestration_status: queued
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         capture_session_id:
@@ -2691,16 +2978,239 @@ components:
           format: uuid
           nullable: true
           type: string
+        orchestration_status:
+          $ref: "#/components/schemas/OrchestrationStatus"
       required:
       - capture_session_id
       title: ReconstructionCreate
+    ReconstructionCreateWithOptions:
+      example:
+        options:
+          random_seed: 0
+          ransac_max_error: 5.962133916683182
+          triangulation_merge_max_reprojection_error: 9.301444243932576
+          ransac_min_inlier_ratio: 5.637376656633329
+          compression_opq_number_bits_per_subvector: 4
+          bundle_adjustment_refine_sensor_from_rig: true
+          bundle_adjustment_refine_principal_point: true
+          compression_opq_number_of_subvectors: 2
+          use_prior_position: true
+          max_keypoints_per_image: 1
+          compression_opq_number_of_training_iterations: 7
+          neighbors_count: 6
+          triangulation_complete_max_reprojection_error: 7.061401241503109
+          mapper_filter_max_reprojection_error: 3.616076749251911
+          triangulation_minimum_angle: 2.3021358869347655
+          bundle_adjustment_refine_additional_params: true
+          bundle_adjustment_refine_focal_length: true
+          single_threaded: true
+          rig_verification: true
+        create:
+          capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          orchestration_status: queued
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        create:
+          $ref: "#/components/schemas/ReconstructionCreate"
+        options:
+          $ref: "#/components/schemas/ReconstructionOptions"
+      required:
+      - create
+      title: ReconstructionCreateWithOptions
+    ReconstructionManifest:
+      example:
+        options:
+          random_seed: 0
+          ransac_max_error: 5.962133916683182
+          triangulation_merge_max_reprojection_error: 9.301444243932576
+          ransac_min_inlier_ratio: 5.637376656633329
+          compression_opq_number_bits_per_subvector: 4
+          bundle_adjustment_refine_sensor_from_rig: true
+          bundle_adjustment_refine_principal_point: true
+          compression_opq_number_of_subvectors: 2
+          use_prior_position: true
+          max_keypoints_per_image: 1
+          compression_opq_number_of_training_iterations: 7
+          neighbors_count: 6
+          triangulation_complete_max_reprojection_error: 7.061401241503109
+          mapper_filter_max_reprojection_error: 3.616076749251911
+          triangulation_minimum_angle: 2.3021358869347655
+          bundle_adjustment_refine_additional_params: true
+          bundle_adjustment_refine_focal_length: true
+          single_threaded: true
+          rig_verification: true
+        metrics:
+          track_length_50th_percentile: 9.301444243932576
+          total_images: 0
+          reprojection_pixel_error_50th_percentile: 2.3021358869347655
+          average_keypoints_per_image: 5.637376656633329
+          reprojection_pixel_error_90th_percentile: 7.061401241503109
+          num_3d_points: 5
+          registration_rate: 1.4658129805029452
+          registered_images: 6
+          percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
+        capture_id: capture_id
+        error: error
+        status: queued
+      properties:
+        capture_id:
+          title: Capture Id
+          type: string
+        status:
+          enum:
+          - queued
+          - pending
+          - downloading
+          - extracting_features
+          - matching_features
+          - reconstructing
+          - training_opq_matrix
+          - training_product_quantizer
+          - uploading
+          - succeeded
+          - failed
+          title: Status
+          type: string
+        error:
+          nullable: true
+          type: string
+        options:
+          $ref: "#/components/schemas/ReconstructionOptions"
+        metrics:
+          $ref: "#/components/schemas/ReconstructionMetrics"
+      required:
+      - capture_id
+      - metrics
+      - options
+      - status
+      title: ReconstructionManifest
+    ReconstructionMetrics:
+      example:
+        track_length_50th_percentile: 9.301444243932576
+        total_images: 0
+        reprojection_pixel_error_50th_percentile: 2.3021358869347655
+        average_keypoints_per_image: 5.637376656633329
+        reprojection_pixel_error_90th_percentile: 7.061401241503109
+        num_3d_points: 5
+        registration_rate: 1.4658129805029452
+        registered_images: 6
+        percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
+      properties:
+        total_images:
+          nullable: true
+          type: integer
+        registered_images:
+          nullable: true
+          type: integer
+        registration_rate:
+          nullable: true
+          type: number
+        num_3d_points:
+          nullable: true
+          type: integer
+        average_keypoints_per_image:
+          nullable: true
+          type: number
+        reprojection_pixel_error_50th_percentile:
+          nullable: true
+          type: number
+        reprojection_pixel_error_90th_percentile:
+          nullable: true
+          type: number
+        track_length_50th_percentile:
+          nullable: true
+          type: number
+        percent_tracks_with_length_greater_than_or_equal_to_3:
+          nullable: true
+          type: number
+      title: ReconstructionMetrics
+    ReconstructionOptions:
+      example:
+        random_seed: 0
+        ransac_max_error: 5.962133916683182
+        triangulation_merge_max_reprojection_error: 9.301444243932576
+        ransac_min_inlier_ratio: 5.637376656633329
+        compression_opq_number_bits_per_subvector: 4
+        bundle_adjustment_refine_sensor_from_rig: true
+        bundle_adjustment_refine_principal_point: true
+        compression_opq_number_of_subvectors: 2
+        use_prior_position: true
+        max_keypoints_per_image: 1
+        compression_opq_number_of_training_iterations: 7
+        neighbors_count: 6
+        triangulation_complete_max_reprojection_error: 7.061401241503109
+        mapper_filter_max_reprojection_error: 3.616076749251911
+        triangulation_minimum_angle: 2.3021358869347655
+        bundle_adjustment_refine_additional_params: true
+        bundle_adjustment_refine_focal_length: true
+        single_threaded: true
+        rig_verification: true
+      properties:
+        random_seed:
+          nullable: true
+          type: integer
+        single_threaded:
+          nullable: true
+          type: boolean
+        neighbors_count:
+          nullable: true
+          type: integer
+        max_keypoints_per_image:
+          nullable: true
+          type: integer
+        ransac_max_error:
+          nullable: true
+          type: number
+        ransac_min_inlier_ratio:
+          nullable: true
+          type: number
+        use_prior_position:
+          nullable: true
+          type: boolean
+        rig_verification:
+          nullable: true
+          type: boolean
+        triangulation_minimum_angle:
+          nullable: true
+          type: number
+        triangulation_complete_max_reprojection_error:
+          nullable: true
+          type: number
+        triangulation_merge_max_reprojection_error:
+          nullable: true
+          type: number
+        mapper_filter_max_reprojection_error:
+          nullable: true
+          type: number
+        bundle_adjustment_refine_sensor_from_rig:
+          nullable: true
+          type: boolean
+        bundle_adjustment_refine_focal_length:
+          nullable: true
+          type: boolean
+        bundle_adjustment_refine_principal_point:
+          nullable: true
+          type: boolean
+        bundle_adjustment_refine_additional_params:
+          nullable: true
+          type: boolean
+        compression_opq_number_of_subvectors:
+          nullable: true
+          type: integer
+        compression_opq_number_bits_per_subvector:
+          nullable: true
+          type: integer
+        compression_opq_number_of_training_iterations:
+          nullable: true
+          type: integer
+      title: ReconstructionOptions
     ReconstructionRead:
       example:
         capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         updated_at: 2000-01-23T04:56:07.000+00:00
+        orchestration_status: queued
         created_at: 2000-01-23T04:56:07.000+00:00
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        status: queued
       properties:
         capture_session_id:
           format: uuid
@@ -2718,36 +3228,284 @@ components:
           format: date-time
           title: Updated At
           type: string
-        status:
-          $ref: "#/components/schemas/ReconstructionStatus"
+        orchestration_status:
+          $ref: "#/components/schemas/OrchestrationStatus"
       required:
       - capture_session_id
       - created_at
       - id
-      - status
+      - orchestration_status
       - updated_at
       title: ReconstructionRead
-    ReconstructionStatus:
-      enum:
-      - queued
-      - pending
-      - running
-      - succeeded
-      - cancelled
-      - failed
-      title: ReconstructionStatus
-      type: string
-    Transform:
+    Rig-Input:
+      example:
+        cameras:
+        - rotation:
+            w: 5.962133916683182
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+          translation:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
+          intrinsics:
+            fx: 2.027123023002322
+            fy: 4.145608029883936
+            cx: 7.386281948385884
+            cy: 1.2315135367772556
+            rotation: None
+            width: 9
+            model: PINHOLE
+            mirroring: None
+            height: 3
+          ref_sensor: true
+          id: id
+        - rotation:
+            w: 5.962133916683182
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+          translation:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
+          intrinsics:
+            fx: 2.027123023002322
+            fy: 4.145608029883936
+            cx: 7.386281948385884
+            cy: 1.2315135367772556
+            rotation: None
+            width: 9
+            model: PINHOLE
+            mirroring: None
+            height: 3
+          ref_sensor: true
+          id: id
+        id: id
+      properties:
+        id:
+          title: Id
+          type: string
+        cameras:
+          items:
+            $ref: "#/components/schemas/RigCamera"
+          type: array
+      required:
+      - cameras
+      - id
+      title: Rig
+    Rig-Output:
+      example:
+        cameras:
+        - rotation:
+            w: 5.962133916683182
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+          translation:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
+          intrinsics:
+            fx: 2.027123023002322
+            fy: 4.145608029883936
+            cx: 7.386281948385884
+            cy: 1.2315135367772556
+            rotation: None
+            width: 9
+            model: PINHOLE
+            mirroring: None
+            height: 3
+          ref_sensor: true
+          id: id
+        - rotation:
+            w: 5.962133916683182
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+          translation:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
+          intrinsics:
+            fx: 2.027123023002322
+            fy: 4.145608029883936
+            cx: 7.386281948385884
+            cy: 1.2315135367772556
+            rotation: None
+            width: 9
+            model: PINHOLE
+            mirroring: None
+            height: 3
+          ref_sensor: true
+          id: id
+        id: id
+      properties:
+        id:
+          title: Id
+          type: string
+        cameras:
+          items:
+            $ref: "#/components/schemas/RigCamera"
+          type: array
+      required:
+      - cameras
+      - id
+      title: Rig
+    RigCamera:
       example:
         rotation:
-          w: 0.8008281904610115
-          x: 6.027456183070403
-          "y": 1.4658129805029452
-          z: 5.962133916683182
-        position:
+          w: 5.962133916683182
           x: 0.8008281904610115
           "y": 6.027456183070403
           z: 1.4658129805029452
+        translation:
+          x: 5.637376656633329
+          "y": 2.3021358869347655
+          z: 7.061401241503109
+        intrinsics:
+          fx: 2.027123023002322
+          fy: 4.145608029883936
+          cx: 7.386281948385884
+          cy: 1.2315135367772556
+          rotation: None
+          width: 9
+          model: PINHOLE
+          mirroring: None
+          height: 3
+        ref_sensor: true
+        id: id
+      properties:
+        id:
+          title: Id
+          type: string
+        ref_sensor:
+          nullable: true
+          type: boolean
+        rotation:
+          $ref: "#/components/schemas/Quaternion"
+        translation:
+          $ref: "#/components/schemas/Vector3"
+        intrinsics:
+          $ref: "#/components/schemas/Intrinsics"
+      required:
+      - id
+      - intrinsics
+      - ref_sensor
+      - rotation
+      - translation
+      title: RigCamera
+    RigConfig:
+      example:
+        rigs:
+        - cameras:
+          - rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            intrinsics:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            ref_sensor: true
+            id: id
+          - rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            intrinsics:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            ref_sensor: true
+            id: id
+          id: id
+        - cameras:
+          - rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            intrinsics:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            ref_sensor: true
+            id: id
+          - rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            intrinsics:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            ref_sensor: true
+            id: id
+          id: id
+      properties:
+        rigs:
+          items:
+            $ref: "#/components/schemas/Rig-Output"
+          type: array
+      required:
+      - rigs
+      title: RigConfig
+    Transform:
+      example:
+        rotation:
+          w: 5.962133916683182
+          x: 0.8008281904610115
+          "y": 6.027456183070403
+          z: 1.4658129805029452
+        position:
+          x: 5.637376656633329
+          "y": 2.3021358869347655
+          z: 7.061401241503109
       properties:
         position:
           $ref: "#/components/schemas/Vector3"
@@ -2782,9 +3540,9 @@ components:
       title: ValidationError
     Vector3:
       example:
-        x: 0.8008281904610115
-        "y": 6.027456183070403
-        z: 1.4658129805029452
+        x: 5.637376656633329
+        "y": 2.3021358869347655
+        z: 7.061401241503109
       properties:
         x:
           title: X
@@ -2802,10 +3560,25 @@ components:
       title: Vector3
     Camera:
       anyOf:
-      - $ref: "#/components/schemas/PinholeIntrinsics"
-      - $ref: "#/components/schemas/OpenCVRadTanIntrinsics"
+      - $ref: "#/components/schemas/PinholeCamera"
+      - $ref: "#/components/schemas/OpenCVCamera"
+      - $ref: "#/components/schemas/FullOpenCVCamera"
       - $ref: "#/components/schemas/GenericParamsIntrinsics"
       title: Camera
+    Intrinsics:
+      discriminator:
+        mapping:
+          FULL_OPENCV: "#/components/schemas/FullOpenCVCamera"
+          GENERIC: "#/components/schemas/GenericParamsIntrinsics"
+          OPENCV: "#/components/schemas/OpenCVCamera"
+          PINHOLE: "#/components/schemas/PinholeCamera"
+        propertyName: model
+      oneOf:
+      - $ref: "#/components/schemas/PinholeCamera"
+      - $ref: "#/components/schemas/OpenCVCamera"
+      - $ref: "#/components/schemas/FullOpenCVCamera"
+      - $ref: "#/components/schemas/GenericParamsIntrinsics"
+      title: Intrinsics
     ValidationError_loc_inner:
       anyOf:
       - type: string

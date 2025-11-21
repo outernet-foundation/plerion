@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-import json
 import time
 
 from common.batch_client import create_batch_client
 from common.boto_clients import create_s3_client
+from common.reconstruction_manifest import ReconstructionManifest
 from models.public_tables import Reconstruction
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session
@@ -37,7 +37,7 @@ def start_next_reconstruction() -> None:
     with Session(engine) as session, session.begin():
         queued_reconstruction = session.execute(
             select(Reconstruction.id)
-            .where(Reconstruction.status == "queued")
+            .where(Reconstruction.orchestration_status == "queued")
             .order_by(Reconstruction.created_at)
             .with_for_update(skip_locked=True)
             .limit(1)
@@ -51,15 +51,6 @@ def start_next_reconstruction() -> None:
 
         print(
             f"Starting reconstruction {queued_reconstruction.id} for capture {queued_reconstruction.capture_session_id}"
-        )
-
-        s3_client.put_object(
-            Bucket=settings.reconstructions_bucket,
-            Key=f"{queued_reconstruction.id}/run.json",
-            Body=json.dumps({"status": "pending", "capture_id": str(queued_reconstruction.capture_session_id)}).encode(
-                "utf-8"
-            ),
-            ContentType="application/json",
         )
 
         batch_client.submit_job(
@@ -79,7 +70,7 @@ def start_next_reconstruction() -> None:
 
         # https://github.com/agronholm/sqlacodegen/issues/408
         # TODO: sqlacodegen currently generates strings for enums, which sucks
-        queued_reconstruction.status = "pending"
+        queued_reconstruction.orchestration_status = "pending"
         session.add(queued_reconstruction)
 
 
@@ -90,7 +81,7 @@ def reconcile(max_rows: int = 50) -> None:
         running = (
             session.execute(
                 select(Reconstruction.id)
-                .where(Reconstruction.status.in_(["pending", "running"]))
+                .where(Reconstruction.orchestration_status.in_(["pending", "running"]))
                 .order_by(Reconstruction.created_at)
                 .limit(max_rows)
             )
@@ -102,19 +93,28 @@ def reconcile(max_rows: int = 50) -> None:
         print(f"Checking reconstruction {reconstruction_id}")
 
         try:
-            obj = s3_client.get_object(Bucket=settings.reconstructions_bucket, Key=f"{reconstruction_id}/run.json")
-            run = json.loads(obj["Body"].read().decode("utf-8"))
+            manifest = ReconstructionManifest.model_validate_json(
+                s3_client.get_object(Bucket=settings.reconstructions_bucket, Key=f"{reconstruction_id}/manifest.json")[
+                    "Body"
+                ].read()
+            )
         except Exception as e:
-            print(f"No run.json found for reconstruction {reconstruction_id}, skipping: {e}")
+            print(f"No manifest.json found for reconstruction {reconstruction_id}, skipping: {e}")
             continue
 
-        status = run.get("status") or ""
-        print(f"Reconstruction {reconstruction_id} status: {status}")
+        print(f"Reconstruction {reconstruction_id} status: {manifest.status}")
 
         with Session(engine) as session, session.begin():
             row = session.get(Reconstruction, reconstruction_id, with_for_update=False)
             assert row is not None
-            row.status = status
+
+            if manifest.status == "succeeded":
+                row.orchestration_status = "succeeded"
+            elif manifest.status == "failed":
+                row.orchestration_status = "failed"
+            elif manifest.status != "pending":
+                row.orchestration_status = "running"
+
             session.add(row)
             session.flush()
 

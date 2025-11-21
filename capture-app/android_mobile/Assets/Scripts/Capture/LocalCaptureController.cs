@@ -10,15 +10,17 @@ using UnityEngine.Android;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using System.Collections.Generic;
-using static RigConfig;
 using Unity.Mathematics;
+using Plerion.Model;
+
 
 public static class LocalCaptureController
 {
     static ARCameraManager cameraManager;
+    static ARAnchorManager anchorManager;
+    static ARAnchor captureAnchor;
     static float captureIntervalSeconds;
-    static Vector3 startingPosition;
-    static Quaternion startingRotation;
+    static XRCameraConfiguration? bestConfig = null;
 
     static Guid sessionId;
     static string sessionDirectory;
@@ -60,6 +62,7 @@ public static class LocalCaptureController
         Directory.CreateDirectory(recordingsRoot); // ensure root exists
 
         cameraManager = UnityEngine.Object.FindObjectOfType<ARCameraManager>();
+        anchorManager = UnityEngine.Object.FindObjectOfType<ARAnchorManager>();
         captureIntervalSeconds = requestedCaptureIntervalSeconds;
 
         Application.targetFrameRate = 30;
@@ -68,8 +71,32 @@ public static class LocalCaptureController
             () => Permission.HasUserAuthorizedPermission(Permission.Camera),
             cancellationToken: cancellationToken);
 
+        foreach (var config in cameraManager.GetConfigurations(Allocator.Temp))
+        {
+            if (bestConfig == null ||
+                (config.width * config.height) > (bestConfig.Value.width * bestConfig.Value.height))
+            {
+                bestConfig = config;
+            }
+        }
+        if (bestConfig.HasValue)
+        {
+            cameraManager.currentConfiguration = bestConfig;
+            Debug.Log($"Selected camera configuration: {bestConfig.Value.width}x{bestConfig.Value.height} @ {bestConfig.Value.framerate}fps");
+        }
+        else
+        {
+            Debug.LogWarning("No camera configurations available.");
+        }
+
         await UniTask.WaitUntil(
             () => ARSession.state == ARSessionState.SessionTracking,
+            cancellationToken: cancellationToken);
+
+        captureAnchor = (await anchorManager.TryAddAnchorAsync(new Pose(cameraManager.transform.position, cameraManager.transform.rotation))).value;
+
+        await UniTask.WaitUntil(
+            () => captureAnchor.trackingState == TrackingState.Tracking,
             cancellationToken: cancellationToken);
 
         sessionId = Guid.NewGuid();
@@ -108,86 +135,91 @@ public static class LocalCaptureController
 
     static void OnCameraFrameReceived(ARCameraFrameEventArgs args)
     {
-        // sometimes the camera image itself is flipped, so we might need to un-flip it
-        var flipped = true; // TODO figure out how to detect this properly
-
-        // Write config.json once
-        if (first_frame)
+        // Don't capture if we lost tracking of the capture anchor
+        if (captureAnchor.trackingState != TrackingState.Tracking)
         {
-            startingPosition = cameraManager.transform.position;
-            startingRotation = cameraManager.transform.rotation;
-
-            if (cameraManager.TryGetIntrinsics(out var intrinsics))
-            {
-                var json = JsonUtility.ToJson(
-                    new RigConfig()
-                    {
-                        rigs = new Rig[]
-                        {
-                            new()
-                            {
-                                id = "rig0",
-                                cameras = new RigCamera[]
-                                {
-                                    new RigCamera()
-                                    {
-                                        id = "camera0",
-                                        model = "PINHOLE",
-                                        width = intrinsics.resolution.x,
-                                        height = intrinsics.resolution.y,
-                                        intrinsics = new float[]
-                                        {
-                                            intrinsics.focalLength.x,
-                                            intrinsics.focalLength.y,
-                                            // Adjust principal point to account for mirroring the image
-                                            flipped ? (intrinsics.resolution.x - 1) - intrinsics.principalPoint.x : intrinsics.principalPoint.x,
-                                            intrinsics.principalPoint.y
-                                        },
-                                        ref_sensor = true,
-                                        rotation = new float[] {0, 0, 0, 1},
-                                        translation = new float[] {0, 0, 0}
-                                    }
-                                }
-                            }
-                        }
-                    }
-                );
-
-                File.WriteAllText(
-                    Path.Combine(sessionDirectory, "config.json"),
-                    json
-                );
-
-                first_frame = false;
-            }
+            Debug.LogWarning("Capture anchor lost tracking; skipping frame.");
+            return;
         }
 
         // Throttle capture to the requested interval.
         if (Time.time < nextCaptureTime) return;
         nextCaptureTime = Time.time + captureIntervalSeconds;
 
+        // sometimes the camera image itself is flipped, so we might need to un-flip it
+        var flipped = true; // TODO figure out how to detect this properly
+
+        if (first_frame)
+        {
+            // Wait until we get intrinsics and they match the selected config
+            if (!cameraManager.TryGetIntrinsics(out var intrinsics) ||
+                intrinsics.resolution.x != bestConfig?.width ||
+                intrinsics.resolution.y != bestConfig?.height)
+            {
+                return;
+            }
+
+            // Write out rig config
+            File.WriteAllText(
+                Path.Combine(sessionDirectory, "config.json"),
+
+                    new RigConfig(
+                        new List<RigOutput>
+                        {
+                            new RigOutput(
+                                "rig0",
+                                new List<RigCamera>
+                                {
+                                    new RigCamera(
+                                        "camera0",
+                                        true,
+                                        new Plerion.Model.Quaternion(0, 0, 0, 1),
+                                        new Plerion.Model.Vector3(0, 0, 0),
+                                        new Intrinsics(new PinholeCamera(
+                                            intrinsics.resolution.x,
+                                            intrinsics.resolution.y,
+                                            PinholeCamera.MirroringEnum.None,
+                                            PinholeCamera.RotationEnum._90CCW,
+                                            PinholeCamera.ModelEnum.PINHOLE,
+                                            intrinsics.focalLength.x,
+                                            intrinsics.focalLength.y,
+                                            flipped ? (intrinsics.resolution.x - 1) - intrinsics.principalPoint.x : intrinsics.principalPoint.x,
+                                            intrinsics.principalPoint.y
+                                        ))
+                                    )
+                                }
+                            )
+                        }
+                    ).ToJson()
+
+            );
+
+            // Done with first frame setup
+            first_frame = false;
+        }
+
         // Acquire the latest CPU image.
         if (!cameraManager.TryAcquireLatestCpuImage(out var cpuImage)) return;
 
         long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        // Convert from world-from-camera to camera-from-world (COLMAP expects the latter for pose priors)
-        float3x3 rotationCameraFromWorld_unity = math.transpose(new float3x3(cameraManager.transform.rotation));
-        float3 translationCameraFromWorld_unity = -math.mul(rotationCameraFromWorld_unity, new float3(cameraManager.transform.position));
+        // Compute camera pose relative to the capture anchor
+        var framePosition = captureAnchor.transform.InverseTransformPoint(cameraManager.transform.position);
+        var frameRotation = UnityEngine.Quaternion.Inverse(captureAnchor.transform.rotation) * cameraManager.transform.rotation;
 
         // Change basis from Unity to OpenCV
-        var (rotationCameraFromWorld_openCV, translationCameraFromWorld_openCV) =
-            OpenCVFromUnity(rotationCameraFromWorld_unity, translationCameraFromWorld_unity);
+        var (rotationWorldFromCamera_openCV, cameraCenterInWorld_openCV) =
+                OpenCVFromUnity(new float3x3(frameRotation), new float3(framePosition));
 
-        // Write pose prior
-        var quaternionCameraFromWorld_openCV = new quaternion(rotationCameraFromWorld_openCV);
+        // Write world_from_camera rotation (as quaternion) and camera_center_in_world
+        var quaternionWorldFromCamera_openCV = new quaternion(rotationWorldFromCamera_openCV);
         poseWriter.WriteLine(string.Format(
             CultureInfo.InvariantCulture,
-            "{0},{1},{2},{3},{4},{5},{6},{7}",
+                "{0},{1},{2},{3},{4},{5},{6},{7}",
             timestampMilliseconds,
-            translationCameraFromWorld_openCV.x, translationCameraFromWorld_openCV.y, translationCameraFromWorld_openCV.z,
-            quaternionCameraFromWorld_openCV.value.x, quaternionCameraFromWorld_openCV.value.y,
-            quaternionCameraFromWorld_openCV.value.z, quaternionCameraFromWorld_openCV.value.w));
+            cameraCenterInWorld_openCV.x, cameraCenterInWorld_openCV.y, cameraCenterInWorld_openCV.z,
+            quaternionWorldFromCamera_openCV.value.x, quaternionWorldFromCamera_openCV.value.y,
+            quaternionWorldFromCamera_openCV.value.z, quaternionWorldFromCamera_openCV.value.w));
 
         // Save jpeg
         SaveImageAsync(cpuImage, flipped, Path.Combine(sessionDirectory, "rig0", "camera0", $"{timestampMilliseconds}.jpg")).Forget();

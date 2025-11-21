@@ -12,13 +12,14 @@ from pathlib import Path
 from textwrap import dedent
 from typing import Any, cast
 
-from common.run_command import run_command
 from humps import pascalize
 from pydantic import create_model
 from pydantic.alias_generators import to_snake
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.sql.sqltypes import Enum as SAEnum
+
+from ..run_command import run_command
 
 allow_hazards = [
     "DELETES_DATA",
@@ -40,7 +41,7 @@ def sync_schema(project: Path, database: str, no_cache: bool, log: bool):
     print("Migrating database schema")
 
     migrator_dsn = (
-        f"postgresql://{database}_owner:password@localhost:5432/{database}?options=-c%20check_function_bodies%3Doff"
+        f"postgresql://{database}_owner:password@localhost:55432/{database}?options=-c%20check_function_bodies%3Doff"
     )
     pg_schema_diff_path = _find_pg_schema_diff()
     result = run_command(
@@ -52,7 +53,7 @@ def sync_schema(project: Path, database: str, no_cache: bool, log: bool):
         print("Database schema is up to date, skipping model generation")
         return
 
-    service_dsn = f"postgresql+psycopg://{database}_api_user:password@localhost:5432/{database}"
+    service_dsn = f"postgresql+psycopg://{database}_api_user:password@localhost:55432/{database}"
     _generate_models_for_schema("public", models_path, service_dsn, log)
     _generate_models_for_schema("auth", models_path, service_dsn, log)
 

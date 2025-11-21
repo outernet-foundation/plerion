@@ -8,15 +8,16 @@ using Unity.Mathematics;
 using UnityEngine;
 
 using Cysharp.Threading.Tasks;
-using PlerionClient.Client;
+using Plerion.Client;
 using System.IO;
-using PlerionClient.Api;
+using Plerion.Api;
 using System.Threading.Tasks;
 using System.Net.Http;
 
-using CameraModel = PlerionClient.Model.Camera;
-using PinholeIntrinsics = PlerionClient.Model.PinholeIntrinsics;
-using LocalizationSession = PlerionClient.Model.LocalizationSessionRead;
+using CameraModel = Plerion.Model.Camera;
+using PinholeCamera = Plerion.Model.PinholeCamera;
+using LocalizationSession = Plerion.Model.LocalizationSessionRead;
+using LocalizationMetrics = Plerion.Model.LocalizationMetrics;
 
 namespace Plerion.VPS
 {
@@ -112,16 +113,16 @@ namespace Plerion.VPS
         //TODO EP: Replace with proper URLs when deploying
         public static void Initialize(string username, string password)
         {
-            Auth.url = "https://elliot-laptop-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token";
+            Auth.url = "https://desktop-otd3rch-keycloak.outernetfoundation.org/realms/plerion-dev/protocol/openid-connect/token";
             Auth.username = username;
             Auth.password = password;
 
             api = new DefaultApi(
                 new HttpClient(new KeycloakHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
-                    BaseAddress = new Uri("https://elliot-laptop-api.outernetfoundation.org")
+                    BaseAddress = new Uri("https://desktop-otd3rch-api.outernetfoundation.org")
                 },
-                "https://elliot-laptop-api.outernetfoundation.org"
+                "https://desktop-otd3rch-api.outernetfoundation.org"
             );
         }
 
@@ -135,10 +136,12 @@ namespace Plerion.VPS
 
             startSessionTokenSource?.Dispose();
             startSessionTokenSource = new CancellationTokenSource();
-            startSessionTask = StartSessionInternal(new CameraModel(new PinholeIntrinsics(
-                model: PinholeIntrinsics.ModelEnum.PINHOLE,
+            startSessionTask = StartSessionInternal(new CameraModel(new PinholeCamera(
+                model: PinholeCamera.ModelEnum.PINHOLE,
                 width: intrinsics.resolution.x,
                 height: intrinsics.resolution.y,
+                mirroring: PinholeCamera.MirroringEnum.None,
+                rotation: PinholeCamera.RotationEnum._90CCW,
                 fx: intrinsics.focalLength.x,
                 fy: intrinsics.focalLength.y,
                 cx: intrinsics.resolution.x - 1 - intrinsics.principlePoint.x,
@@ -169,6 +172,8 @@ namespace Plerion.VPS
             }
         }
 
+        public static LocalizationMetrics latestMetrics = null;
+
         public static async UniTask LocalizeFromCameraImage(byte[] image, Vector3 cameraTranslationUnityWorldFromCamera, Quaternion cameraRotationUnityWorldFromCamera)
         {
             if (image == null)
@@ -186,6 +191,8 @@ namespace Plerion.VPS
             }
 
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
+
+            latestMetrics = localizationResult.Metrics;
 
             var unityWorldFromColmap = BuildUnityWorldFromColmapWorldTransform(
                 colmapRotationCameraFromWorld: localizationResult.Transform.Rotation.ToMathematicsQuaternion(),
@@ -218,7 +225,7 @@ namespace Plerion.VPS
             // Adjust unity rotation to account for phone orientation (portrait vs landscape)
             var unityRotationWorldFromCameraMatrix = math.mul(
                 new float3x3(unityRotationWorldFromCamera),
-                new float3x3(quaternion.AxisAngle(new float3(0f, 0f, 1f), math.radians(-90f))));
+                new float3x3(quaternion.AxisAngle(new float3(0f, 0f, 1f), math.radians(0f))));
 
             // Change basis from OpenCV to Unity
             var colmapRotationCameraFromWorldMatrix = new float3x3(colmapRotationCameraFromWorld);
@@ -267,14 +274,14 @@ namespace Plerion.VPS
             if (maps == null || maps.Count == 0)
                 return new MapData[0];
 
-            var loadedMaps = new List<PlerionClient.Model.LocalizationMapRead>();
+            var loadedMaps = new List<Plerion.Model.LocalizationMapRead>();
 
             await UniTask.WhenAll(maps.Select(map => api
                 .GetMapLoadStatusAsync(localizationSessionId, map.Id, cancellationToken)
                 .AsUniTask()
                 .ContinueWith(x =>
                 {
-                    if (x == "\"ready\"")
+                    if (x.Status == Plerion.Model.LoadState.Ready)
                         loadedMaps.Add(map);
                 })
             ));
@@ -322,7 +329,7 @@ namespace Plerion.VPS
             }).ToArray();
         }
 
-        private static MapData ToMapData(PlerionClient.Model.LocalizationMapRead map)
+        private static MapData ToMapData(Plerion.Model.LocalizationMapRead map)
         {
             return new MapData()
             {
