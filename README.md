@@ -17,13 +17,14 @@ appears there for every user.
 Notable features:
 - Unity localization package and reference app
   - Server-side localization only right now
-  - Android mobile (data capture and localization) and Magic Leap 2 (localization, wip) 
+  - Android mobile (data capture, map management, localization)
+  - Magic Leap 2 (localization, wip) 
 - Zed data capture app for creating maps of large environments (wip)
 - Tooling for georeferencing maps against Cesium tilesets (wip)
 - Rig-aware geometric verification using colmap 3.13
 - Superpoint/Lightglue for feature point descriptor extraction and matching
 - deep-image-retrieval for image retrieval descriptor extraction
-- FAISS OPQ for compressing feature point descriptors
+- FAISS OPQ encoding for compressing feature point descriptors
 - Typed Rest API clients (currently python and C#) using openapi-generator-cli
 - Pulumi AWS IaaC (wip)
 - Postgres RLS with with Keycloak Auth
