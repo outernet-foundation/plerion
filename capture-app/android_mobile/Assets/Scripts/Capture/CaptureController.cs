@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Linq;
+using System.Net.Http;
 
 using UnityEngine;
-using UnityEngine.UI;
 
 using Cysharp.Threading.Tasks;
 using TMPro;
 using PlerionApiClient.Api;
 using PlerionApiClient.Model;
+
+using PlerionClient.Api;
+using PlerionClient.Model;
 
 using FofX;
 using FofX.Stateful;
@@ -30,6 +33,7 @@ using Color = UnityEngine.Color;
 using System.Threading.Tasks;
 using System.Net;
 using PlerionApiClient.Client;
+using static PlerionClient.Client.UIElements;
 
 namespace PlerionClient.Client
 {
@@ -52,10 +56,10 @@ namespace PlerionClient.Client
         private DefaultApi capturesApi;
         private IControl ui;
         private TaskHandle currentCaptureTask = TaskHandle.Complete;
+        private TaskHandle loginTask = TaskHandle.Complete;
 
         private string localCaptureNamePath;
 
-        private IDisposable awaitReconstructionTasksStream;
         private Dictionary<Guid, TaskHandle> awaitReconstructionTasks = new Dictionary<Guid, TaskHandle>();
         private IDisposable localizationMapActiveObserver;
         async UniTask DeleteAllZedCaptures()
@@ -77,6 +81,7 @@ namespace PlerionClient.Client
                 // Handle the exception if ZedCaptureController.GetCaptures() fails
             }
         }
+        private IDisposable captureStatusStream;
 
         void Awake()
         {
@@ -98,76 +103,97 @@ namespace PlerionClient.Client
 
             ui = ConstructUI(canvas);
 
-            App.RegisterObserver(HandleCaptureStatusChanged, App.state.captureStatus);
+            App.RegisterObserver(HandleLoginRequestedChanged, App.state.loginRequested);
+            App.RegisterObserver(HandleCaptureStatusChanged, App.state.loggedIn, App.state.captureStatus);
             App.RegisterObserver(HandleCapturesChanged, App.state.captures);
 
-            awaitReconstructionTasksStream = App.state.captures
-                .AsObservable()
-                .WhereDynamic(x => x.Value.status
-                    .AsObservable()
-                    .SelectDynamic(x =>
-                        x == CaptureUploadStatus.Initializing ||
-                        x == CaptureUploadStatus.Uploading ||
-                        x == CaptureUploadStatus.Reconstructing
-                    )
-                )
-                .Subscribe(
-                    observer: x =>
+            captureStatusStream = App.state.captures.AsObservable()
+                .SelectDynamic(x => x.Value)
+                .SubscribeEach(capture => capture.status.AsObservable().Subscribe(
+                    x =>
                     {
-                        if (x.operationType == OpType.Add)
-                        {
-                            var progress = Progress.Create<CaptureUploadStatus>(progress => x.element.Value.status.ScheduleSet(progress));
-
-                            awaitReconstructionTasks.Add(
-                                x.element.Key,
-                                TaskHandle.Execute(token => AwaitReconstructionComplete(x.element.Key, progress, token))
-                            );
-                        }
-                        else if (awaitReconstructionTasks.TryGetValue(x.element.Key, out var taskHandle))
+                        if (x.currentValue != CaptureUploadStatus.Initializing &&
+                            x.currentValue != CaptureUploadStatus.Uploading &&
+                            x.currentValue != CaptureUploadStatus.Reconstructing &&
+                            awaitReconstructionTasks.TryGetValue(capture.id, out var taskHandle))
                         {
                             taskHandle.Cancel();
-                            awaitReconstructionTasks.Remove(x.element.Key);
+                            awaitReconstructionTasks.Remove(capture.id);
                         }
-                    },
-                    onDispose: () =>
-                    {
-                        foreach (var taskHandle in awaitReconstructionTasks.Values)
-                            taskHandle.Cancel();
 
-                        awaitReconstructionTasks.Clear();
+                        if (x.currentValue == CaptureUploadStatus.UploadRequested)
+                        {
+                            UploadCapture(
+                                capture.id,
+                                capture.name.value ?? capture.id.ToString(),
+                                capture.type.value,
+                                Progress.Create<CaptureUploadStatus>(x => capture.status.ScheduleSet(x))
+                            ).Forget();
+                        }
+                        else if (x.currentValue == CaptureUploadStatus.ReconstructRequested)
+                        {
+                            capturesApi.CreateReconstructionAsync(new ReconstructionCreate(capture.id));
+                            capture.status.ExecuteSetOrDelay(CaptureUploadStatus.Reconstructing);
+                        }
+                        else if (x.currentValue == CaptureUploadStatus.CreateMapRequested)
+                        {
+                            capturesApi.CreateLocalizationMapAsync(new LocalizationMapCreate(capture.reconstructionId.value, 0, 0, 0, 0, 0, 0, 1, 0))
+                                .ContinueWith(x =>
+                                {
+                                    capture.localizationMapId.ScheduleSet(x.Result.Id);
+                                    capture.status.ScheduleSet(CaptureUploadStatus.MapCreated);
+                                });
+                        }
+                        else if (x.currentValue == CaptureUploadStatus.Initializing ||
+                            x.currentValue == CaptureUploadStatus.Uploading ||
+                            x.currentValue == CaptureUploadStatus.Reconstructing)
+                        {
+                            if (!awaitReconstructionTasks.ContainsKey(capture.id))
+                            {
+                                var progress = Progress.Create<CaptureUploadStatus>(progress => capture.status.ScheduleSet(progress));
+
+                                awaitReconstructionTasks.Add(
+                                    capture.id,
+                                    TaskHandle.Execute(token => AwaitReconstructionComplete(capture.id, progress, token))
+                                );
+                            }
+                        }
                     }
-                );
-
-            localizationMapActiveObserver = App.state.captures
-                .AsObservable()
-                .CreateDynamic(kvp =>
-                {
-                    bool initializing = true;
-                    return kvp.Value.active.AsObservable().Subscribe(x =>
-                    {
-                        if (initializing)
-                        {
-                            initializing = false;
-                            return;
-                        }
-
-                        capturesApi.UpdateLocalizationMapAsync(kvp.Value.localizationMapId.value, new LocalizationMapUpdate() { Active = x.currentValue })
-                            .AsUniTask()
-                            .Forget();
-                    });
-                }).Subscribe();
+                ));
         }
 
         void OnDestroy()
         {
-            ui.Dispose();
-            currentCaptureTask.Cancel();
-            awaitReconstructionTasksStream.Dispose();
-            localizationMapActiveObserver.Dispose();
+            ui?.Dispose();
+            currentCaptureTask?.Cancel();
+            captureStatusStream?.Dispose();
+        }
+
+        private void HandleLoginRequestedChanged(NodeChangeEventArgs args)
+        {
+            loginTask.Cancel();
+
+            if (!App.state.loginRequested.value)
+                return;
+
+            string username = App.state.username.value;
+            string password = App.state.password.value;
+
+            loginTask = TaskHandle.Execute(async x =>
+            {
+                Auth.username = username;
+                Auth.password = password;
+                await Auth.Login();
+                await UniTask.SwitchToMainThread(cancellationToken: x);
+                App.state.apiAuthComplete.ExecuteSetOrDelay(true);
+            });
         }
 
         private void HandleCaptureStatusChanged(NodeChangeEventArgs args)
         {
+            if (!App.state.loggedIn.value)
+                return;
+
             switch (App.state.captureStatus.value)
             {
                 case CaptureStatus.Idle:
@@ -256,7 +282,7 @@ namespace PlerionClient.Client
                     var reconstruction = remoteCaptureReconstructions.FirstOrDefault(y => y.CaptureSessionId == x.Id);
                     var localizationMap = reconstruction == null ? default : remoteCaptureLocalizationMaps.FirstOrDefault(y => y.ReconstructionId == reconstruction.Id);
 
-                    return (name: x.Name, capture: x, reconstruction, localizationMap);
+                    return (name: x.Name, capture: x, reconstruction, localizationMap, hasLocalFiles: LocalCaptureController.CaptureExists(x.Id));
                 }
             );
 
@@ -279,7 +305,13 @@ namespace PlerionClient.Client
                 if (captureData.ContainsKey(localCapture))
                     continue;
 
-                captureData.Add(localCapture, new(captureNames.TryGetValue(localCapture, out var name) ? name : null, null, null, null));
+                captureData.Add(localCapture, (
+                    name: captureNames.TryGetValue(localCapture, out var name) ? name : null,
+                    capture: null,
+                    reconstruction: null,
+                    localizationMap: null,
+                    hasLocalFiles: LocalCaptureController.CaptureExists(localCapture)
+                ));
             }
 
             await UniTask.SwitchToMainThread();
@@ -294,6 +326,8 @@ namespace PlerionClient.Client
                         copy: (key, entry, state) =>
                         {
                             state.name.value = entry.name;
+                            state.type.value = CaptureType.Local;
+                            state.hasLocalFiles.value = entry.hasLocalFiles;
 
                             if (entry.capture == null) //capture is local only
                             {
@@ -332,8 +366,8 @@ namespace PlerionClient.Client
 
                             if (entry.localizationMap != null)
                             {
+                                state.status.value = CaptureUploadStatus.MapCreated;
                                 state.localizationMapId.value = entry.localizationMap.Id;
-                                state.active.value = entry.localizationMap.Active;
                             }
                         }
                     );
@@ -469,180 +503,24 @@ namespace PlerionClient.Client
 
         private IControl ConstructUI(Canvas canvas)
         {
-            return new Control("root", canvas.gameObject).Setup(root => root.Children(
-                Image("background").Setup(background =>
-                {
-                    background.FillParent();
-                    background.props.color.From(new Color(0.2196079f, 0.2196079f, 0.2196079f, 1f));
-                }),
-                SafeArea().Setup(safeArea => safeArea.Children(TightRowsWideColumns("content").Setup(content =>
-                {
-                    content.props.padding.From(new RectOffset(10, 10, 10, 10));
-                    content.FillParent();
-                    content.Children(
-                        ScrollRect("captureList").Setup(captureList =>
-                        {
-                            captureList.FlexibleHeight(true);
-                            captureList.props.horizontal.From(false);
-                            captureList.props.content.From(TightRowsWideColumns("content").Setup(content =>
-                            {
-                                content.FillParentWidth();
-                                content.FitContentVertical(ContentSizeFitter.FitMode.PreferredSize);
-                                content.Children(
-                                    App.state.captures
-                                        .AsObservable()
-                                        .CreateDynamic(x => ConstructCaptureRow(x.Value).WithMetadata(x.Value.name))
-                                        .OrderByDynamic(x => x.metadata.AsObservable())
-                                );
-                            }));
-                        }),
-                        Row("bottomBar").Setup(row => row.Children(
-                            Button().Setup(button =>
-                            {
-                                button.props.interactable.From(App.state.captureStatus.AsObservable().SelectDynamic(x => x == CaptureStatus.Idle || x == CaptureStatus.Capturing));
-
-                                button.PreferredWidth(110);
-                                button.LabelFrom(App.state.captureStatus.AsObservable().SelectDynamic(x =>
-                                    x switch
-                                    {
-                                        CaptureStatus.Idle => "Start Capture",
-                                        CaptureStatus.Starting => "Starting...",
-                                        CaptureStatus.Capturing => "Stop Capture",
-                                        CaptureStatus.Stopping => "Stopping...",
-                                        _ => throw new ArgumentOutOfRangeException(nameof(x), x, null)
-                                    }
-                                ));
-
-                                button.props.onClick.From(() =>
-                                {
-                                    if (App.state.captureStatus.value == CaptureStatus.Idle)
-                                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Starting));
-                                    else if (App.state.captureStatus.value == CaptureStatus.Capturing)
-                                        App.state.ExecuteAction(new SetCaptureStatusAction(CaptureStatus.Stopping));
-                                });
-                            }),
-                            Dropdown().Setup(dropdown =>
-                            {
-                                dropdown.PreferredWidth(100);
-                                dropdown.props.options.From(Enum.GetNames(typeof(CaptureType)));
-                                dropdown.props.interactable.From(App.state.captureStatus.AsObservable().SelectDynamic(x => x == CaptureStatus.Idle));
-                                dropdown.BindValue(App.state.captureMode, x => (CaptureType)x, x => (int)x);
-                            }),
-                            Button().Setup(button =>
-                            {
-                                button.PreferredWidth(110);
-                                button.LabelFrom("Delete All Zed Captures");
-                                button.props.onClick.From(() =>
-                                    DeleteAllZedCaptures().Forget()
-                                );
-                            })
-                        ))
-                    );
-                })))
-            ));
-        }
-
-        private IControl<LayoutProps> ConstructCaptureRow(CaptureState capture)
-        {
-            return Row().Setup(row => row.Children(
-                EditableLabel().Setup(editableLabel =>
-                {
-                    editableLabel.MinHeight(28);
-                    editableLabel.FlexibleWidth(true);
-
-                    editableLabel.props.label.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
-                    editableLabel.props.label.style.textWrappingMode.From(TextWrappingModes.Normal);
-                    editableLabel.props.label.style.overflowMode.From(TextOverflowModes.Ellipsis);
-                    editableLabel.props.inputField.placeholderText.text.From(DefaultRowLabel(capture.id));
-                    editableLabel.props.inputField.onEndEdit.From(x => capture.name.ExecuteSetOrDelay(x));
-                    editableLabel.AddBinding(capture.name.AsObservable().Subscribe(x => editableLabel.props.inputField.inputText.text.From(x.currentValue)));
-                }),
-                Text().Setup(text =>
-                {
-                    text.props.style.horizontalAlignment.From(HorizontalAlignmentOptions.Center);
-                    text.props.text.From(capture.type.AsObservable());
-                    text.props.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
-                    text.MinHeight(25);
-                    text.PreferredWidth(100);
-                }),
-                Button().Setup(button =>
-                {
-                    button.props.interactable.From(Observables.Combine(
-                        capture.status.AsObservable(),
-                        capture.localizationMapId.AsObservable(),
-                        (uploadStatus, localizationMapId) =>
-                        {
-                            if (localizationMapId != Guid.Empty)
-                                return false;
-
-                            return uploadStatus == CaptureUploadStatus.NotUploaded ||
-                                uploadStatus == CaptureUploadStatus.ReconstructionNotStarted ||
-                                uploadStatus == CaptureUploadStatus.Uploaded;
-                        }
-                    ));
-
-                    button.LabelFrom(Observables.Combine(
-                        capture.status.AsObservable(),
-                        capture.statusPercentage.AsObservable(),
-                        capture.localizationMapId.AsObservable(),
-                        (uploadStatus, statusPercentage, localizationMapId) =>
-                        {
-                            if (localizationMapId != Guid.Empty)
-                                return "Map Created";
-
-                            return uploadStatus switch
-                            {
-                                CaptureUploadStatus.NotUploaded => "Upload",
-                                CaptureUploadStatus.ReconstructionNotStarted => "Reconstruct",
-                                CaptureUploadStatus.Initializing => "Initializing",
-                                CaptureUploadStatus.Uploading => "Uploading: " + $"{statusPercentage}%",
-                                CaptureUploadStatus.Reconstructing => "Constructing",
-                                CaptureUploadStatus.Uploaded => "Create Map",
-                                CaptureUploadStatus.Failed => "Failed",
-                                _ => throw new ArgumentOutOfRangeException(nameof(uploadStatus), uploadStatus, null)
-                            };
-                        }
-                    ));
-
-                    button.PreferredWidth(106);
-                    button.props.onClick.From(() =>
+            return new Control("root", canvas.gameObject).Setup(root => root.SingleChild(
+                App.state.loggedIn.AsObservable()
+                    .SelectDynamic(loggedIn =>
                     {
-                        if (capture.status.value == CaptureUploadStatus.NotUploaded)
+                        IControl screen = default;
+
+                        if (loggedIn)
                         {
-                            UploadCapture(
-                                capture.id,
-                                capture.name.value ?? capture.id.ToString(),
-                                capture.type.value,
-                                Progress.Create<(CaptureUploadStatus status, float? statusPercentage)>(x =>
-                                {
-                                    capture.status.ScheduleSet(x.status);
-                                    if (x.statusPercentage.HasValue)
-                                        capture.statusPercentage.ScheduleSet(x.statusPercentage.Value);
-                                })
-                            ).Forget();
+                            screen = MainAppUI().Setup(mainUI => mainUI.BindValue(x => x.mode, App.state.mode));
                         }
-                        else if (capture.status.value == CaptureUploadStatus.ReconstructionNotStarted)
+                        else
                         {
-                            CreateReconstruction(capture.id).Forget();
-                            capture.status.ExecuteSetOrDelay(CaptureUploadStatus.Reconstructing);
+                            screen = LoginUI();
                         }
-                        else if (capture.status.value == CaptureUploadStatus.Uploaded)
-                        {
-                            CreateLocalizationMapAndAssignId(capture).Forget();
-                        }
-                    });
-                }),
-                Button().Setup(activeButton =>
-                {
-                    activeButton.MinWidth(75);
-                    activeButton.props.interactable.From(capture.localizationMapId.AsObservable().SelectDynamic(x => x != Guid.Empty));
-                    activeButton.LabelFrom(Observables.Combine(
-                        capture.active.AsObservable(),
-                        capture.localizationMapId.AsObservable(),
-                        (active, id) => id != Guid.Empty && active ? "Active" : "Inactive"
-                    ));
-                    activeButton.props.onClick.From(() => capture.active.ExecuteSetOrDelay(!capture.active.value));
-                })
+
+                        screen?.FillParent();
+                        return screen;
+                    })
             ));
         }
 

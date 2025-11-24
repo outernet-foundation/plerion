@@ -151,12 +151,20 @@ namespace Plerion.VPS
             return startSessionTask.AsUniTask();
         }
 
+        public static UniTask LoadLocalizationMaps(IEnumerable<Guid> maps)
+            => LoadLocalizationMaps(maps.ToList());
+
         public static UniTask LoadLocalizationMaps(params Guid[] maps)
             => LoadLocalizationMaps(maps.ToList());
 
         public static async UniTask LoadLocalizationMaps(List<Guid> maps)
         {
             await api.LoadLocalizationMapsAsync(localizationSessionId, maps);
+        }
+
+        public static async UniTask UnloadLocalizationMap(Guid map)
+        {
+            await api.UnloadMapAsync(localizationSessionId, map);
         }
 
         public static void StopLocalizationSession()

@@ -133,6 +133,18 @@ public static class LocalCaptureController
         System.IO.Compression.ZipFile.CreateFromDirectory(sessionDirectory, zipFilePath);
     }
 
+    public static bool CaptureExists(Guid id)
+        => File.Exists(ZipPath(id.ToString()));
+
+    public static void DeleteCapture(Guid id)
+    {
+        if (File.Exists(ZipPath(id.ToString())))
+            File.Delete(ZipPath(id.ToString()));
+
+        if (Directory.Exists(SessionDir(id.ToString())))
+            Directory.Delete(SessionDir(id.ToString()), recursive: true);
+    }
+
     static void OnCameraFrameReceived(ARCameraFrameEventArgs args)
     {
         // Don't capture if we lost tracking of the capture anchor
