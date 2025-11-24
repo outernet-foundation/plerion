@@ -45,6 +45,7 @@ RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
 
 # Install neural-networks
 COPY packages/neural-networks /app/packages/neural-networks
+RUN uv pip install --no-deps --no-sources /app/packages/neural-networks/third-party/deep-image-retrieval
 RUN uv pip install --no-deps --no-sources /app/packages/neural-networks
 
 # Preload neural-networks models to cache them in the image

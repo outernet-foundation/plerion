@@ -14,7 +14,7 @@ from torch.hub import get_dir
 from torch.nn import Module
 
 environ["DB_ROOT"] = ""  # required by dirtorch
-from dirtorch.extract_features import load_model
+from dirtorch.extract_features import load_model  # type: ignore
 from dirtorch.utils.common import whiten_features  # type: ignore
 
 # From Hierarchical-Localization:
