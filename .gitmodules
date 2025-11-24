@@ -1,6 +1,0 @@
-[submodule "deep-image-retrieval"]
-	path = packages/neural-networks/third-party/deep-image-retrieval
-	url = https://github.com/naver/deep-image-retrieval.git
-[submodule "SuperGluePretrainedNetwork"]
-	path = packages/neural-networks/third-party/SuperGluePretrainedNetwork
-	url = https://github.com/magicleap/SuperGluePretrainedNetwork.git

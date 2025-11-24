@@ -13,8 +13,7 @@ from core.transform import Quaternion, Transform, Vector3
 from core.ugh import create_colmap_camera
 from neural_networks.dir import load_DIR
 from neural_networks.image import create_image_tensors
-from neural_networks.lightglue import load_lightglue
-from neural_networks.superpoint import load_superpoint
+from neural_networks.lightglue import load_lightglue, load_superpoint
 from numpy.typing import NDArray
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstruction
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
@@ -45,7 +44,7 @@ else:
     dir = load_DIR(DEVICE)
 
     print("Loading superpoint model")
-    superpoint = load_superpoint(WEIGHTS, MAX_KEYPOINTS, DEVICE)
+    superpoint = load_superpoint(max_keypoints=MAX_KEYPOINTS, device=DEVICE)
 
     print("Loading lightglue model")
     lightglue = load_lightglue(DEVICE)

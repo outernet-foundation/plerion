@@ -21,8 +21,7 @@ from faiss import (  # type: ignore
 from h5py import File
 from neural_networks.dir import load_DIR
 from neural_networks.image import create_image_tensors
-from neural_networks.lightglue import load_lightglue
-from neural_networks.superpoint import load_superpoint
+from neural_networks.lightglue import load_lightglue, load_superpoint
 from numpy import (
     array,
     asarray,
@@ -149,7 +148,7 @@ def main():
     dir = load_DIR(DEVICE)
 
     print("Loading superpoint model")
-    superpoint = load_superpoint(WEIGHTS, manifest.options.max_keypoints_per_image, DEVICE)
+    superpoint = load_superpoint(max_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
 
     print(f"Loading feature matching model: {'SuperGlue'}")
     lightglue = load_lightglue(DEVICE)

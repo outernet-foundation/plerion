@@ -28,13 +28,12 @@ RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.toml
 
 # Install project
-COPY pyproject.toml /app/pyproject.toml
 COPY packages/common/ /app/packages/common
 COPY packages/core/ /app/packages/core
 COPY packages/datamodels/ /app/packages/datamodels
 COPY packages/generated/localizer-client-python/ /app/packages/generated/localizer-client-python
 COPY docker/api /app/docker/api/
-RUN uv pip install --no-deps \
+RUN uv pip install --no-deps --no-sources \
     /app/packages/common \
     /app/packages/core \
     /app/packages/datamodels \

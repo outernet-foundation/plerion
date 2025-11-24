@@ -28,11 +28,10 @@ RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.toml
 
 # Install project
-COPY pyproject.toml /app/pyproject.toml
 COPY packages/common/ /app/packages/common
 COPY packages/datamodels/ /app/packages/datamodels
 COPY docker/orchestrator /app/docker/orchestrator/
-RUN uv pip install --no-deps \
+RUN uv pip install --no-deps --no-sources \
     /app/packages/common \
     /app/packages/datamodels \
     /app/docker/orchestrator

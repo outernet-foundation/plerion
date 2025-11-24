@@ -14,7 +14,7 @@ from torch.hub import get_dir
 from torch.nn import Module
 
 environ["DB_ROOT"] = ""  # required by dirtorch
-from dirtorch.extract_features import load_model  # type: ignore
+from dirtorch.extract_features import load_model
 from dirtorch.utils.common import whiten_features  # type: ignore
 
 # From Hierarchical-Localization:
@@ -78,7 +78,7 @@ class DIR(Module):
         }
 
 
-def load_DIR(device: str):
+def load_DIR(device: str = "cpu"):
     _orig_load = torch.load  # type: ignore
 
     # PyTorch 2.6 flips torch.load default to weights_only=True, so we temporarily force legacy loading to read DIR’s pickled checkpoint;

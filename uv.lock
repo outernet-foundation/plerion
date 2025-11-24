@@ -14,6 +14,7 @@ members = [
     "core",
     "database-manager",
     "datamodels",
+    "dirtorch",
     "neural-networks",
     "orchestrator",
     "plerion-api",
@@ -719,6 +720,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/12/80/630b4b88364e9a8c8
 wheels = [
     { url = "https://files.pythonhosted.org/packages/50/3d/9373ad9c56321fdab5b41197068e1d8c25883b3fea29dd361f9b55116869/dill-0.4.0-py3-none-any.whl", hash = "sha256:44f54bf6412c2c8464c14e8243eb163690a9800dbe2c367330883b19c7561049", size = 119668, upload-time = "2025-04-16T00:41:47.671Z" },
 ]
+
+[[package]]
+name = "dirtorch"
+version = "0.0.0"
+source = { editable = "packages/neural-networks/third-party/dirtorch" }
 
 [[package]]
 name = "dnspython"
@@ -1587,6 +1593,7 @@ name = "neural-networks"
 version = "0.1.0"
 source = { editable = "packages/neural-networks" }
 dependencies = [
+    { name = "dirtorch" },
     { name = "gdown" },
     { name = "lightglue" },
     { name = "nvidia-cublas-cu12", marker = "sys_platform == 'linux'" },
@@ -1610,6 +1617,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "dirtorch", editable = "packages/neural-networks/third-party/dirtorch" },
     { name = "gdown", specifier = ">=5.2.0" },
     { name = "lightglue", git = "https://github.com/cvg/LightGlue.git" },
     { name = "nvidia-cublas-cu12", marker = "sys_platform == 'linux'", specifier = "==12.6.4.1" },

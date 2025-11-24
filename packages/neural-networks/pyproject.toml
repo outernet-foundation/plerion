@@ -5,9 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "lightglue",
+    "dirtorch",
     "pillow>=12.0.0",
     "gdown>=5.2.0",
-    "lightglue",
     "torch==2.6.0+cu126",
     "torchvision==0.21.0+cu126",
     "scikit-learn>=1.7.2",
@@ -28,11 +29,11 @@ dependencies = [
     "nvidia-nccl-cu12==2.21.5; platform_system == 'Linux'",
 ]
 
-
 [tool.uv.sources]
+lightglue = { git = "https://github.com/cvg/LightGlue.git" }
+dirtorch = { workspace = true }
 torch = { index = "pytorch-cu126" }
 torchvision = { index = "pytorch-cu126" }
-lightglue = { git = "https://github.com/cvg/LightGlue.git" }
 
 [[tool.uv.index]]
 name = "pytorch-cu126"
@@ -46,7 +47,3 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/neural_networks"]
 include = ["src/neural_networks/py.typed"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"third-party/deep-image-retrieval/dirtorch" = "dirtorch"
-"third-party/SuperGluePretrainedNetwork" = "SuperGluePretrainedNetwork"

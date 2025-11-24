@@ -45,7 +45,7 @@ RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
 
 # Install neural-networks
 COPY packages/neural-networks /app/packages/neural-networks
-RUN uv pip install --no-deps /app/packages/neural-networks
+RUN uv pip install --no-deps --no-sources /app/packages/neural-networks
 
 # Preload neural-networks models to cache them in the image
 RUN uv run python -c "import neural_networks.preload"
@@ -56,11 +56,10 @@ RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.toml
 
 # Install the project itself
-COPY pyproject.toml /app/pyproject.toml
 COPY packages/core /app/packages/core
 COPY packages/common /app/packages/common
 COPY docker/reconstructor /app/docker/reconstructor
-RUN uv pip install --no-deps \
+RUN uv pip install --no-deps --no-sources \
     /app/packages/common \
     /app/packages/core \
     /app/docker/reconstructor
