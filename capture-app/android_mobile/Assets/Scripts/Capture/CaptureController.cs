@@ -12,8 +12,8 @@ using TMPro;
 using PlerionApiClient.Api;
 using PlerionApiClient.Model;
 
-using PlerionClient.Api;
-using PlerionClient.Model;
+// using PlerionClient.Api;
+// using PlerionClient.Model;
 
 using FofX;
 using FofX.Stateful;
@@ -25,7 +25,7 @@ using ObserveThing;
 using ObserveThing.StatefulExtensions;
 
 using static Nessle.UIBuilder;
-using static PlerionClient.Client.UIPresets;
+// using static PlerionClient.Client.UIPresets;
 using System.Net.Http;
 using UnityEngine.SocialPlatforms;
 
@@ -127,12 +127,12 @@ namespace PlerionClient.Client
                                 capture.id,
                                 capture.name.value ?? capture.id.ToString(),
                                 capture.type.value,
-                                Progress.Create<CaptureUploadStatus>(x => capture.status.ScheduleSet(x))
+                                Progress.Create<(CaptureUploadStatus, float?)>(progress => capture.status.ScheduleSet(progress.Item1))
                             ).Forget();
                         }
                         else if (x.currentValue == CaptureUploadStatus.ReconstructRequested)
                         {
-                            capturesApi.CreateReconstructionAsync(new ReconstructionCreate(capture.id));
+                            CreateReconstruction(capture.id).Forget();
                             capture.status.ExecuteSetOrDelay(CaptureUploadStatus.Reconstructing);
                         }
                         else if (x.currentValue == CaptureUploadStatus.CreateMapRequested)
@@ -326,7 +326,7 @@ namespace PlerionClient.Client
                         copy: (key, entry, state) =>
                         {
                             state.name.value = entry.name;
-                            state.type.value = CaptureType.Local;
+                            state.type.value = CaptureType.ARFoundation;
                             state.hasLocalFiles.value = entry.hasLocalFiles;
 
                             if (entry.capture == null) //capture is local only

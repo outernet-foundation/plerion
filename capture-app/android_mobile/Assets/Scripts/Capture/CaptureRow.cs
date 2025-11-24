@@ -4,7 +4,7 @@ using UnityEngine;
 
 using Cysharp.Threading.Tasks;
 using TMPro;
-using PlerionClient.Model;
+// using PlerionClient.Model;
 
 using FofX.Stateful;
 
@@ -59,7 +59,7 @@ namespace PlerionClient.Client
                         240,
                         Text().Setup(text =>
                         {
-                            text.props.text.From(capture.type.AsObservable().SelectDynamic(x => x == CaptureType.Local ? "Mobile" : "Zed"));
+                            text.props.text.From(capture.type.AsObservable().SelectDynamic(x => x == CaptureType.ARFoundation ? "Mobile" : "Zed"));
                             text.props.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
                             text.props.style.horizontalAlignment.From(HorizontalAlignmentOptions.Right);
                         })

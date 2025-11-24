@@ -27,13 +27,7 @@ namespace PlerionClient.Client
 
             var env = UnityEnv.GetOrCreateInstance();
 
-            var plerionAPIBaseUrl = string.IsNullOrEmpty(env.deviceName) ?
-                "https://api.outernetfoundation.org" : $"https://{env.deviceName}-api.outernetfoundation.org";
-
-            var keycloakBaseUrl = string.IsNullOrEmpty(env.deviceName) ?
-                "https://keycloak.outernetfoundation.org" : $"https://{env.deviceName}-keycloak.outernetfoundation.org";
-
-            App.state.plerionAPIBaseUrl.ExecuteSet(plerionBaseURL);
+            App.state.plerionAPIBaseUrl.ExecuteSet(env.plerionBaseURL);
 
             if (env.loginAutomatically)
                 App.ExecuteAction(new LogInAction(env.username, env.password));

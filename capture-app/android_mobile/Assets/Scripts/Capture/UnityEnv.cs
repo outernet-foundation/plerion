@@ -10,7 +10,7 @@ namespace PlerionClient.Client
     public class UnityEnv : ScriptableObject
     {
         private static UnityEnv _instance;
-        public string deviceName;
+        public string plerionBaseURL = "https://api.outernetfoundation.org";
         public bool loginAutomatically;
         public string username;
         public string password;
