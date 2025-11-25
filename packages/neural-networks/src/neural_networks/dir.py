@@ -78,7 +78,7 @@ class DIR(Module):
         }
 
 
-def load_DIR(device: str):
+def load_DIR(device: str = "cpu"):
     _orig_load = torch.load  # type: ignore
 
     # PyTorch 2.6 flips torch.load default to weights_only=True, so we temporarily force legacy loading to read DIR’s pickled checkpoint;

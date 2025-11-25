@@ -17,6 +17,7 @@ members = [
     "packages/common",
     "packages/datamodels",
     "packages/neural-networks",
+    "packages/neural-networks/third-party/deep-image-retrieval",
     "packages/generated/api-client-python",
     "packages/generated/localizer-client-python",
     "scripts",

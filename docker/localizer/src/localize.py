@@ -13,8 +13,7 @@ from core.transform import Quaternion, Transform, Vector3
 from core.ugh import create_colmap_camera
 from neural_networks.dir import load_DIR
 from neural_networks.image import create_image_tensors
-from neural_networks.lightglue import load_lightglue
-from neural_networks.superpoint import load_superpoint
+from neural_networks.lightglue import load_lightglue, load_superpoint
 from numpy.typing import NDArray
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstruction
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
@@ -45,7 +44,7 @@ else:
     dir = load_DIR(DEVICE)
 
     print("Loading superpoint model")
-    superpoint = load_superpoint(WEIGHTS, MAX_KEYPOINTS, DEVICE)
+    superpoint = load_superpoint(max_num_keypoints=MAX_KEYPOINTS, device=DEVICE)
 
     print("Loading lightglue model")
     lightglue = load_lightglue(DEVICE)
@@ -92,21 +91,22 @@ async def localize_image_against_reconstruction(
     )
 
     padded_db_descriptors = torch.zeros(
-        (batch_size, descriptor_dimension, max_keypoints), dtype=torch.float32, device=DEVICE
+        (batch_size, max_keypoints, descriptor_dimension), dtype=torch.float32, device=DEVICE
     )
 
     for batch_index, matched_image_id in enumerate(matched_image_ids):
         num_image_keypoints = map.keypoints[matched_image_id].shape[0]
         padded_db_keypoints[batch_index, :num_image_keypoints, :] = map.keypoints[matched_image_id]
-        padded_db_descriptors[batch_index, :, :num_image_keypoints] = map.descriptors[matched_image_id]
+        padded_db_descriptors[batch_index, :num_image_keypoints, :] = map.descriptors[matched_image_id].T
+
 
     keypoints0 = padded_db_keypoints
     descriptors0 = padded_db_descriptors
     keypoints1 = query_image_keypoints.unsqueeze(0).expand(batch_size, -1, -1)
     descriptors1 = query_image_descriptors.unsqueeze(0).expand(batch_size, -1, -1)
 
-    descriptors0 = descriptors0.transpose(-1, -2)
-    descriptors1 = descriptors1.transpose(-1, -2)
+    descriptors0 = descriptors0
+    descriptors1 = descriptors1
 
     sizes0 = torch.tensor(
         [
