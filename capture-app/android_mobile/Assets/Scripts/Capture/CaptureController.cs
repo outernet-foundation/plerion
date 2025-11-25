@@ -104,7 +104,7 @@ namespace PlerionClient.Client
                         }
                         else if (x.currentValue == CaptureUploadStatus.CreateMapRequested)
                         {
-                            capturesApi.CreateLocalizationMapAsync(new LocalizationMapCreate(capture.reconstructionId.value, 0, 0, 0, 0, 0, 0, 1, 0))
+                            capturesApi.CreateLocalizationMapAsync(new LocalizationMapCreate(capture.reconstructionId.value, 0, 0, 0, 0, 0, 0, 1, 0) { Name = capture.name.value })
                                 .ContinueWith(x =>
                                 {
                                     capture.localizationMapId.ScheduleSet(x.Result.Id);
