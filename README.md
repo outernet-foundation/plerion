@@ -18,7 +18,7 @@ and therefore agree upon
 a shared reference frame, such that a piece of AR content that appears in a certain place in the real world for one user,
 appears there for every user.
 
-Plerion targets the same class of problems as products like Niantic’s visual positioning system (VPS), but is fully open-source, and was built from the ground up to be self-hosted.
+Plerion targets the same class of problems as products like Niantic’s visual positioning system (VPS), but is fully open-source, and was built from the ground up to be self-hostable.
 
 ## Notable features:
 
@@ -170,10 +170,14 @@ uv run --project scripts --no_workspace \
 # Building the Android Mobile app
 
 - Install Unity 6000.0.56f1 with Android Build Support
-- Open `apps/PlerionAndroidMobile` in Unity
-- Configure plerion url
-  - TODO
-- Switch platorm to Android Mobile and build main scene
+- Open `capture-app/android_mobile` in Unity
+- Configure API url
+  - Open `Assets/Scenes/Main.unity`
+  - Open **App** object in scene hierarchy
+  - Fill in "Plerion Base URL" in the inspector to match your public URL from earlier
+  - (Optional) Tick the "Login Automatically" checkbox and fill in the Username and Passowrd (see **Verify** section above for where those credentials come from)
+- Switch platorm to Android Mobile
+- Build `Assets/Scenes/Main.unity`
 
 # Building, installing, and running the Zed capture app
 
