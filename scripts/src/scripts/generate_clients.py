@@ -7,9 +7,9 @@ from tempfile import NamedTemporaryFile
 from common.run_command import run_command
 from typer import Option, run
 
-MUSTACHE_TEMPLATES_PATH = Path(__file__).parent.parent / "mustache-templates"
-OPENAPI_GENERATOR_IGNORE_PATH = Path(__file__).parent.parent / ".openapi-generator-ignore"
-OPENAPI_GENERATOR_CONFIGS_PATH = Path(__file__).parent.parent / "openapi-generator-configs"
+MUSTACHE_TEMPLATES_PATH = Path(__file__).parents[2] / "mustache-templates"
+OPENAPI_GENERATOR_IGNORE_PATH = Path(__file__).parents[2] / ".openapi-generator-ignore"
+OPENAPI_GENERATOR_CONFIGS_PATH = Path(__file__).parents[2] / "openapi-generator-configs"
 
 
 def cli(

@@ -6,7 +6,7 @@ from lightglue import LightGlue, SuperPoint  # type: ignore
 def load_superpoint(
     nms_radius: float | None = None,
     keypoint_threshold: float | None = None,
-    max_keypoints: int | None = None,
+    max_num_keypoints: int | None = None,
     remove_borders: int | None = None,
     device: str = "cpu",
 ):
@@ -15,8 +15,8 @@ def load_superpoint(
         conf["nms_radius"] = nms_radius
     if keypoint_threshold is not None:
         conf["keypoint_threshold"] = keypoint_threshold
-    if max_keypoints is not None:
-        conf["max_keypoints"] = max_keypoints
+    if max_num_keypoints is not None:
+        conf["max_num_keypoints"] = max_num_keypoints
     if remove_borders is not None:
         conf["remove_borders"] = remove_borders
 

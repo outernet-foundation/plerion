@@ -117,7 +117,6 @@ class Image:
         global_descriptor: Tensor,
         keypoints: Tensor,
         descriptors: Tensor,
-        scores: Tensor,
         size: int,
     ):
         self.colmap_id = colmap_id
@@ -125,7 +124,6 @@ class Image:
         self.global_descriptor = global_descriptor
         self.keypoints = keypoints
         self.descriptors = descriptors
-        self.scores = scores
         self.size = size
 
 
@@ -148,7 +146,7 @@ def main():
     dir = load_DIR(DEVICE)
 
     print("Loading superpoint model")
-    superpoint = load_superpoint(max_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
+    superpoint = load_superpoint(max_num_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
 
     print(f"Loading feature matching model: {'SuperGlue'}")
     lightglue = load_lightglue(DEVICE)
@@ -238,7 +236,6 @@ def main():
                     superpoint_output = superpoint({"image": grayscale_image_tensor})
                     keypoints = superpoint_output["keypoints"][0]
                     descriptors = superpoint_output["descriptors"][0]
-                    scores = superpoint_output["scores"][0]
 
                     keypoints_array = keypoints.detach().cpu().numpy().astype(float32, copy=False)
                     database.write_keypoints(colmap_image_id, keypoints_array)
@@ -249,7 +246,6 @@ def main():
                     global_descriptor=global_descriptor,
                     keypoints=keypoints,
                     descriptors=descriptors,
-                    scores=scores,
                     size=image_size,
                 )
 
@@ -278,12 +274,12 @@ def main():
         all_matches[(imageA, imageB)] = lightglue({
             "image0": {
                 "keypoints": images[imageA].keypoints.unsqueeze(0),
-                "descriptors": images[imageA].descriptors.unsqueeze(0).transpose(-1, -2),
+                "descriptors": images[imageA].descriptors.unsqueeze(0),
                 "image_size": image_size,
             },
             "image1": {
                 "keypoints": images[imageB].keypoints.unsqueeze(0),
-                "descriptors": images[imageB].descriptors.unsqueeze(0).transpose(-1, -2),
+                "descriptors": images[imageB].descriptors.unsqueeze(0),
                 "image_size": image_size,
             },
         })["matches0"][0]
@@ -511,7 +507,7 @@ def main():
     manifest.options.compression_opq_number_bits_per_subvector = number_of_bits_per_subvector
     manifest.options.compression_opq_number_of_training_iterations = opq_iterations
 
-    training_descriptors = vstack([_to_f32(images[name].descriptors).T for name in images.keys()])
+    training_descriptors = vstack([_to_f32(images[name].descriptors) for name in images.keys()])
     dimension = int(training_descriptors.shape[1])
 
     print("Training OPQ matrix")
@@ -613,7 +609,7 @@ def main():
             )
 
             # Descriptors -> OPQ rotate (via apply) -> PQ encode
-            descriptors_contiguous = ascontiguousarray(_to_f32(images[name].descriptors).T)
+            descriptors_contiguous = ascontiguousarray(_to_f32(images[name].descriptors))
             descriptors_rotated = cast(NDArray[float32], opq_matrix.apply(descriptors_contiguous))  # type: ignore
             codes = cast(NDArray[uint8], faiss_pq.compute_codes(descriptors_rotated))  # type: ignore
 
