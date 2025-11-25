@@ -12,6 +12,7 @@ using ObserveThing;
 using ObserveThing.StatefulExtensions;
 
 using static Nessle.UIBuilder;
+using DeviceType = PlerionApiClient.Model.DeviceType;
 
 namespace PlerionClient.Client
 {
@@ -59,52 +60,66 @@ namespace PlerionClient.Client
             {
                 captureUI.FillParent();
                 captureUI.Children(
-                    Button().Setup(capturesButton =>
+                    Control("bottomBar").Setup(bottomBar =>
                     {
-                        capturesButton.FitContentHorizontal(ContentSizeFitter.FitMode.PreferredSize);
-                        capturesButton.SetPivot(new Vector2(0.5f, 0));
-                        capturesButton.AnchorToBottom();
-                        capturesButton.AnchoredPosition(new Vector2(0, 230));
-                        capturesButton.LabelFrom("Captures");
-                        capturesButton.props.onClick.From(() =>
-                        {
-                            captureUI.children.Add(
-                                CapturesListUI().Setup(x =>
-                                {
-                                    x.FillParent();
-                                })
-                            );
-                        });
-                    }),
-                    Toggle(prefab: elements.recordButton).Setup(recordButton =>
-                    {
-                        recordButton.SetPivot(new Vector2(0.5f, 0));
-                        recordButton.AnchorToBottom();
-                        recordButton.AnchoredPosition(new Vector2(0, 350));
-
-                        recordButton.props.interactable.From(App.state.captureStatus
-                            .AsObservable()
-                            .SelectDynamic(x => x == CaptureStatus.Idle || x == CaptureStatus.Capturing)
-                        );
-
-                        recordButton.props.isOn.From(App.state.captureStatus
-                            .AsObservable()
-                            .SelectDynamic(x => x == CaptureStatus.Capturing || x == CaptureStatus.Starting)
-                        );
-
-                        recordButton.AddBinding(
-                            recordButton.props.isOn.Subscribe(x =>
+                        bottomBar.SetPivot(new Vector2(0.5f, 0));
+                        bottomBar.AnchorToBottom();
+                        bottomBar.AnchoredPosition(new Vector2(0, 250));
+                        bottomBar.SizeDelta(new Vector2(785, 170));
+                        bottomBar.Children(
+                            Button().Setup(capturesButton =>
                             {
-                                if (x.currentValue)
+                                capturesButton.SizeDelta(new Vector2(255, 75));
+                                capturesButton.SetPivot(new Vector2(1, 0.5f));
+                                capturesButton.AnchorToRight();
+                                capturesButton.AnchoredPosition(new Vector2(0, 0));
+                                capturesButton.LabelFrom("Captures");
+                                capturesButton.props.onClick.From(() =>
                                 {
-                                    if (App.state.captureStatus.value == CaptureStatus.Idle)
-                                        App.state.captureStatus.ExecuteSetOrDelay(CaptureStatus.Starting);
-                                }
-                                else
-                                {
-                                    if (App.state.captureStatus.value == CaptureStatus.Capturing)
-                                        App.state.captureStatus.ExecuteSetOrDelay(CaptureStatus.Stopping);
-                                }
+                                    captureUI.children.Add(
+                                        CapturesListUI().Setup(x => x.FillParent())
+                                    );
+                                });
+                            }),
+                            Dropdown().Setup(modeSelect =>
+                            {
+                                modeSelect.SizeDelta(new Vector2(255, 75));
+                                modeSelect.SetPivot(new Vector2(0, 0.5f));
+                                modeSelect.AnchorToLeft();
+                                modeSelect.AnchoredPosition(new Vector2(0, 0));
+                                modeSelect.props.options.From("Local", "Zed");
+                                modeSelect.BindValue(App.state.captureMode, x => (DeviceType)(x + 1), x => ((int)x) - 1);
+                            }),
+                            Toggle(prefab: elements.recordButton).Setup(recordButton =>
+                            {
+                                recordButton.Anchor(new Vector2(0.5f, 0.5f));
+                                recordButton.AnchoredPosition(new Vector2(0, 0));
+
+                                recordButton.props.interactable.From(App.state.captureStatus
+                                    .AsObservable()
+                                    .SelectDynamic(x => x == CaptureStatus.Idle || x == CaptureStatus.Capturing)
+                                );
+
+                                recordButton.props.isOn.From(App.state.captureStatus
+                                    .AsObservable()
+                                    .SelectDynamic(x => x == CaptureStatus.Capturing || x == CaptureStatus.Starting)
+                                );
+
+                                recordButton.AddBinding(
+                                    recordButton.props.isOn.Subscribe(x =>
+                                    {
+                                        if (x.currentValue)
+                                        {
+                                            if (App.state.captureStatus.value == CaptureStatus.Idle)
+                                                App.state.captureStatus.ExecuteSetOrDelay(CaptureStatus.Starting);
+                                        }
+                                        else
+                                        {
+                                            if (App.state.captureStatus.value == CaptureStatus.Capturing)
+                                                App.state.captureStatus.ExecuteSetOrDelay(CaptureStatus.Stopping);
+                                        }
+                                    })
+                                );
                             })
                         );
                     })
