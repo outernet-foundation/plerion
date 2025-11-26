@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, cast
 import torch
 from common.boto_clients import create_s3_client
 from common.reconstruction_manifest import ReconstructionManifest
-from core.rig import RigConfig
+from core.rig import Rig, RigConfig
 from core.ugh import create_colmap_rig
 from faiss import (  # type: ignore
     OPQMatrix,
@@ -59,7 +59,7 @@ from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial,
 from scipy.spatial.transform import Rotation
 from torch import Tensor, cuda, no_grad
 
-from .find_pairs import ImageTransform, pairs_from_poses
+from .find_pairs import Transform, pairs_from_poses
 from .settings import get_settings
 
 settings = get_settings()
@@ -110,17 +110,8 @@ def _to_f16(t: Tensor) -> NDArray[float16]:
 
 
 class Image:
-    def __init__(
-        self,
-        colmap_id: int,
-        transform: ImageTransform,
-        global_descriptor: Tensor,
-        keypoints: Tensor,
-        descriptors: Tensor,
-        size: int,
-    ):
+    def __init__(self, colmap_id: int, global_descriptor: Tensor, keypoints: Tensor, descriptors: Tensor, size: int):
         self.colmap_id = colmap_id
-        self.transform = transform
         self.global_descriptor = global_descriptor
         self.keypoints = keypoints
         self.descriptors = descriptors
@@ -167,63 +158,53 @@ def main():
         with open(file_path, "rb") as f:
             return f.read()
 
-    rigs = RigConfig.model_validate(json.loads(_get_capture_object("config.json").decode("utf-8"))).rigs
+    rigs: dict[str, Rig] = {
+        rig.id: rig
+        for rig in RigConfig.model_validate(json.loads(_get_capture_object("config.json").decode("utf-8"))).rigs
+    }
     rig_configs: list[pycolmapRigConfig] = []
     camera_id_to_colmap_camera_id: dict[Tuple[str, str], int] = {}
-    for rig in rigs:
+    frame_poses: dict[tuple[str, str], Transform] = {}
+    images: dict[str, Image] = {}
+    intra_frame_pairs: list[tuple[str, str]] = []
+    for rig_id, rig in rigs.items():
         rigConfig, cameras = create_colmap_rig(rig)
         rig_configs.append(rigConfig)
         for camera_id, camera in cameras.items():
-            camera_id_to_colmap_camera_id[(rig.id, camera_id)] = database.write_camera(camera)
+            camera_id_to_colmap_camera_id[(rig_id, camera_id)] = database.write_camera(camera)
 
-    images: Dict[str, Image] = {}
-    for rig in rigs:
-        for line in _get_capture_object(f"{rig.id}/frames.csv").decode("utf-8").splitlines()[1:]:  # Skip header
-            frame_id, tx, ty, tz, qx, qy, qz, qw = line.strip().split(",")
+        for frame in _get_capture_object(f"{rig_id}/frames.csv").decode("utf-8").splitlines()[1:]:  # Skip header
+            frame_id, tx, ty, tz, qx, qy, qz, qw = frame.strip().split(",")
             rotation_world_from_rig = Rotation.from_quat([float(qx), float(qy), float(qz), float(qw)])
             translation_world_from_rig = array([float(tx), float(ty), float(tz)], dtype=float)
+            frame_poses[(rig_id, frame_id)] = Transform(
+                rotation=rotation_world_from_rig.as_matrix(), translation=translation_world_from_rig
+            )
+
+            intra_frame_pairs.append((
+                f"{rig_id}/{rig.cameras[0].id}/{frame_id}.jpg",
+                f"{rig_id}/{rig.cameras[1].id}/{frame_id}.jpg",
+            ))
 
             for camera in rig.cameras:
-                name = f"{rig.id}/{camera.id}/{frame_id}.jpg"
+                name = f"{rig_id}/{camera.id}/{frame_id}.jpg"
                 print(f"Processing image: {name}")
 
-                rotation_world_from_camera = (
-                    rotation_world_from_rig
-                    * Rotation.from_quat([
-                        camera.rotation.x,
-                        camera.rotation.y,
-                        camera.rotation.z,
-                        camera.rotation.w,
-                    ]).inv()
-                )
-
-                translation_world_from_camera = (
-                    -rotation_world_from_camera.apply([
-                        camera.translation.x,
-                        camera.translation.y,
-                        camera.translation.z,
-                    ])
-                    + translation_world_from_rig
-                )
-
-                image_transform = ImageTransform(
-                    name, cast(NDArray[float64], rotation_world_from_camera.as_matrix()), translation_world_from_camera
-                )
-
                 colmap_image_id = database.write_image(
-                    pycolmapImage(name=name, camera_id=camera_id_to_colmap_camera_id[(rig.id, camera.id)])
+                    pycolmapImage(name=name, camera_id=camera_id_to_colmap_camera_id[(rig_id, camera.id)])
                 )
 
-                database.write_pose_prior(
-                    colmap_image_id,
-                    PosePrior(
-                        position=image_transform.translation.reshape(3, 1),
-                        position_covariance=(POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64),
-                        coordinate_system=PosePriorCoordinateSystem.CARTESIAN,
-                    ),
-                )
+                if camera.ref_sensor:
+                    database.write_pose_prior(
+                        colmap_image_id,
+                        PosePrior(
+                            position=translation_world_from_rig.reshape(3, 1),
+                            position_covariance=(POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64),
+                            coordinate_system=PosePriorCoordinateSystem.CARTESIAN,
+                        ),
+                    )
 
-                buffer = _get_capture_object(f"{rig.id}/{camera.id}/{frame_id}.jpg")
+                buffer = _get_capture_object(f"{rig_id}/{camera.id}/{frame_id}.jpg")
                 rbg_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(
                     camera.intrinsics.rotation, buffer, device=DEVICE
                 )
@@ -242,7 +223,6 @@ def main():
 
                 images[name] = Image(
                     colmap_id=colmap_image_id,
-                    transform=image_transform,
                     global_descriptor=global_descriptor,
                     keypoints=keypoints,
                     descriptors=descriptors,
@@ -253,13 +233,21 @@ def main():
         sum(len(img.keypoints) for img in images.values()) / len(images)
     )
 
-    pairs_by_pose_proximity = pairs_from_poses(
-        [img.transform for img in images.values()],
-        min(manifest.options.neighbors_count or DEFAULT_NEIGHBORS_COUNT, max(1, len(images) - 1)),
+    frame_pairs_by_pose_proximity = pairs_from_poses(
+        frame_poses, min(manifest.options.neighbors_count or DEFAULT_NEIGHBORS_COUNT, max(1, len(images) - 1))
     )
 
+    pairs_by_pose_proximity = [
+        (f"{rig_id_a}/{camera_a.id}/{frame_id_a}.jpg", f"{rig_id_b}/{camera_b.id}/{frame_id_b}.jpg")
+        for (rig_id_a, frame_id_a), (rig_id_b, frame_id_b) in frame_pairs_by_pose_proximity
+        for camera_a in rigs[rig_id_a].cameras
+        for camera_b in rigs[rig_id_b].cameras
+    ]
+
+    all_pairs = pairs_by_pose_proximity + intra_frame_pairs
+
     # Canonicalize and deduplicate pairs
-    pairs = sorted({tuple(sorted((a, b))) for a, b in pairs_by_pose_proximity if a != b})
+    pairs = sorted({tuple(sorted((a, b))) for a, b in all_pairs if a != b})
 
     PAIRS_FILE.parent.mkdir(parents=True, exist_ok=True)
     PAIRS_FILE.write_text("\n".join(f"{a} {b}" for a, b in pairs))
