@@ -1,18 +1,19 @@
 from typing import Annotated, Literal, Union
 
+from numpy import ndarray
 from pydantic import BaseModel, Discriminator
 
 from .transform import Quaternion, Vector3
 
 
-class CameraBase(BaseModel):
+class CameraConfigBase(BaseModel):
     width: int
     height: int
     mirroring: Literal["None", "X", "Y"]
     rotation: Literal["None", "90_CW", "180", "90_CCW"]
 
 
-class PinholeCamera(CameraBase):
+class PinholeCameraConfig(CameraConfigBase):
     model: Literal["PINHOLE"]
     fx: float
     fy: float
@@ -20,7 +21,7 @@ class PinholeCamera(CameraBase):
     cy: float
 
 
-class OpenCVCamera(CameraBase):
+class OpenCVCameraConfig(CameraConfigBase):
     model: Literal["OPENCV"]
     fx: float
     fy: float
@@ -33,7 +34,7 @@ class OpenCVCamera(CameraBase):
     k3: float
 
 
-class FullOpenCVCamera(CameraBase):
+class FullOpenCVCameraConfig(CameraConfigBase):
     model: Literal["FULL_OPENCV"]
     fx: float
     fy: float
@@ -49,30 +50,27 @@ class FullOpenCVCamera(CameraBase):
     k6: float
 
 
-class GenericParamsIntrinsics(CameraBase):
-    model: Literal["GENERIC"]
-    width: int
-    height: int
-    params: list[float]
+CameraConfig = Annotated[Union[PinholeCameraConfig, OpenCVCameraConfig, FullOpenCVCameraConfig], Discriminator("model")]
 
 
-Camera = Annotated[
-    Union[PinholeCamera, OpenCVCamera, FullOpenCVCamera, GenericParamsIntrinsics], Discriminator("model")
-]
-
-
-class RigCamera(BaseModel):
+class RigCameraConfig(BaseModel):
     id: str
     ref_sensor: bool | None
     rotation: Quaternion
     translation: Vector3
-    intrinsics: Camera
-
-
-class Rig(BaseModel):
-    id: str
-    cameras: list[RigCamera]
+    camera_config: CameraConfig
 
 
 class RigConfig(BaseModel):
-    rigs: list[Rig]
+    id: str
+    cameras: list[RigCameraConfig]
+
+
+class Config(BaseModel):
+    rigs: list[RigConfig]
+
+
+class Transform:
+    def __init__(self, rotation: ndarray, translation: ndarray):
+        self.rotation = rotation
+        self.translation = translation

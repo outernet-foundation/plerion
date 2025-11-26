@@ -3,17 +3,12 @@ from __future__ import annotations
 from typing import Dict, Optional
 
 import torch
-from numpy import arccos, clip, degrees, fill_diagonal, ndarray, stack, where
+from core.rig import Transform
+from numpy import arccos, clip, degrees, fill_diagonal, stack, where
 from numpy.linalg import norm
 from torch import from_numpy, topk  # type: ignore
 
 ROTATION_THRESHOLD_DEG = 30.0
-
-
-class Transform:
-    def __init__(self, rotation: ndarray, translation: ndarray):
-        self.rotation = rotation
-        self.translation = translation
 
 
 def pairs_from_poses(

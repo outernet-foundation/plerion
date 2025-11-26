@@ -10,7 +10,7 @@ from uuid import UUID
 from common.boto_clients import create_s3_client
 from common.fastapi import create_fastapi_app
 from core.classes import LocalizationMetrics
-from core.rig import Camera, PinholeCamera
+from core.rig import CameraConfig, PinholeCameraConfig
 from core.transform import Transform
 from fastapi import File, HTTPException, UploadFile
 
@@ -47,7 +47,7 @@ _load_lock = Lock()
 _load_state: dict[UUID, LoadState] = {}
 _load_error: dict[UUID, str] = {}
 
-_camera: PinholeCamera | None = None
+_camera: PinholeCameraConfig | None = None
 
 
 @app.get("/health")
@@ -132,7 +132,7 @@ async def get_reconstruction_load_status(id: UUID) -> LoadStateResponse:
 
 
 @app.put("/camera")
-async def set_camera_intrinsics(camera: Camera):
+async def set_camera_intrinsics(camera: CameraConfig):
     # only pinhole supported for now
     if camera.model != "PINHOLE":
         raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")

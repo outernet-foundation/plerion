@@ -2,7 +2,7 @@ from uuid import UUID, uuid4
 
 from common.session_client_docker import DockerSessionClient
 from core.classes import LocalizationMetrics
-from core.rig import Camera
+from core.rig import CameraConfig
 from core.transform import Quaternion, Transform, Vector3
 from datamodels.public_dtos import LocalizationSessionRead, localization_session_to_dto
 from datamodels.public_tables import LocalizationMap, LocalizationSession
@@ -70,7 +70,7 @@ async def delete_localization_session(localization_session_id: UUID, session: As
 
 @router.put("/{localization_session_id}/camera")
 async def set_localization_session_camera_intrinsics(
-    localization_session_id: UUID, camera: Camera = Body(...), session: AsyncSession = Depends(get_session)
+    localization_session_id: UUID, camera: CameraConfig = Body(...), session: AsyncSession = Depends(get_session)
 ):
     if camera.model != "PINHOLE":
         raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")

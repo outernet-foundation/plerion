@@ -353,7 +353,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/RigConfig"
+                $ref: "#/components/schemas/Config"
           description: Successful Response
         "422":
           content:
@@ -1786,13 +1786,112 @@ components:
       - g
       - r
       title: Color
+    Config:
+      example:
+        rigs:
+        - cameras:
+          - camera_config:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          - camera_config:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          id: id
+        - cameras:
+          - camera_config:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          - camera_config:
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              rotation: None
+              width: 9
+              model: PINHOLE
+              mirroring: None
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          id: id
+      properties:
+        rigs:
+          items:
+            $ref: "#/components/schemas/RigConfig"
+          type: array
+      required:
+      - rigs
+      title: Config
     DeviceType:
       enum:
       - ARFoundation
       - Zed
       title: DeviceType
       type: string
-    FullOpenCVCamera:
+    FullOpenCVCameraConfig:
       properties:
         width:
           title: Width
@@ -1874,47 +1973,7 @@ components:
       - p2
       - rotation
       - width
-      title: FullOpenCVCamera
-    GenericParamsIntrinsics:
-      properties:
-        width:
-          title: Width
-          type: integer
-        height:
-          title: Height
-          type: integer
-        mirroring:
-          enum:
-          - None
-          - X
-          - "Y"
-          title: Mirroring
-          type: string
-        rotation:
-          enum:
-          - None
-          - 90_CW
-          - "180"
-          - 90_CCW
-          title: Rotation
-          type: string
-        model:
-          enum:
-          - GENERIC
-          title: Model
-          type: string
-        params:
-          items:
-            type: number
-          type: array
-      required:
-      - height
-      - mirroring
-      - model
-      - params
-      - rotation
-      - width
-      title: GenericParamsIntrinsics
+      title: FullOpenCVCameraConfig
     GroupBatchUpdate:
       example:
         parent_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -2743,7 +2802,7 @@ components:
       - rotation_z
       - updated_at
       title: NodeRead
-    OpenCVCamera:
+    OpenCVCameraConfig:
       properties:
         width:
           title: Width
@@ -2813,7 +2872,7 @@ components:
       - p2
       - rotation
       - width
-      title: OpenCVCamera
+      title: OpenCVCameraConfig
     OrchestrationStatus:
       enum:
       - queued
@@ -2824,7 +2883,7 @@ components:
       - failed
       title: OrchestrationStatus
       type: string
-    PinholeCamera:
+    PinholeCameraConfig:
       example:
         fx: 2.027123023002322
         fy: 4.145608029883936
@@ -2884,7 +2943,7 @@ components:
       - model
       - rotation
       - width
-      title: PinholeCamera
+      title: PinholeCameraConfig
     PointCloudPoint:
       example:
         color:
@@ -3202,76 +3261,9 @@ components:
       - orchestration_status
       - updated_at
       title: ReconstructionRead
-    Rig:
+    RigCameraConfig:
       example:
-        cameras:
-        - rotation:
-            w: 5.962133916683182
-            x: 0.8008281904610115
-            "y": 6.027456183070403
-            z: 1.4658129805029452
-          translation:
-            x: 5.637376656633329
-            "y": 2.3021358869347655
-            z: 7.061401241503109
-          intrinsics:
-            fx: 2.027123023002322
-            fy: 4.145608029883936
-            cx: 7.386281948385884
-            cy: 1.2315135367772556
-            rotation: None
-            width: 9
-            model: PINHOLE
-            mirroring: None
-            height: 3
-          ref_sensor: true
-          id: id
-        - rotation:
-            w: 5.962133916683182
-            x: 0.8008281904610115
-            "y": 6.027456183070403
-            z: 1.4658129805029452
-          translation:
-            x: 5.637376656633329
-            "y": 2.3021358869347655
-            z: 7.061401241503109
-          intrinsics:
-            fx: 2.027123023002322
-            fy: 4.145608029883936
-            cx: 7.386281948385884
-            cy: 1.2315135367772556
-            rotation: None
-            width: 9
-            model: PINHOLE
-            mirroring: None
-            height: 3
-          ref_sensor: true
-          id: id
-        id: id
-      properties:
-        id:
-          title: Id
-          type: string
-        cameras:
-          items:
-            $ref: "#/components/schemas/RigCamera"
-          type: array
-      required:
-      - cameras
-      - id
-      title: Rig
-    RigCamera:
-      example:
-        rotation:
-          w: 5.962133916683182
-          x: 0.8008281904610115
-          "y": 6.027456183070403
-          z: 1.4658129805029452
-        translation:
-          x: 5.637376656633329
-          "y": 2.3021358869347655
-          z: 7.061401241503109
-        intrinsics:
+        camera_config:
           fx: 2.027123023002322
           fy: 4.145608029883936
           cx: 7.386281948385884
@@ -3281,6 +3273,15 @@ components:
           model: PINHOLE
           mirroring: None
           height: 3
+        rotation:
+          w: 5.962133916683182
+          x: 0.8008281904610115
+          "y": 6.027456183070403
+          z: 1.4658129805029452
+        translation:
+          x: 5.637376656633329
+          "y": 2.3021358869347655
+          z: 7.061401241503109
         ref_sensor: true
         id: id
       properties:
@@ -3294,113 +3295,72 @@ components:
           $ref: "#/components/schemas/Quaternion"
         translation:
           $ref: "#/components/schemas/Vector3"
-        intrinsics:
-          $ref: "#/components/schemas/Intrinsics"
+        camera_config:
+          $ref: "#/components/schemas/Camera_Config"
       required:
+      - camera_config
       - id
-      - intrinsics
       - ref_sensor
       - rotation
       - translation
-      title: RigCamera
+      title: RigCameraConfig
     RigConfig:
       example:
-        rigs:
-        - cameras:
-          - rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            intrinsics:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            ref_sensor: true
-            id: id
-          - rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            intrinsics:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            ref_sensor: true
-            id: id
+        cameras:
+        - camera_config:
+            fx: 2.027123023002322
+            fy: 4.145608029883936
+            cx: 7.386281948385884
+            cy: 1.2315135367772556
+            rotation: None
+            width: 9
+            model: PINHOLE
+            mirroring: None
+            height: 3
+          rotation:
+            w: 5.962133916683182
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+          translation:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
+          ref_sensor: true
           id: id
-        - cameras:
-          - rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            intrinsics:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            ref_sensor: true
-            id: id
-          - rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            intrinsics:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            ref_sensor: true
-            id: id
+        - camera_config:
+            fx: 2.027123023002322
+            fy: 4.145608029883936
+            cx: 7.386281948385884
+            cy: 1.2315135367772556
+            rotation: None
+            width: 9
+            model: PINHOLE
+            mirroring: None
+            height: 3
+          rotation:
+            w: 5.962133916683182
+            x: 0.8008281904610115
+            "y": 6.027456183070403
+            z: 1.4658129805029452
+          translation:
+            x: 5.637376656633329
+            "y": 2.3021358869347655
+            z: 7.061401241503109
+          ref_sensor: true
           id: id
+        id: id
       properties:
-        rigs:
+        id:
+          title: Id
+          type: string
+        cameras:
           items:
-            $ref: "#/components/schemas/Rig"
+            $ref: "#/components/schemas/RigCameraConfig"
           type: array
       required:
-      - rigs
+      - cameras
+      - id
       title: RigConfig
     Transform:
       example:
@@ -3467,25 +3427,22 @@ components:
       title: Vector3
     Camera:
       anyOf:
-      - $ref: "#/components/schemas/PinholeCamera"
-      - $ref: "#/components/schemas/OpenCVCamera"
-      - $ref: "#/components/schemas/FullOpenCVCamera"
-      - $ref: "#/components/schemas/GenericParamsIntrinsics"
+      - $ref: "#/components/schemas/PinholeCameraConfig"
+      - $ref: "#/components/schemas/OpenCVCameraConfig"
+      - $ref: "#/components/schemas/FullOpenCVCameraConfig"
       title: Camera
-    Intrinsics:
+    Camera_Config:
       discriminator:
         mapping:
-          FULL_OPENCV: "#/components/schemas/FullOpenCVCamera"
-          GENERIC: "#/components/schemas/GenericParamsIntrinsics"
-          OPENCV: "#/components/schemas/OpenCVCamera"
-          PINHOLE: "#/components/schemas/PinholeCamera"
+          FULL_OPENCV: "#/components/schemas/FullOpenCVCameraConfig"
+          OPENCV: "#/components/schemas/OpenCVCameraConfig"
+          PINHOLE: "#/components/schemas/PinholeCameraConfig"
         propertyName: model
       oneOf:
-      - $ref: "#/components/schemas/PinholeCamera"
-      - $ref: "#/components/schemas/OpenCVCamera"
-      - $ref: "#/components/schemas/FullOpenCVCamera"
-      - $ref: "#/components/schemas/GenericParamsIntrinsics"
-      title: Intrinsics
+      - $ref: "#/components/schemas/PinholeCameraConfig"
+      - $ref: "#/components/schemas/OpenCVCameraConfig"
+      - $ref: "#/components/schemas/FullOpenCVCameraConfig"
+      title: Camera Config
     ValidationError_loc_inner:
       anyOf:
       - type: string

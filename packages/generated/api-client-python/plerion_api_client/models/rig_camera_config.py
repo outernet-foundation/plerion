@@ -17,20 +17,25 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictStr
-from typing import Any, ClassVar, Dict, List
-from plerion_api_client.models.rig_camera_config import RigCameraConfig
+from pydantic import BaseModel, ConfigDict, StrictBool, StrictStr
+from typing import Any, ClassVar, Dict, List, Optional
+from plerion_api_client.models.camera_config import CameraConfig
+from plerion_api_client.models.quaternion import Quaternion
+from plerion_api_client.models.vector3 import Vector3
 from typing import Optional, Set
 from typing_extensions import Self
 
-class RigConfig(BaseModel):
+class RigCameraConfig(BaseModel):
     """
-    RigConfig
+    RigCameraConfig
     """ # noqa: E501
     id: StrictStr
-    cameras: List[RigCameraConfig]
+    ref_sensor: Optional[StrictBool]
+    rotation: Quaternion
+    translation: Vector3
+    camera_config: CameraConfig
     additional_properties: Dict[str, Any] = {}
-    __properties: ClassVar[List[str]] = ["id", "cameras"]
+    __properties: ClassVar[List[str]] = ["id", "ref_sensor", "rotation", "translation", "camera_config"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -50,7 +55,7 @@ class RigConfig(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of RigConfig from a JSON string"""
+        """Create an instance of RigCameraConfig from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -73,23 +78,30 @@ class RigConfig(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of each item in cameras (list)
-        _items = []
-        if self.cameras:
-            for _item_cameras in self.cameras:
-                if _item_cameras:
-                    _items.append(_item_cameras.to_dict())
-            _dict['cameras'] = _items
+        # override the default output from pydantic by calling `to_dict()` of rotation
+        if self.rotation:
+            _dict['rotation'] = self.rotation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of translation
+        if self.translation:
+            _dict['translation'] = self.translation.to_dict()
+        # override the default output from pydantic by calling `to_dict()` of camera_config
+        if self.camera_config:
+            _dict['camera_config'] = self.camera_config.to_dict()
         # puts key-value pairs in additional_properties in the top level
         if self.additional_properties is not None:
             for _key, _value in self.additional_properties.items():
                 _dict[_key] = _value
 
+        # set to None if ref_sensor (nullable) is None
+        # and model_fields_set contains the field
+        if self.ref_sensor is None and "ref_sensor" in self.model_fields_set:
+            _dict['ref_sensor'] = None
+
         return _dict
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of RigConfig from a dict"""
+        """Create an instance of RigCameraConfig from a dict"""
         if obj is None:
             return None
 
@@ -98,7 +110,10 @@ class RigConfig(BaseModel):
 
         _obj = cls.model_validate({
             "id": obj.get("id"),
-            "cameras": [RigCameraConfig.from_dict(_item) for _item in obj["cameras"]] if obj.get("cameras") is not None else None
+            "ref_sensor": obj.get("ref_sensor"),
+            "rotation": Quaternion.from_dict(obj["rotation"]) if obj.get("rotation") is not None else None,
+            "translation": Vector3.from_dict(obj["translation"]) if obj.get("translation") is not None else None,
+            "camera_config": CameraConfig.from_dict(obj["camera_config"]) if obj.get("camera_config") is not None else None
         })
         # store additional fields in additional_properties
         for _key in obj.keys():

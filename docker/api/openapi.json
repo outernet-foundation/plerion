@@ -525,7 +525,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RigConfig"
+                  "$ref": "#/components/schemas/Config"
                 }
               }
             }
@@ -1602,16 +1602,13 @@
               "schema": {
                 "anyOf": [
                   {
-                    "$ref": "#/components/schemas/PinholeCamera"
+                    "$ref": "#/components/schemas/PinholeCameraConfig"
                   },
                   {
-                    "$ref": "#/components/schemas/OpenCVCamera"
+                    "$ref": "#/components/schemas/OpenCVCameraConfig"
                   },
                   {
-                    "$ref": "#/components/schemas/FullOpenCVCamera"
-                  },
-                  {
-                    "$ref": "#/components/schemas/GenericParamsIntrinsics"
+                    "$ref": "#/components/schemas/FullOpenCVCameraConfig"
                   }
                 ],
                 "title": "Camera"
@@ -2682,6 +2679,22 @@
         ],
         "title": "Color"
       },
+      "Config": {
+        "properties": {
+          "rigs": {
+            "items": {
+              "$ref": "#/components/schemas/RigConfig"
+            },
+            "type": "array",
+            "title": "Rigs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "rigs"
+        ],
+        "title": "Config"
+      },
       "DeviceType": {
         "type": "string",
         "enum": [
@@ -2690,7 +2703,7 @@
         ],
         "title": "DeviceType"
       },
-      "FullOpenCVCamera": {
+      "FullOpenCVCameraConfig": {
         "properties": {
           "width": {
             "type": "integer",
@@ -2793,60 +2806,7 @@
           "k5",
           "k6"
         ],
-        "title": "FullOpenCVCamera"
-      },
-      "GenericParamsIntrinsics": {
-        "properties": {
-          "width": {
-            "type": "integer",
-            "title": "Width"
-          },
-          "height": {
-            "type": "integer",
-            "title": "Height"
-          },
-          "mirroring": {
-            "type": "string",
-            "enum": [
-              "None",
-              "X",
-              "Y"
-            ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
-          },
-          "model": {
-            "type": "string",
-            "const": "GENERIC",
-            "title": "Model"
-          },
-          "params": {
-            "items": {
-              "type": "number"
-            },
-            "type": "array",
-            "title": "Params"
-          }
-        },
-        "type": "object",
-        "required": [
-          "width",
-          "height",
-          "mirroring",
-          "rotation",
-          "model",
-          "params"
-        ],
-        "title": "GenericParamsIntrinsics"
+        "title": "FullOpenCVCameraConfig"
       },
       "GroupBatchUpdate": {
         "properties": {
@@ -4231,7 +4191,7 @@
         ],
         "title": "NodeRead"
       },
-      "OpenCVCamera": {
+      "OpenCVCameraConfig": {
         "properties": {
           "width": {
             "type": "integer",
@@ -4319,7 +4279,7 @@
           "p2",
           "k3"
         ],
-        "title": "OpenCVCamera"
+        "title": "OpenCVCameraConfig"
       },
       "OrchestrationStatus": {
         "type": "string",
@@ -4333,7 +4293,7 @@
         ],
         "title": "OrchestrationStatus"
       },
-      "PinholeCamera": {
+      "PinholeCameraConfig": {
         "properties": {
           "width": {
             "type": "integer",
@@ -4396,7 +4356,7 @@
           "cx",
           "cy"
         ],
-        "title": "PinholeCamera"
+        "title": "PinholeCameraConfig"
       },
       "PointCloudPoint": {
         "properties": {
@@ -4935,28 +4895,7 @@
         ],
         "title": "ReconstructionRead"
       },
-      "Rig": {
-        "properties": {
-          "id": {
-            "type": "string",
-            "title": "Id"
-          },
-          "cameras": {
-            "items": {
-              "$ref": "#/components/schemas/RigCamera"
-            },
-            "type": "array",
-            "title": "Cameras"
-          }
-        },
-        "type": "object",
-        "required": [
-          "id",
-          "cameras"
-        ],
-        "title": "Rig"
-      },
-      "RigCamera": {
+      "RigCameraConfig": {
         "properties": {
           "id": {
             "type": "string",
@@ -4979,29 +4918,25 @@
           "translation": {
             "$ref": "#/components/schemas/Vector3"
           },
-          "intrinsics": {
+          "camera_config": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/PinholeCamera"
+                "$ref": "#/components/schemas/PinholeCameraConfig"
               },
               {
-                "$ref": "#/components/schemas/OpenCVCamera"
+                "$ref": "#/components/schemas/OpenCVCameraConfig"
               },
               {
-                "$ref": "#/components/schemas/FullOpenCVCamera"
-              },
-              {
-                "$ref": "#/components/schemas/GenericParamsIntrinsics"
+                "$ref": "#/components/schemas/FullOpenCVCameraConfig"
               }
             ],
-            "title": "Intrinsics",
+            "title": "Camera Config",
             "discriminator": {
               "propertyName": "model",
               "mapping": {
-                "FULL_OPENCV": "#/components/schemas/FullOpenCVCamera",
-                "GENERIC": "#/components/schemas/GenericParamsIntrinsics",
-                "OPENCV": "#/components/schemas/OpenCVCamera",
-                "PINHOLE": "#/components/schemas/PinholeCamera"
+                "FULL_OPENCV": "#/components/schemas/FullOpenCVCameraConfig",
+                "OPENCV": "#/components/schemas/OpenCVCameraConfig",
+                "PINHOLE": "#/components/schemas/PinholeCameraConfig"
               }
             }
           }
@@ -5012,23 +4947,28 @@
           "ref_sensor",
           "rotation",
           "translation",
-          "intrinsics"
+          "camera_config"
         ],
-        "title": "RigCamera"
+        "title": "RigCameraConfig"
       },
       "RigConfig": {
         "properties": {
-          "rigs": {
+          "id": {
+            "type": "string",
+            "title": "Id"
+          },
+          "cameras": {
             "items": {
-              "$ref": "#/components/schemas/Rig"
+              "$ref": "#/components/schemas/RigCameraConfig"
             },
             "type": "array",
-            "title": "Rigs"
+            "title": "Cameras"
           }
         },
         "type": "object",
         "required": [
-          "rigs"
+          "id",
+          "cameras"
         ],
         "title": "RigConfig"
       },

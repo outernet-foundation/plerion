@@ -151,26 +151,22 @@
               "schema": {
                 "oneOf": [
                   {
-                    "$ref": "#/components/schemas/PinholeCamera"
+                    "$ref": "#/components/schemas/PinholeCameraConfig"
                   },
                   {
-                    "$ref": "#/components/schemas/OpenCVCamera"
+                    "$ref": "#/components/schemas/OpenCVCameraConfig"
                   },
                   {
-                    "$ref": "#/components/schemas/FullOpenCVCamera"
-                  },
-                  {
-                    "$ref": "#/components/schemas/GenericParamsIntrinsics"
+                    "$ref": "#/components/schemas/FullOpenCVCameraConfig"
                   }
                 ],
                 "title": "Camera",
                 "discriminator": {
                   "propertyName": "model",
                   "mapping": {
-                    "PINHOLE": "#/components/schemas/PinholeCamera",
-                    "OPENCV": "#/components/schemas/OpenCVCamera",
-                    "FULL_OPENCV": "#/components/schemas/FullOpenCVCamera",
-                    "GENERIC": "#/components/schemas/GenericParamsIntrinsics"
+                    "PINHOLE": "#/components/schemas/PinholeCameraConfig",
+                    "OPENCV": "#/components/schemas/OpenCVCameraConfig",
+                    "FULL_OPENCV": "#/components/schemas/FullOpenCVCameraConfig"
                   }
                 }
               }
@@ -259,7 +255,7 @@
         ],
         "title": "Body_localize_image"
       },
-      "FullOpenCVCamera": {
+      "FullOpenCVCameraConfig": {
         "properties": {
           "width": {
             "type": "integer",
@@ -362,60 +358,7 @@
           "k5",
           "k6"
         ],
-        "title": "FullOpenCVCamera"
-      },
-      "GenericParamsIntrinsics": {
-        "properties": {
-          "width": {
-            "type": "integer",
-            "title": "Width"
-          },
-          "height": {
-            "type": "integer",
-            "title": "Height"
-          },
-          "mirroring": {
-            "type": "string",
-            "enum": [
-              "None",
-              "X",
-              "Y"
-            ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
-          },
-          "model": {
-            "type": "string",
-            "const": "GENERIC",
-            "title": "Model"
-          },
-          "params": {
-            "items": {
-              "type": "number"
-            },
-            "type": "array",
-            "title": "Params"
-          }
-        },
-        "type": "object",
-        "required": [
-          "width",
-          "height",
-          "mirroring",
-          "rotation",
-          "model",
-          "params"
-        ],
-        "title": "GenericParamsIntrinsics"
+        "title": "FullOpenCVCameraConfig"
       },
       "HTTPValidationError": {
         "properties": {
@@ -518,7 +461,7 @@
         ],
         "title": "LocalizationMetrics"
       },
-      "OpenCVCamera": {
+      "OpenCVCameraConfig": {
         "properties": {
           "width": {
             "type": "integer",
@@ -606,9 +549,9 @@
           "p2",
           "k3"
         ],
-        "title": "OpenCVCamera"
+        "title": "OpenCVCameraConfig"
       },
-      "PinholeCamera": {
+      "PinholeCameraConfig": {
         "properties": {
           "width": {
             "type": "integer",
@@ -671,7 +614,7 @@
           "cx",
           "cy"
         ],
-        "title": "PinholeCamera"
+        "title": "PinholeCameraConfig"
       },
       "Quaternion": {
         "properties": {

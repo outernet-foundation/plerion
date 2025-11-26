@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from common.boto_clients import create_s3_client
 from core.classes import LocalizationMetrics
-from core.rig import PinholeCamera
+from core.rig import PinholeCameraConfig
 from core.transform import Quaternion, Transform, Vector3
 from core.ugh import create_colmap_camera
 from neural_networks.dir import load_DIR
@@ -54,7 +54,7 @@ reconstructions: dict[UUID, Reconstruction] = {}
 
 
 async def localize_image_against_reconstruction(
-    map: Map, camera: PinholeCamera, image: bytes
+    map: Map, camera: PinholeCameraConfig, image: bytes
 ) -> tuple[Transform, LocalizationMetrics]:
     pycolmap_camera = create_colmap_camera(camera)
     rgb_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(camera.rotation, image, DEVICE)
@@ -98,7 +98,6 @@ async def localize_image_against_reconstruction(
         num_image_keypoints = map.keypoints[matched_image_id].shape[0]
         padded_db_keypoints[batch_index, :num_image_keypoints, :] = map.keypoints[matched_image_id]
         padded_db_descriptors[batch_index, :num_image_keypoints, :] = map.descriptors[matched_image_id].T
-
 
     keypoints0 = padded_db_keypoints
     descriptors0 = padded_db_descriptors

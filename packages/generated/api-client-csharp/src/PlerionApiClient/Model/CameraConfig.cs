@@ -20,6 +20,7 @@ using System.Text.RegularExpressions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using JsonSubTypes;
 using FileParameter = PlerionApiClient.Client.FileParameter;
 using OpenAPIDateConverter = PlerionApiClient.Client.OpenAPIDateConverter;
 using System.Reflection;
@@ -27,46 +28,46 @@ using System.Reflection;
 namespace PlerionApiClient.Model
 {
     /// <summary>
-    /// Camera
+    /// CameraConfig
     /// </summary>
-    [JsonConverter(typeof(CameraJsonConverter))]
-    [DataContract(Name = "Camera")]
-    public partial class Camera : AbstractOpenAPISchema
+    [JsonConverter(typeof(CameraConfigJsonConverter))]
+    [DataContract(Name = "Camera_Config")]
+    public partial class CameraConfig : AbstractOpenAPISchema
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Camera" /> class
+        /// Initializes a new instance of the <see cref="CameraConfig" /> class
         /// with the <see cref="PinholeCameraConfig" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of PinholeCameraConfig.</param>
-        public Camera(PinholeCameraConfig actualInstance)
+        public CameraConfig(PinholeCameraConfig actualInstance)
         {
-            IsNullable = false;
-            SchemaType= "anyOf";
-            ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
+            this.IsNullable = false;
+            this.SchemaType= "oneOf";
+            this.ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Camera" /> class
+        /// Initializes a new instance of the <see cref="CameraConfig" /> class
         /// with the <see cref="OpenCVCameraConfig" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of OpenCVCameraConfig.</param>
-        public Camera(OpenCVCameraConfig actualInstance)
+        public CameraConfig(OpenCVCameraConfig actualInstance)
         {
-            IsNullable = false;
-            SchemaType= "anyOf";
-            ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
+            this.IsNullable = false;
+            this.SchemaType= "oneOf";
+            this.ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Camera" /> class
+        /// Initializes a new instance of the <see cref="CameraConfig" /> class
         /// with the <see cref="FullOpenCVCameraConfig" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of FullOpenCVCameraConfig.</param>
-        public Camera(FullOpenCVCameraConfig actualInstance)
+        public CameraConfig(FullOpenCVCameraConfig actualInstance)
         {
-            IsNullable = false;
-            SchemaType= "anyOf";
-            ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
+            this.IsNullable = false;
+            this.SchemaType= "oneOf";
+            this.ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
         }
 
 
@@ -83,17 +84,17 @@ namespace PlerionApiClient.Model
             }
             set
             {
-                if (value.GetType() == typeof(FullOpenCVCameraConfig))
+                if (value.GetType() == typeof(FullOpenCVCameraConfig) || value is FullOpenCVCameraConfig)
                 {
-                    _actualInstance = value;
+                    this._actualInstance = value;
                 }
-                else if (value.GetType() == typeof(OpenCVCameraConfig))
+                else if (value.GetType() == typeof(OpenCVCameraConfig) || value is OpenCVCameraConfig)
                 {
-                    _actualInstance = value;
+                    this._actualInstance = value;
                 }
-                else if (value.GetType() == typeof(PinholeCameraConfig))
+                else if (value.GetType() == typeof(PinholeCameraConfig) || value is PinholeCameraConfig)
                 {
-                    _actualInstance = value;
+                    this._actualInstance = value;
                 }
                 else
                 {
@@ -109,7 +110,7 @@ namespace PlerionApiClient.Model
         /// <returns>An instance of PinholeCameraConfig</returns>
         public PinholeCameraConfig GetPinholeCameraConfig()
         {
-            return (PinholeCameraConfig)ActualInstance;
+            return (PinholeCameraConfig)this.ActualInstance;
         }
 
         /// <summary>
@@ -119,7 +120,7 @@ namespace PlerionApiClient.Model
         /// <returns>An instance of OpenCVCameraConfig</returns>
         public OpenCVCameraConfig GetOpenCVCameraConfig()
         {
-            return (OpenCVCameraConfig)ActualInstance;
+            return (OpenCVCameraConfig)this.ActualInstance;
         }
 
         /// <summary>
@@ -129,7 +130,7 @@ namespace PlerionApiClient.Model
         /// <returns>An instance of FullOpenCVCameraConfig</returns>
         public FullOpenCVCameraConfig GetFullOpenCVCameraConfig()
         {
-            return (FullOpenCVCameraConfig)ActualInstance;
+            return (FullOpenCVCameraConfig)this.ActualInstance;
         }
 
         /// <summary>
@@ -139,8 +140,8 @@ namespace PlerionApiClient.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class Camera {\n");
-            sb.Append("  ActualInstance: ").Append(ActualInstance).Append("\n");
+            sb.Append("class CameraConfig {\n");
+            sb.Append("  ActualInstance: ").Append(this.ActualInstance).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }
@@ -151,28 +152,38 @@ namespace PlerionApiClient.Model
         /// <returns>JSON string presentation of the object</returns>
         public override string ToJson()
         {
-            return JsonConvert.SerializeObject(ActualInstance, Camera.SerializerSettings);
+            return JsonConvert.SerializeObject(this.ActualInstance, CameraConfig.SerializerSettings);
         }
 
         /// <summary>
-        /// Converts the JSON string into an instance of Camera
+        /// Converts the JSON string into an instance of CameraConfig
         /// </summary>
         /// <param name="jsonString">JSON string</param>
-        /// <returns>An instance of Camera</returns>
-        public static Camera FromJson(string jsonString)
+        /// <returns>An instance of CameraConfig</returns>
+        public static CameraConfig FromJson(string jsonString)
         {
-            Camera newCamera = null;
+            CameraConfig newCameraConfig = null;
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return newCamera;
+                return newCameraConfig;
             }
+            int match = 0;
+            List<string> matchedTypes = new List<string>();
 
             try
             {
-                newCamera = new Camera(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, Camera.SerializerSettings));
-                // deserialization is considered successful at this point if no exception has been thrown.
-                return newCamera;
+                // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
+                if (typeof(FullOpenCVCameraConfig).GetProperty("AdditionalProperties") == null)
+                {
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, CameraConfig.SerializerSettings));
+                }
+                else
+                {
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, CameraConfig.AdditionalPropertiesSerializerSettings));
+                }
+                matchedTypes.Add("FullOpenCVCameraConfig");
+                match++;
             }
             catch (Exception exception)
             {
@@ -182,9 +193,17 @@ namespace PlerionApiClient.Model
 
             try
             {
-                newCamera = new Camera(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, Camera.SerializerSettings));
-                // deserialization is considered successful at this point if no exception has been thrown.
-                return newCamera;
+                // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
+                if (typeof(OpenCVCameraConfig).GetProperty("AdditionalProperties") == null)
+                {
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, CameraConfig.SerializerSettings));
+                }
+                else
+                {
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, CameraConfig.AdditionalPropertiesSerializerSettings));
+                }
+                matchedTypes.Add("OpenCVCameraConfig");
+                match++;
             }
             catch (Exception exception)
             {
@@ -194,9 +213,17 @@ namespace PlerionApiClient.Model
 
             try
             {
-                newCamera = new Camera(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, Camera.SerializerSettings));
-                // deserialization is considered successful at this point if no exception has been thrown.
-                return newCamera;
+                // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
+                if (typeof(PinholeCameraConfig).GetProperty("AdditionalProperties") == null)
+                {
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, CameraConfig.SerializerSettings));
+                }
+                else
+                {
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, CameraConfig.AdditionalPropertiesSerializerSettings));
+                }
+                matchedTypes.Add("PinholeCameraConfig");
+                match++;
             }
             catch (Exception exception)
             {
@@ -204,16 +231,25 @@ namespace PlerionApiClient.Model
                 System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into PinholeCameraConfig: {1}", jsonString, exception.ToString()));
             }
 
-            // no match found, throw an exception
-            throw new InvalidDataException("The JSON string `" + jsonString + "` cannot be deserialized into any schema defined.");
+            if (match == 0)
+            {
+                throw new InvalidDataException("The JSON string `" + jsonString + "` cannot be deserialized into any schema defined.");
+            }
+            else if (match > 1)
+            {
+                throw new InvalidDataException("The JSON string `" + jsonString + "` incorrectly matches more than one schema (should be exactly one match): " + String.Join(",", matchedTypes));
+            }
+
+            // deserialization is considered successful at this point if no exception has been thrown.
+            return newCameraConfig;
         }
 
     }
 
     /// <summary>
-    /// Custom JSON converter for Camera
+    /// Custom JSON converter for CameraConfig
     /// </summary>
-    public class CameraJsonConverter : JsonConverter
+    public class CameraConfigJsonConverter : JsonConverter
     {
         /// <summary>
         /// To write the JSON string
@@ -223,7 +259,7 @@ namespace PlerionApiClient.Model
         /// <param name="serializer">JSON Serializer</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            writer.WriteRawValue((string)(typeof(Camera).GetMethod("ToJson").Invoke(value, null)));
+            writer.WriteRawValue((string)(typeof(CameraConfig).GetMethod("ToJson").Invoke(value, null)));
         }
 
         /// <summary>
@@ -239,9 +275,9 @@ namespace PlerionApiClient.Model
             switch(reader.TokenType) 
             {
                 case JsonToken.StartObject:
-                    return Camera.FromJson(JObject.Load(reader).ToString(Formatting.None));
+                    return CameraConfig.FromJson(JObject.Load(reader).ToString(Formatting.None));
                 case JsonToken.StartArray:
-                    return Camera.FromJson(JArray.Load(reader).ToString(Formatting.None));
+                    return CameraConfig.FromJson(JArray.Load(reader).ToString(Formatting.None));
                 default:
                     return null;
             }

@@ -2,16 +2,22 @@ from __future__ import annotations
 
 import json
 from io import BytesIO
+from itertools import combinations
 from pathlib import Path
-from statistics import mean, median
 from tarfile import open as open_tar
-from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple, cast
+from typing import Iterable, List, Optional, Sequence, Tuple, cast
 
 import torch
 from common.boto_clients import create_s3_client
-from common.reconstruction_manifest import ReconstructionManifest
-from core.rig import Rig, RigConfig
-from core.ugh import create_colmap_rig
+from core.reconstruction_manifest import (
+    ReconstructionManifest,
+    ReconstructionMetricsBuilder,
+    ReconstructionOptionsBuilder,
+)
+from core.rig import Config
+from core.ugh import Rig
+
+# from core.ugh import create_colmap_rig
 from faiss import (  # type: ignore
     OPQMatrix,
     ProductQuantizer,
@@ -23,7 +29,6 @@ from neural_networks.dir import load_DIR
 from neural_networks.image import create_image_tensors
 from neural_networks.lightglue import load_lightglue, load_superpoint
 from numpy import (
-    array,
     asarray,
     ascontiguousarray,
     eye,
@@ -41,25 +46,13 @@ from numpy import (
 )
 from numpy.linalg import norm
 from numpy.typing import NDArray
-from pycolmap import (
-    Database,
-    FeatureMatchingOptions,
-    ImageMap,
-    IncrementalPipelineOptions,
-    Point3D,
-    Point3DMap,
-    PosePrior,
-    PosePriorCoordinateSystem,
-    TwoViewGeometryOptions,
-)
+from pycolmap import Database, ImageMap, Point3D, Point3DMap, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as PycolmapImage
 from pycolmap import Image as pycolmapImage
-from pycolmap import RigConfig as pycolmapRigConfig
 from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial, set_random_seed
-from scipy.spatial.transform import Rotation
 from torch import Tensor, cuda, no_grad
 
-from .find_pairs import Transform, pairs_from_poses
+from .find_pairs import pairs_from_poses
 from .settings import get_settings
 
 settings = get_settings()
@@ -126,20 +119,16 @@ def main():
             "Body"
         ].read()
     )
-    manifest.status = "downloading"
-    _put_reconstruction_object(key="manifest.json", body=manifest.model_dump_json().encode("utf-8"))
+
+    options_builder = ReconstructionOptionsBuilder(manifest.options)
+    metrics_builder = ReconstructionMetricsBuilder(COLMAP_DB_PATH)
 
     if manifest.options.random_seed is not None:
         random.seed(manifest.options.random_seed)
         set_random_seed(manifest.options.random_seed)
 
-    print("Loading deep-image-retrieval model")
     dir = load_DIR(DEVICE)
-
-    print("Loading superpoint model")
     superpoint = load_superpoint(max_num_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
-
-    print(f"Loading feature matching model: {'SuperGlue'}")
     lightglue = load_lightglue(DEVICE)
 
     if COLMAP_DB_PATH.exists():
@@ -159,54 +148,34 @@ def main():
             return f.read()
 
     rigs: dict[str, Rig] = {
-        rig.id: rig
-        for rig in RigConfig.model_validate(json.loads(_get_capture_object("config.json").decode("utf-8"))).rigs
+        rig.id: Rig(rig, _get_capture_object(f"{rig.id}/frames.csv").decode("utf-8"))
+        for rig in Config.model_validate(json.loads(_get_capture_object("config.json").decode("utf-8"))).rigs
     }
-    rig_configs: list[pycolmapRigConfig] = []
-    camera_id_to_colmap_camera_id: dict[Tuple[str, str], int] = {}
-    frame_poses: dict[tuple[str, str], Transform] = {}
     images: dict[str, Image] = {}
-    intra_frame_pairs: list[tuple[str, str]] = []
     for rig_id, rig in rigs.items():
-        rigConfig, cameras = create_colmap_rig(rig)
-        rig_configs.append(rigConfig)
-        for camera_id, camera in cameras.items():
-            camera_id_to_colmap_camera_id[(rig_id, camera_id)] = database.write_camera(camera)
+        for camera in rig.cameras.values():
+            colmap_camera_id = database.write_camera(camera[1])
 
-        for frame in _get_capture_object(f"{rig_id}/frames.csv").decode("utf-8").splitlines()[1:]:  # Skip header
-            frame_id, tx, ty, tz, qx, qy, qz, qw = frame.strip().split(",")
-            rotation_world_from_rig = Rotation.from_quat([float(qx), float(qy), float(qz), float(qw)])
-            translation_world_from_rig = array([float(tx), float(ty), float(tz)], dtype=float)
-            frame_poses[(rig_id, frame_id)] = Transform(
-                rotation=rotation_world_from_rig.as_matrix(), translation=translation_world_from_rig
-            )
-
-            intra_frame_pairs.append((
-                f"{rig_id}/{rig.cameras[0].id}/{frame_id}.jpg",
-                f"{rig_id}/{rig.cameras[1].id}/{frame_id}.jpg",
-            ))
-
-            for camera in rig.cameras:
-                name = f"{rig_id}/{camera.id}/{frame_id}.jpg"
+            for frame_id, transform in rig.frame_poses.items():
+                name = f"{rig_id}/{camera[0].id}/{frame_id}.jpg"
                 print(f"Processing image: {name}")
 
-                colmap_image_id = database.write_image(
-                    pycolmapImage(name=name, camera_id=camera_id_to_colmap_camera_id[(rig_id, camera.id)])
-                )
+                colmap_image_id = database.write_image(pycolmapImage(name=name, camera_id=colmap_camera_id))
 
-                if camera.ref_sensor:
+                if camera[0].ref_sensor:
                     database.write_pose_prior(
                         colmap_image_id,
                         PosePrior(
-                            position=translation_world_from_rig.reshape(3, 1),
+                            position=transform.translation.reshape(3, 1),
                             position_covariance=(POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64),
                             coordinate_system=PosePriorCoordinateSystem.CARTESIAN,
                         ),
                     )
 
-                buffer = _get_capture_object(f"{rig_id}/{camera.id}/{frame_id}.jpg")
                 rbg_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(
-                    camera.intrinsics.rotation, buffer, device=DEVICE
+                    camera[0].camera_config.rotation,
+                    _get_capture_object(f"{rig_id}/{camera[0].id}/{frame_id}.jpg"),
+                    device=DEVICE,
                 )
 
                 with no_grad():
@@ -229,32 +198,40 @@ def main():
                     size=image_size,
                 )
 
-    manifest.metrics.average_keypoints_per_image = float(
+    metrics_builder.metrics.average_keypoints_per_image = float(
         sum(len(img.keypoints) for img in images.values()) / len(images)
     )
 
-    frame_pairs_by_pose_proximity = pairs_from_poses(
-        frame_poses, min(manifest.options.neighbors_count or DEFAULT_NEIGHBORS_COUNT, max(1, len(images) - 1))
-    )
-
-    pairs_by_pose_proximity = [
-        (f"{rig_id_a}/{camera_a.id}/{frame_id_a}.jpg", f"{rig_id_b}/{camera_b.id}/{frame_id_b}.jpg")
-        for (rig_id_a, frame_id_a), (rig_id_b, frame_id_b) in frame_pairs_by_pose_proximity
-        for camera_a in rigs[rig_id_a].cameras
-        for camera_b in rigs[rig_id_b].cameras
+    pairs = [
+        # Cross-frame, cross-sensor pairs by frame proximity
+        (f"{rig_id_a}/{camera_a[0].id}/{frame_id_a}.jpg", f"{rig_id_b}/{camera_b[0].id}/{frame_id_b}.jpg")
+        for (rig_id_a, frame_id_a), (rig_id_b, frame_id_b) in pairs_from_poses(
+            {
+                (rig_id, frame_id): transform
+                for rig_id, rig in rigs.items()
+                for frame_id, transform in rig.frame_poses.items()
+            },
+            min(manifest.options.neighbors_count or DEFAULT_NEIGHBORS_COUNT, max(1, len(images) - 1)),
+        )
+        for camera_a in rigs[rig_id_a].cameras.values()
+        for camera_b in rigs[rig_id_b].cameras.values()
+    ] + [
+        # Intra-frame, cross-sensor pairs
+        (f"{rig_id}/{camera_a[0].id}/{frame_id}.jpg", f"{rig_id}/{camera_b[0].id}/{frame_id}.jpg")
+        for rig_id, rig in rigs.items()
+        for frame_id in rig.frame_poses.keys()
+        for camera_a, camera_b in combinations(list(rig.cameras.values()), 2)
     ]
 
-    all_pairs = pairs_by_pose_proximity + intra_frame_pairs
-
     # Canonicalize and deduplicate pairs
-    pairs = sorted({tuple(sorted((a, b))) for a, b in all_pairs if a != b})
+    canonical_pairs = sorted({tuple(sorted((a, b))) for a, b in pairs if a != b})
 
     PAIRS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    PAIRS_FILE.write_text("\n".join(f"{a} {b}" for a, b in pairs))
+    PAIRS_FILE.write_text("\n".join(f"{a} {b}" for a, b in sorted({tuple(sorted((a, b))) for a, b in pairs if a != b})))
 
     # Match features using SuperGlue and add matches to COLMAP database
     all_matches: dict[Tuple[str, str], Tensor] = {}
-    for imageA, imageB in pairs:
+    for imageA, imageB in canonical_pairs:
         print(f"  {imageA}:{imageB}")
 
         image_size = torch.tensor([images[imageA].size], device=DEVICE)
@@ -273,7 +250,7 @@ def main():
         })["matches0"][0]
 
     valid_matches: dict[Tuple[str, str], NDArray[int32]] = {}
-    for imageA, imageB in pairs:
+    for imageA, imageB in canonical_pairs:
         matches = all_matches[(imageA, imageB)].cpu().numpy().astype(int32)
 
         # Filter invalid matches
@@ -284,194 +261,32 @@ def main():
         # Convert matches to COLMAP format
         valid_matches[(imageA, imageB)] = stack((query_indices, train_indices), axis=1).astype(int32)
 
-    for (imageA, imageB), matches in valid_matches.items():
-        # Check for duplicate query indices (same point matched multiple times)
-        unique_query = len(set(matches[:, 0]))
-        if unique_query != len(matches):
-            print(f"  WARNING: {len(matches) - unique_query} duplicate query indices!")
-
     # Write two-view geometries (matches) to database
-    for a, b in pairs:
+    for a, b in canonical_pairs:
         database.write_matches(
             images[a].colmap_id, images[b].colmap_id, valid_matches[(a, b)].astype(uint32, copy=False)
         )
 
     # Apply rig configuration to database
     # (This must be done after all cameras and images have been added)
-    apply_rig_config(rig_configs, database)
+    apply_rig_config([rig.colmap_rig_config for rig in rigs.values()], database)
 
     database.close()
-
-    two_view_geometry_options = TwoViewGeometryOptions()
-    two_view_geometry_options.compute_relative_pose = True
-    if manifest.options.random_seed is not None:
-        two_view_geometry_options.ransac.random_seed = manifest.options.random_seed
-    if manifest.options.ransac_max_error is not None:
-        two_view_geometry_options.ransac.max_error = manifest.options.ransac_max_error
-    if manifest.options.ransac_min_inlier_ratio is not None:
-        two_view_geometry_options.ransac.min_inlier_ratio = manifest.options.ransac_min_inlier_ratio
-    two_view_geometry_options.filter_stationary_matches = True
-    two_view_geometry_options.stationary_matches_max_error = 4.0
-
-    feature_matching_options = FeatureMatchingOptions()
-    if manifest.options.rig_verification is not None:
-        feature_matching_options.rig_verification = manifest.options.rig_verification
-    feature_matching_options.skip_image_pairs_in_same_frame = False
 
     match_spatial(
         database_path=str(COLMAP_DB_PATH),
-        matching_options=feature_matching_options,
-        verification_options=two_view_geometry_options,
+        matching_options=options_builder.feature_matching_options(),
+        verification_options=options_builder.two_view_geometry_options(),
     )
 
-    # ADD CODE HERE to print stats for verified matches
-
-    database = Database.open(str(COLMAP_DB_PATH))
-    # Map image name -> image_id (help Pyright with explicit types)
-    all_images: list[pycolmapImage] = database.read_all_images()
-    name_to_id: Dict[str, int] = {img.name: img.image_id for img in all_images}
-
-    def _parse_name(name: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
-        # Expected: "<rig_id>/<camera_id>/<frame_id>.jpg"
-        try:
-            rig_id, cam_id, rest = name.split("/", 2)
-            frame_id = rest.rsplit(".", 1)[0]
-            return rig_id, cam_id, frame_id
-        except Exception:
-            return None, None, None
-
-    total: int = 0
-    verified: int = 0
-    inliers_all: List[int] = []
-
-    st_total = st_verified = 0  # stereo: same frame, different sensors
-    st_inliers: List[int] = []
-
-    ss_total = ss_verified = 0  # same sensor across frames
-    ss_inliers: List[int] = []
-
-    cs_total = cs_verified = 0  # cross sensor across frames
-    cs_inliers: List[int] = []
-
-    for a, b in pairs:
-        total += 1
-        ida: int = name_to_id[a]
-        idb: int = name_to_id[b]
-        tvg: Any = database.read_two_view_geometry(ida, idb)
-
-        ninl: int = len(getattr(tvg, "inlier_matches", []))
-        ok: bool = ninl > 0 and int(getattr(tvg, "config", 0)) != 0
-
-        if ok:
-            verified += 1
-            inliers_all.append(ninl)
-
-        ra, ca, fa = _parse_name(a)
-        rb, cb, fb = _parse_name(b)
-        if None not in (ra, ca, fa, rb, cb, fb) and ra == rb:
-            if fa == fb and ca != cb:
-                st_total += 1
-                if ok:
-                    st_verified += 1
-                    st_inliers.append(ninl)
-            elif ca == cb and fa != fb:
-                ss_total += 1
-                if ok:
-                    ss_verified += 1
-                    ss_inliers.append(ninl)
-            elif ca != cb and fa != fb:
-                cs_total += 1
-                if ok:
-                    cs_verified += 1
-                    cs_inliers.append(ninl)
-
-    def _bucket(title: str, tot: int, ver: int, inls: List[int]) -> None:
-        pct = (100.0 * ver / tot) if tot else 0.0
-        m = mean(inls) if inls else 0.0
-        md = median(inls) if inls else 0.0
-        print(
-            f"[GV] {title:34s} verified {ver:5d}/{tot:5d}  ({pct:5.1f}%)  "
-            f"mean inliers {m:6.1f}  median inliers {md:6.1f}"
-        )
-
-    _bucket("ALL", total, verified, inliers_all)
-    _bucket("STEREO (same frame, diff sensor)", st_total, st_verified, st_inliers)
-    _bucket("SAME-SENSOR (across frames)", ss_total, ss_verified, ss_inliers)
-    _bucket("CROSS-SENSOR (across frames)", cs_total, cs_verified, cs_inliers)
-    database.close()
-    print("Verifying matches")
-
-    # ransac_options = RANSACOptions()
-    # if manifest.options.random_seed is not None:
-    #     ransac_options.random_seed = manifest.options.random_seed
-    # if manifest.options.ransac_max_error is not None:
-    #     ransac_options.max_error = manifest.options.ransac_max_error
-    # if manifest.options.ransac_min_inlier_ratio is not None:
-    #     ransac_options.min_inlier_ratio = manifest.options.ransac_min_inlier_ratio
-
-    # verify_matches(
-    #     str(COLMAP_DB_PATH),
-    #     str(PAIRS_FILE),
-    #     options=TwoViewGeometryOptions(ransac=ransac_options, compute_relative_pose=True),
-    # )
-
-    print("Running reconstruction")
-
-    incremental_pipeline_options = IncrementalPipelineOptions()
-    # incremental_pipeline_options.num_threads = 1
-    # incremental_pipeline_options.mapper.num_threads = 1
-
-    if manifest.options.random_seed is not None:
-        incremental_pipeline_options.random_seed = manifest.options.random_seed
-        incremental_pipeline_options.triangulation.random_seed = manifest.options.random_seed
-
-    if manifest.options.use_prior_position is not None:
-        incremental_pipeline_options.use_prior_position = manifest.options.use_prior_position
-    if manifest.options.bundle_adjustment_refine_sensor_from_rig is not None:
-        incremental_pipeline_options.ba_refine_sensor_from_rig = (
-            manifest.options.bundle_adjustment_refine_sensor_from_rig
-        )
-    if manifest.options.bundle_adjustment_refine_focal_length is not None:
-        incremental_pipeline_options.ba_refine_focal_length = manifest.options.bundle_adjustment_refine_focal_length
-    if manifest.options.bundle_adjustment_refine_principal_point is not None:
-        incremental_pipeline_options.ba_refine_principal_point = (
-            manifest.options.bundle_adjustment_refine_principal_point
-        )
-    # if manifest.options.bundle_adjustment_refine_additional_params is not None:
-    #     incremental_pipeline_options.ba_refine_extra_params = (
-    #         manifest.options.bundle_adjustment_refine_additional_params
-    #     )
-    if manifest.options.triangulation_minimum_angle is not None:
-        incremental_pipeline_options.mapper.filter_min_tri_angle = manifest.options.triangulation_minimum_angle
-        incremental_pipeline_options.triangulation.min_angle = manifest.options.triangulation_minimum_angle
-    if manifest.options.mapper_filter_max_reprojection_error is not None:
-        incremental_pipeline_options.mapper.filter_max_reproj_error = (
-            manifest.options.mapper_filter_max_reprojection_error
-        )
-    if manifest.options.triangulation_complete_max_reprojection_error is not None:
-        incremental_pipeline_options.triangulation.complete_max_reproj_error = (
-            manifest.options.triangulation_complete_max_reprojection_error
-        )
-    if manifest.options.triangulation_merge_max_reprojection_error is not None:
-        incremental_pipeline_options.triangulation.merge_max_reproj_error = (
-            manifest.options.triangulation_merge_max_reprojection_error
-        )
-
-    # incremental_pipeline_options.mapper.constant_cameras = {camera.camera_id for camera in cameras}
-    # incremental_pipeline_options.mapper.constant_rigs = {rig.rig_id for rig in rigs}
-
-    # print(incremental_pipeline_options.mapper.constant_cameras)
-    # print(incremental_pipeline_options.mapper.constant_rigs)
-
-    manifest.status = "reconstructing"
-    _put_reconstruction_object(key="manifest.json", body=manifest.model_dump_json().encode("utf-8"))
+    metrics_builder.build_verified_matches_metrics(canonical_pairs)
 
     CAPTURE_SESSION_DIRECTORY.mkdir(parents=True, exist_ok=True)
     reconstructions = incremental_mapping(
         database_path=str(COLMAP_DB_PATH),
         image_path=str(CAPTURE_SESSION_DIRECTORY),
         output_path=str(COLMAP_SFM_DIRECTORY),
-        options=incremental_pipeline_options,
+        options=options_builder.incremental_pipeline_options(),
     )
 
     if len(reconstructions) == 0:
@@ -498,11 +313,7 @@ def main():
     training_descriptors = vstack([_to_f32(images[name].descriptors) for name in images.keys()])
     dimension = int(training_descriptors.shape[1])
 
-    print("Training OPQ matrix")
-
-    manifest.status = "training_opq_matrix"
-    _put_reconstruction_object(key="manifest.json", body=manifest.model_dump_json().encode("utf-8"))
-
+    # Train OPQ matrix
     opq_matrix = OPQMatrix(dimension, number_of_subvectors)
     opq_matrix.niter = opq_iterations
     opq_matrix.verbose = True
@@ -510,11 +321,7 @@ def main():
     opq_matrix.train(training_unit)  # type: ignore
     write_VectorTransform(opq_matrix, str(OPQ_MATRIX_FILE))
 
-    print("Training PQ quantizer")
-
-    manifest.status = "training_product_quantizer"
-    _put_reconstruction_object(key="manifest.json", body=manifest.model_dump_json().encode("utf-8"))
-
+    # Train PQ quantizer on OPQ-rotated descriptors
     rotated_training_unit = opq_matrix.apply(training_unit)  # type: ignore
     faiss_pq = ProductQuantizer(dimension, number_of_subvectors, number_of_bits_per_subvector)
     faiss_pq.verbose = True
