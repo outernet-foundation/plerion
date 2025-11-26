@@ -8,8 +8,8 @@ from typer import Option, run
 
 zed_project = Path(__file__).parent
 repo_root = zed_project.parent.parent
-common_root = repo_root / "docker/common"
-core_root = repo_root / "docker/core"
+common_root = repo_root / "packages/common"
+core_root = repo_root / "packages/core"
 
 excluded_paths = [zed_project / ".venv", zed_project / "__pycache__", zed_project / "clients", zed_project / "typings"]
 common_exclude_paths = [common_root / "__pycache__", common_root / ".venv"]
@@ -32,10 +32,10 @@ def cli(host: str = Option(..., help="The host address for the Zed application."
                 tar.add(item, arcname=Path("capture-app") / "zed" / item.name)
         for item in common_root.iterdir():
             if item not in common_exclude_paths:
-                tar.add(item, arcname=Path("docker/common") / item.name)
+                tar.add(item, arcname=Path("packages/common") / item.name)
         for item in core_root.iterdir():
             if item not in core_exclude_paths:
-                tar.add(item, arcname=Path("docker/core") / item.name)
+                tar.add(item, arcname=Path("packages/core") / item.name)
 
     print("Uploading")
     run_command(f"scp {tarball_path} {host}:{remote_tarball_path}")
