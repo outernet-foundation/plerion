@@ -29,7 +29,7 @@ Transform:
   m_GameObject: {fileID: 1672449841698518041}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0, y: -0, z: -0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -112,7 +112,7 @@ MonoBehaviour:
       y: 0
       z: 0
       w: 1
-  _lastKnownPosition: {x: -0, y: -0, z: -0}
+  _lastKnownPosition: {x: 0, y: 0, z: 0}
   _lastKnownRotation: {x: 0, y: 0, z: 0, w: 1}
   _positionInitialized: 1
 --- !u!114 &4569578418812139524
@@ -250,15 +250,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2733253158488810719, guid: a340c74884937b44fa1b0c65053d84c2, type: 3}
       propertyPath: _lastKnownPosition.x
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2733253158488810719, guid: a340c74884937b44fa1b0c65053d84c2, type: 3}
       propertyPath: _lastKnownPosition.y
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2733253158488810719, guid: a340c74884937b44fa1b0c65053d84c2, type: 3}
       propertyPath: _lastKnownPosition.z
-      value: -0
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2733253158488810719, guid: a340c74884937b44fa1b0c65053d84c2, type: 3}
       propertyPath: _lastKnownRotation.w
@@ -316,7 +316,8 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: 2733253158488810719, guid: a340c74884937b44fa1b0c65053d84c2, type: 3}
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents: []

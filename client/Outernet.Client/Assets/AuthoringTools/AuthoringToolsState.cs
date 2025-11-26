@@ -92,7 +92,7 @@ namespace Outernet.Client.AuthoringTools
             }
 
 #if AUTHORING_TOOLS_ENABLED && !MAP_REGISTRATION_TOOLS_ENABLED
-            if (authoringTools.nodeGroups.TryGetValue(id, out var group))
+            if (nodeGroups.TryGetValue(id, out var group))
             {
                 name = group.name;
                 return true;

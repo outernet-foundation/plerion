@@ -252,7 +252,7 @@ namespace Outernet.Client.AuthoringTools
                 LabelScale = node.labelScale.value,
                 LabelWidth = node.labelWidth.value,
                 LabelHeight = node.labelHeight.value,
-                LayerId = node.layer.value,
+                LayerId = node.layer.value == Guid.Empty ? null : node.layer.value,
                 ParentId = node.parentID.value
             };
         }
