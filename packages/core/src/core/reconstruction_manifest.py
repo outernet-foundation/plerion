@@ -1,11 +1,30 @@
+from __future__ import annotations
+
 from pathlib import Path
 from statistics import mean, median
-from typing import Any, List, Literal, Optional
+from typing import Any, Iterable, List, Literal, Optional, Sequence, cast
 
 # from core.ugh import create_colmap_rig
-from pycolmap import Database, FeatureMatchingOptions, IncrementalPipelineOptions, TwoViewGeometryOptions
+from numpy import asarray, float64, percentile
+from numpy.linalg import norm
+from numpy.typing import NDArray
+
+# from core.ugh import create_colmap_rig
+from pycolmap import (
+    Database,
+    FeatureMatchingOptions,
+    ImageMap,
+    IncrementalPipelineOptions,
+    Point3D,
+    Point3DMap,
+    Reconstruction,
+    TwoViewGeometryOptions,
+)
+from pycolmap import Image as PycolmapImage
 from pycolmap import Image as pycolmapImage
 from pydantic import BaseModel, Field
+
+UINT64_MAX = 18446744073709551615  # sentinel used by Point2D.point3D_id default
 
 
 class ReconstructionOptions(BaseModel):
@@ -387,3 +406,52 @@ class ReconstructionMetricsBuilder:
         self.metrics.cross_sensor_verified_match_inliers_median = median(cs_inliers) if cs_inliers else 0.0
 
         database.close()
+
+    def build_reconstruction_metrics(self, best: Reconstruction) -> None:
+        points3d: Point3DMap = best.points3D
+        points3d_values: Iterable[Point3D] = cast(Iterable[Point3D], points3d.values())  # type: ignore
+        reconstruction_images: ImageMap = best.images
+        reconstruction_image_values: Iterable[PycolmapImage] = cast(
+            Iterable[PycolmapImage],
+            reconstruction_images.values(),  # type: ignore
+        )
+        track_lengths = [len(p.track.elements) for p in points3d_values]
+
+        reproject_errors: List[float] = []
+        for image in reconstruction_image_values:
+            for point2d in image.points2D:
+                if point2d.point3D_id == UINT64_MAX or point2d.point3D_id not in points3d:
+                    continue
+                projection: Optional[NDArray[float64]] = image.project_point(points3d[point2d.point3D_id].xyz)
+                if projection is None:
+                    continue
+                reproject_errors.append(
+                    float(
+                        norm(
+                            asarray(projection, dtype=float64).reshape(2)
+                            - asarray(point2d.xy, dtype=float64).reshape(2)
+                        )
+                    )
+                )
+
+        self.metrics.total_images = len(reconstruction_images)
+        self.metrics.registered_images = best.num_reg_images()
+        self.metrics.registration_rate = float(best.num_reg_images() / len(reconstruction_images) * 100.0)
+        self.metrics.num_3d_points = len(points3d)
+        self.metrics.track_length_50th_percentile = _percentile([float(L) for L in track_lengths], 50.0)
+        self.metrics.percent_tracks_with_length_greater_than_or_equal_to_3 = float(
+            sum(1 for L in track_lengths if L >= 3) / float(len(track_lengths)) * 100.0
+        )
+
+        def q(x: float, eps: float = 1e-9) -> float:
+            return float(round(x / eps) * eps)
+
+        self.metrics.reprojection_pixel_error_50th_percentile = q(_percentile(reproject_errors, 50.0))
+        self.metrics.reprojection_pixel_error_90th_percentile = q(_percentile(reproject_errors, 90.0))
+
+
+def _percentile(xs: Sequence[float], q: float):
+    arr = asarray(xs, dtype=float64)
+    if arr.size == 0:
+        raise ValueError("Cannot compute percentile of empty array")
+    return float(percentile(arr, q))

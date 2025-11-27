@@ -8,6 +8,7 @@ import numpy as np
 import torch
 from common.boto_clients import create_s3_client
 from core.classes import LocalizationMetrics
+from core.map import Map
 from core.rig import PinholeCameraConfig
 from core.transform import Quaternion, Transform, Vector3
 from core.ugh import create_colmap_camera
@@ -19,7 +20,6 @@ from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstructio
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
 from torch import cuda, inference_mode, mv, topk  # type: ignore
 
-from .map import Map
 from .settings import get_settings
 
 WEIGHTS = "indoor"

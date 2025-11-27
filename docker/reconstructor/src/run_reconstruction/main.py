@@ -5,7 +5,7 @@ from io import BytesIO
 from itertools import combinations
 from pathlib import Path
 from tarfile import open as open_tar
-from typing import Iterable, List, Optional, Sequence, Tuple, cast
+from typing import Tuple
 
 import torch
 from common.boto_clients import create_s3_client
@@ -16,43 +16,22 @@ from core.reconstruction_manifest import (
 )
 from core.rig import Config
 from core.ugh import Rig
+from core.utility import to_f16, to_f32
 
 # from core.ugh import create_colmap_rig
-from faiss import (  # type: ignore
-    OPQMatrix,
-    ProductQuantizer,
-    write_ProductQuantizer,  # type: ignore
-    write_VectorTransform,  # type: ignore
-)
 from h5py import File
 from neural_networks.dir import load_DIR
 from neural_networks.image import create_image_tensors
 from neural_networks.lightglue import load_lightglue, load_superpoint
-from numpy import (
-    asarray,
-    ascontiguousarray,
-    eye,
-    float16,
-    float32,
-    float64,
-    int32,
-    nonzero,
-    percentile,
-    random,
-    stack,
-    uint8,
-    uint32,
-    vstack,
-)
-from numpy.linalg import norm
+from numpy import eye, float32, float64, int32, nonzero, random, stack, uint32
 from numpy.typing import NDArray
-from pycolmap import Database, ImageMap, Point3D, Point3DMap, PosePrior, PosePriorCoordinateSystem
-from pycolmap import Image as PycolmapImage
+from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
 from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial, set_random_seed
 from torch import Tensor, cuda, no_grad
 
 from .find_pairs import pairs_from_poses
+from .opq import train_opq_and_encode
 from .settings import get_settings
 
 settings = get_settings()
@@ -92,14 +71,6 @@ s3_client = create_s3_client(
 def _put_reconstruction_object(key: str, body: bytes):
     print(f"Putting object in bucket {settings.reconstructions_bucket} with key {settings.reconstruction_id}/{key}")
     s3_client.put_object(Bucket=settings.reconstructions_bucket, Key=f"{settings.reconstruction_id}/{key}", Body=body)
-
-
-def _to_f32(t: Tensor) -> NDArray[float32]:
-    return t.detach().cpu().numpy().astype(float32, copy=False)
-
-
-def _to_f16(t: Tensor) -> NDArray[float16]:
-    return t.detach().cpu().numpy().astype(float16, copy=False)
 
 
 class Image:
@@ -297,78 +268,19 @@ def main():
     best_id = max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
     best = reconstructions[best_id]
 
+    metrics_builder.build_reconstruction_metrics(best)
+
     best_out = COLMAP_SFM_DIRECTORY / "best"
     best_out.mkdir(parents=True, exist_ok=True)
     best.write_text(str(best_out))
     best.export_PLY(str(best_out / "points3D.ply"))
 
-    # opq + pq
-    number_of_subvectors = 16
-    number_of_bits_per_subvector = 8
-    opq_iterations = 20
-    manifest.options.compression_opq_number_of_subvectors = number_of_subvectors
-    manifest.options.compression_opq_number_bits_per_subvector = number_of_bits_per_subvector
-    manifest.options.compression_opq_number_of_training_iterations = opq_iterations
-
-    training_descriptors = vstack([_to_f32(images[name].descriptors) for name in images.keys()])
-    dimension = int(training_descriptors.shape[1])
-
-    # Train OPQ matrix
-    opq_matrix = OPQMatrix(dimension, number_of_subvectors)
-    opq_matrix.niter = opq_iterations
-    opq_matrix.verbose = True
-    training_unit = ascontiguousarray(training_descriptors)
-    opq_matrix.train(training_unit)  # type: ignore
-    write_VectorTransform(opq_matrix, str(OPQ_MATRIX_FILE))
-
-    # Train PQ quantizer on OPQ-rotated descriptors
-    rotated_training_unit = opq_matrix.apply(training_unit)  # type: ignore
-    faiss_pq = ProductQuantizer(dimension, number_of_subvectors, number_of_bits_per_subvector)
-    faiss_pq.verbose = True
-    faiss_pq.train(rotated_training_unit)  # type: ignore
-    write_ProductQuantizer(faiss_pq, str(PQ_QUANTIZER_FILE))
-
-    # Compute metrics
-    points3d: Point3DMap = best.points3D
-    points3d_values: Iterable[Point3D] = cast(Iterable[Point3D], points3d.values())  # type: ignore
-    reconstruction_images: ImageMap = best.images
-    reconstruction_image_values: Iterable[PycolmapImage] = cast(Iterable[PycolmapImage], reconstruction_images.values())  # type: ignore
-    track_lengths = [len(p.track.elements) for p in points3d_values]
-
-    reproject_errors: List[float] = []
-    for image in reconstruction_image_values:
-        for point2d in image.points2D:
-            if point2d.point3D_id == UINT64_MAX or point2d.point3D_id not in points3d:
-                continue
-            projection: Optional[NDArray[float64]] = image.project_point(points3d[point2d.point3D_id].xyz)
-            if projection is None:
-                continue
-            reproject_errors.append(
-                float(
-                    norm(asarray(projection, dtype=float64).reshape(2) - asarray(point2d.xy, dtype=float64).reshape(2))
-                )
-            )
-
-    manifest.metrics.total_images = len(images)
-    manifest.metrics.registered_images = best.num_reg_images()
-    manifest.metrics.registration_rate = float(best.num_reg_images() / len(images) * 100.0)
-    manifest.metrics.num_3d_points = len(points3d)
-    manifest.metrics.track_length_50th_percentile = _percentile([float(L) for L in track_lengths], 50.0)
-    manifest.metrics.percent_tracks_with_length_greater_than_or_equal_to_3 = float(
-        sum(1 for L in track_lengths if L >= 3) / float(len(track_lengths)) * 100.0
+    image_codes = train_opq_and_encode(
+        manifest.options,
+        {key: images[key].descriptors for key in images.keys()},
+        str(OPQ_MATRIX_FILE),
+        str(PQ_QUANTIZER_FILE),
     )
-
-    def q(x: float, eps: float = 1e-9) -> float:
-        return float(round(x / eps) * eps)
-
-    manifest.metrics.reprojection_pixel_error_50th_percentile = q(_percentile(reproject_errors, 50.0))
-    manifest.metrics.reprojection_pixel_error_90th_percentile = q(_percentile(reproject_errors, 90.0))
-    _put_reconstruction_object(key="manifest.json", body=manifest.model_dump_json().encode("utf-8"))
-
-    print("Uploading reconstruction results")
-
-    manifest.status = "uploading"
-    _put_reconstruction_object(key="manifest.json", body=manifest.model_dump_json().encode("utf-8"))
 
     with File(str(GLOBAL_DESCRIPTORS_FILE), "w") as gfile:
         # for name, gdesc in global_descriptors.items():
@@ -376,7 +288,7 @@ def main():
             group = gfile.require_group(name)  # type: ignore
             if "global_descriptor" in group:
                 del group["global_descriptor"]
-            group.create_dataset("global_descriptor", data=_to_f32(gdesc), compression="gzip", compression_opts=3)  # type: ignore
+            group.create_dataset("global_descriptor", data=to_f32(gdesc), compression="gzip", compression_opts=3)  # type: ignore
 
     with File(str(FEATURES_FILE), "w") as ffile:
         # for name in global_descriptors.keys():  # ensures the same set/order as globals
@@ -396,20 +308,15 @@ def main():
             # write FP16 + gzip-9 + shuffle + chunks
             group.create_dataset(  # type: ignore
                 "keypoints",
-                data=_to_f16(images[name].keypoints),
+                data=to_f16(images[name].keypoints),
                 compression="gzip",
                 compression_opts=9,
                 shuffle=True,
                 chunks=True,
             )
 
-            # Descriptors -> OPQ rotate (via apply) -> PQ encode
-            descriptors_contiguous = ascontiguousarray(_to_f32(images[name].descriptors))
-            descriptors_rotated = cast(NDArray[float32], opq_matrix.apply(descriptors_contiguous))  # type: ignore
-            codes = cast(NDArray[uint8], faiss_pq.compute_codes(descriptors_rotated))  # type: ignore
-
             group.create_dataset(  # type: ignore
-                "pq_codes", data=codes, compression="gzip", compression_opts=9, shuffle=True, chunks=True
+                "pq_codes", data=image_codes[name], compression="gzip", compression_opts=9, shuffle=True, chunks=True
             )
 
     _put_reconstruction_object(key="global_descriptors.h5", body=GLOBAL_DESCRIPTORS_FILE.read_bytes())
@@ -424,13 +331,6 @@ def main():
 
     manifest.status = "succeeded"
     _put_reconstruction_object(key="manifest.json", body=manifest.model_dump_json().encode("utf-8"))
-
-
-def _percentile(xs: Sequence[float], q: float):
-    arr = asarray(xs, dtype=float64)
-    if arr.size == 0:
-        raise ValueError("Cannot compute percentile of empty array")
-    return float(percentile(arr, q))
 
 
 if __name__ == "__main__":

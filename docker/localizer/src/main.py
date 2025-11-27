@@ -10,6 +10,7 @@ from uuid import UUID
 from common.boto_clients import create_s3_client
 from common.fastapi import create_fastapi_app
 from core.classes import LocalizationMetrics
+from core.map import Map, load_map_data
 from core.rig import CameraConfig, PinholeCameraConfig
 from core.transform import Transform
 from fastapi import File, HTTPException, UploadFile
@@ -19,7 +20,6 @@ from pydantic import BaseModel
 from torch import cuda  # type: ignore
 
 from .localize import localize_image_against_reconstruction
-from .map import Map, load_map_data
 from .settings import get_settings
 
 DEVICE = "cuda" if cuda.is_available() else "cpu"
