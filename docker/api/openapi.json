@@ -4620,6 +4620,198 @@
             ],
             "title": "Percent Tracks With Length Greater Than Or Equal To 3",
             "description": "Percentage of 3D points whose track length is \u2265 3 (a common robustness threshold). Computed as 100 \u00d7 (#points with length\u22653 / #points)."
+          },
+          "all_verified_matches": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "All Verified Matches",
+            "description": "Total number of verified matches across all image pairs."
+          },
+          "all_verified_match_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "All Verified Match Rate",
+            "description": "Percentage of verified matches across all image pairs."
+          },
+          "all_verified_match_inliers_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "All Verified Match Inliers Mean",
+            "description": "Mean number of inliers for all verified matches."
+          },
+          "all_verified_match_inliers_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "All Verified Match Inliers Median",
+            "description": "Median number of inliers for all verified matches."
+          },
+          "stereo_verified_matches": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stereo Verified Matches",
+            "description": "Number of verified matches for stereo pairs (same frame, different sensors)."
+          },
+          "stereo_verified_match_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stereo Verified Match Rate",
+            "description": "Percentage of verified matches for stereo pairs."
+          },
+          "stereo_verified_match_inliers_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stereo Verified Match Inliers Mean",
+            "description": "Mean number of inliers for verified matches for stereo pairs."
+          },
+          "stereo_verified_match_inliers_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stereo Verified Match Inliers Median",
+            "description": "Median number of inliers for verified matches for stereo pairs."
+          },
+          "same_sensor_verified_matches": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Same Sensor Verified Matches",
+            "description": "Number of verified matches for same-sensor pairs (across frames)."
+          },
+          "same_sensor_verified_match_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Same Sensor Verified Match Rate",
+            "description": "Percentage of verified matches for same-sensor pairs."
+          },
+          "same_sensor_verified_match_inliers_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Same Sensor Verified Match Inliers Mean",
+            "description": "Mean number of inliers for verified matches for same-sensor pairs."
+          },
+          "same_sensor_verified_match_inliers_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Same Sensor Verified Match Inliers Median",
+            "description": "Median number of inliers for verified matches for same-sensor pairs."
+          },
+          "cross_sensor_verified_matches": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cross Sensor Verified Matches",
+            "description": "Number of verified matches for cross-sensor pairs (across frames)."
+          },
+          "cross_sensor_verified_match_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cross Sensor Verified Match Rate",
+            "description": "Percentage of verified matches for cross-sensor pairs."
+          },
+          "cross_sensor_verified_match_inliers_mean": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cross Sensor Verified Match Inliers Mean",
+            "description": "Mean number of inliers for verified matches for cross-sensor pairs."
+          },
+          "cross_sensor_verified_match_inliers_median": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cross Sensor Verified Match Inliers Median",
+            "description": "Median number of inliers for verified matches for cross-sensor pairs."
           }
         },
         "type": "object",

@@ -21,12 +21,12 @@ from torch import Tensor, from_numpy  # type: ignore
 @dataclass(frozen=True)
 class Map:
     reconstruction: Reconstruction
-    image_names: list[str]  # rows order for global_matrix
-    image_ids_in_order: list[int]  # same length/order as image_names/global_matrix
-    image_id_by_name: dict[str, int]  # optional lookup by name (subset)
-    global_matrix: Tensor  # (N, Dg) aligned with image_names
-    keypoints: Dict[int, Tensor]  # only for kept image_ids
-    descriptors: Dict[int, Tensor]  # only for kept image_ids
+    image_names: list[str]
+    image_ids_in_order: list[int]
+    image_id_by_name: dict[str, int]
+    global_matrix: Tensor
+    keypoints: Dict[int, Tensor]
+    descriptors: Dict[int, Tensor]
 
 
 def load_map_data(reconstruction_path: Path, device: str) -> Map:

@@ -1894,6 +1894,7 @@ version = "0.1.0"
 source = { virtual = "docker/orchestrator" }
 dependencies = [
     { name = "common" },
+    { name = "core" },
     { name = "datamodels" },
     { name = "debugpy" },
     { name = "pydantic-settings" },
@@ -1902,6 +1903,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "common", editable = "packages/common" },
+    { name = "core", editable = "packages/core" },
     { name = "datamodels", editable = "packages/datamodels" },
     { name = "debugpy", specifier = ">=1.8.17" },
     { name = "pydantic-settings", specifier = ">=2.11.0" },

@@ -3064,15 +3064,31 @@ components:
           single_threaded: true
           rig_verification: true
         metrics:
-          track_length_50th_percentile: 9.301444243932576
-          total_images: 0
+          all_verified_match_inliers_median: 1.2315135367772556
+          cross_sensor_verified_matches: 9
           reprojection_pixel_error_50th_percentile: 2.3021358869347655
-          average_keypoints_per_image: 5.637376656633329
-          reprojection_pixel_error_90th_percentile: 7.061401241503109
+          stereo_verified_match_rate: 1.4894159098541704
+          same_sensor_verified_match_inliers_median: 9.965781217890562
           num_3d_points: 5
+          same_sensor_verified_match_rate: 4.965218492984954
+          all_verified_match_inliers_mean: 7.386281948385884
+          cross_sensor_verified_match_inliers_mean: 8.762042012749001
+          stereo_verified_match_inliers_median: 7.457744773683766
+          all_verified_matches: 2
+          average_keypoints_per_image: 5.637376656633329
+          cross_sensor_verified_match_rate: 6.683562403749608
           registration_rate: 1.4658129805029452
+          same_sensor_verified_match_inliers_mean: 5.025004791520295
           registered_images: 6
           percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
+          same_sensor_verified_matches: 1
+          track_length_50th_percentile: 9.301444243932576
+          cross_sensor_verified_match_inliers_median: 9.018348186070783
+          all_verified_match_rate: 4.145608029883936
+          total_images: 0
+          reprojection_pixel_error_90th_percentile: 7.061401241503109
+          stereo_verified_matches: 1
+          stereo_verified_match_inliers_mean: 6.84685269835264
         capture_id: capture_id
         error: error
         status: queued
@@ -3110,15 +3126,31 @@ components:
       title: ReconstructionManifest
     ReconstructionMetrics:
       example:
-        track_length_50th_percentile: 9.301444243932576
-        total_images: 0
+        all_verified_match_inliers_median: 1.2315135367772556
+        cross_sensor_verified_matches: 9
         reprojection_pixel_error_50th_percentile: 2.3021358869347655
-        average_keypoints_per_image: 5.637376656633329
-        reprojection_pixel_error_90th_percentile: 7.061401241503109
+        stereo_verified_match_rate: 1.4894159098541704
+        same_sensor_verified_match_inliers_median: 9.965781217890562
         num_3d_points: 5
+        same_sensor_verified_match_rate: 4.965218492984954
+        all_verified_match_inliers_mean: 7.386281948385884
+        cross_sensor_verified_match_inliers_mean: 8.762042012749001
+        stereo_verified_match_inliers_median: 7.457744773683766
+        all_verified_matches: 2
+        average_keypoints_per_image: 5.637376656633329
+        cross_sensor_verified_match_rate: 6.683562403749608
         registration_rate: 1.4658129805029452
+        same_sensor_verified_match_inliers_mean: 5.025004791520295
         registered_images: 6
         percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
+        same_sensor_verified_matches: 1
+        track_length_50th_percentile: 9.301444243932576
+        cross_sensor_verified_match_inliers_median: 9.018348186070783
+        all_verified_match_rate: 4.145608029883936
+        total_images: 0
+        reprojection_pixel_error_90th_percentile: 7.061401241503109
+        stereo_verified_matches: 1
+        stereo_verified_match_inliers_mean: 6.84685269835264
       properties:
         total_images:
           nullable: true
@@ -3145,6 +3177,54 @@ components:
           nullable: true
           type: number
         percent_tracks_with_length_greater_than_or_equal_to_3:
+          nullable: true
+          type: number
+        all_verified_matches:
+          nullable: true
+          type: integer
+        all_verified_match_rate:
+          nullable: true
+          type: number
+        all_verified_match_inliers_mean:
+          nullable: true
+          type: number
+        all_verified_match_inliers_median:
+          nullable: true
+          type: number
+        stereo_verified_matches:
+          nullable: true
+          type: integer
+        stereo_verified_match_rate:
+          nullable: true
+          type: number
+        stereo_verified_match_inliers_mean:
+          nullable: true
+          type: number
+        stereo_verified_match_inliers_median:
+          nullable: true
+          type: number
+        same_sensor_verified_matches:
+          nullable: true
+          type: integer
+        same_sensor_verified_match_rate:
+          nullable: true
+          type: number
+        same_sensor_verified_match_inliers_mean:
+          nullable: true
+          type: number
+        same_sensor_verified_match_inliers_median:
+          nullable: true
+          type: number
+        cross_sensor_verified_matches:
+          nullable: true
+          type: integer
+        cross_sensor_verified_match_rate:
+          nullable: true
+          type: number
+        cross_sensor_verified_match_inliers_mean:
+          nullable: true
+          type: number
+        cross_sensor_verified_match_inliers_median:
           nullable: true
           type: number
       title: ReconstructionMetrics
