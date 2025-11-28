@@ -4,7 +4,7 @@ from io import BytesIO
 from itertools import combinations
 from pathlib import Path
 from tarfile import open as open_tar
-from typing import Literal
+from typing import Iterable, Iterator, Literal, TypeVar
 
 import torch
 from common.boto_clients import create_s3_client
@@ -23,7 +23,8 @@ from lightglue.superpoint import SuperPoint  # type: ignore
 from neural_networks.dir import DIR, load_DIR
 from neural_networks.image import create_image_tensors
 from neural_networks.lightglue import load_lightglue, load_superpoint
-from numpy import eye, float32, float64, int32, random, uint32
+from numpy import eye, float32, float64, int32, intp, nonzero, random, stack, uint32
+from numpy.typing import NDArray
 from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
 from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial, set_random_seed
@@ -66,6 +67,15 @@ s3_client = create_s3_client(
     s3_endpoint_url=settings.s3_endpoint_url, s3_access_key=settings.s3_access_key, s3_secret_key=settings.s3_secret_key
 )
 
+T = TypeVar("T")
+
+
+def iterate_and_log(iterable: Iterable[T], every: int = 1, label: str = "Progress") -> Iterator[T]:
+    for i, item in enumerate(iterable, start=1):
+        if i % every == 0:
+            print(f"{label}: {i} items processed", flush=True)
+        yield item
+
 
 def _put_reconstruction_object(key: str, body: bytes):
     print(f"Putting object in bucket {settings.reconstructions_bucket} with key {settings.reconstruction_id}/{key}")
@@ -80,8 +90,6 @@ class Image:
         superpoint: SuperPoint,
         dir: DIR,
     ):
-        print(f"  {image_path}")
-
         with open(image_path, "rb") as img_file:
             rbg_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(
                 camera_rotation, img_file.read(), device=DEVICE
@@ -124,7 +132,7 @@ def main():
 
     # Load capture config
     with open(CAPTURE_SESSION_DIRECTORY / "config.json", "rb") as file:
-        config = Config.model_validate(file.read().decode("utf-8"))
+        config = Config.model_validate_json(file.read().decode("utf-8"))
 
     # Load and validate rigs
     rigs = {rig.id: Rig(rig, (CAPTURE_SESSION_DIRECTORY / f"{rig.id}/frames.csv").read_text()) for rig in config.rigs}
@@ -168,7 +176,6 @@ def main():
     superpoint = load_superpoint(max_num_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
 
     # Extract global descriptors and keypoints/descriptors for all images
-    print("Extracting features")
     images = {
         f"{rig_id}/{camera[0].id}/{frame_id}.jpg": Image(
             image_path=str(CAPTURE_SESSION_DIRECTORY / f"{rig_id}/{camera[0].id}/{frame_id}.jpg"),
@@ -176,9 +183,15 @@ def main():
             superpoint=superpoint,
             dir=dir,
         )
-        for rig_id, rig in rigs.items()
-        for camera in rig.cameras.values()
-        for frame_id in rig.frame_poses.keys()
+        for rig_id, camera, frame_id in iterate_and_log(
+            (
+                (rig_id, camera, frame_id)
+                for rig_id, rig in rigs.items()
+                for camera in rig.cameras.values()
+                for frame_id in rig.frame_poses.keys()
+            ),
+            label="Extracting features",
+        )
     }
 
     # Move keypoints to cpu and convert to numpy
@@ -258,17 +271,24 @@ def main():
                 "image_size": torch.tensor([images[imageB].size], device=DEVICE),
             },
         })["matches0"][0]
-        for imageA, imageB in canonical_pairs
+        for imageA, imageB in iterate_and_log(canonical_pairs, label="Matching features")
     }
 
     # Move matches to CPU and convert to numpy
     matches = {key: value.cpu().numpy().astype(int32) for key, value in matches_gpu.items()}
 
-    # Filter out invalid matches (-1 entries)
-    valid_matches = {
-        (image_a, image_b): matches[(image_a, image_b)][matches[(image_a, image_b)] >= 0]
-        for image_a, image_b in canonical_pairs
-    }
+    # Extract keypoint indices for matches
+    match_indices: dict[tuple[str, str], tuple[NDArray[intp], NDArray[intp]]] = {}
+    for image_a, image_b in canonical_pairs:
+        image_a_keypoint_to_image_b_keypoint = matches[(image_a, image_b)]
+
+        # Create mask of actual matches (where the keypoint index in image B for a keypoint in image A is not -1)
+        mask = image_a_keypoint_to_image_b_keypoint >= 0
+
+        # Extract indices of valid matches
+        image_a_indices = nonzero(mask)[0]
+        image_b_indices = image_a_keypoint_to_image_b_keypoint[mask]
+        match_indices[(image_a, image_b)] = (image_a_indices, image_b_indices)
 
     # Create COLMAP database
     database = Database.open(str(COLMAP_DB_PATH))
@@ -282,7 +302,9 @@ def main():
             for frame_id, transform in rig.frame_poses.items():
                 image_name = f"{rig_id}/{camera_id}/{frame_id}.jpg"
 
-                colmap_image_ids[image_name] = database.write_image(pycolmapImage(image_name, colmap_camera_id))
+                colmap_image_ids[image_name] = database.write_image(
+                    pycolmapImage(name=image_name, camera_id=colmap_camera_id)
+                )
                 database.write_keypoints(colmap_image_ids[image_name], keypoints[image_name])
 
                 # Only write pose prior for images from reference sensors (all others are implied by rig)
@@ -301,8 +323,11 @@ def main():
 
     # Write matches to database
     for a, b in canonical_pairs:
+        (image_a_indices, image_b_indices) = match_indices[(a, b)]
         database.write_matches(
-            colmap_image_ids[a], colmap_image_ids[b], valid_matches[(a, b)].astype(uint32, copy=False)
+            colmap_image_ids[a],
+            colmap_image_ids[b],
+            stack((image_a_indices, image_b_indices), axis=1).astype(uint32, copy=False),
         )
 
     # Close database
