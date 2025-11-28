@@ -12,9 +12,7 @@ from core.map import Map
 from core.rig import PinholeCameraConfig
 from core.transform import Quaternion, Transform, Vector3
 from core.ugh import create_colmap_camera
-from neural_networks.dir import load_DIR
 from neural_networks.image import create_image_tensors
-from neural_networks.lightglue import load_lightglue, load_superpoint
 from numpy.typing import NDArray
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstruction
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
@@ -37,6 +35,9 @@ if environ.get("CODEGEN"):
     superpoint: Any = None
     lightglue: Any = None
 else:
+    from neural_networks.dir import load_DIR
+    from neural_networks.lightglue import load_lightglue, load_superpoint
+
     DEVICE = "cuda" if cuda.is_available() else "cpu"
     print(f"Using device: {DEVICE}")
 
