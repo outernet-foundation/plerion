@@ -525,7 +525,6 @@ source = { editable = "packages/core" }
 dependencies = [
     { name = "common" },
     { name = "opencv-python" },
-    { name = "pycolmap" },
     { name = "scipy" },
 ]
 
@@ -538,7 +537,6 @@ dev = [
 requires-dist = [
     { name = "common", editable = "packages/common" },
     { name = "opencv-python", specifier = ">=4.10.0" },
-    { name = "pycolmap", specifier = ">=3.13.0" },
     { name = "scipy", specifier = ">=1.16.3" },
 ]
 

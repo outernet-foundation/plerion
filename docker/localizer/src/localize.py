@@ -11,10 +11,11 @@ from core.classes import LocalizationMetrics
 from core.map import Map
 from core.rig import PinholeCameraConfig
 from core.transform import Quaternion, Transform, Vector3
-from core.ugh import create_colmap_camera
+from core.ugh import transform_intrinsics
 from neural_networks.image import create_image_tensors
 from numpy.typing import NDArray
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstruction
+from pycolmap import Camera as ColmapCamera
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
 from torch import cuda, inference_mode, mv, topk  # type: ignore
 
@@ -57,7 +58,9 @@ reconstructions: dict[UUID, Reconstruction] = {}
 async def localize_image_against_reconstruction(
     map: Map, camera: PinholeCameraConfig, image: bytes
 ) -> tuple[Transform, LocalizationMetrics]:
-    pycolmap_camera = create_colmap_camera(camera)
+    pycolmap_camera = ColmapCamera(
+        width=camera.width, height=camera.height, model="PINHOLE", params=transform_intrinsics(camera)
+    )
     rgb_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(camera.rotation, image, DEVICE)
 
     print("Extracting features")

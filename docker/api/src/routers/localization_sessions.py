@@ -11,7 +11,7 @@ from plerion_localizer_client import ApiClient, Configuration
 from plerion_localizer_client.api.default_api import DefaultApi
 from plerion_localizer_client.models.camera import Camera as LocalizeCamera
 from plerion_localizer_client.models.load_state_response import LoadStateResponse
-from plerion_localizer_client.models.pinhole_camera import PinholeCamera as LocalizePinholeCamera
+from plerion_localizer_client.models.pinhole_camera_config import PinholeCameraConfig
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -79,7 +79,7 @@ async def set_localization_session_camera_intrinsics(
     async with ApiClient(Configuration(host=url)) as api_client:
         try:
             await DefaultApi(api_client).set_camera_intrinsics(
-                LocalizeCamera(actual_instance=LocalizePinholeCamera.model_validate(camera.model_dump()))
+                LocalizeCamera(actual_instance=PinholeCameraConfig.model_validate(camera.model_dump()))
             )
         except Exception as e:
             raise HTTPException(502, f"session backend unreachable: {e}") from e

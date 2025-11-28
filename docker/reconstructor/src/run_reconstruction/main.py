@@ -8,16 +8,9 @@ from typing import Iterable, Iterator, Literal, TypeVar
 
 import torch
 from common.boto_clients import create_s3_client
-from core.reconstruction_manifest import (
-    ReconstructionManifest,
-    ReconstructionMetricsBuilder,
-    ReconstructionOptionsBuilder,
-)
+from core.reconstruction_manifest import ReconstructionManifest
 from core.rig import Config
-from core.ugh import Rig
 from core.utility import to_f16, to_f32
-
-# from core.ugh import create_colmap_rig
 from h5py import File
 from lightglue.superpoint import SuperPoint  # type: ignore
 from neural_networks.dir import DIR, load_DIR
@@ -31,7 +24,10 @@ from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial,
 from torch import cuda, no_grad
 
 from .find_pairs import pairs_from_poses
+from .metrics_builder import MetricsBuilder
 from .opq import train_opq_and_encode
+from .options_builder import OptionsBuilder
+from .rig import Rig
 from .settings import get_settings
 
 settings = get_settings()
@@ -117,8 +113,8 @@ def main():
         set_random_seed(manifest.options.random_seed)
 
     # Create builders for options and metrics
-    options_builder = ReconstructionOptionsBuilder(manifest.options)
-    metrics_builder = ReconstructionMetricsBuilder(COLMAP_DB_PATH)
+    options_builder = OptionsBuilder(manifest.options)
+    metrics_builder = MetricsBuilder(COLMAP_DB_PATH)
 
     # Download and extract capture session tarball
     print("Downloading capture session")
