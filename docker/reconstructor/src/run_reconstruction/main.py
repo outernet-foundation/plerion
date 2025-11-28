@@ -161,11 +161,13 @@ def main():
     PAIRS_FILE.parent.mkdir(parents=True, exist_ok=True)
     PAIRS_FILE.write_text("\n".join(f"{a} {b}" for a, b in canonical_pairs))
 
-    # Extract global descriptors and keypoints/descriptors for all images
+    # Load DIR and SuperPoint models
     print("Loading DIR")
     dir = load_DIR(DEVICE)
     print("Loading SuperPoint")
     superpoint = load_superpoint(max_num_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
+
+    # Extract global descriptors and keypoints/descriptors for all images
     print("Extracting features")
     images = {
         f"{rig_id}/{camera[0].id}/{frame_id}.jpg": Image(
@@ -237,9 +239,11 @@ def main():
                 "pq_codes", data=image_codes[name], compression="gzip", compression_opts=9, shuffle=True, chunks=True
             )
 
-    # Match features for all image pairs
+    # Load LightGlue model
     print("Loading LightGlue")
     lightglue = load_lightglue(DEVICE)
+
+    # Match features for all image pairs
     print("Matching features")
     matches_gpu = {
         (imageA, imageB): lightglue({
@@ -295,7 +299,7 @@ def main():
     # Apply rig configuration to database (must be done after writing cameras and images)
     apply_rig_config([rig.colmap_rig_config for rig in rigs.values()], database)
 
-    # Write  matches to database
+    # Write matches to database
     for a, b in canonical_pairs:
         database.write_matches(
             colmap_image_ids[a], colmap_image_ids[b], valid_matches[(a, b)].astype(uint32, copy=False)
@@ -331,6 +335,7 @@ def main():
         manifest.error = "No model was created"
 
     # Choose the reconstruction with the most registered images
+    # TODO: Write information to metrics about this for visibility
     best_id = max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
     best = reconstructions[best_id]
 
