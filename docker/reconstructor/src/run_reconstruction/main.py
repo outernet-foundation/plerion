@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import json
 from io import BytesIO
 from itertools import combinations
 from pathlib import Path
 from tarfile import open as open_tar
-from typing import Tuple
+from typing import Literal
 
 import torch
 from common.boto_clients import create_s3_client
@@ -20,15 +19,15 @@ from core.utility import to_f16, to_f32
 
 # from core.ugh import create_colmap_rig
 from h5py import File
-from neural_networks.dir import load_DIR
+from lightglue.superpoint import SuperPoint  # type: ignore
+from neural_networks.dir import DIR, load_DIR
 from neural_networks.image import create_image_tensors
 from neural_networks.lightglue import load_lightglue, load_superpoint
-from numpy import eye, float32, float64, int32, nonzero, random, stack, uint32
-from numpy.typing import NDArray
+from numpy import eye, float32, float64, int32, random, uint32
 from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
 from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial, set_random_seed
-from torch import Tensor, cuda, no_grad
+from torch import cuda, no_grad
 
 from .find_pairs import pairs_from_poses
 from .opq import train_opq_and_encode
@@ -74,120 +73,81 @@ def _put_reconstruction_object(key: str, body: bytes):
 
 
 class Image:
-    def __init__(self, colmap_id: int, global_descriptor: Tensor, keypoints: Tensor, descriptors: Tensor, size: int):
-        self.colmap_id = colmap_id
-        self.global_descriptor = global_descriptor
-        self.keypoints = keypoints
-        self.descriptors = descriptors
-        self.size = size
+    def __init__(
+        self,
+        image_path: str,
+        camera_rotation: Literal["None", "90_CW", "180", "90_CCW"],
+        superpoint: SuperPoint,
+        dir: DIR,
+    ):
+        print(f"  {image_path}")
+
+        with open(image_path, "rb") as img_file:
+            rbg_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(
+                camera_rotation, img_file.read(), device=DEVICE
+            )
+
+        with no_grad():
+            superpoint_output = superpoint({"image": grayscale_image_tensor})
+            self.global_descriptor = dir({"image": rbg_image_tensor})["global_descriptor"][0]
+            self.keypoints = superpoint_output["keypoints"][0]
+            self.descriptors = superpoint_output["descriptors"][0]
+            self.size = image_size
 
 
 def main():
-    print(f"Starting reconstruction {settings.reconstruction_id}")
-
+    # Load reconstruction manifest
     manifest = ReconstructionManifest.model_validate_json(
         s3_client.get_object(Bucket=settings.reconstructions_bucket, Key=f"{settings.reconstruction_id}/manifest.json")[
             "Body"
         ].read()
     )
 
-    options_builder = ReconstructionOptionsBuilder(manifest.options)
-    metrics_builder = ReconstructionMetricsBuilder(COLMAP_DB_PATH)
-
+    # Set random seed if one is provided
     if manifest.options.random_seed is not None:
         random.seed(manifest.options.random_seed)
         set_random_seed(manifest.options.random_seed)
 
-    dir = load_DIR(DEVICE)
-    superpoint = load_superpoint(max_num_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
-    lightglue = load_lightglue(DEVICE)
+    # Create builders for options and metrics
+    options_builder = ReconstructionOptionsBuilder(manifest.options)
+    metrics_builder = ReconstructionMetricsBuilder(COLMAP_DB_PATH)
 
-    if COLMAP_DB_PATH.exists():
-        COLMAP_DB_PATH.unlink()
-    database = Database.open(str(COLMAP_DB_PATH))
-
-    print("Fetching capture data")
-    capture_tar = s3_client.get_object(Bucket=settings.captures_bucket, Key=f"{settings.capture_id}.tar")["Body"].read()
-
-    # extract tar to temporary directory
-    with open_tar(fileobj=BytesIO(capture_tar), mode="r:*") as tar:
+    # Download and extract capture session tarball
+    print("Downloading capture session")
+    with open_tar(
+        fileobj=BytesIO(
+            s3_client.get_object(Bucket=settings.captures_bucket, Key=f"{settings.capture_id}.tar")["Body"].read()
+        ),
+        mode="r:*",
+    ) as tar:
         tar.extractall(path=CAPTURE_SESSION_DIRECTORY)
 
-    def _get_capture_object(key: str) -> bytes:
-        file_path = CAPTURE_SESSION_DIRECTORY / key
-        with open(file_path, "rb") as f:
-            return f.read()
+    # Load capture config
+    with open(CAPTURE_SESSION_DIRECTORY / "config.json", "rb") as file:
+        config = Config.model_validate(file.read().decode("utf-8"))
 
-    rigs: dict[str, Rig] = {
-        rig.id: Rig(rig, _get_capture_object(f"{rig.id}/frames.csv").decode("utf-8"))
-        for rig in Config.model_validate(json.loads(_get_capture_object("config.json").decode("utf-8"))).rigs
-    }
-    images: dict[str, Image] = {}
-    for rig_id, rig in rigs.items():
-        for camera in rig.cameras.values():
-            colmap_camera_id = database.write_camera(camera[1])
+    # Load and validate rigs
+    rigs = {rig.id: Rig(rig, (CAPTURE_SESSION_DIRECTORY / f"{rig.id}/frames.csv").read_text()) for rig in config.rigs}
 
-            for frame_id, transform in rig.frame_poses.items():
-                name = f"{rig_id}/{camera[0].id}/{frame_id}.jpg"
-                print(f"Processing image: {name}")
-
-                colmap_image_id = database.write_image(pycolmapImage(name=name, camera_id=colmap_camera_id))
-
-                if camera[0].ref_sensor:
-                    database.write_pose_prior(
-                        colmap_image_id,
-                        PosePrior(
-                            position=transform.translation.reshape(3, 1),
-                            position_covariance=(POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64),
-                            coordinate_system=PosePriorCoordinateSystem.CARTESIAN,
-                        ),
-                    )
-
-                rbg_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(
-                    camera[0].camera_config.rotation,
-                    _get_capture_object(f"{rig_id}/{camera[0].id}/{frame_id}.jpg"),
-                    device=DEVICE,
-                )
-
-                with no_grad():
-                    # Extract global descriptor using NetVLAD
-                    global_descriptor = dir({"image": rbg_image_tensor})["global_descriptor"][0]
-
-                    # Extract local features and descriptors using SuperPoint
-                    superpoint_output = superpoint({"image": grayscale_image_tensor})
-                    keypoints = superpoint_output["keypoints"][0]
-                    descriptors = superpoint_output["descriptors"][0]
-
-                    keypoints_array = keypoints.detach().cpu().numpy().astype(float32, copy=False)
-                    database.write_keypoints(colmap_image_id, keypoints_array)
-
-                images[name] = Image(
-                    colmap_id=colmap_image_id,
-                    global_descriptor=global_descriptor,
-                    keypoints=keypoints,
-                    descriptors=descriptors,
-                    size=image_size,
-                )
-
-    metrics_builder.metrics.average_keypoints_per_image = float(
-        sum(len(img.keypoints) for img in images.values()) / len(images)
+    # Find proximal frame pairs across all rigs
+    proximal_frame_pairs = pairs_from_poses(
+        {
+            (rig_id, frame_id): transform
+            for rig_id, rig in rigs.items()
+            for frame_id, transform in rig.frame_poses.items()
+        },
+        manifest.options.neighbors_count or DEFAULT_NEIGHBORS_COUNT,
     )
 
+    # Determine image pairs to match
     pairs = [
-        # Cross-frame, cross-sensor pairs by frame proximity
+        # Cross-frame image pairs by frame proximity
         (f"{rig_id_a}/{camera_a[0].id}/{frame_id_a}.jpg", f"{rig_id_b}/{camera_b[0].id}/{frame_id_b}.jpg")
-        for (rig_id_a, frame_id_a), (rig_id_b, frame_id_b) in pairs_from_poses(
-            {
-                (rig_id, frame_id): transform
-                for rig_id, rig in rigs.items()
-                for frame_id, transform in rig.frame_poses.items()
-            },
-            min(manifest.options.neighbors_count or DEFAULT_NEIGHBORS_COUNT, max(1, len(images) - 1)),
-        )
+        for (rig_id_a, frame_id_a), (rig_id_b, frame_id_b) in proximal_frame_pairs
         for camera_a in rigs[rig_id_a].cameras.values()
         for camera_b in rigs[rig_id_b].cameras.values()
     ] + [
-        # Intra-frame, cross-sensor pairs
+        # Intra-frame, cross-sensor image pairs
         (f"{rig_id}/{camera_a[0].id}/{frame_id}.jpg", f"{rig_id}/{camera_b[0].id}/{frame_id}.jpg")
         for rig_id, rig in rigs.items()
         for frame_id in rig.frame_poses.keys()
@@ -197,84 +157,40 @@ def main():
     # Canonicalize and deduplicate pairs
     canonical_pairs = sorted({tuple(sorted((a, b))) for a, b in pairs if a != b})
 
+    # Write pairs to file
     PAIRS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    PAIRS_FILE.write_text("\n".join(f"{a} {b}" for a, b in sorted({tuple(sorted((a, b))) for a, b in pairs if a != b})))
+    PAIRS_FILE.write_text("\n".join(f"{a} {b}" for a, b in canonical_pairs))
 
-    # Match features using SuperGlue and add matches to COLMAP database
-    all_matches: dict[Tuple[str, str], Tensor] = {}
-    for imageA, imageB in canonical_pairs:
-        print(f"  {imageA}:{imageB}")
-
-        image_size = torch.tensor([images[imageA].size], device=DEVICE)
-
-        all_matches[(imageA, imageB)] = lightglue({
-            "image0": {
-                "keypoints": images[imageA].keypoints.unsqueeze(0),
-                "descriptors": images[imageA].descriptors.unsqueeze(0),
-                "image_size": image_size,
-            },
-            "image1": {
-                "keypoints": images[imageB].keypoints.unsqueeze(0),
-                "descriptors": images[imageB].descriptors.unsqueeze(0),
-                "image_size": image_size,
-            },
-        })["matches0"][0]
-
-    valid_matches: dict[Tuple[str, str], NDArray[int32]] = {}
-    for imageA, imageB in canonical_pairs:
-        matches = all_matches[(imageA, imageB)].cpu().numpy().astype(int32)
-
-        # Filter invalid matches
-        valid_mask = matches >= 0
-        query_indices = nonzero(valid_mask)[0]
-        train_indices = matches[valid_mask]
-
-        # Convert matches to COLMAP format
-        valid_matches[(imageA, imageB)] = stack((query_indices, train_indices), axis=1).astype(int32)
-
-    # Write two-view geometries (matches) to database
-    for a, b in canonical_pairs:
-        database.write_matches(
-            images[a].colmap_id, images[b].colmap_id, valid_matches[(a, b)].astype(uint32, copy=False)
+    # Extract global descriptors and keypoints/descriptors for all images
+    print("Loading DIR")
+    dir = load_DIR(DEVICE)
+    print("Loading SuperPoint")
+    superpoint = load_superpoint(max_num_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
+    print("Extracting features")
+    images = {
+        f"{rig_id}/{camera[0].id}/{frame_id}.jpg": Image(
+            image_path=str(CAPTURE_SESSION_DIRECTORY / f"{rig_id}/{camera[0].id}/{frame_id}.jpg"),
+            camera_rotation=camera[0].camera_config.rotation,
+            superpoint=superpoint,
+            dir=dir,
         )
+        for rig_id, rig in rigs.items()
+        for camera in rig.cameras.values()
+        for frame_id in rig.frame_poses.keys()
+    }
 
-    # Apply rig configuration to database
-    # (This must be done after all cameras and images have been added)
-    apply_rig_config([rig.colmap_rig_config for rig in rigs.values()], database)
+    # Move keypoints to cpu and convert to numpy
+    keypoints = {
+        name: image.keypoints.detach().cpu().numpy().astype(float32, copy=False) for name, image in images.items()
+    }
 
-    database.close()
-
-    match_spatial(
-        database_path=str(COLMAP_DB_PATH),
-        matching_options=options_builder.feature_matching_options(),
-        verification_options=options_builder.two_view_geometry_options(),
+    # Compute and store average keypoints per image metric
+    metrics_builder.metrics.average_keypoints_per_image = float(
+        sum(len(img.keypoints) for img in images.values()) / len(images)
     )
 
-    metrics_builder.build_verified_matches_metrics(canonical_pairs)
-
-    CAPTURE_SESSION_DIRECTORY.mkdir(parents=True, exist_ok=True)
-    reconstructions = incremental_mapping(
-        database_path=str(COLMAP_DB_PATH),
-        image_path=str(CAPTURE_SESSION_DIRECTORY),
-        output_path=str(COLMAP_SFM_DIRECTORY),
-        options=options_builder.incremental_pipeline_options(),
-    )
-
-    if len(reconstructions) == 0:
-        manifest.status = "failed"
-        manifest.error = "No model was created"
-
-    # Choose the reconstruction with the most registered images
-    best_id = max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
-    best = reconstructions[best_id]
-
-    metrics_builder.build_reconstruction_metrics(best)
-
-    best_out = COLMAP_SFM_DIRECTORY / "best"
-    best_out.mkdir(parents=True, exist_ok=True)
-    best.write_text(str(best_out))
-    best.export_PLY(str(best_out / "points3D.ply"))
-
+    # Train OPQ and PQ, and encode all image descriptors
+    print("Training OPQ and PQ, and encoding descriptors")
     image_codes = train_opq_and_encode(
         manifest.options,
         {key: images[key].descriptors for key in images.keys()},
@@ -282,6 +198,8 @@ def main():
         str(PQ_QUANTIZER_FILE),
     )
 
+    # Write global descriptors and features to H5 files
+    print("Writing global descriptors and features to H5 files")
     with File(str(GLOBAL_DESCRIPTORS_FILE), "w") as gfile:
         # for name, gdesc in global_descriptors.items():
         for name, gdesc in ((name, images[name].global_descriptor) for name in images.keys()):
@@ -318,6 +236,111 @@ def main():
             group.create_dataset(  # type: ignore
                 "pq_codes", data=image_codes[name], compression="gzip", compression_opts=9, shuffle=True, chunks=True
             )
+
+    # Match features for all image pairs
+    print("Loading LightGlue")
+    lightglue = load_lightglue(DEVICE)
+    print("Matching features")
+    matches_gpu = {
+        (imageA, imageB): lightglue({
+            "image0": {
+                "keypoints": images[imageA].keypoints.unsqueeze(0),
+                "descriptors": images[imageA].descriptors.unsqueeze(0),
+                "image_size": torch.tensor([images[imageA].size], device=DEVICE),
+            },
+            "image1": {
+                "keypoints": images[imageB].keypoints.unsqueeze(0),
+                "descriptors": images[imageB].descriptors.unsqueeze(0),
+                "image_size": torch.tensor([images[imageB].size], device=DEVICE),
+            },
+        })["matches0"][0]
+        for imageA, imageB in canonical_pairs
+    }
+
+    # Move matches to CPU and convert to numpy
+    matches = {key: value.cpu().numpy().astype(int32) for key, value in matches_gpu.items()}
+
+    # Filter out invalid matches (-1 entries)
+    valid_matches = {
+        (image_a, image_b): matches[(image_a, image_b)][matches[(image_a, image_b)] >= 0]
+        for image_a, image_b in canonical_pairs
+    }
+
+    # Create COLMAP database
+    database = Database.open(str(COLMAP_DB_PATH))
+
+    # Write cameras, images, keypoints, and pose priors to database
+    colmap_image_ids: dict[str, int] = {}
+    for rig_id, rig in rigs.items():
+        for camera_id, camera in rig.cameras.items():
+            colmap_camera_id = database.write_camera(camera[1])
+
+            for frame_id, transform in rig.frame_poses.items():
+                image_name = f"{rig_id}/{camera_id}/{frame_id}.jpg"
+
+                colmap_image_ids[image_name] = database.write_image(pycolmapImage(image_name, colmap_camera_id))
+                database.write_keypoints(colmap_image_ids[image_name], keypoints[image_name])
+
+                # Only write pose prior for images from reference sensors (all others are implied by rig)
+                if camera[0].ref_sensor:
+                    database.write_pose_prior(
+                        colmap_image_ids[image_name],
+                        PosePrior(
+                            position=transform.translation.reshape(3, 1),
+                            position_covariance=(POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64),
+                            coordinate_system=PosePriorCoordinateSystem.CARTESIAN,
+                        ),
+                    )
+
+    # Apply rig configuration to database (must be done after writing cameras and images)
+    apply_rig_config([rig.colmap_rig_config for rig in rigs.values()], database)
+
+    # Write  matches to database
+    for a, b in canonical_pairs:
+        database.write_matches(
+            colmap_image_ids[a], colmap_image_ids[b], valid_matches[(a, b)].astype(uint32, copy=False)
+        )
+
+    # Close database
+    database.close()
+
+    # Perform rig-aware geometric verification of matches
+    print("Verifying geometry for matches")
+    match_spatial(
+        database_path=str(COLMAP_DB_PATH),
+        matching_options=options_builder.feature_matching_options(),
+        verification_options=options_builder.two_view_geometry_options(),
+    )
+
+    # Compute and store verified matches metrics
+    metrics_builder.build_verified_matches_metrics(canonical_pairs)
+
+    # Run incremental mapping
+    print("Running incremental mapping")
+    CAPTURE_SESSION_DIRECTORY.mkdir(parents=True, exist_ok=True)
+    reconstructions = incremental_mapping(
+        database_path=str(COLMAP_DB_PATH),
+        image_path=str(CAPTURE_SESSION_DIRECTORY),
+        output_path=str(COLMAP_SFM_DIRECTORY),
+        options=options_builder.incremental_pipeline_options(),
+    )
+
+    # Check that at least one reconstruction was created
+    if len(reconstructions) == 0:
+        manifest.status = "failed"
+        manifest.error = "No model was created"
+
+    # Choose the reconstruction with the most registered images
+    best_id = max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
+    best = reconstructions[best_id]
+
+    # Compute and store reconstruction metrics
+    metrics_builder.build_reconstruction_metrics(best)
+
+    best_out = COLMAP_SFM_DIRECTORY / "best"
+    best_out.mkdir(parents=True, exist_ok=True)
+    best.write_text(str(best_out))
+    best.export_PLY(str(best_out / "points3D.ply"))
 
     _put_reconstruction_object(key="global_descriptors.h5", body=GLOBAL_DESCRIPTORS_FILE.read_bytes())
     _put_reconstruction_object(key="features.h5", body=FEATURES_FILE.read_bytes())
