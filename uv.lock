@@ -525,12 +525,8 @@ source = { editable = "packages/core" }
 dependencies = [
     { name = "common" },
     { name = "opencv-python" },
-    { name = "scipy" },
-]
-
-[package.optional-dependencies]
-colmap = [
     { name = "pycolmap" },
+    { name = "scipy" },
 ]
 
 [package.dev-dependencies]
@@ -542,10 +538,9 @@ dev = [
 requires-dist = [
     { name = "common", editable = "packages/common" },
     { name = "opencv-python", specifier = ">=4.10.0" },
-    { name = "pycolmap", marker = "extra == 'colmap'", specifier = ">=3.13.0" },
+    { name = "pycolmap", specifier = ">=3.13.0" },
     { name = "scipy", specifier = ">=1.16.3" },
 ]
-provides-extras = ["colmap"]
 
 [package.metadata.requires-dev]
 dev = [{ name = "scipy-stubs", specifier = ">=1.16.3.0" }]
@@ -823,44 +818,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/58/46/0028a82567109b5ef6e4d2a1f04a583fb513e6cf9527fcdd09afd817deeb/filelock-3.20.0.tar.gz", hash = "sha256:711e943b4ec6be42e1d4e6690b48dc175c822967466bb31c0c293f34334c13f4", size = 18922, upload-time = "2025-10-08T18:03:50.056Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/76/91/7216b27286936c16f5b4d0c530087e4a54eead683e6b0b73dd0c64844af6/filelock-3.20.0-py3-none-any.whl", hash = "sha256:339b4732ffda5cd79b13f4e2711a31b0365ce445d95d243bb996273d072546a2", size = 16054, upload-time = "2025-10-08T18:03:48.35Z" },
-]
-
-[[package]]
-name = "flake8"
-version = "7.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "mccabe" },
-    { name = "pycodestyle" },
-    { name = "pyflakes" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/9b/af/fbfe3c4b5a657d79e5c47a2827a362f9e1b763336a52f926126aa6dc7123/flake8-7.3.0.tar.gz", hash = "sha256:fe044858146b9fc69b551a4b490d69cf960fcb78ad1edcb84e7fbb1b4a8e3872", size = 48326, upload-time = "2025-06-20T19:31:35.838Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9f/56/13ab06b4f93ca7cac71078fbe37fcea175d3216f31f85c3168a6bbd0bb9a/flake8-7.3.0-py2.py3-none-any.whl", hash = "sha256:b9696257b9ce8beb888cdbe31cf885c90d31928fe202be0889a7cdafad32f01e", size = 57922, upload-time = "2025-06-20T19:31:34.425Z" },
-]
-
-[[package]]
-name = "flake8-pyproject"
-version = "1.2.3"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "flake8" },
-]
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/5f/1d/635e86f9f3a96b7ea9e9f19b5efe17a987e765c39ca496e4a893bb999112/flake8_pyproject-1.2.3-py3-none-any.whl", hash = "sha256:6249fe53545205af5e76837644dc80b4c10037e73a0e5db87ff562d75fb5bd4a", size = 4756, upload-time = "2023-03-21T20:51:38.911Z" },
-]
-
-[[package]]
-name = "flake8-requirements"
-version = "2.3.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "flake8" },
-    { name = "packaging" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/e3/2e/d18c6103460be0ebcb3d7139ae167dc141ce945f8b584614bf66adf9a618/flake8_requirements-2.3.0.tar.gz", hash = "sha256:ee90007c871855d0183fce7a78f14dee9157457dda38623fda3cc94ca5d8faaa", size = 21534, upload-time = "2025-08-23T15:06:28.61Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/63/8e009c33b03381faaddce3868985f94c349b660a350a8a7b768687b8c213/flake8_requirements-2.3.0-py3-none-any.whl", hash = "sha256:6b097398b8d1e3382e1e887bb884fb20bd159a5069011972a615b8ac66548830", size = 15903, upload-time = "2025-08-23T15:06:27.529Z" },
 ]
 
 [[package]]
@@ -1453,15 +1410,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/e6/a5/85e2edf76ea0ad4288d174926d9454ea85f3ce5390cc4e6fab196cbf250b/matplotlib-3.10.7-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:702590829c30aada1e8cef0568ddbffa77ca747b4d6e36c6d173f66e301f89cc", size = 9594066, upload-time = "2025-10-09T00:27:43.694Z" },
     { url = "https://files.pythonhosted.org/packages/39/69/9684368a314f6d83fe5c5ad2a4121a3a8e03723d2e5c8ea17b66c1bad0e7/matplotlib-3.10.7-cp314-cp314t-win_amd64.whl", hash = "sha256:f79d5de970fc90cd5591f60053aecfce1fcd736e0303d9f0bf86be649fa68fb8", size = 8342832, upload-time = "2025-10-09T00:27:45.543Z" },
     { url = "https://files.pythonhosted.org/packages/04/5f/e22e08da14bc1a0894184640d47819d2338b792732e20d292bf86e5ab785/matplotlib-3.10.7-cp314-cp314t-win_arm64.whl", hash = "sha256:cb783436e47fcf82064baca52ce748af71725d0352e1d31564cbe9c95df92b9c", size = 8172585, upload-time = "2025-10-09T00:27:47.185Z" },
-]
-
-[[package]]
-name = "mccabe"
-version = "0.7.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e7/ff/0ffefdcac38932a54d2b5eed4e0ba8a408f215002cd178ad1df0f2806ff8/mccabe-0.7.0.tar.gz", hash = "sha256:348e0240c33b60bbdf4e523192ef919f28cb2c3d7d5c7794f74009290f236325", size = 9658, upload-time = "2022-01-24T01:14:51.113Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/27/1a/1f68f9ba0c207934b35b86a8ca3aad8395a3d6dd7921c0686e23853ff5a9/mccabe-0.7.0-py2.py3-none-any.whl", hash = "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e", size = 7350, upload-time = "2022-01-24T01:14:49.62Z" },
 ]
 
 [[package]]
@@ -2214,7 +2162,7 @@ version = "0.1.0"
 source = { editable = "docker/localizer" }
 dependencies = [
     { name = "common" },
-    { name = "core", extra = ["colmap"] },
+    { name = "core" },
     { name = "faiss-cpu" },
     { name = "fastapi" },
     { name = "h5py" },
@@ -2243,7 +2191,7 @@ torch = [
 [package.metadata]
 requires-dist = [
     { name = "common", editable = "packages/common" },
-    { name = "core", extras = ["colmap"], editable = "packages/core" },
+    { name = "core", editable = "packages/core" },
     { name = "faiss-cpu", specifier = ">=1.12.0" },
     { name = "fastapi", specifier = ">=0.119.0" },
     { name = "h5py", specifier = ">=3.15.0" },
@@ -2311,22 +2259,6 @@ requires-dist = [
 name = "plerion-workspace"
 version = "0.0.1"
 source = { virtual = "." }
-
-[package.dev-dependencies]
-dev = [
-    { name = "flake8" },
-    { name = "flake8-pyproject" },
-    { name = "flake8-requirements" },
-]
-
-[package.metadata]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "flake8", specifier = ">=7.3.0" },
-    { name = "flake8-pyproject", specifier = ">=1.2.3" },
-    { name = "flake8-requirements", specifier = ">=2.3.0" },
-]
 
 [[package]]
 name = "propcache"
@@ -2577,15 +2509,6 @@ version = "2.5.1"
 source = { git = "https://github.com/sarlinpe/pybind11-stubgen?rev=sarlinpe%2Ffix-2024-08#28d2acac14e92df0aa3136c27628a4d20b07d616" }
 
 [[package]]
-name = "pycodestyle"
-version = "2.14.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/11/e0/abfd2a0d2efe47670df87f3e3a0e2edda42f055053c85361f19c0e2c1ca8/pycodestyle-2.14.0.tar.gz", hash = "sha256:c4b5b517d278089ff9d0abdec919cd97262a3367449ea1c8b49b91529167b783", size = 39472, upload-time = "2025-06-20T18:49:48.75Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d7/27/a58ddaf8c588a3ef080db9d0b7e0b97215cee3a45df74f3a94dbbf5c893a/pycodestyle-2.14.0-py2.py3-none-any.whl", hash = "sha256:dd6bf7cb4ee77f8e016f9c8e74a35ddd9f67e1d5fd4184d86c3b98e07099f42d", size = 31594, upload-time = "2025-06-20T18:49:47.491Z" },
-]
-
-[[package]]
 name = "pycolmap"
 version = "3.13.0"
 source = { registry = "https://pypi.org/simple" }
@@ -2695,15 +2618,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/43/4b/ac7e0aae12027748076d72a8764ff1c9d82ca75a7a52622e67ed3f765c54/pydantic_settings-2.12.0.tar.gz", hash = "sha256:005538ef951e3c2a68e1c08b292b5f2e71490def8589d4221b95dab00dafcfd0", size = 194184, upload-time = "2025-11-10T14:25:47.013Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/c1/60/5d4751ba3f4a40a6891f24eec885f51afd78d208498268c734e256fb13c4/pydantic_settings-2.12.0-py3-none-any.whl", hash = "sha256:fddb9fd99a5b18da837b29710391e945b1e30c135477f484084ee513adb93809", size = 51880, upload-time = "2025-11-10T14:25:45.546Z" },
-]
-
-[[package]]
-name = "pyflakes"
-version = "3.4.0"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/45/dc/fd034dc20b4b264b3d015808458391acbf9df40b1e54750ef175d39180b1/pyflakes-3.4.0.tar.gz", hash = "sha256:b24f96fafb7d2ab0ec5075b7350b3d2d2218eab42003821c06344973d3ea2f58", size = 64669, upload-time = "2025-06-20T18:45:27.834Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c2/2f/81d580a0fb83baeb066698975cb14a618bdbed7720678566f1b046a95fe8/pyflakes-3.4.0-py2.py3-none-any.whl", hash = "sha256:f742a7dbd0d9cb9ea41e9a24a918996e8170c799fa528688d40dd582c8265f4f", size = 63551, upload-time = "2025-06-20T18:45:26.937Z" },
 ]
 
 [[package]]
@@ -2911,7 +2825,7 @@ version = "0.1.0"
 source = { editable = "docker/reconstructor" }
 dependencies = [
     { name = "boto3" },
-    { name = "core", extra = ["colmap"] },
+    { name = "core" },
     { name = "faiss-cpu" },
     { name = "h5py" },
     { name = "numpy" },
@@ -2939,7 +2853,7 @@ torch = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.40.18" },
-    { name = "core", extras = ["colmap"], editable = "packages/core" },
+    { name = "core", editable = "packages/core" },
     { name = "faiss-cpu", specifier = ">=1.12.0" },
     { name = "h5py", specifier = ">=3.15.1" },
     { name = "numpy", specifier = ">=2.0" },
