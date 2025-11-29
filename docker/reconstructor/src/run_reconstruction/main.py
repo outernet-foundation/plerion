@@ -12,16 +12,15 @@ from core.reconstruction_manifest import ReconstructionManifest
 from core.rig import Config
 from core.utility import to_f16, to_f32
 from h5py import File
-from lightglue.superpoint import SuperPoint  # type: ignore
-from neural_networks.dir import DIR, load_DIR
-from neural_networks.image import create_image_tensors
+from neural_networks.dir import load_DIR
+from neural_networks.image import Image
 from neural_networks.lightglue import load_lightglue, load_superpoint
 from numpy import eye, float32, float64, int32, intp, nonzero, random, stack, uint32
 from numpy.typing import NDArray
 from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
 from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial, set_random_seed
-from torch import cuda, no_grad
+from torch import cuda
 
 from .find_pairs import pairs_from_poses
 from .metrics_builder import MetricsBuilder
@@ -76,27 +75,6 @@ def iterate_and_log(iterable: Iterable[T], every: int = 1, label: str = "Progres
 def _put_reconstruction_object(key: str, body: bytes):
     print(f"Putting object in bucket {settings.reconstructions_bucket} with key {settings.reconstruction_id}/{key}")
     s3_client.put_object(Bucket=settings.reconstructions_bucket, Key=f"{settings.reconstruction_id}/{key}", Body=body)
-
-
-class Image:
-    def __init__(
-        self,
-        image_path: str,
-        camera_rotation: Literal["None", "90_CW", "180", "90_CCW"],
-        superpoint: SuperPoint,
-        dir: DIR,
-    ):
-        with open(image_path, "rb") as img_file:
-            rbg_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(
-                camera_rotation, img_file.read(), device=DEVICE
-            )
-
-        with no_grad():
-            superpoint_output = superpoint({"image": grayscale_image_tensor})
-            self.global_descriptor = dir({"image": rbg_image_tensor})["global_descriptor"][0]
-            self.keypoints = superpoint_output["keypoints"][0]
-            self.descriptors = superpoint_output["descriptors"][0]
-            self.size = image_size
 
 
 def main():
@@ -171,13 +149,16 @@ def main():
     print("Loading SuperPoint")
     superpoint = load_superpoint(max_num_keypoints=manifest.options.max_keypoints_per_image, device=DEVICE)
 
+    def create_image(image_path: str, rotation: Literal["None", "90_CW", "180", "90_CCW"]) -> Image:
+        with open(CAPTURE_SESSION_DIRECTORY / image_path, "rb") as img_file:
+            return Image(
+                image_buffer=img_file.read(), camera_rotation=rotation, superpoint=superpoint, dir=dir, device=DEVICE
+            )
+
     # Extract global descriptors and keypoints/descriptors for all images
     images = {
-        f"{rig_id}/{camera[0].id}/{frame_id}.jpg": Image(
-            image_path=str(CAPTURE_SESSION_DIRECTORY / f"{rig_id}/{camera[0].id}/{frame_id}.jpg"),
-            camera_rotation=camera[0].camera_config.rotation,
-            superpoint=superpoint,
-            dir=dir,
+        f"{rig_id}/{camera[0].id}/{frame_id}.jpg": create_image(
+            image_path=f"{rig_id}/{camera[0].id}/{frame_id}.jpg", rotation=camera[0].camera_config.rotation
         )
         for rig_id, camera, frame_id in iterate_and_log(
             (

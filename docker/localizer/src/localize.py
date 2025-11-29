@@ -12,12 +12,12 @@ from core.map import Map
 from core.rig import PinholeCameraConfig
 from core.transform import Quaternion, Transform, Vector3
 from core.ugh import transform_intrinsics
-from neural_networks.image import create_image_tensors
+from neural_networks.image import Image
 from numpy.typing import NDArray
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstruction
 from pycolmap import Camera as ColmapCamera
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
-from torch import cuda, inference_mode, mv, topk  # type: ignore
+from torch import cuda, mv, topk  # type: ignore
 
 from .settings import get_settings
 
@@ -56,30 +56,18 @@ reconstructions: dict[UUID, Reconstruction] = {}
 
 
 async def localize_image_against_reconstruction(
-    map: Map, camera: PinholeCameraConfig, image: bytes
+    map: Map, camera: PinholeCameraConfig, image_buffer: bytes
 ) -> tuple[Transform, LocalizationMetrics]:
     pycolmap_camera = ColmapCamera(
         width=camera.width, height=camera.height, model="PINHOLE", params=transform_intrinsics(camera)
     )
-    rgb_image_tensor, grayscale_image_tensor, image_size = create_image_tensors(camera.rotation, image, DEVICE)
 
-    print("Extracting features")
-
-    # Extract keypoints and global descriptor for query image
-    with inference_mode():
-        query_image_global_descriptor = dir({"image": rgb_image_tensor})["global_descriptor"][0]
-
-        # Hloc's DIR wrapper moves the descriptor to the CPU for PCA whitening; move it back to DEVICE
-        query_image_global_descriptor = query_image_global_descriptor.to(DEVICE)
-
-        superpoint_output = superpoint({"image": grayscale_image_tensor})
-        query_image_keypoints = superpoint_output["keypoints"][0]
-        query_image_descriptors = superpoint_output["descriptors"][0]
-
-    print("Retrieving similar database images")
+    image = Image(
+        image_buffer=image_buffer, camera_rotation=camera.rotation, superpoint=superpoint, dir=dir, device=DEVICE
+    )
 
     # Retrieve top K most similar database images
-    similarity_scores = mv(map.global_matrix, query_image_global_descriptor)
+    similarity_scores = mv(map.global_matrix, image.global_descriptor)
     topk_rows: list[int] = topk(similarity_scores, RETRIEVAL_TOP_K).indices.cpu().tolist()  # type: ignore
     matched_names: list[str] = [map.image_names[i] for i in topk_rows]
     matched_image_ids: list[int] = [map.image_id_by_name[n] for n in matched_names]
@@ -105,8 +93,8 @@ async def localize_image_against_reconstruction(
 
     keypoints0 = padded_db_keypoints
     descriptors0 = padded_db_descriptors
-    keypoints1 = query_image_keypoints.unsqueeze(0).expand(batch_size, -1, -1)
-    descriptors1 = query_image_descriptors.unsqueeze(0).expand(batch_size, -1, -1)
+    keypoints1 = image.keypoints.unsqueeze(0).expand(batch_size, -1, -1)
+    descriptors1 = image.descriptors.unsqueeze(0).expand(batch_size, -1, -1)
 
     descriptors0 = descriptors0
     descriptors1 = descriptors1
@@ -121,7 +109,7 @@ async def localize_image_against_reconstruction(
         ],
         device=DEVICE,
     )
-    sizes1 = torch.tensor([image_size] * batch_size, device=DEVICE)
+    sizes1 = torch.tensor([image.size] * batch_size, device=DEVICE)
 
     print("Matching features")
 
@@ -160,7 +148,7 @@ async def localize_image_against_reconstruction(
     query_keypoint_indices, point3d_indices = zip(*correspondences.items())
 
     # Select the matched 2D keypoints and convert from torch tensor to NumPy array
-    points2d = (query_image_keypoints[list(query_keypoint_indices)]).cpu().numpy()
+    points2d = (image.keypoints[list(query_keypoint_indices)]).cpu().numpy()
 
     # For each matched 2D keypoint, look up its corresponding 3D world point and
     # stack them into an (M, 3) NumPy array to feed into absolute_pose_estimation.

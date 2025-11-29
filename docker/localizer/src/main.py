@@ -159,7 +159,9 @@ async def localize_image(image: UploadFile = File(...)) -> list[Localization]:
         for id, result in zip(
             maps.keys(),
             [
-                await localize_image_against_reconstruction(map=maps[id], camera=_camera, image=await image.read())
+                await localize_image_against_reconstruction(
+                    map=maps[id], camera=_camera, image_buffer=await image.read()
+                )
                 for id in maps.keys()
             ],
         )
