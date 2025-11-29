@@ -10,16 +10,18 @@ from uuid import UUID
 from common.boto_clients import create_s3_client
 from common.fastapi import create_fastapi_app
 from core.classes import LocalizationMetrics
-from core.map import Map, load_map_data
+from core.map import read_h5_features_for_reconstruction, read_opq
 from core.rig import CameraConfig, PinholeCameraConfig
 from core.transform import Transform
 from fastapi import File, HTTPException, UploadFile
+from pycolmap import Reconstruction
 
 # from pycolmap import Camera as PycolmapCamera
 from pydantic import BaseModel
 from torch import cuda  # type: ignore
 
 from .localize import localize_image_against_reconstruction
+from .map import Map
 from .settings import get_settings
 
 DEVICE = "cuda" if cuda.is_available() else "cpu"
@@ -90,7 +92,27 @@ def _load_reconstruction(id: UUID):
             print(f"Downloading s3://{settings.reconstructions_bucket}/{key} to {local_path}")
             s3_client.download_file(settings.reconstructions_bucket, key, str(local_path))
 
-    maps[id] = load_map_data(reconstruction_path=RECONSTRUCTIONS_DIR / str(id), device=DEVICE)
+    reconstruction_path = RECONSTRUCTIONS_DIR / str(id)
+
+    reconstruction = Reconstruction(str(reconstruction_path / "sfm_model"))
+
+    (opq_matrix, pq) = read_opq(reconstruction_path)
+
+    (image_names, image_ids_in_order, global_matrix, keypoints, pq_codes) = read_h5_features_for_reconstruction(
+        reconstruction, reconstruction_path, DEVICE
+    )
+
+    maps[id] = Map(
+        reconstruction=reconstruction,
+        image_names=image_names,
+        image_ids_in_order=image_ids_in_order,
+        image_id_by_name={n: i for n, i in zip(image_names, image_ids_in_order)},
+        global_matrix=global_matrix,
+        keypoints=keypoints,
+        opq_matrix=opq_matrix,
+        pq=pq,
+        pq_codes=pq_codes,
+    )
 
 
 @app.post("/reconstructions/{id}")

@@ -14,7 +14,7 @@ from pycolmap import Image as ColmapImage
 UINT64_MAX = 18446744073709551615  # sentinel used by Point2D.point3D_id default
 
 
-class MetricsBuilder:
+class Metrics:
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.metrics = ReconstructionMetrics()

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import combinations
 from typing import Dict, Optional
 
 import torch
@@ -8,12 +9,41 @@ from numpy import arccos, clip, degrees, fill_diagonal, stack, where
 from numpy.linalg import norm
 from torch import from_numpy, topk  # type: ignore
 
-ROTATION_THRESHOLD_DEG = 30.0
+from .rig import Rig
 
 
-def pairs_from_poses(
-    images: dict[tuple[str, str], Transform], num_neighbors: int, rotation_thresh_deg: float = ROTATION_THRESHOLD_DEG
-):
+def generate_image_pairs(rigs: Dict[str, Rig], neighbors_count: int, rotation_thresh_deg: float):
+    proximal_frame_pairs = pairs_from_poses(
+        {
+            (rig_id, frame_id): transform
+            for rig_id, rig in rigs.items()
+            for frame_id, transform in rig.frame_poses.items()
+        },
+        neighbors_count,
+        rotation_thresh_deg,
+    )
+
+    cross_frame_image_pairs_by_frame_proximity = [
+        (f"{rig_id_a}/{camera_a[0].id}/{frame_id_a}.jpg", f"{rig_id_b}/{camera_b[0].id}/{frame_id_b}.jpg")
+        for (rig_id_a, frame_id_a), (rig_id_b, frame_id_b) in proximal_frame_pairs
+        for camera_a in rigs[rig_id_a].cameras.values()
+        for camera_b in rigs[rig_id_b].cameras.values()
+    ]
+
+    intra_frame_image_pairs = [
+        (f"{rig_id}/{camera_a[0].id}/{frame_id}.jpg", f"{rig_id}/{camera_b[0].id}/{frame_id}.jpg")
+        for rig_id, rig in rigs.items()
+        for frame_id in rig.frame_poses.keys()
+        for camera_a, camera_b in combinations(list(rig.cameras.values()), 2)
+    ]
+
+    # Canonicalize and deduplicate
+    return sorted({
+        tuple(sorted((a, b))) for a, b in cross_frame_image_pairs_by_frame_proximity + intra_frame_image_pairs if a != b
+    })
+
+
+def pairs_from_poses(images: dict[tuple[str, str], Transform], num_neighbors: int, rotation_thresh_deg: float):
     names = list(images.keys())
     R_w_c = stack([images[name].rotation for name in names], axis=0)  # (N, 3, 3)
     centers = stack([images[name].translation for name in names], axis=0)  # (N, 3)

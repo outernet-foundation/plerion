@@ -4,7 +4,7 @@ from core.reconstruction_manifest import ReconstructionOptions
 from pycolmap import FeatureMatchingOptions, IncrementalPipelineOptions, TwoViewGeometryOptions
 
 
-class OptionsBuilder:
+class Options:
     def __init__(self, options: ReconstructionOptions):
         self.options = options
 

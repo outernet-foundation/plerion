@@ -2,24 +2,23 @@ from __future__ import annotations
 
 from os import environ
 from typing import Any, cast
-from uuid import UUID
 
 import numpy as np
 import torch
 from common.boto_clients import create_s3_client
 from core.classes import LocalizationMetrics
-from core.map import Map
 from core.rig import PinholeCameraConfig
 from core.transform import Quaternion, Transform, Vector3
 from core.ugh import transform_intrinsics
 from neural_networks.image import Image
 from numpy import float32, linalg
 from numpy.typing import NDArray
-from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstruction
+from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions
 from pycolmap import Camera as ColmapCamera
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
 from torch import cuda, from_numpy, mv, topk  # type: ignore
 
+from .map import Map
 from .settings import get_settings
 
 WEIGHTS = "indoor"
@@ -51,15 +50,6 @@ else:
 
     print("Loading lightglue model")
     lightglue = load_lightglue(DEVICE)
-
-
-reconstructions: dict[UUID, Reconstruction] = {}
-
-
-def _l2_normalize_rows(matrix: NDArray[float32]) -> NDArray[float32]:
-    return (matrix / (linalg.norm(matrix, axis=1, keepdims=True).astype(float32) + float32(1e-12))).astype(
-        float32, copy=False
-    )
 
 
 async def localize_image_against_reconstruction(
@@ -238,4 +228,10 @@ async def localize_image_against_reconstruction(
         image_coverage=0.0,
         depth_z_90th_percentile=0.0,
         depth_z_10th_percentile=0.0,
+    )
+
+
+def _l2_normalize_rows(matrix: NDArray[float32]) -> NDArray[float32]:
+    return (matrix / (linalg.norm(matrix, axis=1, keepdims=True).astype(float32) + float32(1e-12))).astype(
+        float32, copy=False
     )
