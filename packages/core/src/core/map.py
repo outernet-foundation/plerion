@@ -1,6 +1,6 @@
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, Dict, Mapping, cast
+from typing import TYPE_CHECKING, Any, Dict, Mapping, cast
 
 from faiss import (  # type: ignore
     OPQMatrix,
@@ -11,7 +11,6 @@ from faiss import (  # type: ignore
     write_VectorTransform,  # type: ignore
 )
 from h5py import Dataset, File, Group
-from mypy_boto3_s3 import S3Client
 from numpy import asarray, float32, stack, uint8
 from numpy.typing import NDArray
 from pycolmap import Reconstruction
@@ -21,6 +20,12 @@ from .metrics import Metrics
 from .options import Options
 from .reconstruction_manifest import ReconstructionManifest
 from .utility import to_f32
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3 import S3Client
+else:
+    S3Client = Any
+
 
 GLOBAL_DESCRIPTORS_DATASET_NAME = "global_descriptor"
 KEYPOINTS_DATASET_NAME = "keypoints"
