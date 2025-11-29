@@ -2,20 +2,13 @@ from typing import cast
 
 from core.reconstruction_manifest import ReconstructionOptions
 from core.utility import to_f32
-from faiss import (  # type: ignore
-    OPQMatrix,
-    ProductQuantizer,
-    write_ProductQuantizer,  # type: ignore
-    write_VectorTransform,  # type: ignore
-)
+from faiss import OPQMatrix, ProductQuantizer  # type: ignore
 from numpy import ascontiguousarray, float32, uint8, vstack
 from numpy.typing import NDArray
 from torch import Tensor
 
 
-def train_opq_and_encode(
-    options: ReconstructionOptions, image_descriptors: dict[str, Tensor], opq_matrix_file: str, pq_quantizer_file: str
-):
+def train_opq_and_encode(options: ReconstructionOptions, image_descriptors: dict[str, Tensor]):
     # opq + pq
     number_of_subvectors = 16
     number_of_bits_per_subvector = 8
@@ -33,21 +26,19 @@ def train_opq_and_encode(
     opq_matrix.verbose = True
     training_unit = ascontiguousarray(training_descriptors)
     opq_matrix.train(training_unit)  # type: ignore
-    write_VectorTransform(opq_matrix, opq_matrix_file)
 
     # Train PQ quantizer on OPQ-rotated descriptors
     rotated_training_unit = opq_matrix.apply(training_unit)  # type: ignore
-    faiss_pq = ProductQuantizer(dimension, number_of_subvectors, number_of_bits_per_subvector)
-    faiss_pq.verbose = True
-    faiss_pq.train(rotated_training_unit)  # type: ignore
-    write_ProductQuantizer(faiss_pq, pq_quantizer_file)
+    product_quantizer = ProductQuantizer(dimension, number_of_subvectors, number_of_bits_per_subvector)
+    product_quantizer.verbose = True
+    product_quantizer.train(rotated_training_unit)  # type: ignore
 
     images_codes: dict[str, NDArray[uint8]] = {}
     for name in image_descriptors.keys():
         # Descriptors -> OPQ rotate (via apply) -> PQ encode
         descriptors_contiguous = ascontiguousarray(to_f32(image_descriptors[name]))
         descriptors_rotated = cast(NDArray[float32], opq_matrix.apply(descriptors_contiguous))  # type: ignore
-        codes = cast(NDArray[uint8], faiss_pq.compute_codes(descriptors_rotated))  # type: ignore
+        codes = cast(NDArray[uint8], product_quantizer.compute_codes(descriptors_rotated))  # type: ignore
         images_codes[name] = codes
 
-    return images_codes
+    return opq_matrix, product_quantizer, images_codes

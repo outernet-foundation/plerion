@@ -8,10 +8,9 @@ from typing import Iterable, Iterator, Literal, TypeVar
 
 import torch
 from common.boto_clients import create_s3_client
+from core.h5 import write_h5_features, write_opq, write_pairs
 from core.reconstruction_manifest import ReconstructionManifest
 from core.rig import Config
-from core.utility import to_f16, to_f32
-from h5py import File
 from neural_networks.dir import load_DIR
 from neural_networks.image import Image
 from neural_networks.lightglue import load_lightglue, load_superpoint
@@ -39,11 +38,11 @@ UINT64_MAX = 18446744073709551615  # sentinel used by Point2D.point3D_id default
 WORK_DIR = Path("/tmp/reconstruction")
 OUTPUT_DIRECTORY = WORK_DIR / "outputs"
 CAPTURE_SESSION_DIRECTORY = WORK_DIR / "capture_session"
-PAIRS_FILE = WORK_DIR / "pairs.txt"
-GLOBAL_DESCRIPTORS_FILE = WORK_DIR / "global_descriptors.h5"
-FEATURES_FILE = WORK_DIR / "features.h5"
-OPQ_MATRIX_FILE = WORK_DIR / "opq_matrix.tf"
-PQ_QUANTIZER_FILE = WORK_DIR / "pq_quantizer.pq"
+# PAIRS_FILE = WORK_DIR / "pairs.txt"
+# GLOBAL_DESCRIPTORS_FILE = WORK_DIR / "global_descriptors.h5"
+# FEATURES_FILE = WORK_DIR / "features.h5"
+# OPQ_MATRIX_FILE = WORK_DIR / "opq_matrix.tf"
+# PQ_QUANTIZER_FILE = WORK_DIR / "pq_quantizer.pq"
 COLMAP_DB_PATH = OUTPUT_DIRECTORY / "database.db"
 COLMAP_SFM_DIRECTORY = OUTPUT_DIRECTORY / "sfm_model"
 COLMAP_SFM_DIRECTORY.mkdir(parents=True, exist_ok=True)
@@ -139,9 +138,8 @@ def main():
     # Canonicalize and deduplicate pairs
     canonical_pairs = sorted({tuple(sorted((a, b))) for a, b in pairs if a != b})
 
-    # Write pairs to file
-    PAIRS_FILE.parent.mkdir(parents=True, exist_ok=True)
-    PAIRS_FILE.write_text("\n".join(f"{a} {b}" for a, b in canonical_pairs))
+    pairs_file = write_pairs(WORK_DIR, canonical_pairs)
+    _put_reconstruction_object(key="pairs.txt", body=pairs_file.read_bytes())
 
     # Load DIR and SuperPoint models
     print("Loading DIR")
@@ -183,51 +181,22 @@ def main():
 
     # Train OPQ and PQ, and encode all image descriptors
     print("Training OPQ and PQ, and encoding descriptors")
-    image_codes = train_opq_and_encode(
-        manifest.options,
-        {key: images[key].descriptors for key in images.keys()},
-        str(OPQ_MATRIX_FILE),
-        str(PQ_QUANTIZER_FILE),
+    opq_matrix, product_quantizer, image_codes = train_opq_and_encode(
+        manifest.options, {key: images[key].descriptors for key in images.keys()}
     )
 
-    # Write global descriptors and features to H5 files
-    print("Writing global descriptors and features to H5 files")
-    with File(str(GLOBAL_DESCRIPTORS_FILE), "w") as gfile:
-        # for name, gdesc in global_descriptors.items():
-        for name, gdesc in ((name, images[name].global_descriptor) for name in images.keys()):
-            group = gfile.require_group(name)  # type: ignore
-            if "global_descriptor" in group:
-                del group["global_descriptor"]
-            group.create_dataset("global_descriptor", data=to_f32(gdesc), compression="gzip", compression_opts=3)  # type: ignore
+    opq_matrix_file, pq_file = write_opq(opq_matrix, product_quantizer, WORK_DIR)
+    _put_reconstruction_object(key="opq_matrix.tf", body=opq_matrix_file.read_bytes())
+    _put_reconstruction_object(key="pq_quantizer.pq", body=pq_file.read_bytes())
 
-    with File(str(FEATURES_FILE), "w") as ffile:
-        # for name in global_descriptors.keys():  # ensures the same set/order as globals
-        for name in images.keys():
-            group = ffile.require_group(name)  # type: ignore
-
-            # Clean any existing datasets
-            if "keypoints" in group:
-                del group["keypoints"]
-            if "descriptors" in group:  # we no longer store raw float descriptors
-                del group["descriptors"]
-            if "scores" in group:
-                del group["scores"]
-            if "pq_codes" in group:
-                del group["pq_codes"]
-
-            # write FP16 + gzip-9 + shuffle + chunks
-            group.create_dataset(  # type: ignore
-                "keypoints",
-                data=to_f16(images[name].keypoints),
-                compression="gzip",
-                compression_opts=9,
-                shuffle=True,
-                chunks=True,
-            )
-
-            group.create_dataset(  # type: ignore
-                "pq_codes", data=image_codes[name], compression="gzip", compression_opts=9, shuffle=True, chunks=True
-            )
+    global_descriptors_file, features_file = write_h5_features(
+        root_path=WORK_DIR,
+        global_descriptors={name: images[name].global_descriptor for name in images.keys()},
+        keypoints=keypoints,
+        pq_codes=image_codes,
+    )
+    _put_reconstruction_object(key="global_descriptors.h5", body=global_descriptors_file.read_bytes())
+    _put_reconstruction_object(key="features.h5", body=features_file.read_bytes())
 
     # Load LightGlue model
     print("Loading LightGlue")
@@ -348,12 +317,6 @@ def main():
     best_out.mkdir(parents=True, exist_ok=True)
     best.write_text(str(best_out))
     best.export_PLY(str(best_out / "points3D.ply"))
-
-    _put_reconstruction_object(key="global_descriptors.h5", body=GLOBAL_DESCRIPTORS_FILE.read_bytes())
-    _put_reconstruction_object(key="features.h5", body=FEATURES_FILE.read_bytes())
-    _put_reconstruction_object(key="opq_matrix.tf", body=OPQ_MATRIX_FILE.read_bytes())
-    _put_reconstruction_object(key="pq_quantizer.pq", body=PQ_QUANTIZER_FILE.read_bytes())
-    _put_reconstruction_object(key="pairs.txt", body=PAIRS_FILE.read_bytes())
 
     for file_path in best_out.rglob("*"):
         if file_path.is_file():

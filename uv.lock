@@ -524,6 +524,7 @@ version = "0.1.0"
 source = { editable = "packages/core" }
 dependencies = [
     { name = "common" },
+    { name = "faiss-cpu" },
     { name = "opencv-python" },
     { name = "scipy" },
 ]
@@ -536,6 +537,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "common", editable = "packages/common" },
+    { name = "faiss-cpu", specifier = ">=1.12.0" },
     { name = "opencv-python", specifier = ">=4.10.0" },
     { name = "scipy", specifier = ">=1.16.3" },
 ]

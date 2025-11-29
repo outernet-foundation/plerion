@@ -79,27 +79,20 @@ async def localize_image_against_reconstruction(
     matched_names: list[str] = [map.image_names[i] for i in topk_rows]
     matched_image_ids: list[int] = [map.image_id_by_name[n] for n in matched_names]
 
-    # Start padding logic
     batch_size = len(matched_image_ids)
-
-    # descriptor_dimension = map.descriptors[matched_image_ids[0]].shape[0]
     max_keypoints = max(map.keypoints[i].shape[0] for i in matched_image_ids)
+    descriptors = {
+        # Decode pq codes, apply opq reverse transform, and normalize
+        image_id: _l2_normalize_rows(
+            cast(
+                NDArray[float32],
+                map.opq_matrix.reverse_transform(map.pq.decode(map.pq_codes[image_id])),  # type: ignore
+            )
+        )
+        for image_id in matched_image_ids
+    }
 
-    decoded_descriptors: dict[int, np.ndarray] = {}
-    # descriptor_dimension: int | None = None
-
-    for image_id in matched_image_ids:
-        codes = map.pq_codes[image_id]
-
-        # PQ decode -> OPQ reverse_transform
-        rotated_descriptors = map.pq.decode(codes)  # type: ignore
-        descriptors_array = cast(NDArray[float32], map.opq_matrix.reverse_transform(rotated_descriptors))  # type: ignore
-
-        decoded_descriptors[image_id] = _l2_normalize_rows(descriptors_array)
-        # if descriptor_dimension is None:
-        #     descriptor_dimension = descriptors_array.shape[1]
-
-    descriptor_dimension = decoded_descriptors[matched_image_ids[0]].shape[1]
+    descriptor_dimension = descriptors[matched_image_ids[0]].shape[1]
 
     padded_db_keypoints = torch.full(
         (batch_size, max_keypoints, 2), fill_value=-1.0, dtype=torch.float32, device=DEVICE
@@ -112,9 +105,9 @@ async def localize_image_against_reconstruction(
     for batch_index, matched_image_id in enumerate(matched_image_ids):
         num_image_keypoints = map.keypoints[matched_image_id].shape[0]
         padded_db_keypoints[batch_index, :num_image_keypoints, :] = map.keypoints[matched_image_id]
-        padded_db_descriptors[batch_index, :num_image_keypoints, :] = from_numpy(
-            decoded_descriptors[matched_image_id]
-        ).to(DEVICE)
+        padded_db_descriptors[batch_index, :num_image_keypoints, :] = from_numpy(descriptors[matched_image_id]).to(
+            DEVICE
+        )
 
     keypoints0 = padded_db_keypoints
     descriptors0 = padded_db_descriptors

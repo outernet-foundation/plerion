@@ -4,7 +4,12 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
-dependencies = ["common", "scipy>=1.16.3", "opencv-python>=4.10.0"]
+dependencies = [
+    "common",
+    "scipy>=1.16.3",
+    "opencv-python>=4.10.0",
+    "faiss-cpu>=1.12.0",
+]
 
 [dependency-groups]
 dev = ["scipy-stubs>=1.16.3.0"]
