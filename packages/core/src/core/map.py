@@ -12,7 +12,7 @@ from faiss import (  # type: ignore
 )
 from h5py import Dataset, Group
 from h5py import File as h5File
-from numpy import asarray, float32, linalg, stack, uint8
+from numpy import asarray, float32, stack, uint8
 from numpy.typing import NDArray
 from pycolmap import Reconstruction
 from torch import Tensor, from_numpy  # type: ignore
@@ -26,7 +26,10 @@ class Map:
     image_id_by_name: dict[str, int]
     global_matrix: Tensor
     keypoints: Dict[int, Tensor]
-    descriptors: Dict[int, Tensor]
+    # descriptors: Dict[int, Tensor]
+    opq_matrix: OPQMatrix
+    pq: ProductQuantizer
+    pq_codes: dict[int, NDArray[uint8]]
 
 
 def load_map_data(reconstruction_path: Path, device: str) -> Map:
@@ -78,7 +81,8 @@ def load_map_data(reconstruction_path: Path, device: str) -> Map:
 
     # ---- Locals: load only for the kept subset, and only if datasets exist ----
     keypoints: Dict[int, Tensor] = {}
-    descriptors: Dict[int, Tensor] = {}
+    # descriptors: Dict[int, Tensor] = {}
+    pq_codes: Dict[int, NDArray[uint8]] = {}
     with h5File(str(features_path), "r") as ffile:
         for name, img_id in zip(kept_names, kept_ids):
             group = ffile.get(name)
@@ -93,21 +97,22 @@ def load_map_data(reconstruction_path: Path, device: str) -> Map:
             keypoints_array = asarray(keypoints_dataset[()], dtype=float32)  # (K,2)
             pq_codes_array = asarray(pq_codes_dataset[()], dtype=uint8)  # (K,)
 
-            rotated_descriptors = pq.decode(pq_codes_array)  # type: ignore
-            descriptors_array = cast(NDArray[float32], opq_matrix.reverse_transform(rotated_descriptors))  # type: ignore
+            # rotated_descriptors = pq.decode(pq_codes_array)  # type: ignore
+            # descriptors_array = cast(NDArray[float32], opq_matrix.reverse_transform(rotated_descriptors))  # type: ignore
 
-            descriptors_array = _l2_normalize_rows(descriptors_array)
+            # descriptors_array = _l2_normalize_rows(descriptors_array)
 
             kpts = from_numpy(keypoints_array).to(device)
-            desc = from_numpy(descriptors_array).to(device)
+            # desc = from_numpy(descriptors_array).to(device)
 
-            if desc.ndim == 2 and desc.shape[0] == kpts.shape[0] and desc.shape[1] != kpts.shape[0]:
-                desc = desc.transpose(0, 1)  # -> (D,K)
-            if desc.shape[1] != kpts.shape[0]:
-                continue
+            # if desc.ndim == 2 and desc.shape[0] == kpts.shape[0] and desc.shape[1] != kpts.shape[0]:
+            #     desc = desc.transpose(0, 1)  # -> (D,K)
+            # if desc.shape[1] != kpts.shape[0]:
+            #     continue
 
             keypoints[img_id] = kpts
-            descriptors[img_id] = desc
+            # descriptors[img_id] = desc
+            pq_codes[img_id] = pq_codes_array
 
     return Map(
         image_names=kept_names,
@@ -115,12 +120,15 @@ def load_map_data(reconstruction_path: Path, device: str) -> Map:
         image_id_by_name={n: i for n, i in zip(kept_names, kept_ids)},
         global_matrix=global_matrix,
         keypoints=keypoints,
-        descriptors=descriptors,
+        # descriptors=descriptors,
         reconstruction=reconstruction,
+        opq_matrix=opq_matrix,
+        pq=pq,
+        pq_codes=pq_codes,
     )
 
 
-def _l2_normalize_rows(matrix: NDArray[float32]) -> NDArray[float32]:
-    return (matrix / (linalg.norm(matrix, axis=1, keepdims=True).astype(float32) + float32(1e-12))).astype(
-        float32, copy=False
-    )
+# def _l2_normalize_rows(matrix: NDArray[float32]) -> NDArray[float32]:
+#     return (matrix / (linalg.norm(matrix, axis=1, keepdims=True).astype(float32) + float32(1e-12))).astype(
+#         float32, copy=False
+#     )

@@ -74,7 +74,7 @@ class DIR(Module):
                         whitenm=WHITENM,
                     ),
                 )
-            )
+            ).to(image.device)
         }
 
 

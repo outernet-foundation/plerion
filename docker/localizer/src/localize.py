@@ -13,11 +13,12 @@ from core.rig import PinholeCameraConfig
 from core.transform import Quaternion, Transform, Vector3
 from core.ugh import transform_intrinsics
 from neural_networks.image import Image
+from numpy import float32, linalg
 from numpy.typing import NDArray
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions, Reconstruction
 from pycolmap import Camera as ColmapCamera
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
-from torch import cuda, mv, topk  # type: ignore
+from torch import cuda, from_numpy, mv, topk  # type: ignore
 
 from .settings import get_settings
 
@@ -55,6 +56,12 @@ else:
 reconstructions: dict[UUID, Reconstruction] = {}
 
 
+def _l2_normalize_rows(matrix: NDArray[float32]) -> NDArray[float32]:
+    return (matrix / (linalg.norm(matrix, axis=1, keepdims=True).astype(float32) + float32(1e-12))).astype(
+        float32, copy=False
+    )
+
+
 async def localize_image_against_reconstruction(
     map: Map, camera: PinholeCameraConfig, image_buffer: bytes
 ) -> tuple[Transform, LocalizationMetrics]:
@@ -74,9 +81,25 @@ async def localize_image_against_reconstruction(
 
     # Start padding logic
     batch_size = len(matched_image_ids)
-    print(batch_size)
-    descriptor_dimension = map.descriptors[matched_image_ids[0]].shape[0]
+
+    # descriptor_dimension = map.descriptors[matched_image_ids[0]].shape[0]
     max_keypoints = max(map.keypoints[i].shape[0] for i in matched_image_ids)
+
+    decoded_descriptors: dict[int, np.ndarray] = {}
+    # descriptor_dimension: int | None = None
+
+    for image_id in matched_image_ids:
+        codes = map.pq_codes[image_id]
+
+        # PQ decode -> OPQ reverse_transform
+        rotated_descriptors = map.pq.decode(codes)  # type: ignore
+        descriptors_array = cast(NDArray[float32], map.opq_matrix.reverse_transform(rotated_descriptors))  # type: ignore
+
+        decoded_descriptors[image_id] = _l2_normalize_rows(descriptors_array)
+        # if descriptor_dimension is None:
+        #     descriptor_dimension = descriptors_array.shape[1]
+
+    descriptor_dimension = decoded_descriptors[matched_image_ids[0]].shape[1]
 
     padded_db_keypoints = torch.full(
         (batch_size, max_keypoints, 2), fill_value=-1.0, dtype=torch.float32, device=DEVICE
@@ -89,7 +112,9 @@ async def localize_image_against_reconstruction(
     for batch_index, matched_image_id in enumerate(matched_image_ids):
         num_image_keypoints = map.keypoints[matched_image_id].shape[0]
         padded_db_keypoints[batch_index, :num_image_keypoints, :] = map.keypoints[matched_image_id]
-        padded_db_descriptors[batch_index, :num_image_keypoints, :] = map.descriptors[matched_image_id].T
+        padded_db_descriptors[batch_index, :num_image_keypoints, :] = from_numpy(
+            decoded_descriptors[matched_image_id]
+        ).to(DEVICE)
 
     keypoints0 = padded_db_keypoints
     descriptors0 = padded_db_descriptors

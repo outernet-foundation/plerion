@@ -3,12 +3,12 @@ from typing import Any, Literal
 
 from cv2 import COLOR_BGR2GRAY, COLOR_BGR2RGB, IMREAD_COLOR, cvtColor, imdecode
 from numpy import frombuffer, uint8
-from PIL import PILImage
+from PIL import Image as PILImage
 from PIL.Image import Transpose
-from torch import float32, from_numpy, no_grad
+from torch import float32, from_numpy, no_grad  # type: ignore
 
 from .dir import DIR
-from .superpoint import SuperPoint
+from .lightglue import SuperPoint
 
 
 class Image:
