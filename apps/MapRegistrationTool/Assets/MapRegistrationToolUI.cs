@@ -53,12 +53,6 @@ namespace Outernet.MapRegistrationTool
                 OpenUserSettings
             );
 
-            // Restore when we have scan upload functionality in place
-            // systemMenu.AddMenuItem(
-            //     "File/Add Scan",
-            //     OpenAddScanDialog
-            // );
-
             SystemMenu.AddMenuItem(
                 "Edit/Delete",
                 () =>

@@ -267,7 +267,7 @@ namespace Outernet.MapRegistrationTool
 
         public override void Execute(AppState target)
         {
-            target.settings.FromJSON(_json["settings"]);
+            target.settings.FromJSON(_json);
             target.settings.loaded.value = true;
         }
     }

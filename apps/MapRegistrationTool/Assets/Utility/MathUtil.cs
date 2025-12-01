@@ -48,9 +48,6 @@ namespace Outernet.MapRegistrationTool
 
     public static class Double4x4
     {
-        public static Vector3 ToFloats(this double3 vector) => new Vector3((float)vector.x, (float)vector.y, (float)vector.z);
-        public static double3 ToDoubles(this Vector3 vector) => new double3(vector.x, vector.y, vector.z);
-
         public static double4x4 FromTranslationRotation(Vector3 translation, Quaternion rotation)
         {
             return FromTranslationRotation(

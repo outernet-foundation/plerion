@@ -37,7 +37,7 @@ namespace Outernet.MapRegistrationTool
             }
         }
 
-        public LabelButton locationHistoryElement;
+        public LocationHistoryElement locationHistoryElement;
         public TMP_InputField locationNameInputField;
         public TMP_InputField latitudeInputField;
         public TMP_InputField longitudeInputField;
@@ -95,12 +95,16 @@ namespace Outernet.MapRegistrationTool
                             element.name,
                             element.location
                         ),
-                        view.button.onClick.OnRaised(() => props.ExecuteAction(x =>
+                        view.selectButton.onClick.OnRaised(() => props.ExecuteAction(x =>
                         {
                             x.latitude.value = element.location.value.x;
                             x.longitude.value = element.location.value.y;
                             x.locationName.value = element.name.value;
                             x.status.value = DialogStatus.Complete;
+                        })),
+                        view.removeButton.onClick.OnRaised(() => props.ExecuteAction(x =>
+                        {
+                            x.history.Remove(element);
                         })),
                         Bindings.OnRelease(() => Destroy(view.gameObject))
                     );

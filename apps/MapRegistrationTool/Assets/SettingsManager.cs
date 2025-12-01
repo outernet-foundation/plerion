@@ -27,8 +27,7 @@ namespace Outernet.MapRegistrationTool
             {
                 var settingsJSON = JSONNode.Parse(File.ReadAllText(USER_SETTINGS_PATH));
                 settingsJSON = SettingsUpgrader.UpgradeIfNecessary(settingsJSON);
-
-                App.ExecuteActionOrDelay(new LoadSettingsAction(settingsJSON["data"]));
+                App.ExecuteActionOrDelay(new LoadSettingsAction(settingsJSON["settings"]));
             }
             else
             {

@@ -92,7 +92,6 @@ namespace Outernet.MapRegistrationTool
         public ObservablePrimitive<double2?> lastLocation { get; private set; }
         public ObservablePrimitive<bool> restoreLocationAutomatically { get; private set; }
         public ObservableList<LocationHistoryData> locationHistory { get; private set; }
-        public ObservablePrimitive<bool> autosaveEnabled { get; private set; }
         public ObservablePrimitive<float> nodeFetchRadius { get; private set; }
     }
 

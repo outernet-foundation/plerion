@@ -2,9 +2,6 @@ using UnityEngine;
 using FofX.Serialization;
 using Unity.Mathematics;
 using SimpleJSON;
-using Outernet.MapRegistrationTool;
-
-using UnityEngine.InputSystem.UI;
 
 namespace Outernet.MapRegistrationTool
 {
@@ -56,10 +53,6 @@ namespace Outernet.MapRegistrationTool
 
             var sceneViewRoot = Instantiate(Prefabs.SceneViewManager);
             defaultRaycaster.defaultObject = sceneViewRoot.gameObject;
-
-            // set runtime handles to be a child of the scene view root so input events bubble properly
-            var runtimeHandles = new GameObject("RuntimeHandles", typeof(RuntimeHandles));
-            runtimeHandles.transform.SetParent(sceneViewRoot.transform);
 
             Destroy(this);
         }

@@ -14,6 +14,7 @@ using Unity.Mathematics;
 
 namespace Outernet.MapRegistrationTool
 {
+    [RequireComponent(typeof(ParticleSystem))]
     public class SceneMap : Control<SceneMap.Props>, IPointerClickHandler
     {
         public class Props : ObservableObject
@@ -47,9 +48,14 @@ namespace Outernet.MapRegistrationTool
         private static readonly float3x3 basisChangeUnityFromOpenCV = math.mul(math.transpose(basisUnity), basisOpenCV);
         private static readonly float3x3 basisChangeOpenCVFromUnity = math.transpose(basisChangeUnityFromOpenCV);
 
-        // public LocalizationMapRenderer mapRenderer;
+        private ParticleSystem _particleSystem;
         private TaskHandle _loadPointsTask = TaskHandle.Complete;
         private List<Vector3> _localInputPositions = new List<Vector3>();
+
+        private void Awake()
+        {
+            _particleSystem = GetComponent<ParticleSystem>();
+        }
 
         private void Update()
         {
@@ -110,15 +116,19 @@ namespace Outernet.MapRegistrationTool
                             return new Vector3(unityBasis.Item2.x, unityBasis.Item2.y, unityBasis.Item2.z);
                         }));
 
-                        // mapRenderer.Load(points.Select(x =>
-                        // {
-                        //     var unityBasis = ChangeBasisOpenCVToUnity(new float3x3(quaternion.identity), x.Position.ToFloat3());
-                        //     return new Point()
-                        //     {
-                        //         position = unityBasis.Item2.ToVector3(),
-                        //         color = x.Color.ToUnityColor()
-                        //     };
-                        // }).ToArray());
+                        var m = _particleSystem.main;
+                        _particleSystem.SetParticles(points.Select(x =>
+                        {
+                            var unityBasis = ChangeBasisOpenCVToUnity(new float3x3(quaternion.identity), x.Position.ToFloat3());
+                            return new ParticleSystem.Particle()
+                            {
+                                position = unityBasis.Item2.ToVector3(),
+                                startLifetime = Mathf.Infinity,
+                                startSize = 10000, // Make this huge and cap the particle size in the renderer, so they are always a constant size on screen
+                                startColor = x.Color.ToUnityColor()
+                            };
+                        }).ToArray());
+                        _particleSystem.Play();
                     });
                 })
             );

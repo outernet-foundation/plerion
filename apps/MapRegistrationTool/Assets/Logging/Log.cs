@@ -22,17 +22,18 @@ namespace Outernet.MapRegistrationTool
         Default = 1 << 0,
         UncaughtException = 1 << 1,
         LoggingTests = 1 << 2,
-        Grpc = 1 << 3,
-        SyncedStateClient = 1 << 4,
-        MagicLeapCamera = 1 << 5,
-        Immersal = 1 << 6,
+        // Grpc = 1 << 3,
+        // SyncedStateClient = 1 << 4,
+        // MagicLeapCamera = 1 << 5,
+        // Immersal = 1 << 6,
         Rest = 1 << 7,
         Localizer = 1 << 8,
-        PlaneDetector = 1 << 9,
-        Permissions = 1 << 10,
+        // PlaneDetector = 1 << 9,
+        // Permissions = 1 << 10,
         BugReports = 1 << 11,
-        ContentManagement = 1 << 12,
-        Stateful = 1 << 13
+        // ContentManagement = 1 << 12,
+        Stateful = 1 << 13,
+        MapVisualization = 1 << 14
     }
 
     public static class Log

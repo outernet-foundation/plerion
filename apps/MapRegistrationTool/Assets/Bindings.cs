@@ -521,6 +521,9 @@ namespace Outernet.MapRegistrationTool
 
                     foreach (var change in args.changes)
                     {
+                        if (change.changeType == ChangeType.Dispose)
+                            continue;
+
                         var changeTarget = node.GetChild(change.source.nodePath.Substring(fromNode.nodePath.Length));
                         changeTarget.ApplyChange(change);
                     }
@@ -552,7 +555,12 @@ namespace Outernet.MapRegistrationTool
                     }
 
                     foreach (var change in args.changes)
+                    {
+                        if (change.changeType == ChangeType.Dispose)
+                            continue;
+
                         downstream.GetChild(change.source.nodePath.Substring(upstream.nodePath.Length)).ApplyChange(change);
+                    }
                 },
                 (upstream, args) =>
                 {
@@ -560,7 +568,12 @@ namespace Outernet.MapRegistrationTool
                         return;
 
                     foreach (var change in args.changes)
+                    {
+                        if (change.changeType == ChangeType.Dispose)
+                            continue;
+
                         upstream.GetChild(change.source.nodePath.Substring(downstream.nodePath.Length)).ApplyChange(change);
+                    }
                 }
             );
         }
