@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using R3;
 using Serilog;
 using UnityEngine;
 
@@ -15,8 +14,6 @@ namespace Outernet.MapRegistrationTool
 
         private static string _deviceName;
         public static string DeviceName => _deviceName;
-
-        private static IDisposable subscriptions;
 
         public static void Initialize()
         {
@@ -51,38 +48,33 @@ namespace Outernet.MapRegistrationTool
             // Application.SetStackTraceLogType(LogType.Exception, StackTraceLogType.None);
             Application.SetStackTraceLogType(LogType.Assert, StackTraceLogType.None);
 
-            subscriptions = Disposable.Combine(
-                // Log logs that bypass Debug.unityLogger.logHandler
-                Observable
-                    .FromEvent<Application.LogCallback, (string condition, string stackTrace, LogType type)>(
-                        handler => (condition, stackTrace, type) => handler((condition, stackTrace, type)),
-                        handler => Application.logMessageReceived += handler,
-                        handler => Application.logMessageReceived -= handler)
-                    .Subscribe(tuple => UnityLogMessageReceived(tuple.condition, tuple.stackTrace, tuple.type)),
+            Application.logMessageReceived += HandleApplicationLogMessageReceived;
+            UniTaskScheduler.UnobservedTaskException += LogUnobservedUniTaskExceptions;
+            TaskScheduler.UnobservedTaskException += LogUnobservedTaskExceptions;
+        }
 
-                // Log uncaught exceptions thrown by UniTasks
-                Observable
-                    .FromEvent<Exception>(
-                        handler => UniTaskScheduler.UnobservedTaskException += handler,
-                        handler => UniTaskScheduler.UnobservedTaskException -= handler)
-                    .Subscribe(exception => Log.Error(LogGroup.UncaughtException, exception, "UniTaskScheduler UnobservedTaskException")),
+        private static void HandleApplicationLogMessageReceived(string condition, string stackTrace, LogType type)
+        {
+            UnityLogMessageReceived(condition, stackTrace, type);
+        }
 
-                // Log uncaught exceptions thrown by Tasks
-                Observable
-                    .FromEventHandler<UnobservedTaskExceptionEventArgs>(
-                        handler => TaskScheduler.UnobservedTaskException += handler,
-                        handler => TaskScheduler.UnobservedTaskException -= handler)
-                    .Subscribe(args => Log.Error(LogGroup.UncaughtException, args.e.Exception, "TaskScheduler UnobservedTaskException: sender {0}", args.sender))
-            );
+        private static void LogUnobservedUniTaskExceptions(Exception exception)
+        {
+            Log.Error(LogGroup.UncaughtException, exception, "UniTaskScheduler UnobservedTaskException");
+        }
 
-            // Log uncaught exceptions thrown by R3 subscriptions
-            ObservableSystem.RegisterUnhandledExceptionHandler(exception => Log.Error(LogGroup.UncaughtException, exception, "R3 subscription unhandled exception"));
+        private static void LogUnobservedTaskExceptions(object sender, UnobservedTaskExceptionEventArgs args)
+        {
+            Log.Error(LogGroup.UncaughtException, args.Exception, "TaskScheduler UnobservedTaskException: sender {0}", sender);
         }
 
         public static void Terminate()
         {
-            subscriptions.Dispose();
             logger.Dispose();
+
+            Application.logMessageReceived -= HandleApplicationLogMessageReceived;
+            UniTaskScheduler.UnobservedTaskException -= LogUnobservedUniTaskExceptions;
+            TaskScheduler.UnobservedTaskException -= LogUnobservedTaskExceptions;
         }
 
         public static void Serilog(LogLevel level, LogGroup group, Exception exception, string messageTemplate, params object[] propertyValues)
