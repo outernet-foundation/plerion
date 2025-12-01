@@ -415,7 +415,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: defacc541d6eb724bb423c6753602073, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefabSystem: {fileID: 2055501425331506340, guid: 9ea1c470a1d101649b95ebdb469a7ba1, type: 3}
   sceneReferences: {fileID: 1580230602}
 --- !u!4 &255342862
 Transform:
