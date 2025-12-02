@@ -78,6 +78,11 @@ def run_colmap_reconstruction(
     database.close()
 
     # Perform rig-aware geometric verification of matches
+    #
+    # Calling match_spatial() when matches already exist in the database skips doing actual
+    # SIFT-based feature matching, instead only performing geometric verification on those matches
+    # and adding verified two-view geometries. And because a rig configuration exists in the
+    # database, that verification is rig-aware
     print("Verifying geometry for matches")
     match_spatial(
         database_path=str(COLMAP_DB_PATH),

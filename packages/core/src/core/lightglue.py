@@ -1,37 +1,10 @@
-from typing import Any
-
-from lightglue import LightGlue, SuperPoint  # type: ignore
+from lightglue import LightGlue  # type: ignore
 from numpy import int32, intp, nonzero
 from numpy.typing import NDArray
 from torch import Tensor, inference_mode, tensor
 from torch.nn.utils.rnn import pad_sequence
 
 from .image import Image
-
-
-def load_superpoint(
-    nms_radius: float | None = None,
-    keypoint_threshold: float | None = None,
-    max_num_keypoints: int | None = None,
-    remove_borders: int | None = None,
-    device: str = "cpu",
-):
-    conf: dict[str, Any] = {}
-    if nms_radius is not None:
-        conf["nms_radius"] = nms_radius
-    if keypoint_threshold is not None:
-        conf["keypoint_threshold"] = keypoint_threshold
-    if max_num_keypoints is not None:
-        conf["max_num_keypoints"] = max_num_keypoints
-    if remove_borders is not None:
-        conf["remove_borders"] = remove_borders
-
-    return SuperPoint(**conf).eval().to(device)
-
-
-def load_lightglue(device: str = "cpu"):
-    # TODO: add comment about why width_confidence and depth_confidence are set to -1
-    return LightGlue(features="superpoint", width_confidence=-1, depth_confidence=-1).eval().to(device)
 
 
 def lightglue_match(
@@ -60,24 +33,24 @@ def lightglue_match_tensors(
     num_batches = (len(pairs) + batch_size - 1) // batch_size
     match_indices: dict[tuple[str, str], tuple[NDArray[intp], NDArray[intp]]] = {}
     for batch_start in range(0, len(pairs), batch_size):
-        print(f"Matching batch {batch_start // batch_size + 1} of {num_batches}")
-        batch_pairs = pairs[batch_start : batch_start + batch_size]
+        print(f"Lightglue: batch {batch_start // batch_size + 1} of {num_batches}")
+        batch = pairs[batch_start : batch_start + batch_size]
 
         with inference_mode():
             matches = lightglue({
                 "image0": {
-                    "keypoints": pad_sequence([keypoints[a].to(device) for a, _ in batch_pairs], batch_first=True),
-                    "descriptors": pad_sequence([descriptors[a].to(device) for a, _ in batch_pairs], batch_first=True),
-                    "image_size": tensor([sizes[a] for a, _ in batch_pairs], device=device),
+                    "keypoints": pad_sequence([keypoints[a].to(device) for a, _ in batch], batch_first=True),
+                    "descriptors": pad_sequence([descriptors[a].to(device) for a, _ in batch], batch_first=True),
+                    "image_size": tensor([sizes[a] for a, _ in batch], device=device),
                 },
                 "image1": {
-                    "keypoints": pad_sequence([keypoints[b].to(device) for _, b in batch_pairs], batch_first=True),
-                    "descriptors": pad_sequence([descriptors[b].to(device) for _, b in batch_pairs], batch_first=True),
-                    "image_size": tensor([sizes[b] for _, b in batch_pairs], device=device),
+                    "keypoints": pad_sequence([keypoints[b].to(device) for _, b in batch], batch_first=True),
+                    "descriptors": pad_sequence([descriptors[b].to(device) for _, b in batch], batch_first=True),
+                    "image_size": tensor([sizes[b] for _, b in batch], device=device),
                 },
             })["matches0"]
 
-        for i, (image_a, image_b) in enumerate(batch_pairs):
+        for i, (image_a, image_b) in enumerate(batch):
             image_a_num_keypoints = keypoints[image_a].shape[0]
 
             # Get actual batch matches (without padding), move to CPU, and convert to numpy
