@@ -1,5 +1,10 @@
+from io import BytesIO
+from pathlib import Path
+from tarfile import open as open_tar
+
 from core.classes import Quaternion, Vector3
-from core.rig import RigCameraConfig, RigConfig, Transform, transform_intrinsics
+from core.rig import Config, RigCameraConfig, RigConfig, Transform, transform_intrinsics
+from mypy_boto3_s3 import S3Client
 from numpy import array, float64
 from pycolmap import Camera as ColmapCamera
 from pycolmap import RigConfig as pycolmapRigConfig
@@ -62,3 +67,18 @@ class Rig:
             self.frame_poses[frame_id] = Transform(
                 rotation=rotation_world_from_rig.as_matrix(), translation=translation_world_from_rig
             )
+
+
+def load_capture_session_manifest(
+    captures_bucket: str, capture_id: str, s3_client: S3Client, capture_session_directory: Path
+):
+    with open_tar(
+        fileobj=BytesIO(s3_client.get_object(Bucket=captures_bucket, Key=f"{capture_id}.tar")["Body"].read()),
+        mode="r:*",
+    ) as tar:
+        tar.extractall(path=capture_session_directory)
+
+    with open(capture_session_directory / "config.json", "rb") as file:
+        config = Config.model_validate_json(file.read().decode("utf-8"))
+
+    return {rig.id: Rig(rig, (capture_session_directory / f"{rig.id}/frames.csv").read_text()) for rig in config.rigs}

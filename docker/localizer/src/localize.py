@@ -6,11 +6,11 @@ from typing import Any, cast
 import numpy as np
 from common.boto_clients import create_s3_client
 from core.classes import Quaternion, Transform, Vector3
+from core.image import Image, create_tensors_from_buffer
+from core.lightglue import lightglue_match_tensors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import decode_descriptors
 from core.rig import PinholeCameraConfig, transform_intrinsics
-from neural_networks.image import Image
-from neural_networks.lightglue import lightglue_match_tensors
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions
 from pycolmap import Camera as ColmapCamera
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
@@ -35,30 +35,34 @@ if environ.get("CODEGEN"):
     superpoint: Any = None
     lightglue: Any = None
 else:
-    from neural_networks.dir import load_DIR
-    from neural_networks.lightglue import load_lightglue, load_superpoint
+    from neural_networks.models import load_DIR, load_lightglue, load_superpoint
 
     DEVICE = "cuda" if cuda.is_available() else "cpu"
     print(f"Using device: {DEVICE}")
 
-    print("Loading deep-image-retrieval model")
+    print("Loading DIR")
     dir = load_DIR(DEVICE)
 
-    print("Loading superpoint model")
+    print("Loading SuperPoint")
     superpoint = load_superpoint(max_num_keypoints=MAX_KEYPOINTS, device=DEVICE)
 
-    print("Loading lightglue model")
+    print("Loading LightGlue")
     lightglue = load_lightglue(DEVICE)
 
 
 async def localize_image_against_reconstruction(
     map: Map, camera: PinholeCameraConfig, image_buffer: bytes
 ) -> tuple[Transform, LocalizationMetrics]:
-    pycolmap_camera = ColmapCamera(
-        width=camera.width, height=camera.height, model="PINHOLE", params=transform_intrinsics(camera)
-    )
 
-    query_image = Image.from_buffer(image_buffer, camera.rotation, superpoint, dir, DEVICE)
+    (rgb_tensor, gray_tensor, size) = create_tensors_from_buffer(image_buffer, camera.rotation)
+
+    superpoint_output = superpoint({"image": gray_tensor.to(device=DEVICE)})
+    query_image = Image(
+        dir({"image": rgb_tensor.unsqueeze(0).to(device=DEVICE)})["global_descriptor"][0],
+        superpoint_output["keypoints"][0],
+        superpoint_output["descriptors"][0],
+        size,
+    )
 
     # Retrieve top K most similar database images
     similarity_scores = mv(map.global_matrix, query_image.global_descriptor)
@@ -115,6 +119,10 @@ async def localize_image_against_reconstruction(
 
     points2d = query_image.keypoints[query_keypoint_indices].cpu().numpy()
     points3d = np.vstack([map.reconstruction.points3D[i].xyz for i in point3d_indices])
+
+    pycolmap_camera = ColmapCamera(
+        width=camera.width, height=camera.height, model="PINHOLE", params=transform_intrinsics(camera)
+    )
 
     # Estimate pose using PnP RANSAC
     ransac_options = RANSACOptions()

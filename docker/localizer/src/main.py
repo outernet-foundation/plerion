@@ -10,8 +10,9 @@ from uuid import UUID
 from common.boto_clients import create_s3_client
 from common.fastapi import create_fastapi_app
 from core.classes import Transform
+from core.h5 import read_h5_features_for_reconstruction
 from core.localization_metrics import LocalizationMetrics
-from core.map import read_h5_features_for_reconstruction, read_opq
+from core.opq import read_opq_matrix, read_pq_quantizer
 from core.rig import CameraConfig, PinholeCameraConfig
 from fastapi import File, HTTPException, UploadFile
 from pycolmap import Reconstruction
@@ -96,7 +97,8 @@ def _load_reconstruction(id: UUID):
 
     reconstruction = Reconstruction(str(reconstruction_path / "sfm_model"))
 
-    (opq_matrix, pq) = read_opq(reconstruction_path)
+    opq_matrix = read_opq_matrix(reconstruction_path)
+    pq = read_pq_quantizer(reconstruction_path)
 
     (image_names, image_ids_in_order, global_matrix, keypoints, pq_codes) = read_h5_features_for_reconstruction(
         reconstruction, reconstruction_path, DEVICE

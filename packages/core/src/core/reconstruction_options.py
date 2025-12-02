@@ -18,6 +18,13 @@ class ReconstructionOptions(BaseModel):
             "Smaller values reduce weak overlaps and speed up matching at the cost of some coverage."
         ),
     )
+    rotation_threshold: Optional[float] = Field(
+        default=None,
+        description=(
+            "Rotation angle threshold (degrees) for considering two images as neighbors when generating image pairs. "
+            "Smaller values reduce weak overlaps and speed up matching at the cost of some coverage."
+        ),
+    )
     max_keypoints_per_image: Optional[int] = Field(
         default=None,
         description=(
@@ -110,4 +117,11 @@ class ReconstructionOptions(BaseModel):
     )
     compression_opq_number_of_training_iterations: Optional[int] = Field(
         default=None, description="Number of training iterations for OPQ compression."
+    )
+    pose_prior_position_sigma_m: Optional[float] = Field(
+        default=None,
+        description=(
+            "Standard deviation (meters) for position priors when writing PosePrior to the database. "
+            "Smaller values = stronger priors."
+        ),
     )

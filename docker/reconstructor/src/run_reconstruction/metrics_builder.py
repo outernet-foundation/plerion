@@ -14,13 +14,12 @@ from pycolmap import Image as ColmapImage
 UINT64_MAX = 18446744073709551615  # sentinel used by Point2D.point3D_id default
 
 
-class ReconstructionMetricsBuilder:
-    def __init__(self, db_path: Path):
-        self.db_path = db_path
+class MetricsBuilder:
+    def __init__(self):
         self.metrics = ReconstructionMetrics()
 
-    def build_verified_matches_metrics(self, canonical_pairs: list[tuple[str, ...]]) -> None:
-        database = Database.open(str(self.db_path))
+    def build_verified_matches_metrics(self, db_path: Path, canonical_pairs: list[tuple[str, ...]]) -> None:
+        database = Database.open(str(db_path))
         # Map image name -> image_id (help Pyright with explicit types)
         all_images: list[ColmapImage] = database.read_all_images()
         name_to_id: dict[str, int] = {img.name: img.image_id for img in all_images}

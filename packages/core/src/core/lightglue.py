@@ -1,37 +1,10 @@
-from typing import Any
-
-from lightglue import LightGlue, SuperPoint  # type: ignore
+from lightglue import LightGlue  # type: ignore
 from numpy import int32, intp, nonzero
 from numpy.typing import NDArray
 from torch import Tensor, inference_mode, tensor
 from torch.nn.utils.rnn import pad_sequence
 
 from .image import Image
-
-
-def load_superpoint(
-    nms_radius: float | None = None,
-    keypoint_threshold: float | None = None,
-    max_num_keypoints: int | None = None,
-    remove_borders: int | None = None,
-    device: str = "cpu",
-):
-    conf: dict[str, Any] = {}
-    if nms_radius is not None:
-        conf["nms_radius"] = nms_radius
-    if keypoint_threshold is not None:
-        conf["keypoint_threshold"] = keypoint_threshold
-    if max_num_keypoints is not None:
-        conf["max_num_keypoints"] = max_num_keypoints
-    if remove_borders is not None:
-        conf["remove_borders"] = remove_borders
-
-    return SuperPoint(**conf).eval().to(device)
-
-
-def load_lightglue(device: str = "cpu"):
-    # TODO: add comment about why width_confidence and depth_confidence are set to -1
-    return LightGlue(features="superpoint", width_confidence=-1, depth_confidence=-1).eval().to(device)
 
 
 def lightglue_match(
@@ -60,7 +33,7 @@ def lightglue_match_tensors(
     num_batches = (len(pairs) + batch_size - 1) // batch_size
     match_indices: dict[tuple[str, str], tuple[NDArray[intp], NDArray[intp]]] = {}
     for batch_start in range(0, len(pairs), batch_size):
-        print(f"Matching batch {batch_start // batch_size + 1} of {num_batches}")
+        print(f"  {batch_start // batch_size + 1} of {num_batches}")
         batch_pairs = pairs[batch_start : batch_start + batch_size]
 
         with inference_mode():

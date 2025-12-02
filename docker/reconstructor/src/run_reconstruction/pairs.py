@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from itertools import combinations
+from pathlib import Path
 from typing import Dict, Optional
 
 import torch
@@ -10,6 +11,8 @@ from numpy.linalg import norm
 from torch import from_numpy, topk  # type: ignore
 
 from .rig import Rig
+
+PAIRS_FILE = "pairs.txt"
 
 
 def generate_image_pairs(rigs: Dict[str, Rig], neighbors_count: int, rotation_thresh_deg: float):
@@ -43,6 +46,12 @@ def generate_image_pairs(rigs: Dict[str, Rig], neighbors_count: int, rotation_th
         for a, b in cross_frame_image_pairs_by_frame_proximity + intra_frame_image_pairs
         if a != b
     })
+
+
+def write_pairs(pairs: list[tuple[str, ...]], root_path: Path):
+    path = root_path / PAIRS_FILE
+    path.write_text("\n".join([" ".join(pair) for pair in pairs]))
+    return PAIRS_FILE, path.read_bytes()
 
 
 def pairs_from_poses(images: dict[tuple[str, str], Transform], num_neighbors: int, rotation_thresh_deg: float):

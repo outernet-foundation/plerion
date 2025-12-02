@@ -6,9 +6,12 @@ from pycolmap import FeatureMatchingOptions, IncrementalPipelineOptions, TwoView
 DEFAULT_OPQ_NUMBER_OF_SUBVECTORS = 16
 DEFAULT_OPQ_NUMBER_OF_BITS_PER_SUBVECTOR = 8
 DEFAULT_OPQ_NUMBER_OF_TRAINING_ITERATIONS = 20
+DEFAULT_NEIGHBORS_COUNT = 12
+DEFAULT_NEIGHBOR_ROTATION_THRESHOLD = 30.0
+DEFAULT_POSE_PRIOR_POS_SIGMA_M = 0.25
 
 
-class ReconstructionOptionsBuilder:
+class OptionsBuilder:
     def __init__(self, options: ReconstructionOptions):
         self.options = options
 
@@ -32,6 +35,15 @@ class ReconstructionOptionsBuilder:
         feature_matching_options.skip_image_pairs_in_same_frame = False
         return feature_matching_options
 
+    def neighbors_count(self):
+        return self.options.neighbors_count or DEFAULT_NEIGHBORS_COUNT
+
+    def rotation_threshold_deg(self):
+        return self.options.rotation_threshold or DEFAULT_NEIGHBOR_ROTATION_THRESHOLD
+
+    def max_keypoints_per_image(self):
+        return self.options.max_keypoints_per_image or None
+
     def compression_opq_number_of_subvectors(self):
         return self.options.compression_opq_number_of_subvectors or DEFAULT_OPQ_NUMBER_OF_SUBVECTORS
 
@@ -40,6 +52,9 @@ class ReconstructionOptionsBuilder:
 
     def compression_opq_number_of_training_iterations(self):
         return self.options.compression_opq_number_of_training_iterations or DEFAULT_OPQ_NUMBER_OF_TRAINING_ITERATIONS
+
+    def pose_prior_position_sigma_m(self):
+        return self.options.pose_prior_position_sigma_m or DEFAULT_POSE_PRIOR_POS_SIGMA_M
 
     def incremental_pipeline_options(self):
         incremental_pipeline_options = IncrementalPipelineOptions()

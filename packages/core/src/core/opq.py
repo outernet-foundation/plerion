@@ -1,11 +1,21 @@
+from pathlib import Path
 from typing import cast
 
-from core.utility import to_f32
-from faiss import OPQMatrix, ProductQuantizer  # type: ignore
+from faiss import (  # type: ignore
+    OPQMatrix,
+    ProductQuantizer,
+    read_ProductQuantizer,  # type: ignore
+    read_VectorTransform,  # type: ignore
+    write_ProductQuantizer,  # type: ignore
+    write_VectorTransform,  # type: ignore
+)
 from numpy import ascontiguousarray, float32, uint8
 from numpy.linalg import norm
 from numpy.typing import NDArray
 from torch import Tensor
+
+OPQ_MATRIX_FILE = "opq_matrix.tf"
+PQ_QUANTIZER_FILE = "pq_quantizer.pq"
 
 
 def train_opq_matrix(number_of_subvectors: int, number_of_training_iterations: int, training_unit: NDArray[float32]):
@@ -31,7 +41,7 @@ def encode_descriptors(
 ):
     images_codes: dict[str, NDArray[uint8]] = {}
     for name in image_descriptors.keys():
-        descriptors_contiguous = ascontiguousarray(to_f32(image_descriptors[name]))
+        descriptors_contiguous = ascontiguousarray(image_descriptors[name])
         descriptors_rotated = cast(NDArray[float32], opq_matrix.apply(descriptors_contiguous))  # type: ignore
         codes = cast(NDArray[uint8], product_quantizer.compute_codes(descriptors_rotated))  # type: ignore
         images_codes[name] = codes
@@ -51,3 +61,23 @@ def decode_descriptors(opq_matrix: OPQMatrix, product_quantizer: ProductQuantize
 
 def _l2_normalize_rows(matrix: NDArray[float32]) -> NDArray[float32]:
     return (matrix / (norm(matrix, axis=1, keepdims=True).astype(float32) + float32(1e-12))).astype(float32, copy=False)
+
+
+def write_opq_matrix(opq_matrix: OPQMatrix, root_path: Path):
+    path = root_path / OPQ_MATRIX_FILE
+    write_VectorTransform(opq_matrix, str(path))
+    return OPQ_MATRIX_FILE, path.read_bytes()
+
+
+def write_pq_quantizer(pq_quantizer: ProductQuantizer, root_path: Path):
+    path = root_path / PQ_QUANTIZER_FILE
+    write_ProductQuantizer(pq_quantizer, str(path))
+    return PQ_QUANTIZER_FILE, path.read_bytes()
+
+
+def read_opq_matrix(root_path: Path):
+    return cast(OPQMatrix, read_VectorTransform(str(root_path / OPQ_MATRIX_FILE)))
+
+
+def read_pq_quantizer(root_path: Path):
+    return cast(ProductQuantizer, read_ProductQuantizer(str(root_path / PQ_QUANTIZER_FILE)))
