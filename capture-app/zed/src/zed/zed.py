@@ -12,8 +12,8 @@ from traceback import format_exception
 from typing import Union, cast
 from uuid import UUID, uuid4
 
+from core.classes import Quaternion, Vector3
 from core.rig import Config, PinholeCameraConfig, RigCameraConfig, RigConfig
-from core.transform import Quaternion, Vector3
 from numpy import asarray, float64
 from PIL import Image
 from pyzed.sl import (

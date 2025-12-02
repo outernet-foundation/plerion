@@ -1,6 +1,5 @@
-from core.rig import RigCameraConfig, RigConfig, Transform
-from core.transform import Quaternion, Vector3
-from core.ugh import transform_intrinsics
+from core.classes import Quaternion, Vector3
+from core.rig import RigCameraConfig, RigConfig, Transform, transform_intrinsics
 from numpy import array, float64
 from pycolmap import Camera as ColmapCamera
 from pycolmap import RigConfig as pycolmapRigConfig

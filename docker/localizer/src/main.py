@@ -9,10 +9,10 @@ from uuid import UUID
 
 from common.boto_clients import create_s3_client
 from common.fastapi import create_fastapi_app
-from core.classes import LocalizationMetrics
+from core.classes import Transform
+from core.localization_metrics import LocalizationMetrics
 from core.map import read_h5_features_for_reconstruction, read_opq
 from core.rig import CameraConfig, PinholeCameraConfig
-from core.transform import Transform
 from fastapi import File, HTTPException, UploadFile
 from pycolmap import Reconstruction
 

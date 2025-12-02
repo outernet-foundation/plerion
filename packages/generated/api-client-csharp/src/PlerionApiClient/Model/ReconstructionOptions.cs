@@ -52,7 +52,7 @@ namespace PlerionApiClient.Model
         /// <param name="bundleAdjustmentRefinePrincipalPoint">bundleAdjustmentRefinePrincipalPoint.</param>
         /// <param name="bundleAdjustmentRefineAdditionalParams">bundleAdjustmentRefineAdditionalParams.</param>
         /// <param name="compressionOpqNumberOfSubvectors">compressionOpqNumberOfSubvectors.</param>
-        /// <param name="compressionOpqNumberBitsPerSubvector">compressionOpqNumberBitsPerSubvector.</param>
+        /// <param name="compressionOpqNumberOfBitsPerSubvector">compressionOpqNumberOfBitsPerSubvector.</param>
         /// <param name="compressionOpqNumberOfTrainingIterations">compressionOpqNumberOfTrainingIterations.</param>
         public ReconstructionOptions()
         {
@@ -467,28 +467,28 @@ namespace PlerionApiClient.Model
             return _flagCompressionOpqNumberOfSubvectors;
         }
         /// <summary>
-        /// Gets or Sets CompressionOpqNumberBitsPerSubvector
+        /// Gets or Sets CompressionOpqNumberOfBitsPerSubvector
         /// </summary>
-        [DataMember(Name = "compression_opq_number_bits_per_subvector", EmitDefaultValue = true)]
-        public int? CompressionOpqNumberBitsPerSubvector
+        [DataMember(Name = "compression_opq_number_of_bits_per_subvector", EmitDefaultValue = true)]
+        public int? CompressionOpqNumberOfBitsPerSubvector
         {
-            get{ return _CompressionOpqNumberBitsPerSubvector;}
+            get{ return _CompressionOpqNumberOfBitsPerSubvector;}
             set
             {
-                _CompressionOpqNumberBitsPerSubvector = value;
-                _flagCompressionOpqNumberBitsPerSubvector = true;
+                _CompressionOpqNumberOfBitsPerSubvector = value;
+                _flagCompressionOpqNumberOfBitsPerSubvector = true;
             }
         }
-        private int? _CompressionOpqNumberBitsPerSubvector;
-        private bool _flagCompressionOpqNumberBitsPerSubvector;
+        private int? _CompressionOpqNumberOfBitsPerSubvector;
+        private bool _flagCompressionOpqNumberOfBitsPerSubvector;
 
         /// <summary>
-        /// Returns false as CompressionOpqNumberBitsPerSubvector should not be serialized given that it's read-only.
+        /// Returns false as CompressionOpqNumberOfBitsPerSubvector should not be serialized given that it's read-only.
         /// </summary>
         /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeCompressionOpqNumberBitsPerSubvector()
+        public bool ShouldSerializeCompressionOpqNumberOfBitsPerSubvector()
         {
-            return _flagCompressionOpqNumberBitsPerSubvector;
+            return _flagCompressionOpqNumberOfBitsPerSubvector;
         }
         /// <summary>
         /// Gets or Sets CompressionOpqNumberOfTrainingIterations
@@ -539,7 +539,7 @@ namespace PlerionApiClient.Model
             sb.Append("  BundleAdjustmentRefinePrincipalPoint: ").Append(BundleAdjustmentRefinePrincipalPoint).Append("\n");
             sb.Append("  BundleAdjustmentRefineAdditionalParams: ").Append(BundleAdjustmentRefineAdditionalParams).Append("\n");
             sb.Append("  CompressionOpqNumberOfSubvectors: ").Append(CompressionOpqNumberOfSubvectors).Append("\n");
-            sb.Append("  CompressionOpqNumberBitsPerSubvector: ").Append(CompressionOpqNumberBitsPerSubvector).Append("\n");
+            sb.Append("  CompressionOpqNumberOfBitsPerSubvector: ").Append(CompressionOpqNumberOfBitsPerSubvector).Append("\n");
             sb.Append("  CompressionOpqNumberOfTrainingIterations: ").Append(CompressionOpqNumberOfTrainingIterations).Append("\n");
             sb.Append("}\n");
             return sb.ToString();

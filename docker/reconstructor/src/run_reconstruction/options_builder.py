@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from core.reconstruction_manifest import ReconstructionOptions
+from core.reconstruction_options import ReconstructionOptions
 from pycolmap import FeatureMatchingOptions, IncrementalPipelineOptions, TwoViewGeometryOptions
 
+DEFAULT_OPQ_NUMBER_OF_SUBVECTORS = 16
+DEFAULT_OPQ_NUMBER_OF_BITS_PER_SUBVECTOR = 8
+DEFAULT_OPQ_NUMBER_OF_TRAINING_ITERATIONS = 20
 
-class Options:
+
+class ReconstructionOptionsBuilder:
     def __init__(self, options: ReconstructionOptions):
         self.options = options
 
@@ -27,6 +31,15 @@ class Options:
             feature_matching_options.rig_verification = self.options.rig_verification
         feature_matching_options.skip_image_pairs_in_same_frame = False
         return feature_matching_options
+
+    def compression_opq_number_of_subvectors(self):
+        return self.options.compression_opq_number_of_subvectors or DEFAULT_OPQ_NUMBER_OF_SUBVECTORS
+
+    def compression_opq_number_of_bits_per_subvector(self):
+        return self.options.compression_opq_number_of_bits_per_subvector or DEFAULT_OPQ_NUMBER_OF_BITS_PER_SUBVECTOR
+
+    def compression_opq_number_of_training_iterations(self):
+        return self.options.compression_opq_number_of_training_iterations or DEFAULT_OPQ_NUMBER_OF_TRAINING_ITERATIONS
 
     def incremental_pipeline_options(self):
         incremental_pipeline_options = IncrementalPipelineOptions()

@@ -16,8 +16,6 @@ from numpy.typing import NDArray
 from pycolmap import Reconstruction
 from torch import Tensor, from_numpy  # type: ignore
 
-from .metrics import Metrics
-from .options import Options
 from .reconstruction_manifest import ReconstructionManifest
 from .utility import to_f32
 
@@ -55,17 +53,17 @@ class MapWriter:
         self.s3_client = s3_client
         self.reconstruction_bucket = reconstruction_bucket
         self.reconstruction_id = reconstruction_id
-        self.options = Options(manifest.options)
-        self.metrics = Metrics(colmap_db_path)
 
     def write_pairs(self, pairs: list[tuple[str, ...]]):
         (self.root_path / PAIRS_FILE).write_text("\n".join([" ".join(pair) for pair in pairs]))
         self._put_reconstruction_object(key=PAIRS_FILE, body=(self.root_path / PAIRS_FILE).read_bytes())
 
-    def write_opq(self, opq_matrix: OPQMatrix, pq_quantizer: ProductQuantizer):
+    def write_opq_matrix(self, opq_matrix: OPQMatrix):
         write_VectorTransform(opq_matrix, str(self.root_path / OPQ_MATRIX_FILE))
-        write_ProductQuantizer(pq_quantizer, str(self.root_path / PQ_QUANTIZER_FILE))
         self._put_reconstruction_object(key=OPQ_MATRIX_FILE, body=(self.root_path / OPQ_MATRIX_FILE).read_bytes())
+
+    def write_pq_product_quantizer(self, pq_quantizer: ProductQuantizer):
+        write_ProductQuantizer(pq_quantizer, str(self.root_path / PQ_QUANTIZER_FILE))
         self._put_reconstruction_object(key=PQ_QUANTIZER_FILE, body=(self.root_path / PQ_QUANTIZER_FILE).read_bytes())
 
     def write_h5_features(

@@ -1,9 +1,9 @@
 from uuid import UUID, uuid4
 
 from common.session_client_docker import DockerSessionClient
-from core.classes import LocalizationMetrics
+from core.classes import Quaternion, Transform, Vector3
+from core.localization_metrics import LocalizationMetrics
 from core.rig import CameraConfig
-from core.transform import Quaternion, Transform, Vector3
 from datamodels.public_dtos import LocalizationSessionRead, localization_session_to_dto
 from datamodels.public_tables import LocalizationMap, LocalizationSession
 from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile, status

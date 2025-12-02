@@ -5,22 +5,22 @@ from pathlib import Path
 from tarfile import open as open_tar
 from typing import Iterable, Iterator, Literal, TypeVar
 
-import torch
 from common.boto_clients import create_s3_client
 from core.map import MapWriter
+from core.opq import encode_descriptors, train_opq_matrix, train_pq_quantizer
 from core.reconstruction_manifest import ReconstructionManifest
 from core.rig import Config
+from core.utility import to_f32
 from neural_networks.dir import load_DIR
 from neural_networks.image import Image
-from neural_networks.lightglue import load_lightglue, load_superpoint
-from numpy import eye, float32, float64, int32, intp, nonzero, random, stack, uint32
-from numpy.typing import NDArray
-from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
-from pycolmap import Image as pycolmapImage
-from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial, set_random_seed
+from neural_networks.lightglue import lightglue_match, load_lightglue, load_superpoint
+from numpy import ascontiguousarray, float32, random, vstack
+from pycolmap._core import set_random_seed
 from torch import cuda
 
-from .opq import train_opq_and_encode
+from .colmap import run_colmap_reconstruction
+from .metrics_builder import ReconstructionMetricsBuilder
+from .options_builder import ReconstructionOptionsBuilder
 from .pairs import generate_image_pairs
 from .rig import Rig
 from .settings import get_settings
@@ -62,6 +62,8 @@ def main():
     map_writer = MapWriter(
         WORK_DIR, manifest, s3_client, COLMAP_DB_PATH, settings.reconstructions_bucket, settings.reconstruction_id
     )
+    options_builder = ReconstructionOptionsBuilder(manifest.options)
+    metrics_builder = ReconstructionMetricsBuilder(COLMAP_DB_PATH)
 
     # Download and extract capture session tarball
     print("Downloading capture session")
@@ -93,9 +95,7 @@ def main():
 
     def create_image(image_path: str, rotation: Literal["None", "90_CW", "180", "90_CCW"]) -> Image:
         with open(CAPTURE_SESSION_DIRECTORY / image_path, "rb") as img_file:
-            return Image(
-                image_buffer=img_file.read(), camera_rotation=rotation, superpoint=superpoint, dir=dir, device=DEVICE
-            )
+            return Image.from_buffer(img_file.read(), rotation, superpoint, dir, DEVICE)
 
     # Extract global descriptors and keypoints/descriptors for all images
     images = {
@@ -119,17 +119,33 @@ def main():
     }
 
     # Compute and store average keypoints per image metric
-    map_writer.metrics.metrics.average_keypoints_per_image = float(
+    metrics_builder.metrics.average_keypoints_per_image = float(
         sum(len(img.keypoints) for img in images.values()) / len(images)
     )
 
-    # Train OPQ and PQ, and encode all image descriptors
-    print("Training OPQ and PQ, and encoding descriptors")
-    opq_matrix, product_quantizer, image_codes = train_opq_and_encode(
-        manifest.options, {key: images[key].descriptors for key in images.keys()}
-    )
+    training_unit = ascontiguousarray(vstack([to_f32(images[name].descriptors) for name in images.keys()]))
 
-    map_writer.write_opq(opq_matrix, product_quantizer)
+    print("Training OPQ matrix")
+    opq_matrix = train_opq_matrix(
+        options_builder.compression_opq_number_of_subvectors(),
+        options_builder.compression_opq_number_of_training_iterations(),
+        training_unit,
+    )
+    map_writer.write_opq_matrix(opq_matrix)
+
+    print("Training PQ quantizer")
+    product_quantizer = train_pq_quantizer(
+        options_builder.compression_opq_number_of_subvectors(),
+        options_builder.compression_opq_number_of_bits_per_subvector(),
+        opq_matrix,
+        training_unit,
+    )
+    map_writer.write_pq_product_quantizer(product_quantizer)
+
+    print("Encoding image descriptors")
+    image_codes = encode_descriptors(
+        opq_matrix, product_quantizer, {name: images[name].descriptors for name in images.keys()}
+    )
 
     map_writer.write_h5_features(
         global_descriptors={name: images[name].global_descriptor for name in images.keys()},
@@ -143,116 +159,18 @@ def main():
 
     # Match features for all image pairs
     print("Matching features")
-    matches_gpu = {
-        (imageA, imageB): lightglue({
-            "image0": {
-                "keypoints": images[imageA].keypoints.unsqueeze(0),
-                "descriptors": images[imageA].descriptors.unsqueeze(0),
-                "image_size": torch.tensor([images[imageA].size], device=DEVICE),
-            },
-            "image1": {
-                "keypoints": images[imageB].keypoints.unsqueeze(0),
-                "descriptors": images[imageB].descriptors.unsqueeze(0),
-                "image_size": torch.tensor([images[imageB].size], device=DEVICE),
-            },
-        })["matches0"][0]
-        for imageA, imageB in _iterate_and_log(canonical_pairs, label="Matching features")
-    }
+    match_indices = lightglue_match(lightglue, canonical_pairs, images, batch_size=32, device=DEVICE)
 
-    # Move matches to CPU and convert to numpy
-    matches = {key: value.cpu().numpy().astype(int32) for key, value in matches_gpu.items()}
-
-    # Extract keypoint indices for matches
-    match_indices: dict[tuple[str, str], tuple[NDArray[intp], NDArray[intp]]] = {}
-    for image_a, image_b in canonical_pairs:
-        image_a_keypoint_to_image_b_keypoint = matches[(image_a, image_b)]
-
-        # Create mask of actual matches (where the keypoint index in image B for a keypoint in image A is not -1)
-        mask = image_a_keypoint_to_image_b_keypoint >= 0
-
-        # Extract indices of valid matches
-        image_a_indices = nonzero(mask)[0]
-        image_b_indices = image_a_keypoint_to_image_b_keypoint[mask]
-        match_indices[(image_a, image_b)] = (image_a_indices, image_b_indices)
-
-    # Create COLMAP database
-    database = Database.open(str(COLMAP_DB_PATH))
-
-    # Write cameras, images, keypoints, and pose priors to database
-    colmap_image_ids: dict[str, int] = {}
-    for rig_id, rig in rigs.items():
-        for camera_id, camera in rig.cameras.items():
-            colmap_camera_id = database.write_camera(camera[1])
-
-            for frame_id, transform in rig.frame_poses.items():
-                image_name = f"{rig_id}/{camera_id}/{frame_id}.jpg"
-
-                colmap_image_ids[image_name] = database.write_image(
-                    pycolmapImage(name=image_name, camera_id=colmap_camera_id)
-                )
-                database.write_keypoints(colmap_image_ids[image_name], keypoints[image_name])
-
-                # Only write pose prior for images from reference sensors (all others are implied by rig)
-                if camera[0].ref_sensor:
-                    database.write_pose_prior(
-                        colmap_image_ids[image_name],
-                        PosePrior(
-                            position=transform.translation.reshape(3, 1),
-                            position_covariance=(POSE_PRIOR_POS_SIGMA_M**2) * eye(3, dtype=float64),
-                            coordinate_system=PosePriorCoordinateSystem.CARTESIAN,
-                        ),
-                    )
-
-    # Apply rig configuration to database (must be done after writing cameras and images)
-    apply_rig_config([rig.colmap_rig_config for rig in rigs.values()], database)
-
-    # Write matches to database
-    for a, b in canonical_pairs:
-        (image_a_indices, image_b_indices) = match_indices[(a, b)]
-        database.write_matches(
-            colmap_image_ids[a],
-            colmap_image_ids[b],
-            stack((image_a_indices, image_b_indices), axis=1).astype(uint32, copy=False),
-        )
-
-    # Close database
-    database.close()
-
-    # Perform rig-aware geometric verification of matches
-    print("Verifying geometry for matches")
-    match_spatial(
-        database_path=str(COLMAP_DB_PATH),
-        matching_options=map_writer.options.feature_matching_options(),
-        verification_options=map_writer.options.two_view_geometry_options(),
+    reconstruction = run_colmap_reconstruction(
+        options_builder, metrics_builder, rigs, keypoints, canonical_pairs, match_indices
     )
 
-    # Compute and store verified matches metrics
-    map_writer.metrics.build_verified_matches_metrics(canonical_pairs)
-
-    # Run incremental mapping
-    print("Running incremental mapping")
-    reconstructions = incremental_mapping(
-        database_path=str(COLMAP_DB_PATH),
-        image_path=str(CAPTURE_SESSION_DIRECTORY),
-        output_path=str(COLMAP_SFM_DIRECTORY),
-        options=map_writer.options.incremental_pipeline_options(),
-    )
-
-    # Check that at least one reconstruction was created
-    if len(reconstructions) == 0:
+    manifest.metrics = metrics_builder.metrics
+    if reconstruction is None:
         manifest.status = "failed"
         manifest.error = "No model was created"
-
-    # Choose the reconstruction with the most registered images
-    # TODO: Write information to metrics about this for visibility
-    best_id = max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
-    best = reconstructions[best_id]
-
-    # Compute and store reconstruction metrics
-    map_writer.metrics.build_reconstruction_metrics(best)
-
-    # Write reconstruction results
-    map_writer.write_reconstruction(best)
+    else:
+        map_writer.write_reconstruction(reconstruction)
 
 
 T = TypeVar("T")

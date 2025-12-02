@@ -2418,11 +2418,8 @@ components:
       title: LocalizationMapUpdate
     LocalizationMetrics:
       example:
-        image_coverage: 1.4658129805029452
-        depth_z_10th_percentile: 5.637376656633329
         inlier_ratio: 0.8008281904610115
         reprojection_error_median: 6.027456183070403
-        depth_z_90th_percentile: 5.962133916683182
       properties:
         inlier_ratio:
           title: Inlier Ratio
@@ -2430,19 +2427,7 @@ components:
         reprojection_error_median:
           title: Reprojection Error Median
           type: number
-        image_coverage:
-          title: Image Coverage
-          type: number
-        depth_z_90th_percentile:
-          title: Depth Z 90Th Percentile
-          type: number
-        depth_z_10th_percentile:
-          title: Depth Z 10Th Percentile
-          type: number
       required:
-      - depth_z_10th_percentile
-      - depth_z_90th_percentile
-      - image_coverage
       - inlier_ratio
       - reprojection_error_median
       title: LocalizationMetrics
@@ -2487,11 +2472,8 @@ components:
             z: 7.061401241503109
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         metrics:
-          image_coverage: 1.4658129805029452
-          depth_z_10th_percentile: 5.637376656633329
           inlier_ratio: 0.8008281904610115
           reprojection_error_median: 6.027456183070403
-          depth_z_90th_percentile: 5.962133916683182
         map_transform:
           rotation:
             w: 5.962133916683182
@@ -3014,10 +2996,10 @@ components:
           ransac_max_error: 5.962133916683182
           triangulation_merge_max_reprojection_error: 9.301444243932576
           ransac_min_inlier_ratio: 5.637376656633329
-          compression_opq_number_bits_per_subvector: 4
           bundle_adjustment_refine_sensor_from_rig: true
           bundle_adjustment_refine_principal_point: true
           compression_opq_number_of_subvectors: 2
+          compression_opq_number_of_bits_per_subvector: 4
           use_prior_position: true
           max_keypoints_per_image: 1
           compression_opq_number_of_training_iterations: 7
@@ -3048,10 +3030,10 @@ components:
           ransac_max_error: 5.962133916683182
           triangulation_merge_max_reprojection_error: 9.301444243932576
           ransac_min_inlier_ratio: 5.637376656633329
-          compression_opq_number_bits_per_subvector: 4
           bundle_adjustment_refine_sensor_from_rig: true
           bundle_adjustment_refine_principal_point: true
           compression_opq_number_of_subvectors: 2
+          compression_opq_number_of_bits_per_subvector: 4
           use_prior_position: true
           max_keypoints_per_image: 1
           compression_opq_number_of_training_iterations: 7
@@ -3234,10 +3216,10 @@ components:
         ransac_max_error: 5.962133916683182
         triangulation_merge_max_reprojection_error: 9.301444243932576
         ransac_min_inlier_ratio: 5.637376656633329
-        compression_opq_number_bits_per_subvector: 4
         bundle_adjustment_refine_sensor_from_rig: true
         bundle_adjustment_refine_principal_point: true
         compression_opq_number_of_subvectors: 2
+        compression_opq_number_of_bits_per_subvector: 4
         use_prior_position: true
         max_keypoints_per_image: 1
         compression_opq_number_of_training_iterations: 7
@@ -3301,7 +3283,7 @@ components:
         compression_opq_number_of_subvectors:
           nullable: true
           type: integer
-        compression_opq_number_bits_per_subvector:
+        compression_opq_number_of_bits_per_subvector:
           nullable: true
           type: integer
         compression_opq_number_of_training_iterations:

@@ -2,18 +2,25 @@ from io import BytesIO
 from typing import Any, Literal
 
 from cv2 import COLOR_BGR2GRAY, COLOR_BGR2RGB, IMREAD_COLOR, cvtColor, imdecode
+from lightglue import SuperPoint  # type: ignore
 from numpy import frombuffer, uint8
 from PIL import Image as PILImage
 from PIL.Image import Transpose
-from torch import float32, from_numpy, no_grad  # type: ignore
+from torch import float32, from_numpy, inference_mode  # type: ignore
 
 from .dir import DIR
-from .lightglue import SuperPoint
 
 
 class Image:
-    def __init__(
-        self,
+    def __init__(self, global_descriptor: Any, keypoints: Any, descriptors: Any, size: tuple[int, int]):
+        self.global_descriptor = global_descriptor
+        self.keypoints = keypoints
+        self.descriptors = descriptors
+        self.size = size
+
+    @classmethod
+    def from_buffer(
+        cls,
         image_buffer: bytes,
         camera_rotation: Literal["None", "90_CW", "180", "90_CCW"],
         superpoint: SuperPoint,
@@ -44,10 +51,10 @@ class Image:
             from_numpy(grayscale_image).unsqueeze(0).unsqueeze(0).div(255.0).to(device=device, dtype=float32)
         )
 
-        self.size = bgr_image.shape[:2]
-
-        with no_grad():
-            superpoint_output = superpoint({"image": grayscale_image_tensor})
-            self.global_descriptor = dir({"image": rbg_image_tensor})["global_descriptor"][0]
-            self.keypoints: Any = superpoint_output["keypoints"][0]
-            self.descriptors: Any = superpoint_output["descriptors"][0]
+        with inference_mode():
+            return cls(
+                global_descriptor=dir({"image": rbg_image_tensor})["global_descriptor"][0],
+                keypoints=superpoint({"image": grayscale_image_tensor})["keypoints"][0],
+                descriptors=superpoint({"image": grayscale_image_tensor})["descriptors"][0],
+                size=bgr_image.shape[:2],
+            )

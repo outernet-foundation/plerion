@@ -39,7 +39,9 @@ def generate_image_pairs(rigs: Dict[str, Rig], neighbors_count: int, rotation_th
 
     # Canonicalize and deduplicate
     return sorted({
-        tuple(sorted((a, b))) for a, b in cross_frame_image_pairs_by_frame_proximity + intra_frame_image_pairs if a != b
+        (a, b) if a <= b else (b, a)
+        for a, b in cross_frame_image_pairs_by_frame_proximity + intra_frame_image_pairs
+        if a != b
     })
 
 

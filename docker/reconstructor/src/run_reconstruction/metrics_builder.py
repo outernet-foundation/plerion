@@ -4,7 +4,7 @@ from pathlib import Path
 from statistics import mean, median
 from typing import Any, Iterable, List, Optional, Sequence, cast
 
-from core.reconstruction_manifest import ReconstructionMetrics
+from core.reconstruction_metrics import ReconstructionMetrics
 from numpy import asarray, float64, percentile
 from numpy.linalg import norm
 from numpy.typing import NDArray
@@ -14,7 +14,7 @@ from pycolmap import Image as ColmapImage
 UINT64_MAX = 18446744073709551615  # sentinel used by Point2D.point3D_id default
 
 
-class Metrics:
+class ReconstructionMetricsBuilder:
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.metrics = ReconstructionMetrics()

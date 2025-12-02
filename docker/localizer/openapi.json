@@ -437,27 +437,12 @@
           "reprojection_error_median": {
             "type": "number",
             "title": "Reprojection Error Median"
-          },
-          "image_coverage": {
-            "type": "number",
-            "title": "Image Coverage"
-          },
-          "depth_z_90th_percentile": {
-            "type": "number",
-            "title": "Depth Z 90Th Percentile"
-          },
-          "depth_z_10th_percentile": {
-            "type": "number",
-            "title": "Depth Z 10Th Percentile"
           }
         },
         "type": "object",
         "required": [
           "inlier_ratio",
-          "reprojection_error_median",
-          "image_coverage",
-          "depth_z_90th_percentile",
-          "depth_z_10th_percentile"
+          "reprojection_error_median"
         ],
         "title": "LocalizationMetrics"
       },
