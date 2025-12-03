@@ -1,23 +1,24 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Dict
 
 from faiss import (  # type: ignore
     OPQMatrix,
-    ProductQuantizer,  # type: ignore
+    ProductQuantizer,
 )
 from numpy import float32, uint8
 from numpy.typing import NDArray
-from pycolmap import Reconstruction
+from pycolmap._core import ImageMap, Point3DMap
 
 
 @dataclass(frozen=True)
 class Map:
-    reconstruction: Reconstruction
-    image_names: list[str]
-    image_ids_in_order: list[int]
-    image_id_by_name: dict[str, int]
-    global_matrix: NDArray[float32]
-    keypoints: Dict[int, NDArray[float32]]
+    points3D: Point3DMap
     opq_matrix: OPQMatrix
-    pq: ProductQuantizer
+    product_quantizer: ProductQuantizer
+    ordered_image_ids: list[int]
+    images: ImageMap
+    image_sizes: dict[str, tuple[int, int]]
+    global_descriptors_matrix: NDArray[float32]
+    keypoints: dict[int, NDArray[float32]]
     pq_codes: dict[int, NDArray[uint8]]

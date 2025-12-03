@@ -1,10 +1,9 @@
 from pathlib import Path
-from typing import Any, Dict, Mapping, cast
+from typing import Any, Mapping, cast
 
 from h5py import Dataset, File, Group
-from numpy import asarray, float32, stack, uint8
+from numpy import asarray, float32, uint8
 from numpy.typing import NDArray
-from pycolmap import Reconstruction
 
 GLOBAL_DESCRIPTORS_DATASET_NAME = "global_descriptor"
 KEYPOINTS_DATASET_NAME = "keypoints"
@@ -38,30 +37,28 @@ def _create_dataset(group: Group, name: str, data: Any):
     group.create_dataset(name, data=data, compression="gzip", compression_opts=9, shuffle=True, chunks=True)
 
 
-def read_h5_features_for_reconstruction(reconstruction: Reconstruction, root_path: Path, device: str):
-    images_mapping = cast(Mapping[int, Any], reconstruction.images)
+def read_global_descriptors(root_path: Path):
+    global_descriptors_by_name: dict[str, NDArray[float32]] = {}
 
-    # Canonical order: sort by image id for determinism
-    image_items = sorted(images_mapping.items(), key=lambda item: int(item[0]))
-    image_ids_in_order = [int(image_id) for image_id, _ in image_items]
-    image_names = [str(img.name) for _, img in image_items]
-
-    # --- global descriptors ---
     with File(str(root_path / GLOBAL_DESCRIPTORS_FILE), "r") as file:
-        global_rows = [
-            asarray(cast(Group | File, cast(Group, file[name])[GLOBAL_DESCRIPTORS_DATASET_NAME])[()], dtype=float32)
-            for name in image_names
-        ]
 
-    global_matrix = stack(global_rows, axis=0)
+        def visitor(name: str, obj: Any):
+            if isinstance(obj, Dataset) and name.endswith("/" + GLOBAL_DESCRIPTORS_DATASET_NAME):
+                image_name = name.rsplit("/", 1)[0]  # strip off '/global_descriptor'
+                global_descriptors_by_name[image_name] = asarray(obj[()], dtype=float32)
 
-    keypoints: Dict[int, NDArray[float32]] = {}
-    pq_codes: Dict[int, NDArray[uint8]] = {}
+        file.visititems(visitor)
 
+    return global_descriptors_by_name
+
+
+def read_features(root_path: Path):
+    keypoints_by_name: dict[str, NDArray[float32]] = {}
+    pq_codes_by_name: dict[str, NDArray[uint8]] = {}
     with File(str(root_path / FEATURES_FILE), "r") as file:
-        for image_id, name in zip(image_ids_in_order, image_names):
+        for name in file.keys():
             group = cast(Group, file[name])
-            keypoints[image_id] = asarray(cast(Dataset, group[KEYPOINTS_DATASET_NAME])[()], dtype=float32)
-            pq_codes[image_id] = asarray(cast(Dataset, group[PQ_CODES_DATASET_NAME])[()], dtype=uint8)
+            keypoints_by_name[name] = asarray(cast(Dataset, group[KEYPOINTS_DATASET_NAME])[()], dtype=float32)
+            pq_codes_by_name[name] = asarray(cast(Dataset, group[PQ_CODES_DATASET_NAME])[()], dtype=uint8)
 
-    return image_names, image_ids_in_order, global_matrix, keypoints, pq_codes
+    return keypoints_by_name, pq_codes_by_name
