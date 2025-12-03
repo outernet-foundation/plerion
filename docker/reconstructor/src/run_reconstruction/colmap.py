@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Any
 
 from numpy import eye, float64, intp, stack, uint32
 from numpy.typing import NDArray
 from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
-from pycolmap._core import Reconstruction, apply_rig_config, incremental_mapping, match_spatial
+from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial
 
 from .metrics_builder import MetricsBuilder
 from .options_builder import OptionsBuilder
@@ -103,11 +102,3 @@ def run_reconstruction(
     # Choose the reconstruction with the most registered images
     # TODO: Write information to metrics about this for visibility
     return reconstructions[max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())]
-
-
-def write_reconstruction(reconstruction: Reconstruction):
-    with TemporaryDirectory() as temp_dir:
-        temp_path = Path(temp_dir)
-        reconstruction.write_text(str(temp_path))
-        reconstruction.export_PLY(str(temp_path / "points3D.ply"))
-    return temp_path

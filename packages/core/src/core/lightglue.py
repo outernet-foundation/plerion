@@ -4,24 +4,8 @@ from numpy.typing import NDArray
 from torch import from_numpy, inference_mode, tensor  # type: ignore
 from torch.nn.utils.rnn import pad_sequence
 
-from .image import Image
-
 
 def lightglue_match(
-    lightglue: LightGlue, pairs: list[tuple[str, str]], images: dict[str, Image], batch_size: int, device: str
-):
-    return lightglue_match_tensors(
-        lightglue,
-        pairs,
-        {k: images[k].keypoints for k in images.keys()},
-        {k: images[k].descriptors for k in images.keys()},
-        {k: images[k].size for k in images.keys()},
-        batch_size=batch_size,
-        device=device,
-    )
-
-
-def lightglue_match_tensors(
     lightglue: LightGlue,
     pairs: list[tuple[str, str]],
     keypoints: dict[str, NDArray[float32]],

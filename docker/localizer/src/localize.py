@@ -6,8 +6,8 @@ from typing import Any, cast
 import numpy as np
 from common.boto_clients import create_s3_client
 from core.classes import Quaternion, Transform, Vector3
-from core.image import create_tensors_from_buffer
-from core.lightglue import lightglue_match_tensors
+from core.create_image_tensors import create_image_tensors
+from core.lightglue import lightglue_match
 from core.localization_metrics import LocalizationMetrics
 from core.opq import decode_descriptors
 from core.rig import PinholeCameraConfig, transform_intrinsics
@@ -54,7 +54,7 @@ async def localize_image_against_reconstruction(
     map: Map, camera: PinholeCameraConfig, image_buffer: bytes
 ) -> tuple[Transform, LocalizationMetrics]:
 
-    (rgb_tensor, gray_tensor, size) = create_tensors_from_buffer(image_buffer, camera.rotation)
+    (rgb_tensor, gray_tensor, size) = create_image_tensors(image_buffer, camera.rotation)
 
     print("Extracting features")
     superpoint_output = superpoint({"image": gray_tensor.to(device=DEVICE)})
@@ -87,7 +87,7 @@ async def localize_image_against_reconstruction(
     descriptors["query"] = superpoint_output["descriptors"][0].to(DEVICE)
     sizes["query"] = size
 
-    match_indices = lightglue_match_tensors(lightglue, pairs, keypoints, descriptors, sizes, len(pairs), DEVICE)
+    match_indices = lightglue_match(lightglue, pairs, keypoints, descriptors, sizes, len(pairs), DEVICE)
 
     print("Gathering 2D-3D correspondences")
     query_keypoint_indices: list[int] = []
