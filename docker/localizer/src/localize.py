@@ -4,7 +4,6 @@ from os import environ
 from typing import Any, cast
 
 import numpy as np
-from common.boto_clients import create_s3_client
 from core.classes import Quaternion, Transform, Vector3
 from core.create_image_tensors import create_image_tensors
 from core.lightglue import lightglue_match
@@ -18,17 +17,12 @@ from torch import cuda, from_numpy, mv, topk  # type: ignore
 
 from .build_metrics import build_localization_metrics
 from .map import Map
-from .settings import get_settings
 
 WEIGHTS = "indoor"
 MAX_KEYPOINTS = 2500
 RETRIEVAL_TOP_K = 12  # how many similar database images to keep
 RANSAC_THRESHOLD = 12.0  # reprojection error in pixels
 
-settings = get_settings()
-s3_client = create_s3_client(
-    s3_endpoint_url=settings.s3_endpoint_url, s3_access_key=settings.s3_access_key, s3_secret_key=settings.s3_secret_key
-)
 
 if environ.get("CODEGEN"):
     dir: Any = None
@@ -40,38 +34,31 @@ else:
     DEVICE = "cuda" if cuda.is_available() else "cpu"
     print(f"Using device: {DEVICE}")
 
-    print("Loading DIR")
     dir = load_DIR(DEVICE)
-
-    print("Loading SuperPoint")
     superpoint = load_superpoint(max_num_keypoints=MAX_KEYPOINTS, device=DEVICE)
-
-    print("Loading LightGlue")
     lightglue = load_lightglue(DEVICE)
 
 
 async def localize_image_against_reconstruction(
     map: Map, camera: PinholeCameraConfig, image_buffer: bytes
 ) -> tuple[Transform, LocalizationMetrics]:
-
+    # Extract features from query image
     (rgb_tensor, gray_tensor, size) = create_image_tensors(image_buffer, camera.rotation)
-
-    print("Extracting features")
-    superpoint_output = superpoint({"image": gray_tensor.to(device=DEVICE)})
+    superpoint_output = superpoint({"image": gray_tensor.unsqueeze(0).to(device=DEVICE)})
     query_global_descriptor = dir({"image": rgb_tensor.unsqueeze(0).to(device=DEVICE)})["global_descriptor"][0]
 
-    print("Retrieving similar images")
+    # Retrieve similar database images
     similarity_scores = mv(from_numpy(map.global_matrix).to(DEVICE), query_global_descriptor)
     topk_rows: list[int] = topk(similarity_scores, RETRIEVAL_TOP_K).indices.cpu().tolist()  # type: ignore
     matched_names: list[str] = [map.image_names[i] for i in topk_rows]
     matched_image_ids: list[int] = [map.image_id_by_name[n] for n in matched_names]
 
-    print("Decoding database descriptors")
+    # Decode descriptors of matched database images
     descriptors = decode_descriptors(
         map.opq_matrix, map.pq, {image_id: map.pq_codes[image_id] for image_id in matched_image_ids}
     )
 
-    print("Matching features")
+    # Prepare database image data for matching
     pairs = [(str(image_id), "query") for image_id in matched_image_ids]
     keypoints = {str(image_id): map.keypoints[image_id] for image_id in matched_image_ids}
     descriptors = {str(image_id): descriptors[image_id] for image_id in matched_image_ids}
@@ -83,13 +70,15 @@ async def localize_image_against_reconstruction(
         for image_id in matched_image_ids
     }
 
+    # Prepare query image data for matching
     keypoints["query"] = superpoint_output["keypoints"][0].to(DEVICE)
     descriptors["query"] = superpoint_output["descriptors"][0].to(DEVICE)
     sizes["query"] = size
 
+    # Match features between query and database images
     match_indices = lightglue_match(lightglue, pairs, keypoints, descriptors, sizes, len(pairs), DEVICE)
 
-    print("Gathering 2D-3D correspondences")
+    # Collect 2D-3D correspondences
     query_keypoint_indices: list[int] = []
     point3d_indices: list[int] = []
     for image_id in matched_image_ids:
@@ -102,17 +91,20 @@ async def localize_image_against_reconstruction(
             query_keypoint_indices.append(int(query_image_keypoint_index))
             point3d_indices.append(int(point2D.point3D_id))
 
+    # Verify we have enough correspondences
     if not query_keypoint_indices:
         raise ValueError("No matching keypoints found")
 
+    # Prepare data for PnP
     points2d = keypoints["query"][query_keypoint_indices].cpu().numpy()
     points3d = np.vstack([map.reconstruction.points3D[i].xyz for i in point3d_indices])
 
+    # Create COLMAP camera model
     pycolmap_camera = ColmapCamera(
         width=camera.width, height=camera.height, model="PINHOLE", params=transform_intrinsics(camera)
     )
 
-    print("Esimating pose")
+    # Estimate pose using PnP + RANSAC
     ransac_options = RANSACOptions()
     ransac_options.max_error = RANSAC_THRESHOLD
     estimationOptions = AbsolutePoseEstimationOptions()
@@ -122,9 +114,11 @@ async def localize_image_against_reconstruction(
         estimate_and_refine_absolute_pose(points2d, points3d, pycolmap_camera, estimation_options=estimationOptions),
     )
 
+    # Check if pose estimation was successful
     if pnp_result is None:
         raise ValueError("Pose estimation failed")
 
+    # Build Transform from estimated pose
     transform = Transform(
         position=Vector3(
             x=float(pnp_result["cam_from_world"].translation[0]),
@@ -139,5 +133,6 @@ async def localize_image_against_reconstruction(
         ),
     )
 
+    # Build localization metrics and return
     print(f"Localization successful: {transform}")
     return transform, build_localization_metrics(pnp_result, points2d, points3d, pycolmap_camera)
