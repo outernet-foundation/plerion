@@ -1,16 +1,21 @@
 from io import BytesIO
 from pathlib import Path
 from tarfile import open as open_tar
+from typing import TYPE_CHECKING, Any
 
 from core.classes import Quaternion, Vector3
 from core.rig import Config, RigCameraConfig, RigConfig, Transform, transform_intrinsics
-from mypy_boto3_s3 import S3Client
 from numpy import array, float64
 from pycolmap import Camera as ColmapCamera
-from pycolmap import RigConfig as pycolmapRigConfig
-from pycolmap import RigConfigCamera as pycolmapRigConfigCamera
+from pycolmap import RigConfig as ColmapRigConfig
+from pycolmap import RigConfigCamera as ColmapRigConfigCamera
 from pycolmap import Rigid3d, Rotation3d
 from scipy.spatial.transform import Rotation
+
+if TYPE_CHECKING:
+    from mypy_boto3_s3 import S3Client
+else:
+    S3Client = Any
 
 
 class Rig:
@@ -25,7 +30,7 @@ class Rig:
             raise ValueError(f"Reference sensor {ref_sensor.id} in rig {rig_config.id} must have zero translation")
 
         self.cameras: dict[str, tuple[RigCameraConfig, ColmapCamera]] = {}
-        rig_camera_configs: list[pycolmapRigConfigCamera] = []
+        rig_camera_configs: list[ColmapRigConfigCamera] = []
         for camera in rig_config.cameras:
             self.cameras[camera.id] = (
                 camera,
@@ -38,7 +43,7 @@ class Rig:
             )
 
             rig_camera_configs.append(
-                pycolmapRigConfigCamera(
+                ColmapRigConfigCamera(
                     image_prefix=f"{rig_config.id}/{camera.id}/",
                     ref_sensor=camera.ref_sensor or False,
                     cam_from_rig=Rigid3d(
@@ -57,7 +62,7 @@ class Rig:
                 )
             )
 
-        self.colmap_rig_config = pycolmapRigConfig(cameras=rig_camera_configs)
+        self.colmap_rig_config = ColmapRigConfig(cameras=rig_camera_configs)
 
         self.frame_poses: dict[str, Transform] = {}
         for frame in frames_csv.splitlines()[1:]:  # Skip header

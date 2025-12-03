@@ -1,8 +1,9 @@
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Literal
+from typing import Literal
 
 from numpy import asarray, float32
+from numpy.typing import NDArray
 from PIL import Image as PILImage
 from PIL.Image import Transpose
 from torch import from_numpy  # type: ignore
@@ -37,7 +38,13 @@ def create_tensors_from_buffer(image_buffer: bytes, camera_rotation: Literal["No
 
 
 class Image:
-    def __init__(self, global_descriptor: Any, keypoints: Any, descriptors: Any, size: tuple[int, int]):
+    def __init__(
+        self,
+        global_descriptor: NDArray[float32],
+        keypoints: NDArray[float32],
+        descriptors: NDArray[float32],
+        size: tuple[int, int],
+    ):
         self.global_descriptor = global_descriptor
         self.keypoints = keypoints
         self.descriptors = descriptors

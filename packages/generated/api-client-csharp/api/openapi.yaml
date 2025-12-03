@@ -2993,20 +2993,22 @@ components:
       example:
         options:
           random_seed: 0
-          ransac_max_error: 5.962133916683182
-          triangulation_merge_max_reprojection_error: 9.301444243932576
-          ransac_min_inlier_ratio: 5.637376656633329
+          ransac_max_error: 5.637376656633329
+          triangulation_merge_max_reprojection_error: 3.616076749251911
+          ransac_min_inlier_ratio: 2.3021358869347655
           bundle_adjustment_refine_sensor_from_rig: true
           bundle_adjustment_refine_principal_point: true
-          compression_opq_number_of_subvectors: 2
-          compression_opq_number_of_bits_per_subvector: 4
+          compression_opq_number_of_subvectors: 4
+          rotation_threshold: 1.4658129805029452
+          compression_opq_number_of_bits_per_subvector: 7
           use_prior_position: true
-          max_keypoints_per_image: 1
-          compression_opq_number_of_training_iterations: 7
+          pose_prior_position_sigma_m: 1.0246457001441578
+          max_keypoints_per_image: 5
+          compression_opq_number_of_training_iterations: 1
           neighbors_count: 6
-          triangulation_complete_max_reprojection_error: 7.061401241503109
-          mapper_filter_max_reprojection_error: 3.616076749251911
-          triangulation_minimum_angle: 2.3021358869347655
+          triangulation_complete_max_reprojection_error: 9.301444243932576
+          mapper_filter_max_reprojection_error: 2.027123023002322
+          triangulation_minimum_angle: 7.061401241503109
           bundle_adjustment_refine_additional_params: true
           bundle_adjustment_refine_focal_length: true
           single_threaded: true
@@ -3027,20 +3029,22 @@ components:
       example:
         options:
           random_seed: 0
-          ransac_max_error: 5.962133916683182
-          triangulation_merge_max_reprojection_error: 9.301444243932576
-          ransac_min_inlier_ratio: 5.637376656633329
+          ransac_max_error: 5.637376656633329
+          triangulation_merge_max_reprojection_error: 3.616076749251911
+          ransac_min_inlier_ratio: 2.3021358869347655
           bundle_adjustment_refine_sensor_from_rig: true
           bundle_adjustment_refine_principal_point: true
-          compression_opq_number_of_subvectors: 2
-          compression_opq_number_of_bits_per_subvector: 4
+          compression_opq_number_of_subvectors: 4
+          rotation_threshold: 1.4658129805029452
+          compression_opq_number_of_bits_per_subvector: 7
           use_prior_position: true
-          max_keypoints_per_image: 1
-          compression_opq_number_of_training_iterations: 7
+          pose_prior_position_sigma_m: 1.0246457001441578
+          max_keypoints_per_image: 5
+          compression_opq_number_of_training_iterations: 1
           neighbors_count: 6
-          triangulation_complete_max_reprojection_error: 7.061401241503109
-          mapper_filter_max_reprojection_error: 3.616076749251911
-          triangulation_minimum_angle: 2.3021358869347655
+          triangulation_complete_max_reprojection_error: 9.301444243932576
+          mapper_filter_max_reprojection_error: 2.027123023002322
+          triangulation_minimum_angle: 7.061401241503109
           bundle_adjustment_refine_additional_params: true
           bundle_adjustment_refine_focal_length: true
           single_threaded: true
@@ -3213,20 +3217,22 @@ components:
     ReconstructionOptions:
       example:
         random_seed: 0
-        ransac_max_error: 5.962133916683182
-        triangulation_merge_max_reprojection_error: 9.301444243932576
-        ransac_min_inlier_ratio: 5.637376656633329
+        ransac_max_error: 5.637376656633329
+        triangulation_merge_max_reprojection_error: 3.616076749251911
+        ransac_min_inlier_ratio: 2.3021358869347655
         bundle_adjustment_refine_sensor_from_rig: true
         bundle_adjustment_refine_principal_point: true
-        compression_opq_number_of_subvectors: 2
-        compression_opq_number_of_bits_per_subvector: 4
+        compression_opq_number_of_subvectors: 4
+        rotation_threshold: 1.4658129805029452
+        compression_opq_number_of_bits_per_subvector: 7
         use_prior_position: true
-        max_keypoints_per_image: 1
-        compression_opq_number_of_training_iterations: 7
+        pose_prior_position_sigma_m: 1.0246457001441578
+        max_keypoints_per_image: 5
+        compression_opq_number_of_training_iterations: 1
         neighbors_count: 6
-        triangulation_complete_max_reprojection_error: 7.061401241503109
-        mapper_filter_max_reprojection_error: 3.616076749251911
-        triangulation_minimum_angle: 2.3021358869347655
+        triangulation_complete_max_reprojection_error: 9.301444243932576
+        mapper_filter_max_reprojection_error: 2.027123023002322
+        triangulation_minimum_angle: 7.061401241503109
         bundle_adjustment_refine_additional_params: true
         bundle_adjustment_refine_focal_length: true
         single_threaded: true
@@ -3241,6 +3247,9 @@ components:
         neighbors_count:
           nullable: true
           type: integer
+        rotation_threshold:
+          nullable: true
+          type: number
         max_keypoints_per_image:
           nullable: true
           type: integer
@@ -3289,6 +3298,9 @@ components:
         compression_opq_number_of_training_iterations:
           nullable: true
           type: integer
+        pose_prior_position_sigma_m:
+          nullable: true
+          type: number
       title: ReconstructionOptions
     ReconstructionRead:
       example:

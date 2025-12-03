@@ -12,7 +12,7 @@ from core.reconstruction_manifest import ReconstructionManifest
 from neural_networks.models import load_DIR, load_lightglue, load_superpoint
 from numpy import ascontiguousarray, float32, random, vstack
 from pycolmap._core import set_random_seed
-from torch import cuda
+from torch import cuda, inference_mode
 
 from .colmap import run_reconstruction, write_reconstruction
 from .metrics_builder import MetricsBuilder
@@ -81,14 +81,15 @@ def main():
     ]
     images: dict[str, Image] = {}
     for index, (image_path, rotation) in enumerate(image_list):
-        print(f"  {index + 1}/{len(image_list)}")
+        print(f"  Image {index + 1} of {len(image_list)}")
 
         (rgb_tensor, gray_tensor, size) = create_tensors_from_buffer(
             image_buffer=(CAPTURE_SESSION_DIRECTORY / image_path).read_bytes(), camera_rotation=rotation
         )
 
-        dir_output = dir({"image": rgb_tensor.unsqueeze(0).to(device=device)})
-        superpoint_output = superpoint({"image": gray_tensor.to(device=device)})
+        with inference_mode():
+            dir_output = dir({"image": rgb_tensor.unsqueeze(0).to(device=device)})
+            superpoint_output = superpoint({"image": gray_tensor.unsqueeze(0).to(device=device)})
 
         images[image_path] = Image(
             dir_output["global_descriptor"][0].cpu().numpy().astype(float32, copy=False),

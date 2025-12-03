@@ -4840,6 +4840,18 @@
             "title": "Neighbors Count",
             "description": "How many pose-nearest neighbors to consider when generating image pairs. Use -1 for exhaustive matching (all pairs). If None, a sensible default is used (currently 12). Smaller values reduce weak overlaps and speed up matching at the cost of some coverage."
           },
+          "rotation_threshold": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rotation Threshold",
+            "description": "Rotation angle threshold (degrees) for considering two images as neighbors when generating image pairs. Smaller values reduce weak overlaps and speed up matching at the cost of some coverage."
+          },
           "max_keypoints_per_image": {
             "anyOf": [
               {
@@ -5031,6 +5043,18 @@
             ],
             "title": "Compression Opq Number Of Training Iterations",
             "description": "Number of training iterations for OPQ compression."
+          },
+          "pose_prior_position_sigma_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pose Prior Position Sigma M",
+            "description": "Standard deviation (meters) for position priors when writing PosePrior to the database. Smaller values = stronger priors."
           }
         },
         "type": "object",

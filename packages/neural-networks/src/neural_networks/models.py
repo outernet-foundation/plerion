@@ -68,7 +68,7 @@ class DIR(Module):
                 cast(
                     NDArray[float32],
                     whiten_features(
-                        self.net(image).unsqueeze(0).cpu().numpy(),
+                        self.net(image).unsqueeze(0).detach().cpu().numpy(),
                         self.net.pca[WHITEN_NAME],
                         whitenp=WHITENP,
                         whitenv=WHITENV,

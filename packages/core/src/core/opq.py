@@ -12,7 +12,6 @@ from faiss import (  # type: ignore
 from numpy import ascontiguousarray, float32, uint8
 from numpy.linalg import norm
 from numpy.typing import NDArray
-from torch import Tensor
 
 OPQ_MATRIX_FILE = "opq_matrix.tf"
 PQ_QUANTIZER_FILE = "pq_quantizer.pq"
@@ -37,10 +36,11 @@ def train_pq_quantizer(
 
 
 def encode_descriptors(
-    opq_matrix: OPQMatrix, product_quantizer: ProductQuantizer, image_descriptors: dict[str, Tensor]
+    opq_matrix: OPQMatrix, product_quantizer: ProductQuantizer, image_descriptors: dict[str, NDArray[float32]]
 ):
     images_codes: dict[str, NDArray[uint8]] = {}
-    for name in image_descriptors.keys():
+    for i, name in enumerate(image_descriptors.keys()):
+        print(f"  Encoding {i + 1} of {len(image_descriptors)}")
         descriptors_contiguous = ascontiguousarray(image_descriptors[name])
         descriptors_rotated = cast(NDArray[float32], opq_matrix.apply(descriptors_contiguous))  # type: ignore
         codes = cast(NDArray[uint8], product_quantizer.compute_codes(descriptors_rotated))  # type: ignore

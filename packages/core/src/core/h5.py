@@ -5,7 +5,6 @@ from h5py import Dataset, File, Group
 from numpy import asarray, float32, stack, uint8
 from numpy.typing import NDArray
 from pycolmap import Reconstruction
-from torch import Tensor, from_numpy  # type: ignore
 
 GLOBAL_DESCRIPTORS_DATASET_NAME = "global_descriptor"
 KEYPOINTS_DATASET_NAME = "keypoints"
@@ -54,17 +53,15 @@ def read_h5_features_for_reconstruction(reconstruction: Reconstruction, root_pat
             for name in image_names
         ]
 
-    global_matrix = from_numpy(stack(global_rows, axis=0)).to(device).float()
+    global_matrix = stack(global_rows, axis=0)
 
-    keypoints: Dict[int, Tensor] = {}
+    keypoints: Dict[int, NDArray[float32]] = {}
     pq_codes: Dict[int, NDArray[uint8]] = {}
 
     with File(str(root_path / FEATURES_FILE), "r") as file:
         for image_id, name in zip(image_ids_in_order, image_names):
             group = cast(Group, file[name])
-            keypoints[image_id] = from_numpy(
-                asarray(cast(Dataset, group[KEYPOINTS_DATASET_NAME])[()], dtype=float32)
-            ).to(device)
+            keypoints[image_id] = asarray(cast(Dataset, group[KEYPOINTS_DATASET_NAME])[()], dtype=float32)
             pq_codes[image_id] = asarray(cast(Dataset, group[PQ_CODES_DATASET_NAME])[()], dtype=uint8)
 
     return image_names, image_ids_in_order, global_matrix, keypoints, pq_codes
