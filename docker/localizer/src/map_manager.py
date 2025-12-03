@@ -14,7 +14,8 @@ from core.h5 import FEATURES_FILE, GLOBAL_DESCRIPTORS_FILE, read_features, read_
 from core.localization_metrics import LocalizationMetrics
 from core.opq import OPQ_MATRIX_FILE, PQ_QUANTIZER_FILE, read_opq_matrix, read_pq_quantizer
 from core.rig import PinholeCameraConfig
-from numpy import stack
+from numpy import float32, stack, uint8
+from numpy.typing import NDArray
 from pycolmap import Reconstruction
 from pydantic import BaseModel
 
@@ -139,30 +140,32 @@ def _load(id: UUID):
     reconstruction_path = RECONSTRUCTIONS_DIR / str(id)
     reconstruction = Reconstruction(str(reconstruction_path / "sfm_model"))
     ordered_image_ids: list[int] = sorted(cast(Mapping[int, Any], reconstruction.images).keys())
-    global_descriptors_by_name = read_global_descriptors(reconstruction_path)
-    (keypoints_by_name, pq_codes_by_name) = read_features(reconstruction_path)
+    ordered_image_names = [reconstruction.images[image_id].name for image_id in ordered_image_ids]
+    global_descriptors_by_name = read_global_descriptors(reconstruction_path, ordered_image_names)
+    (keypoints_by_name, pq_codes_by_name) = read_features(reconstruction_path, ordered_image_names)
+
+    image_sizes: dict[str, tuple[int, int]] = {}
+    global_descriptor_rows: list[NDArray[float32]] = []
+    keypoints: dict[int, NDArray[float32]] = {}
+    pq_codes: dict[int, NDArray[uint8]] = {}
+
+    for image_id in ordered_image_ids:
+        image = reconstruction.images[image_id]
+        camera = reconstruction.cameras[image.camera_id]
+        name = image.name
+        image_sizes[str(image_id)] = (camera.height, camera.width)
+        keypoints[image_id] = keypoints_by_name[name]
+        pq_codes[image_id] = pq_codes_by_name[name]
+        global_descriptor_rows.append(global_descriptors_by_name[name])
 
     _maps[id] = Map(
         reconstruction.points3D,
+        reconstruction.images,
+        ordered_image_ids,
+        image_sizes,
+        keypoints,
+        pq_codes,
+        stack(global_descriptor_rows, axis=0),
         read_opq_matrix(reconstruction_path),
         read_pq_quantizer(reconstruction_path),
-        ordered_image_ids,
-        reconstruction.images,
-        image_sizes={
-            str(image_id): (
-                reconstruction.cameras[reconstruction.images[image_id].camera_id].height,
-                reconstruction.cameras[reconstruction.images[image_id].camera_id].width,
-            )
-            for image_id in ordered_image_ids
-        },
-        global_descriptors_matrix=stack(
-            [global_descriptors_by_name[str(reconstruction.images[image_id].name)] for image_id in ordered_image_ids],
-            axis=0,
-        ),
-        keypoints={
-            image_id: keypoints_by_name[str(reconstruction.images[image_id].name)] for image_id in ordered_image_ids
-        },
-        pq_codes={
-            image_id: pq_codes_by_name[str(reconstruction.images[image_id].name)] for image_id in ordered_image_ids
-        },
     )

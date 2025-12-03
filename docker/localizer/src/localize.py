@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import json
 from typing import Any, cast
 
 import numpy as np
 from core.classes import Quaternion, Transform, Vector3
 from core.create_image_tensors import create_image_tensors
-from core.lightglue import lightglue_match
+from core.lightglue import lightglue_match_tensors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import decode_descriptors
 from core.rig import PinholeCameraConfig, transform_intrinsics
@@ -54,8 +55,8 @@ def localize_image_against_reconstruction(
     )
 
     # Prepare database image data for matching
-    keypoints = {str(image_id): map.keypoints[image_id] for image_id in matched_image_ids}
-    descriptors = {str(image_id): descriptors[image_id] for image_id in matched_image_ids}
+    keypoints = {str(image_id): from_numpy(map.keypoints[image_id]).to(DEVICE) for image_id in matched_image_ids}
+    descriptors = {str(image_id): from_numpy(descriptors[image_id]).to(DEVICE) for image_id in matched_image_ids}
     sizes = {str(image_id): map.image_sizes[str(image_id)] for image_id in matched_image_ids}
 
     # Prepare query image data for matching
@@ -65,7 +66,7 @@ def localize_image_against_reconstruction(
 
     # Match features between query and database images
     pairs = [(str(image_id), "query") for image_id in matched_image_ids]
-    match_indices = lightglue_match(lightglue, pairs, keypoints, descriptors, sizes, len(pairs), DEVICE)
+    match_indices = lightglue_match_tensors(lightglue, pairs, keypoints, descriptors, sizes, len(pairs), DEVICE)
 
     # Collect 2D-3D correspondences
     query_keypoint_indices: list[int] = []
@@ -126,5 +127,5 @@ def localize_image_against_reconstruction(
     metrics = build_localization_metrics(pnp_result, points2D, points3D, pycolmap_camera)
 
     # Success
-    print(f"Success:\n{transform}\nMetrics:\n{metrics}")
+    print(json.dumps({"transform": transform, "metrics": metrics}, indent=2))
     return transform, metrics

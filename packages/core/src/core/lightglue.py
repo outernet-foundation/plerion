@@ -1,7 +1,7 @@
 from lightglue import LightGlue  # type: ignore
 from numpy import float32, int32, intp, nonzero
 from numpy.typing import NDArray
-from torch import from_numpy, inference_mode, tensor  # type: ignore
+from torch import Tensor, from_numpy, inference_mode, tensor  # type: ignore
 from torch.nn.utils.rnn import pad_sequence
 
 
@@ -10,6 +10,21 @@ def lightglue_match(
     pairs: list[tuple[str, str]],
     keypoints: dict[str, NDArray[float32]],
     descriptors: dict[str, NDArray[float32]],
+    sizes: dict[str, tuple[int, int]],
+    batch_size: int,
+    device: str,
+):
+    keypoints_tensors = {name: from_numpy(kp).to(device) for name, kp in keypoints.items()}
+    descriptors_tensors = {name: from_numpy(desc).to(device) for name, desc in descriptors.items()}
+
+    return lightglue_match_tensors(lightglue, pairs, keypoints_tensors, descriptors_tensors, sizes, batch_size, device)
+
+
+def lightglue_match_tensors(
+    lightglue: LightGlue,
+    pairs: list[tuple[str, str]],
+    keypoints: dict[str, Tensor],
+    descriptors: dict[str, Tensor],
     sizes: dict[str, tuple[int, int]],
     batch_size: int,
     device: str,
@@ -23,21 +38,13 @@ def lightglue_match(
         with inference_mode():
             matches = lightglue({
                 "image0": {
-                    "keypoints": pad_sequence(
-                        [from_numpy(keypoints[a]).to(device) for a, _ in batch_pairs], batch_first=True
-                    ),
-                    "descriptors": pad_sequence(
-                        [from_numpy(descriptors[a]).to(device) for a, _ in batch_pairs], batch_first=True
-                    ),
+                    "keypoints": pad_sequence([keypoints[a] for a, _ in batch_pairs], batch_first=True),
+                    "descriptors": pad_sequence([descriptors[a] for a, _ in batch_pairs], batch_first=True),
                     "image_size": tensor([sizes[a] for a, _ in batch_pairs], device=device),
                 },
                 "image1": {
-                    "keypoints": pad_sequence(
-                        [from_numpy(keypoints[b]).to(device) for _, b in batch_pairs], batch_first=True
-                    ),
-                    "descriptors": pad_sequence(
-                        [from_numpy(descriptors[b]).to(device) for _, b in batch_pairs], batch_first=True
-                    ),
+                    "keypoints": pad_sequence([keypoints[b] for _, b in batch_pairs], batch_first=True),
+                    "descriptors": pad_sequence([descriptors[b] for _, b in batch_pairs], batch_first=True),
                     "image_size": tensor([sizes[b] for _, b in batch_pairs], device=device),
                 },
             })["matches0"]

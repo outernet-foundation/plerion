@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Any, Mapping, cast
+from typing import Any, Iterable, Mapping, cast
 
 from h5py import Dataset, File, Group
 from numpy import asarray, float32, uint8
@@ -37,26 +37,24 @@ def _create_dataset(group: Group, name: str, data: Any):
     group.create_dataset(name, data=data, compression="gzip", compression_opts=9, shuffle=True, chunks=True)
 
 
-def read_global_descriptors(root_path: Path):
-    global_descriptors_by_name: dict[str, NDArray[float32]] = {}
-
+def read_global_descriptors(root_path: Path, image_names: Iterable[str]) -> dict[str, NDArray[float32]]:
+    result: dict[str, NDArray[float32]] = {}
     with File(str(root_path / GLOBAL_DESCRIPTORS_FILE), "r") as file:
+        for name in image_names:
+            group = cast(Group, file[name])
+            result[name] = asarray(cast(Dataset, group[GLOBAL_DESCRIPTORS_DATASET_NAME])[()], dtype=float32)
 
-        def visitor(name: str, obj: Any):
-            if isinstance(obj, Dataset) and name.endswith("/" + GLOBAL_DESCRIPTORS_DATASET_NAME):
-                image_name = name.rsplit("/", 1)[0]  # strip off '/global_descriptor'
-                global_descriptors_by_name[image_name] = asarray(obj[()], dtype=float32)
-
-        file.visititems(visitor)
-
-    return global_descriptors_by_name
+    return result
 
 
-def read_features(root_path: Path):
+def read_features(
+    root_path: Path, image_names: Iterable[str]
+) -> tuple[dict[str, NDArray[float32]], dict[str, NDArray[uint8]]]:
     keypoints_by_name: dict[str, NDArray[float32]] = {}
     pq_codes_by_name: dict[str, NDArray[uint8]] = {}
+
     with File(str(root_path / FEATURES_FILE), "r") as file:
-        for name in file.keys():
+        for name in image_names:
             group = cast(Group, file[name])
             keypoints_by_name[name] = asarray(cast(Dataset, group[KEYPOINTS_DATASET_NAME])[()], dtype=float32)
             pq_codes_by_name[name] = asarray(cast(Dataset, group[PQ_CODES_DATASET_NAME])[()], dtype=uint8)
