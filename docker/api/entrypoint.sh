@@ -9,7 +9,7 @@ echo "Starting API"
 
 if [[ "${RELOAD:-}" == "true" ]]; then
   echo "Reload mode enabled"
-  UVICORN_ARGS+=( "--reload" "--reload-dir" "/app/docker/api/src" "--reload-dir" "/app/packages/datamodels/src" "--reload-dir" "/app/packages/common/src" "--reload-dir" "/app/packages/generated/localizer-client-python" )
+  UVICORN_ARGS+=( "--reload" "--reload-dir" "/app/docker/api/src" "--reload-dir" "/app/packages/generated/python/datamodels/src" "--reload-dir" "/app/packages/python/common/src" "--reload-dir" "/app/packages/generated/python/localizer-client" )
 fi
 
 if [[ "${DEBUG:-}" == "true" ]]; then
