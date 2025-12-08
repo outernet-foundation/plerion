@@ -108,14 +108,14 @@ Ensure you have [uv](https://docs.astral.sh/uv/) installed, then run this comman
 uv sync --all-packages
 ```
 
-### (Re)export lock files
+### (Re)generate lock files
 
 This is a monorepo using a uv workspace, but the dockerfiles that are used to build images all rely on per-project lock files, and some dockerfiles also rely on per-dependency-group lock files (in order to separate heavy image build steps into their own layers, such as pre-caching neural network weights into the image's torch cache).
 
-If you change any dependencies for any projects, use this command to re-export all lock files.
+If you change any dependencies for any projects, use this command to regenerate all lock files.
 
 ```
-uv run --project scripts --no_workspace export-lock-files
+uv run --project scripts --no_workspace generate-lock-files
 ```
 
 ### Migrate the database
@@ -140,18 +140,15 @@ If the generated migration has hazards, such as dropping data from the database 
 **_Warning: Hazards are called hazards for a reason. Make sure you know what you're doing._**
 
 ```
-uv run --project scripts --no_workspace migrate-database  --allow-hazards DELETES_DATA,AUTHZ_UPDATE
+uv run --project scripts --no_workspace migrate-database --allow-hazards DELETES_DATA,AUTHZ_UPDATE
 ```
 
 ### (Re)generate datamodels
 
-If you migrate the database schema using either of the above methods, use this command to regenerate python datamodels from the schema.
+If you migrate the database schema using either of the above methods, use this command to regenerate python datamodels from the schema. This command directly introspects a locally running database, so the database container must be running locally for this command to work (such as via the docker earlier `docker compose up -d` command)
 
 ```
-uv run --project scripts --no_workspace \
-  generate-datamodels \
-  --database plerion \
-  --datamodels-path packages\datamodels\src\datamodels
+uv run --project scripts --no_workspace generate-datamodels
 ```
 
 ### (Re)generate clients
