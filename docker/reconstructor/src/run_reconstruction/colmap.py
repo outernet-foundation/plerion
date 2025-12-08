@@ -101,4 +101,11 @@ def run_reconstruction(
 
     # Choose the reconstruction with the most registered images
     # TODO: Write information to metrics about this for visibility
-    return reconstructions[max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())]
+    best_reconstruction = reconstructions[
+        max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
+    ]
+
+    # Align origin
+    # TODO
+
+    return best_reconstruction

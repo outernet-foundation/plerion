@@ -28,6 +28,8 @@ namespace PlerionClient.Client
             var env = UnityEnv.GetOrCreateInstance();
 
             App.state.plerionAPIBaseUrl.ExecuteSet(env.plerionBaseURL);
+            App.state.plerionAuthUrl.ExecuteSet(env.plerionAuthURL);
+            App.state.plerionAuthClient.ExecuteSet(env.plerionAuthClient);
 
             if (env.loginAutomatically)
                 App.ExecuteAction(new LogInAction(env.username, env.password));

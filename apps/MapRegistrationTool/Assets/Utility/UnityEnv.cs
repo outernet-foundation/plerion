@@ -25,6 +25,8 @@ namespace Outernet.MapRegistrationTool
         public LogLevel logLevel = LogLevel.Info;
         public LogLevel stackTraceLevel = LogLevel.Warn;
         public string plerionAPIBaseUrl;
+        public string plerionAuthUrl;
+        public string plerionAuthClient;
 
         public static UnityEnv GetOrCreateInstance()
         {

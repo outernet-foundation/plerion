@@ -27,17 +27,6 @@ using Plerion.Core;
 
 namespace PlerionClient.Client
 {
-    public class KeycloakHttpHandler : DelegatingHandler
-    {
-        protected override async System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            var token = await Auth.GetOrRefreshToken();
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-            return await base.SendAsync(request, cancellationToken);
-        }
-    }
-
     public class CaptureController : MonoBehaviour
     {
         public Canvas canvas;
@@ -57,7 +46,7 @@ namespace PlerionClient.Client
             localCaptureNamePath = $"{Application.persistentDataPath}/LocalCaptureNames.json";
 
             capturesApi = new DefaultApi(
-                new HttpClient(new KeycloakHttpHandler() { InnerHandler = new HttpClientHandler() })
+                new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
                     BaseAddress = new Uri(App.state.plerionAPIBaseUrl.value),
                     Timeout = TimeSpan.FromSeconds(600)
@@ -402,21 +391,6 @@ namespace PlerionClient.Client
             try
             {
                 await capturesApi.UploadCaptureSessionTarAsync(captureSession.Id, captureData, cancellationToken: cancellationToken).AsUniTask();
-                // var presignedUrl = await capturesApi.GetUploadCaptureSessionTarPresignedUrlAsync(captureSession.Id, cancellationToken);
-                // var progress2 = Progress.Create<float>(p => progress?.Report((CaptureUploadStatus.Uploading, p)));
-                // using (captureData)
-                // {
-                //     var httpClient = new HttpClient(new ProgressReportingHttpClientHandler(progress2))
-                //     {
-                //         Timeout = TimeSpan.FromMinutes(30)
-                //     };
-
-                //     var content = new StreamContent(captureData);
-                //     content.Headers.Add("Content-Type", "application/x-tar");
-
-                //     var response = await httpClient.PutAsync(presignedUrl, content, cancellationToken);
-                //     response.EnsureSuccessStatusCode();
-                // }
             }
             catch (Exception exception)
             {

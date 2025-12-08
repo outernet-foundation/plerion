@@ -24,18 +24,6 @@ namespace Plerion.VPS
 {
     public static class VisualPositioningSystem
     {
-
-        private class KeycloakHttpHandler : DelegatingHandler
-        {
-            protected override async System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(
-                HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                var token = await Auth.GetOrRefreshToken();
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                return await base.SendAsync(request, cancellationToken);
-            }
-        }
-
         public static bool FallbackToMostRecentEstimate = false;
         public static bool DiscardBelowAverageConfidenceEstimates = false;
         public static float MinimumPositionThreshold = 0.05f;
@@ -94,17 +82,19 @@ namespace Plerion.VPS
             localizationSessionId = session.Id;
         }
 
-        public static async UniTask Initialize(string apiUrl, string authUrl, string username, string password)
+        public static async UniTask Initialize(string apiUrl, string authUrl, string authClient, string username, string password)
         {
-            Auth.url = authUrl;
-            Auth.username = username;
-            Auth.password = password;
-            Auth.LogInfo = message => Debug.Log(message);
-            Auth.LogWarning = message => Debug.LogWarning(message);
-            Auth.LogError = message => Debug.LogError(message);
+            Auth.Initialize(
+                authUrl,
+                authClient,
+                username,
+                password,
+                message => Debug.Log(message),
+                message => Debug.LogWarning(message),
+                message => Debug.LogError(message));
 
             api = new DefaultApi(
-                new HttpClient(new KeycloakHttpHandler() { InnerHandler = new HttpClientHandler() })
+                new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
                     BaseAddress = new Uri(apiUrl)
                 },

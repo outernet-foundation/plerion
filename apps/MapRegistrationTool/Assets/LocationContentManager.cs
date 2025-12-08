@@ -147,19 +147,22 @@ namespace Outernet.MapRegistrationTool
                 Destroy(dialog.gameObject);
             });
 
+            // Determine ground level (height above WGS84 ellipsoid) at the specified latitude and longitude
             SceneReferences.GroundTileset.suspendUpdate = false;
             var heightSamplingResult = await SceneReferences.GroundTileset.SampleHeightMostDetailed(new double3(longitude, latitude, 0));
             var groundLevelHeightAboveWGS84Ellipsoid = heightSamplingResult.longitudeLatitudeHeightPositions[0].z;
             SceneReferences.GroundTileset.suspendUpdate = true;
 
+            // Convert cartographic coordinates to ECEF coordinates, and use the EUN frame at that location for orientation
             var translationEcefFromMap = WGS84.CartographicToEcef(CartographicCoordinates.FromLongitudeLatitudeHeight(longitude, latitude, groundLevelHeightAboveWGS84Ellipsoid));
             var rotationEcefFromMap = WGS84.GetEastUpNorthFrameInEcef(translationEcefFromMap);
 
+            // Set Cesium georeference to that position and orientation
             SceneReferences.CesiumGeoreference.SetOriginEarthCenteredEarthFixed(translationEcefFromMap.x, translationEcefFromMap.y, translationEcefFromMap.z);
             SceneReferences.CesiumGeoreference.transform.rotation = math.inverse(rotationEcefFromMap.ToQuaternion());
 
+            // Update the application's ECEF to Unity world matrix.
             (translationEcefFromMap, rotationEcefFromMap) = ChangeBasisEcefToUnity(translationEcefFromMap, rotationEcefFromMap);
-
             App.state.ecefToUnityWorldMatrix.ExecuteSetOrDelay(
                 math.inverse(Double4x4.FromTranslationRotation(translationEcefFromMap, rotationEcefFromMap))
             );

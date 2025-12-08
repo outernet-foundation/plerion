@@ -38,6 +38,8 @@ namespace PlerionClient.Client
     public class AppState : ObservableObject
     {
         public ObservablePrimitive<string> plerionAPIBaseUrl { get; private set; }
+        public ObservablePrimitive<string> plerionAuthUrl { get; private set; }
+        public ObservablePrimitive<string> plerionAuthClient { get; private set; }
         public ObservablePrimitive<string> username { get; private set; }
         public ObservablePrimitive<string> password { get; private set; }
         public ObservablePrimitive<bool> loginRequested { get; private set; }

@@ -1,6 +1,5 @@
 using System;
 using System.Linq;
-using System.Threading;
 using System.Net.Http;
 
 using UnityEngine;
@@ -16,21 +15,12 @@ namespace Outernet.MapRegistrationTool
 {
     public class App : FofX.AppBase<AppState>
     {
-        private class KeycloakHttpHandler : DelegatingHandler
-        {
-            protected override async System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(
-                HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                var token = await Auth.GetOrRefreshToken();
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                return await base.SendAsync(request, cancellationToken);
-            }
-        }
-
         public static DefaultApi API { get; private set; }
 
         public static string environmentURL;
         public static string plerionAPIBaseUrl;
+        public static string plerionAuthUrl;
+        public static string plerionAuthClient;
         public static string serverPrefix;
 
         private bool _unsavedChangesIgnored = false;
@@ -41,7 +31,7 @@ namespace Outernet.MapRegistrationTool
         private void Start()
         {
             API = new DefaultApi(
-                new HttpClient(new KeycloakHttpHandler() { InnerHandler = new HttpClientHandler() })
+                new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
                     BaseAddress = new Uri(plerionAPIBaseUrl)
                 },

@@ -11,6 +11,8 @@ namespace PlerionClient.Client
     {
         private static UnityEnv _instance;
         public string plerionBaseURL = "https://api.outernetfoundation.org";
+        public string plerionAuthURL = "https://api.outernetfoundation.org/auth/realms/plerion/protocol/openid-connect/token";
+        public string plerionAuthClient = "plerion-api";
         public bool loginAutomatically;
         public string username;
         public string password;

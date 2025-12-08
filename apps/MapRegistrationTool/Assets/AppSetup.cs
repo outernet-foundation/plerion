@@ -32,6 +32,8 @@ namespace Outernet.MapRegistrationTool
             UnityEnv env = UnityEnv.GetOrCreateInstance();
             App.environmentURL = env.environmentURL;
             App.plerionAPIBaseUrl = env.plerionAPIBaseUrl;
+            App.plerionAuthUrl = env.plerionAuthUrl;
+            App.plerionAuthClient = env.plerionAuthClient;
 
             gameObject.AddComponent<App>();
 

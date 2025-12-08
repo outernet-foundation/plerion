@@ -3,9 +3,21 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 
 namespace Plerion.Core
 {
+    public class AuthHttpHandler : DelegatingHandler
+    {
+        protected override async System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var token = await Auth.GetOrRefreshToken();
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+            return await base.SendAsync(request, cancellationToken);
+        }
+    }
+
     public static class Auth
     {
         [Serializable]
@@ -21,21 +33,24 @@ namespace Plerion.Core
             public string error_description;
         }
 
-        public static readonly string client_id = "plerion-api";
 
-        public static Action<string> LogInfo;
-        public static Action<string> LogWarning;
-        public static Action<string> LogError;
 
-        public static string url;
-        public static string username;
-        public static string password;
+
+        public static bool Initialized { get; private set; } = false;
+        public static string URL { get; private set; }
+        public static string ClientId { get; private set; }
+        public static string Username { get; private set; }
+        public static string Password { get; private set; }
         public static TokenResponse tokenResponse;
 
         private static readonly HttpClient _httpClient = new HttpClient();
         private static DateTimeOffset _accessTokenExpiresAt;
         private static DateTimeOffset _refreshTokenExpiresAt;
         private static readonly TimeSpan _skew = TimeSpan.FromSeconds(90);
+
+        private static Action<string> LogInfo;
+        private static Action<string> LogWarning;
+        private static Action<string> LogError;
 
         private static void Info(string message)
             => (LogInfo ?? Console.WriteLine).Invoke(message);
@@ -53,28 +68,36 @@ namespace Plerion.Core
             _refreshTokenExpiresAt = now.AddSeconds(Math.Max(0, tr.refresh_expires_in));
         }
 
+        public static void Initialize(string url, string clientId, string username, string password, Action<string> logInfo = null, Action<string> logWarning = null, Action<string> logError = null)
+        {
+            URL = url;
+            ClientId = clientId;
+            Username = username;
+            Password = password;
+            LogInfo = logInfo;
+            LogWarning = logWarning;
+            LogError = logError;
+            Initialized = true;
+        }
+
         public static async UniTask Login()
         {
-            if (string.IsNullOrWhiteSpace(url))
-                throw new InvalidOperationException("Auth.url must be set before calling Login()");
-            if (string.IsNullOrWhiteSpace(username))
-                throw new InvalidOperationException("Auth.username must be set before calling Login()");
-            if (string.IsNullOrWhiteSpace(password))
-                throw new InvalidOperationException("Auth.password must be set before calling Login()");
+            if (!Initialized)
+                throw new InvalidOperationException("Auth.Initialize() must be called before calling Login()");
 
-            Info($"[Auth] Logging in to {url} as {username}");
+            Info($"[Auth] Logging in to {URL} as {Username}");
 
             HttpResponseMessage response;
             try
             {
                 response = await _httpClient.PostAsync(
-                    url,
+                    URL,
                     new FormUrlEncodedContent(new Dictionary<string, string>
                     {
                         ["grant_type"] = "password",
-                        ["client_id"] = client_id,
-                        ["username"] = username,
-                        ["password"] = password
+                        ["client_id"] = ClientId,
+                        ["username"] = Username,
+                        ["password"] = Password
                     })
                 );
             }
@@ -121,11 +144,11 @@ namespace Plerion.Core
                 try
                 {
                     response = await _httpClient.PostAsync(
-                        url,
+                        URL,
                         new FormUrlEncodedContent(new Dictionary<string, string>
                         {
                             ["grant_type"] = "refresh_token",
-                            ["client_id"] = client_id,
+                            ["client_id"] = ClientId,
                             ["refresh_token"] = tokenResponse.refresh_token
                         })
                     );
