@@ -31,7 +31,7 @@ namespace PlerionClient.Client
                 return;
 
             _loginTask = TaskHandle.Execute(token => LogIn(
-                App.state.plerionAPIBaseUrl.value,
+                App.state.plerionApiUrl.value,
                 App.state.plerionAuthUrl.value,
                 App.state.plerionAuthClient.value,
                 App.state.username.value,

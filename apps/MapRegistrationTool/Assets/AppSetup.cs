@@ -30,8 +30,7 @@ namespace Outernet.MapRegistrationTool
             var defaultRaycaster = Camera.main.gameObject.AddComponent<DefaultRaycaster>();
 
             UnityEnv env = UnityEnv.GetOrCreateInstance();
-            App.environmentURL = env.environmentURL;
-            App.plerionAPIBaseUrl = env.plerionAPIBaseUrl;
+            App.plerionApiUrl = env.plerionApiUrl;
             App.plerionAuthUrl = env.plerionAuthUrl;
             App.plerionAuthClient = env.plerionAuthClient;
 

@@ -1,4 +1,9 @@
 using UnityEngine;
+using dotenv.net;
+using System;
+using System.IO;
+
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,12 +15,13 @@ namespace PlerionClient.Client
     public class UnityEnv : ScriptableObject
     {
         private static UnityEnv _instance;
-        public string plerionBaseURL = "https://api.outernetfoundation.org";
-        public string plerionAuthURL = "https://api.outernetfoundation.org/auth/realms/plerion/protocol/openid-connect/token";
-        public string plerionAuthClient = "plerion-api";
-        public bool loginAutomatically;
+        public string dotEnvPath;
+        public string plerionApiUrl;
+        public string plerionAuthUrl;
+        public string plerionAuthClient;
         public string username;
         public string password;
+        public bool loginAutomatically;
 
         public static UnityEnv GetOrCreateInstance()
         {
@@ -41,7 +47,60 @@ namespace PlerionClient.Client
 #endif
             }
 
+            ReloadFromDotEnv();
+
             return _instance;
+        }
+
+
+#if UNITY_EDITOR
+        private void OnValidate()
+        {
+            // Called when you change fields (like dotEnvPath) in the inspector and hit save.
+            if (!Application.isPlaying)
+            {
+                ReloadFromDotEnv();
+                EditorUtility.SetDirty(this);
+            }
+        }
+#endif
+
+        private static void ReloadFromDotEnv()
+        {
+            if (!string.IsNullOrEmpty(_instance.dotEnvPath))
+            {
+                try
+                {
+                    DotEnv.Load(new DotEnvOptions(
+                        envFilePaths: new[] { Path.GetFullPath(Path.Combine(Directory.GetParent(Application.dataPath)!.FullName, _instance.dotEnvPath)) },
+                        ignoreExceptions: false
+                    ));
+
+                    ApplyEnvironmentVariable("PUBLIC_URL", ref _instance.plerionApiUrl);
+                    ApplyEnvironmentVariable("AUTH_URL", ref _instance.plerionAuthUrl);
+                    ApplyEnvironmentVariable("AUTH_CLIENT", ref _instance.plerionAuthClient);
+                }
+                catch (Exception exception)
+                {
+                    Debug.LogError($"Failed to load .env file at {_instance.dotEnvPath}: {exception.Message}");
+                }
+            }
+        }
+
+        private static void ApplyEnvironmentVariable(string key, ref string field)
+        {
+            string value = Environment.GetEnvironmentVariable(key);
+
+            if (string.IsNullOrEmpty(value))
+            {
+                Debug.LogError(
+                    $"UnityEnv: required environment variable '{key}' is missing or empty. " +
+                    $"Keeping existing value '{field ?? "<null>"}'."
+                );
+                return;
+            }
+
+            field = value;
         }
     }
 }

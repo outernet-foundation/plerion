@@ -48,12 +48,12 @@ namespace PlerionClient.Client
             capturesApi = new DefaultApi(
                 new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
-                    BaseAddress = new Uri(App.state.plerionAPIBaseUrl.value),
+                    BaseAddress = new Uri(App.state.plerionApiUrl.value),
                     Timeout = TimeSpan.FromSeconds(600)
                 },
                 new Configuration()
                 {
-                    BasePath = App.state.plerionAPIBaseUrl.value,
+                    BasePath = App.state.plerionApiUrl.value,
                     Timeout = TimeSpan.FromSeconds(600)
                 }
             );

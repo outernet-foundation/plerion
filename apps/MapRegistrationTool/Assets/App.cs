@@ -17,8 +17,7 @@ namespace Outernet.MapRegistrationTool
     {
         public static DefaultApi API { get; private set; }
 
-        public static string environmentURL;
-        public static string plerionAPIBaseUrl;
+        public static string plerionApiUrl;
         public static string plerionAuthUrl;
         public static string plerionAuthClient;
         public static string serverPrefix;
@@ -33,9 +32,9 @@ namespace Outernet.MapRegistrationTool
             API = new DefaultApi(
                 new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
-                    BaseAddress = new Uri(plerionAPIBaseUrl)
+                    BaseAddress = new Uri(plerionApiUrl)
                 },
-                plerionAPIBaseUrl
+                plerionApiUrl
             );
 
             Application.wantsToQuit += WantsToQuit;

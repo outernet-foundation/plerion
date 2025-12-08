@@ -33,9 +33,6 @@ namespace Plerion.Core
             public string error_description;
         }
 
-
-
-
         public static bool Initialized { get; private set; } = false;
         public static string URL { get; private set; }
         public static string ClientId { get; private set; }
