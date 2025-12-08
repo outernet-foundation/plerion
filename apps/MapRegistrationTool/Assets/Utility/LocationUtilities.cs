@@ -5,13 +5,13 @@ namespace Outernet.MapRegistrationTool
 {
     public static class LocationUtilities
     {
-        public static (Vector3 position, Quaternion rotation) EcefToUnityWorld(double3 ecefPosition, quaternion ecefRotation)
+        public static (Vector3 position, Quaternion rotation) UnityFromEcef(double3 ecefPosition, quaternion ecefRotation)
         {
-            var (position, rotation) = Plerion.Core.LocationUtilities.EcefToUnityWorld(App.state.ecefToUnityWorldMatrix.value, ecefPosition, ecefRotation);
-            return (new Vector3((float)position.x, (float)position.y, (float)position.z), new Quaternion((float)rotation.value.x, (float)rotation.value.y, (float)rotation.value.z, (float)rotation.value.w));
+            var (position, rotation) = Plerion.Core.LocationUtilities.UnityFromEcef(App.state.ecefToUnityWorldMatrix.value, ecefPosition, ecefRotation);
+            return (new Vector3((float)position.x, (float)position.y, (float)position.z), new Quaternion(rotation.value.x, rotation.value.y, rotation.value.z, rotation.value.w));
         }
 
-        public static (double3 position, quaternion rotation) UnityWorldToEcef(float3 position, quaternion rotation)
-            => Plerion.Core.LocationUtilities.UnityWorldToEcef(App.state.unityWorldToEcefMatrix.value, position, rotation);
+        public static (double3 position, quaternion rotation) EcefFromUnity(float3 unityPosition, quaternion unityRotation)
+            => Plerion.Core.LocationUtilities.EcefFromUnity(App.state.unityWorldToEcefMatrix.value, unityPosition, unityRotation);
     }
 }

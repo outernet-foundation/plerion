@@ -8280,7 +8280,7 @@ class DefaultApi:
 
 
     @validate_call
-    async def get_reconstruction_image_poses(
+    async def get_reconstruction_frame_poses(
         self,
         id: UUID,
         _request_timeout: Union[
@@ -8296,7 +8296,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[Transform]:
-        """Get Reconstruction Image Poses
+        """Get Reconstruction Frame Poses
 
 
         :param id: (required)
@@ -8323,7 +8323,7 @@ class DefaultApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_reconstruction_image_poses_serialize(
+        _param = self._get_reconstruction_frame_poses_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -8347,7 +8347,7 @@ class DefaultApi:
 
 
     @validate_call
-    async def get_reconstruction_image_poses_with_http_info(
+    async def get_reconstruction_frame_poses_with_http_info(
         self,
         id: UUID,
         _request_timeout: Union[
@@ -8363,7 +8363,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[Transform]]:
-        """Get Reconstruction Image Poses
+        """Get Reconstruction Frame Poses
 
 
         :param id: (required)
@@ -8390,7 +8390,7 @@ class DefaultApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_reconstruction_image_poses_serialize(
+        _param = self._get_reconstruction_frame_poses_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -8414,7 +8414,7 @@ class DefaultApi:
 
 
     @validate_call
-    async def get_reconstruction_image_poses_without_preload_content(
+    async def get_reconstruction_frame_poses_without_preload_content(
         self,
         id: UUID,
         _request_timeout: Union[
@@ -8430,7 +8430,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstruction Image Poses
+        """Get Reconstruction Frame Poses
 
 
         :param id: (required)
@@ -8457,7 +8457,7 @@ class DefaultApi:
         :return: Returns the result object.
         """ # noqa: E501
 
-        _param = self._get_reconstruction_image_poses_serialize(
+        _param = self._get_reconstruction_frame_poses_serialize(
             id=id,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -8476,7 +8476,7 @@ class DefaultApi:
         return response_data.response
 
 
-    def _get_reconstruction_image_poses_serialize(
+    def _get_reconstruction_frame_poses_serialize(
         self,
         id,
         _request_auth,
@@ -8523,7 +8523,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='GET',
-            resource_path='/reconstructions/{id}/image_poses',
+            resource_path='/reconstructions/{id}/frame_poses',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,

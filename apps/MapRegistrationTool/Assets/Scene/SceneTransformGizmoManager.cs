@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 using FofX.Stateful;
-
+using Plerion.Core;
 namespace Outernet.MapRegistrationTool
 {
     public class SceneTransformGizmoManager : Control<SceneTransformGizmoManager.Props>
@@ -125,7 +125,7 @@ namespace Outernet.MapRegistrationTool
                             logLevel: FofX.LogLevel.Trace,
                             App.state.SelectedTransforms().Select(transform =>
                             {
-                                var objTransform = LocationUtilities.EcefToUnityWorld(
+                                var objTransform = LocationUtilities.UnityFromEcef(
                                     transform.position.value,
                                     transform.rotation.value
                                 );
@@ -136,7 +136,7 @@ namespace Outernet.MapRegistrationTool
                                 objTransform.position = curMatrix.MultiplyPoint(objTransform.position);
                                 objTransform.rotation = props.rotation.value * objTransform.rotation;
 
-                                var ecefTransform = LocationUtilities.UnityWorldToEcef(objTransform.position, objTransform.rotation);
+                                var ecefTransform = LocationUtilities.EcefFromUnity(objTransform.position, objTransform.rotation);
 
                                 return new SetSceneObjectTransformAction(transform.id, ecefTransform.position, ecefTransform.rotation);
                             }

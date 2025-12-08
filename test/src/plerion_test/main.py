@@ -56,8 +56,8 @@ async def visual_reconstruction_pointcloud(reconstruction_id: UUID):
 
         print(f"Fetching point cloud for reconstruction {reconstruction_id}")
         points = await api.get_reconstruction_points(reconstruction_id)
-        print(f"Fetching image poses for reconstruction {reconstruction_id}")
-        poses = await api.get_reconstruction_image_poses(reconstruction_id)
+        print(f"Fetching frame poses for reconstruction {reconstruction_id}")
+        poses = await api.get_reconstruction_frame_poses(reconstruction_id)
 
         print(f"Generating visualization → {OUTPUT_HTML_PATH}")
         html = generate_visualization(points, poses, None, intrinsics)
@@ -177,13 +177,13 @@ async def main_async():
         print("Fetching point cloud")
         point_cloud_models: list[PointCloudPoint] = await api.get_reconstruction_points(reconstruction_id)
 
-        print("Fetch image poses")
-        reconstruction_image_poses_models: list[Transform] = await api.get_reconstruction_image_poses(reconstruction_id)
+        print("Fetch frame poses")
+        reconstruction_frame_poses: list[Transform] = await api.get_reconstruction_frame_poses(reconstruction_id)
 
         print(f"Generating visualization → {OUTPUT_HTML_PATH}")
         localization_dict = {loc.id: loc.transform for loc in localizations}
         html = generate_visualization(
-            point_cloud_models, reconstruction_image_poses_models, localization_dict[localization_map_id], intrinsics
+            point_cloud_models, reconstruction_frame_poses, localization_dict[localization_map_id], intrinsics
         )
 
         OUTPUT_HTML_PATH.parent.mkdir(parents=True, exist_ok=True)

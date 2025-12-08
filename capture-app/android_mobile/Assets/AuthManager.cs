@@ -5,7 +5,6 @@ using Cysharp.Threading.Tasks;
 using Plerion.VPS;
 using System.Threading;
 using System;
-using Unity.XR.CoreUtils;
 
 namespace PlerionClient.Client
 {
@@ -32,25 +31,22 @@ namespace PlerionClient.Client
                 return;
 
             _loginTask = TaskHandle.Execute(token => LogIn(
-                App.state.plerionAPIBaseUrl.value,
+                App.state.plerionApiUrl.value,
+                App.state.plerionAuthUrl.value,
+                App.state.plerionAuthClient.value,
                 App.state.username.value,
                 App.state.password.value,
                 token
             ));
         }
 
-        private async UniTask LogIn(string apiUrl, string username, string password, CancellationToken cancellationToken = default)
+        private async UniTask LogIn(string apiUrl, string authUrl, string authClient, string username, string password, CancellationToken cancellationToken = default)
         {
             App.ExecuteActionOrDelay(new SetAuthStatusAction(AuthStatus.LoggingIn));
 
             try
             {
-                await VisualPositioningSystem.Initialize(
-                    apiUrl,
-                    $"{apiUrl}/auth/realms/plerion-dev/protocol/openid-connect/token",
-                    username,
-                    password
-                );
+                await VisualPositioningSystem.Initialize(apiUrl, authUrl, authClient, username, password);
             }
             catch (Exception exc)
             {

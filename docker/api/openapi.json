@@ -978,13 +978,13 @@
         }
       }
     },
-    "/reconstructions/{id}/image_poses": {
+    "/reconstructions/{id}/frame_poses": {
       "get": {
         "tags": [
           "reconstructions"
         ],
-        "summary": "Get Reconstruction Image Poses",
-        "operationId": "get_reconstruction_image_poses",
+        "summary": "Get Reconstruction Frame Poses",
+        "operationId": "get_reconstruction_frame_poses",
         "parameters": [
           {
             "name": "id",
@@ -1006,7 +1006,7 @@
                   "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/Transform",
-                    "x-schema-name": "get_reconstruction_image_poses_resp_200_application_json_item",
+                    "x-schema-name": "get_reconstruction_frame_poses_resp_200_application_json_item",
                     "nullable": false
                   }
                 }

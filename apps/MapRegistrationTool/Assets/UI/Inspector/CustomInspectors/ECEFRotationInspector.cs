@@ -23,7 +23,7 @@ namespace Outernet.MapRegistrationTool
                     return;
 
                 UndoRedoManager.RegisterUndo("Set Rotation");
-                ecefRotation.ExecuteSet(LocationUtilities.UnityWorldToEcef(default, localInput.value).rotation);
+                ecefRotation.ExecuteSet(LocationUtilities.EcefFromUnity(default, localInput.value).rotation);
             };
 
             return Bindings.Compose(
@@ -31,7 +31,7 @@ namespace Outernet.MapRegistrationTool
                 ecefRotation.OnChange(x =>
                 {
                     pushingChanges = true;
-                    localInput.value = LocationUtilities.EcefToUnityWorld(default, x).rotation;
+                    localInput.value = LocationUtilities.UnityFromEcef(default, x).rotation;
                     pushingChanges = false;
                 })
             );

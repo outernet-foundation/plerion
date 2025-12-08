@@ -24,18 +24,6 @@ namespace Plerion.VPS
 {
     public static class VisualPositioningSystem
     {
-
-        private class KeycloakHttpHandler : DelegatingHandler
-        {
-            protected override async System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(
-                HttpRequestMessage request, CancellationToken cancellationToken)
-            {
-                var token = await Auth.GetOrRefreshToken();
-                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-                return await base.SendAsync(request, cancellationToken);
-            }
-        }
-
         public static bool FallbackToMostRecentEstimate = false;
         public static bool DiscardBelowAverageConfidenceEstimates = false;
         public static float MinimumPositionThreshold = 0.05f;
@@ -94,17 +82,19 @@ namespace Plerion.VPS
             localizationSessionId = session.Id;
         }
 
-        public static async UniTask Initialize(string apiUrl, string authUrl, string username, string password)
+        public static async UniTask Initialize(string apiUrl, string authUrl, string authClient, string username, string password)
         {
-            Auth.url = authUrl;
-            Auth.username = username;
-            Auth.password = password;
-            Auth.LogInfo = message => Debug.Log(message);
-            Auth.LogWarning = message => Debug.LogWarning(message);
-            Auth.LogError = message => Debug.LogError(message);
+            Auth.Initialize(
+                authUrl,
+                authClient,
+                username,
+                password,
+                message => Debug.Log(message),
+                message => Debug.LogWarning(message),
+                message => Debug.LogError(message));
 
             api = new DefaultApi(
-                new HttpClient(new KeycloakHttpHandler() { InnerHandler = new HttpClientHandler() })
+                new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })
                 {
                     BaseAddress = new Uri(apiUrl)
                 },
@@ -202,30 +192,14 @@ namespace Plerion.VPS
             OnEcefToUnityWorldTransformUpdated?.Invoke();
         }
 
-        public static void SetUnityWorldToEcefTransform(double4x4 transform)
-        {
-            ecefFromUnityTransform = transform;
-            unityFromEcefTransform = math.inverse(transform);
-
-            OnEcefToUnityWorldTransformUpdated?.Invoke();
-        }
-
-        public static void SetEcefToUnityWorldTransform(double4x4 transform)
-        {
-            unityFromEcefTransform = transform;
-            ecefFromUnityTransform = math.inverse(transform);
-
-            OnEcefToUnityWorldTransformUpdated?.Invoke();
-        }
-
         public static (Vector3 position, Quaternion rotation) EcefToUnityWorld(double3 ecefPosition, quaternion ecefRotation)
         {
-            var (position, rotation) = LocationUtilities.EcefToUnityWorld(unityFromEcefTransform, ecefPosition, ecefRotation);
-            return (new Vector3((float)position.x, (float)position.y, (float)position.z), new Quaternion((float)rotation.value.x, (float)rotation.value.y, (float)rotation.value.z, (float)rotation.value.w));
+            var (position, rotation) = LocationUtilities.UnityFromEcef(unityFromEcefTransform, ecefPosition, ecefRotation);
+            return (new Vector3((float)position.x, (float)position.y, (float)position.z), new Quaternion(rotation.value.x, rotation.value.y, rotation.value.z, rotation.value.w));
         }
 
         public static (double3 position, quaternion rotation) UnityWorldToEcef(Vector3 position, Quaternion rotation)
-            => LocationUtilities.UnityWorldToEcef(ecefFromUnityTransform, position.ToFloat3(), rotation);
+            => LocationUtilities.EcefFromUnity(ecefFromUnityTransform, position.ToFloat3(), rotation);
 
         public static async UniTask<MapData[]> GetLoadedLocalizationMapsAsync(bool includePoints = false, CancellationToken cancellationToken = default)
         {
@@ -280,7 +254,7 @@ namespace Plerion.VPS
             return points.Select(x =>
             {
                 var pcw = x.Position.ToDouble3();
-                var (p_ucam, _) = LocationUtilities.ChangeBasisOpenCVToUnity(pcw, quaternion.identity.ToDouble3x3());
+                var (p_ucam, _) = LocationUtilities.ChangeBasisUnityFromOpenCV(pcw, quaternion.identity.ToDouble3x3());
                 return new Point
                 {
                     position = new float3((float)p_ucam.x, (float)p_ucam.y, (float)p_ucam.z),

@@ -22,7 +22,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..database import get_session
 from ..settings import get_settings
 from .reconstructions import (
-    get_reconstruction_image_poses,
+    get_reconstruction_frame_poses,
     get_reconstruction_points,
     get_reconstruction_points3D_ply,
     get_reconstruction_status,
@@ -143,7 +143,7 @@ async def update_localization_map_image_poses(
     row = await session.get(LocalizationMap, id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"LocalizationMap with id {id} not found")
-    return await get_reconstruction_image_poses(row.reconstruction_id, session)
+    return await get_reconstruction_frame_poses(row.reconstruction_id, session)
 
 
 @router.patch("/{id}")

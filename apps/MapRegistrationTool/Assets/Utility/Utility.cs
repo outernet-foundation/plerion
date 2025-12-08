@@ -75,17 +75,6 @@ namespace Outernet.MapRegistrationTool
             return component != null;
         }
 
-        // Adapted from eastNorthUpToFixedFrame in this file https://github.com/CesiumGS/cesium-native/blob/main/CesiumGeospatial/src/GlobeTransforms.cpp
-        public static Quaternion GetEUNRotationFromECEFPosition(double3 ecefPosition)
-        {
-            var up = CesiumWgs84Ellipsoid.GeodeticSurfaceNormal(ecefPosition);
-            var east = math.normalize(new double3(-ecefPosition.y, ecefPosition.x, 0));
-            var north = math.cross(up, east);
-
-            // Negatives here are to account for handedness difference
-            return Quaternion.LookRotation(-north.ToFloats(), -up.ToFloats());
-        }
-
         public static float Duration(this AnimationCurve curve)
         {
             if (curve.keys.Length == 0)
@@ -289,7 +278,7 @@ namespace Outernet.MapRegistrationTool
                 //
                 // Apologies to the poor soul (probably me) who has to maintain this code in the future.
                 -localTransformMatrix.Position().ToFloats(),
-                localTransformMatrix.Rotation()
+                localTransformMatrix.RotationQuaternion()
             );
         }
 
@@ -300,7 +289,7 @@ namespace Outernet.MapRegistrationTool
                 -position.ToDoubles(),
                 rotation);
             var ecefTransformMatrix = math.mul(localToEcefTransform, localTransformMatrix);
-            return (ecefTransformMatrix.Position(), ecefTransformMatrix.Rotation());
+            return (ecefTransformMatrix.Position(), ecefTransformMatrix.RotationQuaternion());
         }
 
         public static void DisplayDialog(Component dialog)
@@ -341,7 +330,7 @@ namespace Outernet.MapRegistrationTool
 
             pos /= count;
 
-            var localTransform = LocationUtilities.EcefToUnityWorld(pos, rot);
+            var localTransform = LocationUtilities.UnityFromEcef(pos, rot);
 
             position = localTransform.position;
             rotation = count == 1 ? localTransform.rotation : Quaternion.identity;

@@ -15,7 +15,7 @@ namespace Outernet.MapRegistrationTool
 
         private void Awake()
         {
-            loginButton.onClick.AddListener(() => Login(App.plerionAPIBaseUrl, username.text, password.text).Forget());
+            loginButton.onClick.AddListener(() => Login(App.plerionAuthUrl, App.plerionAuthClient, username.text, password.text).Forget());
 
             App.state.loggedIn.OnChange(x =>
             {
@@ -31,11 +31,11 @@ namespace Outernet.MapRegistrationTool
             });
         }
 
-        private async UniTask Login(string apiUrl, string username, string password)
+        private async UniTask Login(string authUrl, string authClient, string username, string password)
         {
             try
             {
-                await Tasks.Login(apiUrl, username, password);
+                await Tasks.Login(authUrl, authClient, username, password);
             }
             catch (Exception exc)
             {

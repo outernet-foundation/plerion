@@ -18,7 +18,9 @@ from datamodels.public_dtos import (
 from datamodels.public_tables import CaptureSession, LocalizationMap, Reconstruction
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import StreamingResponse
+from numpy import array
 from pydantic import BaseModel, Field
+from scipy.spatial.transform import Rotation
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -238,8 +240,8 @@ async def get_reconstruction_points3D_ply(id: UUID, session: AsyncSession = Depe
     )
 
 
-@router.get("/{id}/image_poses")
-async def get_reconstruction_image_poses(id: UUID, session: AsyncSession = Depends(get_session)) -> list[Transform]:
+@router.get("/{id}/frame_poses")
+async def get_reconstruction_frame_poses(id: UUID, session: AsyncSession = Depends(get_session)) -> list[Transform]:
     row = await session.get(Reconstruction, id)
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Reconstruction with id {id} not found")
@@ -249,21 +251,39 @@ async def get_reconstruction_image_poses(id: UUID, session: AsyncSession = Depen
         line.split(
             maxsplit=9  # COLMAP images.txt: ID QW QX QY QZ TX TY TZ CAM_ID NAME; NAME may have spaces, so keep it as one field
         )
-        for index, line in enumerate([
+        for _, line in enumerate([
             line
             for line in [
                 line.decode("utf-8").strip()
                 for line in create_s3_client(settings.s3_endpoint_url, settings.s3_access_key, settings.s3_secret_key)
-                .get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/images.txt")["Body"]
+                .get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/frames.txt")["Body"]
                 .iter_lines()
             ]
             if line and not line.startswith("#")
         ])
-        if index % 2 == 0  # every other line is a header
     ]:
-        qw, qx, qy, qz = map(float, parts[1:5])
-        tx, ty, tz = map(float, parts[5:8])
+        qw, qx, qy, qz = map(float, parts[2:6])
+        tx, ty, tz = map(float, parts[6:9])
 
-        poses.append(Transform(position=Vector3(x=tx, y=ty, z=tz), rotation=Quaternion(x=qx, y=qy, z=qz, w=qw)))
+        # Convert from camera-to-world to world-to-camera
+        world_from_frame_rotation_matrix = Rotation.from_quat([qx, qy, qz, qw]).as_matrix().T
+        world_from_frame_translation = -world_from_frame_rotation_matrix @ array([tx, ty, tz], dtype=float)
+        world_from_frame_rotation_quaternion = Rotation.from_matrix(world_from_frame_rotation_matrix).as_quat()
+
+        poses.append(
+            Transform(
+                position=Vector3(
+                    x=world_from_frame_translation[0],
+                    y=world_from_frame_translation[1],
+                    z=world_from_frame_translation[2],
+                ),
+                rotation=Quaternion(
+                    x=world_from_frame_rotation_quaternion[0],
+                    y=world_from_frame_rotation_quaternion[1],
+                    z=world_from_frame_rotation_quaternion[2],
+                    w=world_from_frame_rotation_quaternion[3],
+                ),
+            )
+        )
 
     return poses
