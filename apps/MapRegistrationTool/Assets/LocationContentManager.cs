@@ -147,16 +147,12 @@ namespace Outernet.MapRegistrationTool
                 Destroy(dialog.gameObject);
             });
 
-            // var heights = await CesiumAPI.GetHeights(new List<(double latitude, double longitude)> { (latitude, longitude) });
-            // SceneReferences.Tilesets
-            // cancellationToken.ThrowIfCancellationRequested();
+            SceneReferences.GroundTileset.suspendUpdate = false;
+            var heightSamplingResult = await SceneReferences.GroundTileset.SampleHeightMostDetailed(new double3(longitude, latitude, 0));
+            var groundLevelHeightAboveWGS84Ellipsoid = heightSamplingResult.longitudeLatitudeHeightPositions[0].z;
+            SceneReferences.GroundTileset.suspendUpdate = true;
 
-            // if (heights == null || heights.Count == 0)
-            //     throw new Exception("No heights found.");
-
-            // var height = heights[0];
-            var height = 0.0;
-            var translationEcefFromMap = WGS84.CartographicToEcef(CartographicCoordinates.FromLongitudeLatitudeHeight(longitude, latitude, height));
+            var translationEcefFromMap = WGS84.CartographicToEcef(CartographicCoordinates.FromLongitudeLatitudeHeight(longitude, latitude, groundLevelHeightAboveWGS84Ellipsoid));
             var rotationEcefFromMap = WGS84.GetEastUpNorthFrameInEcef(translationEcefFromMap);
 
             SceneReferences.CesiumGeoreference.SetOriginEarthCenteredEarthFixed(translationEcefFromMap.x, translationEcefFromMap.y, translationEcefFromMap.z);
