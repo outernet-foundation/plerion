@@ -117,34 +117,5 @@ namespace Plerion.Core
             var (ecefPosition, ecefRotation) = ChangeBasisUnityToEcef(ecefTransform.Position(), ecefTransform.Rotation().ToDouble3x3());
             return (ecefPosition, ecefRotation.ToQuaternion());
         }
-
-        // WGS84 semi-axes (meters)
-        private const double A = 6378137.0;
-        private const double B = 6378137.0;
-        private const double C = 6356752.314245;
-
-        private static readonly double A2 = A * A;
-        private static readonly double B2 = B * B;
-        private static readonly double C2 = C * C;
-
-        public static double3 GeodeticSurfaceNormal(double3 ecef)
-        {
-            double nx = ecef.x / A2;
-            double ny = ecef.y / B2;
-            double nz = ecef.z / C2;
-            double invLen = 1.0 / math.sqrt(nx * nx + ny * ny + nz * nz);
-            return new double3(nx * invLen, ny * invLen, nz * invLen);
-        }
-
-        public static double3x3 GetEunFrameInEcef(double3 ecefPosition)
-        {
-            var up = GeodeticSurfaceNormal(ecefPosition);
-            var zAxis = new double3(0.0, 0.0, 1.0);
-            var yAxis = new double3(0.0, 1.0, 0.0);
-            var refAxis = math.abs(up.z) < 0.99 ? zAxis : yAxis;
-            var east = math.normalize(math.cross(refAxis, up));
-            var north = math.normalize(math.cross(up, east));
-            return new double3x3(east, up, north);
-        }
     }
 }

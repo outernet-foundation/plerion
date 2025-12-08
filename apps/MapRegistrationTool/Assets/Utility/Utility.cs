@@ -76,15 +76,15 @@ namespace Outernet.MapRegistrationTool
         }
 
         // Adapted from eastNorthUpToFixedFrame in this file https://github.com/CesiumGS/cesium-native/blob/main/CesiumGeospatial/src/GlobeTransforms.cpp
-        public static Quaternion GetEUNRotationFromECEFPosition(double3 ecefPosition)
-        {
-            var up = CesiumWgs84Ellipsoid.GeodeticSurfaceNormal(ecefPosition);
-            var east = math.normalize(new double3(-ecefPosition.y, ecefPosition.x, 0));
-            var north = math.cross(up, east);
+        // public static Quaternion GetEUNRotationFromECEFPosition(double3 ecefPosition)
+        // {
+        //     var up = CesiumWgs84Ellipsoid.GeodeticSurfaceNormal(ecefPosition);
+        //     var east = math.normalize(new double3(-ecefPosition.y, ecefPosition.x, 0));
+        //     var north = math.cross(up, east);
 
-            // Negatives here are to account for handedness difference
-            return Quaternion.LookRotation(-north.ToFloats(), -up.ToFloats());
-        }
+        //     // Negatives here are to account for handedness difference
+        //     return Quaternion.LookRotation(-north.ToFloats(), -up.ToFloats());
+        // }
 
         public static float Duration(this AnimationCurve curve)
         {

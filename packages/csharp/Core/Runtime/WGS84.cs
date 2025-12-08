@@ -2,89 +2,142 @@ using Unity.Mathematics;
 
 namespace Plerion.Core
 {
+    // Simple container for WGS84 cartographic coordinates, intended to make lat/long vs long/lat mistakes harder to make
+    public readonly struct CartographicCoordinates
+    {
+        public readonly double Longitude;
+        public readonly double Latitude;
+        public readonly double Height;
+
+        private CartographicCoordinates(double longitude, double latitude, double height)
+        {
+            Longitude = longitude;
+            Latitude = latitude;
+            Height = height;
+        }
+
+        public static CartographicCoordinates FromLongitudeLatitudeHeight(double longitudeDegrees, double latitudeDegrees, double height)
+        {
+            return new CartographicCoordinates(longitudeDegrees, latitudeDegrees, height);
+        }
+
+        public static CartographicCoordinates FromLatitudeLongitudeHeight(double latitudeDegrees, double longitudeDegrees, double height)
+        {
+            return new CartographicCoordinates(longitudeDegrees, latitudeDegrees, height);
+        }
+    }
+
     public static class WGS84
     {
-        private const double A = 6378137.0;
-        private const double B = 6378137.0;
-        private const double C = 6356752.314245;
+        private const double EquatorialRadius = 6378137.0;
+        private const double PolarRadius = 6356752.314245;
 
-        private static readonly double A2 = A * A;
-        private static readonly double B2 = B * B;
-        private static readonly double C2 = C * C;
+        private static readonly double EquatorialRadiusSquared = EquatorialRadius * EquatorialRadius;
+        private static readonly double PolarRadiusSquared = PolarRadius * PolarRadius;
 
-        private static readonly double E2 = (A2 - C2) / A2; // first eccentricity squared
-        private static readonly double EP2 = (A2 - C2) / C2; // second eccentricity squared
+        private static readonly double FirstEccentricitySquared =
+            (EquatorialRadiusSquared - PolarRadiusSquared) / EquatorialRadiusSquared;
 
-        public static double3 GeodeticSurfaceNormal(double3 ecef)
+        private static readonly double SecondEccentricitySquared =
+            (EquatorialRadiusSquared - PolarRadiusSquared) / PolarRadiusSquared;
+
+        // Gradient-based WGS84 geodetic surface normal.
+        public static double3 GeodeticSurfaceNormal(double3 ecefPosition)
         {
-            double nx = ecef.x / A2;
-            double ny = ecef.y / B2;
-            double nz = ecef.z / C2;
-            double invLen = 1.0 / math.sqrt(nx * nx + ny * ny + nz * nz);
-            return new double3(nx * invLen, ny * invLen, nz * invLen);
+            double xScaled = ecefPosition.x / EquatorialRadiusSquared;
+            double yScaled = ecefPosition.y / EquatorialRadiusSquared;
+            double zScaled = ecefPosition.z / PolarRadiusSquared;
+
+            double lengthSquared = xScaled * xScaled + yScaled * yScaled + zScaled * zScaled;
+            double inverseLength = 1.0 / math.sqrt(lengthSquared);
+
+            double xNormalized = xScaled * inverseLength;
+            double yNormalized = yScaled * inverseLength;
+            double zNormalized = zScaled * inverseLength;
+
+            return new double3(xNormalized, yNormalized, zNormalized);
         }
 
-        public static double3x3 GetEunFrameInEcef(double3 ecefPosition)
+        // Local East-Up-North frame from WGS84 geodetic normal.
+        public static double3x3 GetEastUpNorthFrameInEcef(double3 ecefPosition)
         {
-            var up = GeodeticSurfaceNormal(ecefPosition);
-            var zAxis = new double3(0.0, 0.0, 1.0);
-            var yAxis = new double3(0.0, 1.0, 0.0);
-            var refAxis = math.abs(up.z) < 0.99 ? zAxis : yAxis;
-            var east = math.normalize(math.cross(refAxis, up));
-            var north = math.normalize(math.cross(up, east));
-            return new double3x3(east, up, north);
+            double3 upDirection = GeodeticSurfaceNormal(ecefPosition);
+
+            double3 worldZAxis = new double3(0.0, 0.0, 1.0);
+            double3 worldYAxis = new double3(0.0, 1.0, 0.0);
+
+            double3 referenceAxis =
+                math.abs(upDirection.z) < 0.99
+                    ? worldZAxis
+                    : worldYAxis;
+
+            double3 eastDirection = math.normalize(math.cross(referenceAxis, upDirection));
+            double3 northDirection = math.normalize(math.cross(upDirection, eastDirection));
+
+            return new double3x3(eastDirection, upDirection, northDirection);
         }
 
-        public static double3 LongitudeLatitudeHeightToEarthCenteredEarthFixed(
-            double longitude,
-            double latitude,
-            double height)
+        // Standard WGS84 cartographic (lon, lat, h) to ECEF.
+        public static double3 CartographicToEcef(CartographicCoordinates cartographic)
         {
-            double sinLat = math.sin(latitude);
-            double cosLat = math.cos(latitude);
-            double sinLon = math.sin(longitude);
-            double cosLon = math.cos(longitude);
+            double longitudeRadians = math.radians(cartographic.Longitude);
+            double latitudeRadians = math.radians(cartographic.Latitude);
 
-            // Radius of curvature in the prime vertical
-            double N = A / math.sqrt(1.0 - E2 * sinLat * sinLat);
+            double sinLatitude = math.sin(latitudeRadians);
+            double cosLatitude = math.cos(latitudeRadians);
+            double sinLongitude = math.sin(longitudeRadians);
+            double cosLongitude = math.cos(longitudeRadians);
 
-            double x = (N + height) * cosLat * cosLon;
-            double y = (N + height) * cosLat * sinLon;
-            double z = (N * (1.0 - E2) + height) * sinLat;
+            double radiusOfCurvature =
+                EquatorialRadius / math.sqrt(1.0 - FirstEccentricitySquared * sinLatitude * sinLatitude);
+
+            double x = (radiusOfCurvature + cartographic.Height) * cosLatitude * cosLongitude;
+            double y = (radiusOfCurvature + cartographic.Height) * cosLatitude * sinLongitude;
+            double z = (radiusOfCurvature * (1.0 - FirstEccentricitySquared) + cartographic.Height) * sinLatitude;
 
             return new double3(x, y, z);
         }
 
-        /// <summary>
-        /// Converts ECEF (x, y, z in meters) to geodetic (longitude, latitude, height)
-        /// on the WGS-84 ellipsoid. Longitude and latitude are in radians; height in meters.
-        /// </summary>
-        public static double3 EarthCenteredEarthFixedToLongitudeLatitudeHeight(double3 ecef)
+        // Bowring-style WGS84 ECEF to cartographic container.
+        public static CartographicCoordinates EcefToCartographic(double3 ecefPosition)
         {
-            double x = ecef.x;
-            double y = ecef.y;
-            double z = ecef.z;
+            double x = ecefPosition.x;
+            double y = ecefPosition.y;
+            double z = ecefPosition.z;
 
-            double p = math.sqrt(x * x + y * y);
+            double horizontalDistance = math.sqrt(x * x + y * y);
 
-            // Longitude
-            double longitude = math.atan2(y, x);
+            double longitudeRadians = math.atan2(y, x);
 
-            // Bowring’s formula for latitude
-            double theta = math.atan2(A * z, C * p);
-            double sinTheta = math.sin(theta);
-            double cosTheta = math.cos(theta);
+            double auxiliaryAngle =
+                math.atan2(EquatorialRadius * z, PolarRadius * horizontalDistance);
 
-            double numerator = z + EP2 * C * sinTheta * sinTheta * sinTheta;
-            double denominator = p - E2 * A * cosTheta * cosTheta * cosTheta;
-            double latitude = math.atan2(numerator, denominator);
+            double sinAuxiliaryAngle = math.sin(auxiliaryAngle);
+            double cosAuxiliaryAngle = math.cos(auxiliaryAngle);
 
-            double sinLat = math.sin(latitude);
-            double N = A / math.sqrt(1.0 - E2 * sinLat * sinLat);
-            double height = p / math.cos(latitude) - N;
+            double latitudeNumerator =
+                z + SecondEccentricitySquared * PolarRadius * sinAuxiliaryAngle * sinAuxiliaryAngle * sinAuxiliaryAngle;
 
-            return new double3(longitude, latitude, height);
+            double latitudeDenominator =
+                horizontalDistance -
+                FirstEccentricitySquared * EquatorialRadius * cosAuxiliaryAngle * cosAuxiliaryAngle * cosAuxiliaryAngle;
+
+            double latitudeRadians =
+                math.atan2(latitudeNumerator, latitudeDenominator);
+
+            double sinLatitude = math.sin(latitudeRadians);
+
+            double radiusOfCurvature =
+                EquatorialRadius / math.sqrt(1.0 - FirstEccentricitySquared * sinLatitude * sinLatitude);
+
+            double height =
+                horizontalDistance / math.cos(latitudeRadians) -
+                radiusOfCurvature;
+
+            double longitudeDegrees = math.degrees(longitudeRadians);
+            double latitudeDegrees = math.degrees(latitudeRadians);
+
+            return CartographicCoordinates.FromLongitudeLatitudeHeight(longitudeDegrees, latitudeDegrees, height);
         }
-
     }
 }

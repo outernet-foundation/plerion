@@ -1,9 +1,8 @@
 using Unity.Mathematics;
 
 using FofX.Stateful;
-
-using CesiumForUnity;
 using System;
+using Plerion.Core;
 
 namespace Outernet.MapRegistrationTool
 {
@@ -13,7 +12,7 @@ namespace Outernet.MapRegistrationTool
         {
             var ecefPosition = (ObservablePrimitive<double3>)target;
             var ecefInput = UIBuilder.Double3Control("ECEF", LabelType.Adaptive, props.interactable.value);
-            var gpsInput = UIBuilder.LongLatHeightControl("GPS", LabelType.Adaptive, props.interactable.value);
+            var gpsInput = UIBuilder.CartographicCoordinatesControl("GPS", LabelType.Adaptive, props.interactable.value);
             var localInput = UIBuilder.Vector3Control("Local", LabelType.Adaptive, props.interactable.value);
 
             ecefInput.transform.SetParent(rect, false);
@@ -37,7 +36,8 @@ namespace Outernet.MapRegistrationTool
                     return;
 
                 UndoRedoManager.RegisterUndo("Set Position");
-                ecefPosition.ExecuteSet(CesiumWgs84Ellipsoid.LongitudeLatitudeHeightToEarthCenteredEarthFixed(gpsInput.value));
+                ecefPosition.ExecuteSet(WGS84.CartographicToEcef(CartographicCoordinates.FromLatitudeLongitudeHeight(
+                    gpsInput.value.Latitude, gpsInput.value.Longitude, gpsInput.value.Height)));
             };
 
             localInput.onValueChanged += () =>
@@ -54,7 +54,7 @@ namespace Outernet.MapRegistrationTool
                 {
                     pushingChanges = true;
                     ecefInput.value = x;
-                    gpsInput.value = CesiumWgs84Ellipsoid.EarthCenteredEarthFixedToLongitudeLatitudeHeight(x);
+                    gpsInput.value = WGS84.EcefToCartographic(x);
                     localInput.value = LocationUtilities.EcefToUnityWorld(x, default).position;
                     pushingChanges = false;
                 }),
