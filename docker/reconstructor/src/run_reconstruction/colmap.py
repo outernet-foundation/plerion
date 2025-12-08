@@ -105,7 +105,19 @@ def run_reconstruction(
         max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
     ]
 
-    # Align origin
+    # Use the first image's rotation to determine similarity transform
+    first_rig = next(iter(rigs.keys()))
+    first_camera = next(iter(rigs[first_rig].cameras.keys()))
+    first_frame = next(iter(rigs[first_rig].frame_poses.keys()))
+    first_image = f"{first_rig}/{first_camera}/{first_frame}.jpg"
+
+    # Compute the similarity transform between the original and reconstructed rotations for the first image
+    image_id = colmap_image_ids[first_image]
+    original_rotation = rigs[first_rig].frame_poses[first_frame].rotation
+    reconstructed_rotation = best_reconstruction.images[image_id].cam_from_world().rotation
+    similarity_rotation = reconstructed_rotation @ original_rotation.T
+
+    # Apply similarity transform to entire reconstruction
     # TODO
 
     return best_reconstruction
