@@ -46,10 +46,10 @@ namespace Outernet.MapRegistrationTool
                 string name = AssetDatabase.GenerateUniqueAssetPath($"Assets/_LocalWorkspace/Resources/{nameof(UnityEnv)}.asset");
                 AssetDatabase.CreateAsset(_instance, name);
                 AssetDatabase.SaveAssets();
+
+                ReloadFromDotEnv();
 #endif
             }
-
-            ReloadFromDotEnv();
 
             return _instance;
         }

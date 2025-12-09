@@ -92,7 +92,10 @@ public static class LocalCaptureController
             () => ARSession.state == ARSessionState.SessionTracking,
             cancellationToken: cancellationToken);
 
-        captureAnchor = (await anchorManager.TryAddAnchorAsync(new Pose(cameraManager.transform.position, cameraManager.transform.rotation))).value;
+        var rotation = cameraManager.transform.rotation;
+        rotation.x = 0;
+        rotation.z = 0;
+        captureAnchor = (await anchorManager.TryAddAnchorAsync(new Pose(cameraManager.transform.position, rotation))).value;
 
         await UniTask.WaitUntil(
             () => captureAnchor.trackingState == TrackingState.Tracking,

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from numpy import eye, float64, intp, stack, uint32
+from numpy import concatenate, eye, float64, intp, stack, uint32
 from numpy.typing import NDArray
 from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
-from pycolmap._core import apply_rig_config, incremental_mapping, match_spatial
+from pycolmap._core import Frame, Rigid3d, Sim3d, apply_rig_config, incremental_mapping, match_spatial
 
 from .metrics_builder import MetricsBuilder
 from .options_builder import OptionsBuilder
@@ -105,19 +105,30 @@ def run_reconstruction(
         max(range(len(reconstructions)), key=lambda i: reconstructions[i].num_reg_images())
     ]
 
-    # Use the first image's rotation to determine similarity transform
+    # Use the first frame to determine similarity transform
     first_rig = next(iter(rigs.keys()))
     first_camera = next(iter(rigs[first_rig].cameras.keys()))
     first_frame = next(iter(rigs[first_rig].frame_poses.keys()))
-    first_image = f"{first_rig}/{first_camera}/{first_frame}.jpg"
+    first_image_name = f"{first_rig}/{first_camera}/{first_frame}.jpg"
+    first_image_id = colmap_image_ids[first_image_name]
+    first_reconstruction_frame = cast(Frame, best_reconstruction.images[first_image_id].frame)
 
-    # Compute the similarity transform between the original and reconstructed rotations for the first image
-    image_id = colmap_image_ids[first_image]
-    original_rotation = rigs[first_rig].frame_poses[first_frame].rotation
-    reconstructed_rotation = best_reconstruction.images[image_id].cam_from_world().rotation
-    similarity_rotation = reconstructed_rotation @ original_rotation.T
+    # Get the prior pose and reconstructed pose for the first frame
+    first_frame_prior_pose = rigs[first_rig].frame_poses[first_frame]
+    first_rig_from_world_transform = cast(Rigid3d, first_reconstruction_frame.rig_from_world)  # type: ignore
 
-    # Apply similarity transform to entire reconstruction
-    # TODO
+    # Transform the reconstruction to align with the rig coordinate system
+    best_reconstruction.transform(
+        Sim3d(
+            concatenate(
+                [
+                    first_frame_prior_pose.rotation @ first_rig_from_world_transform.rotation.matrix(),
+                    first_frame_prior_pose.rotation @ first_rig_from_world_transform.translation.reshape(3, 1)
+                    + first_frame_prior_pose.translation.reshape(3, 1),
+                ],
+                axis=1,
+            )
+        )
+    )
 
     return best_reconstruction
