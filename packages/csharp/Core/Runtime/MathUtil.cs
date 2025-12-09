@@ -93,6 +93,10 @@ namespace Plerion.Core
             (translationCameraFromMap, rotationCameraFromMap) = ChangeBasisOpenCVToUnity(translationCameraFromMap, rotationCameraFromMap);
             (translationEcefFromMap, rotationEcefFromMap) = ChangeBasisEcefToUnity(translationEcefFromMap, rotationEcefFromMap);
 
+            // Constrain both camera rotations to be gravity-aligned
+            rotationCameraFromMap = rotationCameraFromMap.RemovePitchAndRoll();
+            rotationUnityWorldFromCamera = rotationUnityWorldFromCamera.RemovePitchAndRoll();
+
             var rotationUnityFromMap = math.mul(rotationUnityWorldFromCamera, rotationCameraFromMap);
             var translationUnityFromMap = math.mul(rotationUnityWorldFromCamera, translationCameraFromMap) + translationUnityWorldFromCamera;
             var transformUnityFromMap = Double4x4.FromTranslationRotation(translationUnityFromMap, rotationUnityFromMap);
@@ -100,6 +104,14 @@ namespace Plerion.Core
             var transformMapFromEcef = math.inverse(transformEcefFromMap);
 
             return math.mul(transformUnityFromMap, transformMapFromEcef);
+        }
+
+        public static double3x3 RemovePitchAndRoll(this double3x3 rotation)
+        {
+            float3 up = new float3(0f, 1f, 0f);
+            float3 right = math.mul(rotation.ToQuaternion(), new float3(1f, 0f, 0f));
+            float3 forward = math.normalize(math.cross(right, up));
+            return quaternion.LookRotationSafe(forward, up).ToDouble3x3();
         }
 
         public static (double3 position, quaternion rotation) EcefToUnityWorld(double4x4 ecefToUnityTransform, double3 ecefPosition, quaternion ecefRotation)

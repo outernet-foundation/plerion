@@ -59,7 +59,7 @@ namespace Outernet.MapRegistrationTool
         private void OnValidate()
         {
             // Called when you change fields (like dotEnvPath) in the inspector and hit save.
-            if (!Application.isPlaying)
+            if (!Application.isPlaying && _instance != null)
             {
                 ReloadFromDotEnv();
                 EditorUtility.SetDirty(this);
