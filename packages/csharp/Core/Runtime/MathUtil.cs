@@ -33,21 +33,22 @@ namespace Plerion.Core
     public static class ExtensionMethods
     {
         public static double3x3 ToDouble3x3(this quaternion quat)
-        {
-            return new double3x3(new float3x3(quat.value));
-        }
+            => new double3x3(new float3x3(quat));
 
         public static quaternion ToQuaternion(this double3x3 matrix)
-        {
-            return new quaternion(new float3x3(matrix));
-        }
+            => new quaternion(new float3x3(matrix));
 
-        public static double3 ToFloats(this double3 vector) => new double3((float)vector.x, (float)vector.y, (float)vector.z);
+        public static double3 ToFloats(this double3 vector)
+            => new double3((float)vector.x, (float)vector.y, (float)vector.z);
 
-        public static double3 Position(this double4x4 matrix) => matrix.c3.xyz;
+        public static double3 Position(this double4x4 matrix)
+            => matrix.c3.xyz;
 
-        public static quaternion Rotation(this double4x4 matrix)
-            => new double3x3(math.normalize(matrix.c0.xyz).ToFloats(), math.normalize(matrix.c1.xyz).ToFloats(), math.normalize(matrix.c2.xyz).ToFloats()).ToQuaternion();
+        public static quaternion RotationQuaternion(this double4x4 matrix)
+            => matrix.RotationMatrix().ToQuaternion();
+
+        public static double3x3 RotationMatrix(this double4x4 matrix)
+            => new double3x3(matrix.c0.xyz, matrix.c1.xyz, matrix.c2.xyz);
     }
 
     public static class LocationUtilities
@@ -69,16 +70,16 @@ namespace Plerion.Core
         private static readonly double3x3 basisChangeUnityFromEcef = math.mul(math.transpose(basisUnity), basisEcef);
         private static readonly double3x3 basisChangeEcefFromUnity = math.transpose(basisChangeUnityFromEcef);
 
-        public static (double3, double3x3) ChangeBasisOpenCVToUnity(double3 translation, double3x3 rotation)
+        public static (double3, double3x3) ChangeBasisUnityFromOpenCV(double3 translation, double3x3 rotation)
             => (math.mul(basisChangeUnityFromOpenCV, translation), math.mul(basisChangeUnityFromOpenCV, math.mul(rotation, basisChangeOpenCVFromUnity)));
 
-        public static (double3, double3x3) ChangeBasisUnityToOpenCV(double3 translation, double3x3 rotation)
+        public static (double3, double3x3) ChangeBasisOpenCVFromUnity(double3 translation, double3x3 rotation)
             => (math.mul(basisChangeOpenCVFromUnity, translation), math.mul(basisChangeOpenCVFromUnity, math.mul(rotation, basisChangeUnityFromOpenCV)));
 
-        public static (double3, double3x3) ChangeBasisEcefToUnity(double3 translation, double3x3 rotation)
+        public static (double3, double3x3) ChangeBasisUnityFromEcef(double3 translation, double3x3 rotation)
             => (math.mul(basisChangeUnityFromEcef, translation), math.mul(basisChangeUnityFromEcef, math.mul(rotation, basisChangeEcefFromUnity)));
 
-        public static (double3, double3x3) ChangeBasisUnityToEcef(double3 translation, double3x3 rotation)
+        public static (double3, double3x3) ChangeBasisEcefFromUnity(double3 translation, double3x3 rotation)
             => (math.mul(basisChangeEcefFromUnity, translation), math.mul(basisChangeEcefFromUnity, math.mul(rotation, basisChangeUnityFromEcef)));
 
         public static double4x4 ComputeUnityFromEcefTransform(
@@ -90,8 +91,10 @@ namespace Plerion.Core
             double3x3 rotationUnityWorldFromCamera
         )
         {
-            (translationCameraFromMap, rotationCameraFromMap) = ChangeBasisOpenCVToUnity(translationCameraFromMap, rotationCameraFromMap);
-            (translationEcefFromMap, rotationEcefFromMap) = ChangeBasisEcefToUnity(translationEcefFromMap, rotationEcefFromMap);
+
+
+            (translationCameraFromMap, rotationCameraFromMap) = ChangeBasisUnityFromOpenCV(translationCameraFromMap, rotationCameraFromMap);
+            (translationEcefFromMap, rotationEcefFromMap) = ChangeBasisUnityFromEcef(translationEcefFromMap, rotationEcefFromMap);
 
             // Constrain both camera rotations to be gravity-aligned
             rotationCameraFromMap = rotationCameraFromMap.RemovePitchAndRoll();
@@ -114,19 +117,19 @@ namespace Plerion.Core
             return quaternion.LookRotationSafe(forward, up).ToDouble3x3();
         }
 
-        public static (double3 position, quaternion rotation) EcefToUnityWorld(double4x4 ecefToUnityTransform, double3 ecefPosition, quaternion ecefRotation)
+        public static (double3 position, quaternion rotation) UnityFromEcef(double4x4 unityFromEcefTransformUnityBasis, double3 ecefPosition, quaternion ecefRotation)
         {
-            var (position, rotation) = ChangeBasisEcefToUnity(ecefPosition, ecefRotation.ToDouble3x3());
-            var ecefTransform = Double4x4.FromTranslationRotation(position, rotation);
-            var unityTransform = math.mul(ecefToUnityTransform, ecefTransform);
-            return (unityTransform.Position().ToFloats(), unityTransform.Rotation());
+            var (ecefPositionUnityBasis, ecefRotationUnityBasis) = ChangeBasisUnityFromEcef(ecefPosition, ecefRotation.ToDouble3x3());
+            var ecefTransformUnityBasis = Double4x4.FromTranslationRotation(ecefPositionUnityBasis, ecefRotationUnityBasis);
+            var unityTransform = math.mul(unityFromEcefTransformUnityBasis, ecefTransformUnityBasis);
+            return (unityTransform.Position().ToFloats(), unityTransform.RotationQuaternion());
         }
 
-        public static (double3 position, quaternion rotation) UnityWorldToEcef(double4x4 unityToEcefTransform, double3 position, quaternion rotation)
+        public static (double3 position, quaternion rotation) EcefFromUnity(double4x4 ecefFromUnityTransformUnityBasis, double3 unityPosition, quaternion unityRotation)
         {
-            var unityTransform = Double4x4.FromTranslationRotation(position, rotation);
-            var ecefTransform = math.mul(unityToEcefTransform, unityTransform);
-            var (ecefPosition, ecefRotation) = ChangeBasisUnityToEcef(ecefTransform.Position(), ecefTransform.Rotation().ToDouble3x3());
+            var unityTransform = Double4x4.FromTranslationRotation(unityPosition, unityRotation);
+            var ecefTransformUnityBasis = math.mul(ecefFromUnityTransformUnityBasis, unityTransform);
+            var (ecefPosition, ecefRotation) = ChangeBasisEcefFromUnity(ecefTransformUnityBasis.Position(), ecefTransformUnityBasis.RotationMatrix());
             return (ecefPosition, ecefRotation.ToQuaternion());
         }
     }

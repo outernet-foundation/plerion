@@ -289,7 +289,7 @@ namespace Outernet.MapRegistrationTool
                 //
                 // Apologies to the poor soul (probably me) who has to maintain this code in the future.
                 -localTransformMatrix.Position().ToFloats(),
-                localTransformMatrix.Rotation()
+                localTransformMatrix.RotationQuaternion()
             );
         }
 
@@ -300,7 +300,7 @@ namespace Outernet.MapRegistrationTool
                 -position.ToDoubles(),
                 rotation);
             var ecefTransformMatrix = math.mul(localToEcefTransform, localTransformMatrix);
-            return (ecefTransformMatrix.Position(), ecefTransformMatrix.Rotation());
+            return (ecefTransformMatrix.Position(), ecefTransformMatrix.RotationQuaternion());
         }
 
         public static void DisplayDialog(Component dialog)
@@ -341,7 +341,7 @@ namespace Outernet.MapRegistrationTool
 
             pos /= count;
 
-            var localTransform = LocationUtilities.EcefToUnityWorld(pos, rot);
+            var localTransform = LocationUtilities.UnityFromEcef(pos, rot);
 
             position = localTransform.position;
             rotation = count == 1 ? localTransform.rotation : Quaternion.identity;

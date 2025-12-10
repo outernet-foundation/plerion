@@ -192,30 +192,14 @@ namespace Plerion.VPS
             OnEcefToUnityWorldTransformUpdated?.Invoke();
         }
 
-        public static void SetUnityWorldToEcefTransform(double4x4 transform)
-        {
-            ecefFromUnityTransform = transform;
-            unityFromEcefTransform = math.inverse(transform);
-
-            OnEcefToUnityWorldTransformUpdated?.Invoke();
-        }
-
-        public static void SetEcefToUnityWorldTransform(double4x4 transform)
-        {
-            unityFromEcefTransform = transform;
-            ecefFromUnityTransform = math.inverse(transform);
-
-            OnEcefToUnityWorldTransformUpdated?.Invoke();
-        }
-
         public static (Vector3 position, Quaternion rotation) EcefToUnityWorld(double3 ecefPosition, quaternion ecefRotation)
         {
-            var (position, rotation) = LocationUtilities.EcefToUnityWorld(unityFromEcefTransform, ecefPosition, ecefRotation);
-            return (new Vector3((float)position.x, (float)position.y, (float)position.z), new Quaternion((float)rotation.value.x, (float)rotation.value.y, (float)rotation.value.z, (float)rotation.value.w));
+            var (position, rotation) = LocationUtilities.UnityFromEcef(unityFromEcefTransform, ecefPosition, ecefRotation);
+            return (new Vector3((float)position.x, (float)position.y, (float)position.z), new Quaternion(rotation.value.x, rotation.value.y, rotation.value.z, rotation.value.w));
         }
 
         public static (double3 position, quaternion rotation) UnityWorldToEcef(Vector3 position, Quaternion rotation)
-            => LocationUtilities.UnityWorldToEcef(ecefFromUnityTransform, position.ToFloat3(), rotation);
+            => LocationUtilities.EcefFromUnity(ecefFromUnityTransform, position.ToFloat3(), rotation);
 
         public static async UniTask<MapData[]> GetLoadedLocalizationMapsAsync(bool includePoints = false, CancellationToken cancellationToken = default)
         {
@@ -270,7 +254,7 @@ namespace Plerion.VPS
             return points.Select(x =>
             {
                 var pcw = x.Position.ToDouble3();
-                var (p_ucam, _) = LocationUtilities.ChangeBasisOpenCVToUnity(pcw, quaternion.identity.ToDouble3x3());
+                var (p_ucam, _) = LocationUtilities.ChangeBasisUnityFromOpenCV(pcw, quaternion.identity.ToDouble3x3());
                 return new Point
                 {
                     position = new float3((float)p_ucam.x, (float)p_ucam.y, (float)p_ucam.z),

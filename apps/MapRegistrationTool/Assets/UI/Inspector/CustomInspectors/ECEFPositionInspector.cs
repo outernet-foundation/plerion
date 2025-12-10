@@ -46,7 +46,7 @@ namespace Outernet.MapRegistrationTool
                     return;
 
                 UndoRedoManager.RegisterUndo("Set Position");
-                ecefPosition.ExecuteSet(LocationUtilities.UnityWorldToEcef(localInput.value, default).position);
+                ecefPosition.ExecuteSet(LocationUtilities.EcefFromUnity(localInput.value, default).position);
             };
 
             return Bindings.Compose(
@@ -55,7 +55,7 @@ namespace Outernet.MapRegistrationTool
                     pushingChanges = true;
                     ecefInput.value = x;
                     gpsInput.value = WGS84.EcefToCartographic(x);
-                    localInput.value = LocationUtilities.EcefToUnityWorld(x, default).position;
+                    localInput.value = LocationUtilities.UnityFromEcef(x, default).position;
                     pushingChanges = false;
                 }),
                 ecefInput,

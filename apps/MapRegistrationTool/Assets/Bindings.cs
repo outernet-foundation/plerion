@@ -657,7 +657,7 @@ namespace Outernet.MapRegistrationTool
             return Relationship(
                 _ =>
                 {
-                    var transform = LocationUtilities.EcefToUnityWorld(ecefPosition.value, ecefRotation.value);
+                    var transform = LocationUtilities.UnityFromEcef(ecefPosition.value, ecefRotation.value);
                     localPosition.value = transform.position;
                     localRotation.value = transform.rotation;
                 },
@@ -665,7 +665,7 @@ namespace Outernet.MapRegistrationTool
                 new IObservableNode[] { ecefPosition, ecefRotation, App.state.ecefToUnityWorldMatrix },
                 _ =>
                 {
-                    var transform = LocationUtilities.UnityWorldToEcef(localPosition.value, localRotation.value);
+                    var transform = LocationUtilities.EcefFromUnity(localPosition.value, localRotation.value);
                     ecefPosition.value = transform.position;
                     ecefRotation.value = transform.rotation;
                 },

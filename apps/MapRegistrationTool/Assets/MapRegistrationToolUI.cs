@@ -380,7 +380,7 @@ namespace Outernet.MapRegistrationTool
 
         public async UniTask ImportScan(string scanName)
         {
-            var newMapTransform = LocationUtilities.UnityWorldToEcef(
+            var newMapTransform = LocationUtilities.EcefFromUnity(
                 Camera.main.transform.position + (Camera.main.transform.forward * 3f),
                 Camera.main.transform.rotation.Flatten()
             );

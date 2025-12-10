@@ -58,8 +58,8 @@ namespace Plerion.Core
             return new double3(xNormalized, yNormalized, zNormalized);
         }
 
-        // Local East-Up-North frame from WGS84 geodetic normal.
-        public static double3x3 GetEastUpNorthFrameInEcef(double3 ecefPosition)
+        // Local East-North-Up frame from WGS84 geodetic normal.
+        public static double3x3 GetEastNorthUpFrameInEcef(double3 ecefPosition)
         {
             double3 upDirection = GeodeticSurfaceNormal(ecefPosition);
 
@@ -74,7 +74,7 @@ namespace Plerion.Core
             double3 eastDirection = math.normalize(math.cross(referenceAxis, upDirection));
             double3 northDirection = math.normalize(math.cross(upDirection, eastDirection));
 
-            return new double3x3(eastDirection, upDirection, northDirection);
+            return new double3x3(eastDirection, northDirection, upDirection);
         }
 
         // Standard WGS84 cartographic (lon, lat, h) to ECEF.

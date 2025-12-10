@@ -154,18 +154,19 @@ namespace Outernet.MapRegistrationTool
             SceneReferences.GroundTileset.suspendUpdate = true;
 
             // Convert cartographic coordinates to ECEF coordinates, and use the EUN frame at that location for orientation
-            var translationEcefFromMap = WGS84.CartographicToEcef(CartographicCoordinates.FromLongitudeLatitudeHeight(longitude, latitude, groundLevelHeightAboveWGS84Ellipsoid));
-            var rotationEcefFromMap = WGS84.GetEastUpNorthFrameInEcef(translationEcefFromMap);
+            var ecefPosition = WGS84.CartographicToEcef(CartographicCoordinates.FromLongitudeLatitudeHeight(longitude, latitude, groundLevelHeightAboveWGS84Ellipsoid));
+            var ecefRotation = WGS84.GetEastNorthUpFrameInEcef(ecefPosition);
 
             // Set Cesium georeference to that position and orientation
-            SceneReferences.CesiumGeoreference.SetOriginEarthCenteredEarthFixed(translationEcefFromMap.x, translationEcefFromMap.y, translationEcefFromMap.z);
-            SceneReferences.CesiumGeoreference.transform.rotation = math.inverse(rotationEcefFromMap.ToQuaternion());
+            SceneReferences.CesiumGeoreference.SetOriginEarthCenteredEarthFixed(ecefPosition.x, ecefPosition.y, ecefPosition.z);
+            SceneReferences.CesiumGeoreference.transform.rotation = math.inverse(ecefRotation.ToQuaternion());
 
             // Update the application's ECEF to Unity world matrix.
-            (translationEcefFromMap, rotationEcefFromMap) = ChangeBasisEcefToUnity(translationEcefFromMap, rotationEcefFromMap);
-            App.state.ecefToUnityWorldMatrix.ExecuteSetOrDelay(
-                math.inverse(Double4x4.FromTranslationRotation(translationEcefFromMap, rotationEcefFromMap))
-            );
+            var (ecefPositionUnityBasis, ecefRotationUnityBasis) = ChangeBasisUnityFromEcef(ecefPosition, ecefRotation);
+            var ecefFromUnityTransformUnityBasis = Double4x4.FromTranslationRotation(ecefPositionUnityBasis, ecefRotationUnityBasis);
+            App.state.unityWorldToEcefMatrix.ExecuteSetOrDelay(ecefFromUnityTransformUnityBasis);
+            var unityFromEcefTransformUnityBasis = math.inverse(ecefFromUnityTransformUnityBasis);
+            App.state.ecefToUnityWorldMatrix.ExecuteSetOrDelay(unityFromEcefTransformUnityBasis);
 
             List<LocalizationMapRead> maps = default;
 
