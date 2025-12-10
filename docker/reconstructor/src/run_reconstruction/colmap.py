@@ -3,11 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, cast
 
-from numpy import concatenate, eye, float64, intp, stack, uint32
+from numpy import eye, float64, intp, stack, uint32
 from numpy.typing import NDArray
 from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
-from pycolmap._core import Frame, Rigid3d, Sim3d, apply_rig_config, incremental_mapping, match_spatial
+from pycolmap._core import Frame, Rigid3d, apply_rig_config, incremental_mapping, match_spatial
 
 from .metrics_builder import MetricsBuilder
 from .options_builder import OptionsBuilder
@@ -118,17 +118,17 @@ def run_reconstruction(
     first_rig_from_world_transform = cast(Rigid3d, first_reconstruction_frame.rig_from_world)  # type: ignore
 
     # Transform the reconstruction to align with the rig coordinate system
-    best_reconstruction.transform(
-        Sim3d(
-            concatenate(
-                [
-                    first_frame_prior_pose.rotation @ first_rig_from_world_transform.rotation.matrix(),
-                    first_frame_prior_pose.rotation @ first_rig_from_world_transform.translation.reshape(3, 1)
-                    + first_frame_prior_pose.translation.reshape(3, 1),
-                ],
-                axis=1,
-            )
-        )
-    )
+    # best_reconstruction.transform(
+    #     Sim3d(
+    #         concatenate(
+    #             [
+    #                 first_frame_prior_pose.rotation @ first_rig_from_world_transform.rotation.matrix(),
+    #                 first_frame_prior_pose.rotation @ first_rig_from_world_transform.translation.reshape(3, 1)
+    #                 + first_frame_prior_pose.translation.reshape(3, 1),
+    #             ],
+    #             axis=1,
+    #         )
+    #     )
+    # )
 
     return best_reconstruction
