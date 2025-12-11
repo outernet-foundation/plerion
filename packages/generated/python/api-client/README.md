@@ -116,7 +116,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**get_map_load_status**](docs/DefaultApi.md#get_map_load_status) | **GET** /localization_sessions/{localization_session_id}/maps/{map_id}/status | Get Map Load Status
 *DefaultApi* | [**get_nodes**](docs/DefaultApi.md#get_nodes) | **GET** /nodes | Get Nodes
 *DefaultApi* | [**get_reconstruction**](docs/DefaultApi.md#get_reconstruction) | **GET** /reconstructions/{id} | Get Reconstruction
-*DefaultApi* | [**get_reconstruction_image_poses**](docs/DefaultApi.md#get_reconstruction_image_poses) | **GET** /reconstructions/{id}/image_poses | Get Reconstruction Image Poses
+*DefaultApi* | [**get_reconstruction_frame_poses**](docs/DefaultApi.md#get_reconstruction_frame_poses) | **GET** /reconstructions/{id}/frame_poses | Get Reconstruction Frame Poses
 *DefaultApi* | [**get_reconstruction_localization_map**](docs/DefaultApi.md#get_reconstruction_localization_map) | **GET** /reconstructions/{id}/localization_map | Get Reconstruction Localization Map
 *DefaultApi* | [**get_reconstruction_manifest**](docs/DefaultApi.md#get_reconstruction_manifest) | **GET** /reconstructions/{id}/manifest | Get Reconstruction Manifest
 *DefaultApi* | [**get_reconstruction_points**](docs/DefaultApi.md#get_reconstruction_points) | **GET** /reconstructions/{id}/points | Get Reconstruction Points

@@ -117,12 +117,12 @@ def _generate_client(openapi_spec: str, project: str, client: str):
             json.dumps(
                 {
                     "name": client_package_name_camel,
-                    "references": [],
+                    "references": ["Newtonsoft.Json", "Polly", "JsonSubTypes"],
                     "includePlatforms": [],
                     "excludePlatforms": [],
                     "allowUnsafeCode": False,
                     "overrideReferences": False,
-                    "precompiledReferences": ["Newtonsoft.Json.dll", "Polly.dll", "JsonSubTypes.dll"],
+                    "precompiledReferences": [],
                     "autoReferenced": True,
                     "defineConstraints": [],
                     "versionDefines": [],

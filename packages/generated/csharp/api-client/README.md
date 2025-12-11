@@ -156,7 +156,7 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**GetMapLoadStatus**](docs/DefaultApi.md#getmaploadstatus) | **GET** /localization_sessions/{localization_session_id}/maps/{map_id}/status | Get Map Load Status
 *DefaultApi* | [**GetNodes**](docs/DefaultApi.md#getnodes) | **GET** /nodes | Get Nodes
 *DefaultApi* | [**GetReconstruction**](docs/DefaultApi.md#getreconstruction) | **GET** /reconstructions/{id} | Get Reconstruction
-*DefaultApi* | [**GetReconstructionImagePoses**](docs/DefaultApi.md#getreconstructionimageposes) | **GET** /reconstructions/{id}/image_poses | Get Reconstruction Image Poses
+*DefaultApi* | [**GetReconstructionFramePoses**](docs/DefaultApi.md#getreconstructionframeposes) | **GET** /reconstructions/{id}/frame_poses | Get Reconstruction Frame Poses
 *DefaultApi* | [**GetReconstructionLocalizationMap**](docs/DefaultApi.md#getreconstructionlocalizationmap) | **GET** /reconstructions/{id}/localization_map | Get Reconstruction Localization Map
 *DefaultApi* | [**GetReconstructionManifest**](docs/DefaultApi.md#getreconstructionmanifest) | **GET** /reconstructions/{id}/manifest | Get Reconstruction Manifest
 *DefaultApi* | [**GetReconstructionPoints**](docs/DefaultApi.md#getreconstructionpoints) | **GET** /reconstructions/{id}/points | Get Reconstruction Points

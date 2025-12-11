@@ -101,7 +101,7 @@ namespace Outernet.MapRegistrationTool
 
                         await UniTask.WhenAll(
                             App.API.GetReconstructionPointsAsync(x, token).AsUniTask().ContinueWith(x => points = x),
-                            App.API.GetReconstructionImagePosesAsync(x, token).AsUniTask().ContinueWith(x => localInputPositions = x)
+                            App.API.GetReconstructionFramePosesAsync(x, token).AsUniTask().ContinueWith(x => localInputPositions = x)
                         );
 
                         await UniTask.SwitchToMainThread(cancellationToken: token);
