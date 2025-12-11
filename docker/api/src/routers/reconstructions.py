@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Optional
 from uuid import UUID
 
@@ -208,7 +209,9 @@ async def get_reconstruction_points(id: UUID, session: AsyncSession = Depends(ge
     if not row:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Reconstruction with id {id} not found")
 
-    return [
+    # profile it
+    time_start = time.perf_counter()
+    result = [
         PointCloudPoint(
             position=Vector3(x=float(parts[1]), y=float(parts[2]), z=float(parts[3])),
             color=Color(r=int(parts[4]), g=int(parts[5]), b=int(parts[6])),
@@ -224,6 +227,9 @@ async def get_reconstruction_points(id: UUID, session: AsyncSession = Depends(ge
             if line and not line.startswith("#")
         ]
     ]
+    print(f"Loaded {len(result)} points in {time.perf_counter() - time_start:.2f} seconds")
+
+    return result
 
 
 @router.get("/{id}/points.ply", response_class=StreamingResponse, responses={200: {"content": binary_schema}})

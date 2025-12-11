@@ -1,16 +1,18 @@
-﻿using Cysharp.Threading.Tasks;
-using Newtonsoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
+using Cysharp.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Plerion.Core
 {
     public class AuthHttpHandler : DelegatingHandler
     {
         protected override async System.Threading.Tasks.Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request, CancellationToken cancellationToken)
+            HttpRequestMessage request,
+            CancellationToken cancellationToken
+        )
         {
             var token = await Auth.GetOrRefreshToken();
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
@@ -49,14 +51,11 @@ namespace Plerion.Core
         private static Action<string> LogWarning;
         private static Action<string> LogError;
 
-        private static void Info(string message)
-            => (LogInfo ?? Console.WriteLine).Invoke(message);
+        private static void Info(string message) => (LogInfo ?? Console.WriteLine).Invoke(message);
 
-        private static void Warn(string message)
-            => (LogWarning ?? Console.WriteLine).Invoke(message);
+        private static void Warn(string message) => (LogWarning ?? Console.WriteLine).Invoke(message);
 
-        private static void Error(string message)
-            => (LogError ?? Console.WriteLine).Invoke(message);
+        private static void Error(string message) => (LogError ?? Console.WriteLine).Invoke(message);
 
         private static void StampExpiries(TokenResponse tr)
         {
@@ -65,7 +64,15 @@ namespace Plerion.Core
             _refreshTokenExpiresAt = now.AddSeconds(Math.Max(0, tr.refresh_expires_in));
         }
 
-        public static void Initialize(string url, string clientId, string username, string password, Action<string> logInfo = null, Action<string> logWarning = null, Action<string> logError = null)
+        public static void Initialize(
+            string url,
+            string clientId,
+            string username,
+            string password,
+            Action<string> logInfo,
+            Action<string> logWarning,
+            Action<string> logError
+        )
         {
             URL = url;
             ClientId = clientId;
@@ -89,13 +96,15 @@ namespace Plerion.Core
             {
                 response = await _httpClient.PostAsync(
                     URL,
-                    new FormUrlEncodedContent(new Dictionary<string, string>
-                    {
-                        ["grant_type"] = "password",
-                        ["client_id"] = ClientId,
-                        ["username"] = Username,
-                        ["password"] = Password
-                    })
+                    new FormUrlEncodedContent(
+                        new Dictionary<string, string>
+                        {
+                            ["grant_type"] = "password",
+                            ["client_id"] = ClientId,
+                            ["username"] = Username,
+                            ["password"] = Password,
+                        }
+                    )
                 );
             }
             catch (Exception ex)
@@ -125,29 +134,35 @@ namespace Plerion.Core
             var nowWithSkew = DateTimeOffset.UtcNow.Add(_skew);
 
             // If access token is still good (with skew), use it
-            if (tokenResponse != null &&
-                !string.IsNullOrEmpty(tokenResponse.access_token) &&
-                nowWithSkew < _accessTokenExpiresAt)
+            if (
+                tokenResponse != null
+                && !string.IsNullOrEmpty(tokenResponse.access_token)
+                && nowWithSkew < _accessTokenExpiresAt
+            )
             {
                 return tokenResponse.access_token;
             }
 
             // If access token is stale but refresh token is still good, refresh
-            if (tokenResponse != null &&
-                !string.IsNullOrEmpty(tokenResponse.refresh_token) &&
-                nowWithSkew < _refreshTokenExpiresAt)
+            if (
+                tokenResponse != null
+                && !string.IsNullOrEmpty(tokenResponse.refresh_token)
+                && nowWithSkew < _refreshTokenExpiresAt
+            )
             {
                 HttpResponseMessage response = null;
                 try
                 {
                     response = await _httpClient.PostAsync(
                         URL,
-                        new FormUrlEncodedContent(new Dictionary<string, string>
-                        {
-                            ["grant_type"] = "refresh_token",
-                            ["client_id"] = ClientId,
-                            ["refresh_token"] = tokenResponse.refresh_token
-                        })
+                        new FormUrlEncodedContent(
+                            new Dictionary<string, string>
+                            {
+                                ["grant_type"] = "refresh_token",
+                                ["client_id"] = ClientId,
+                                ["refresh_token"] = tokenResponse.refresh_token,
+                            }
+                        )
                     );
                 }
                 catch (Exception ex)

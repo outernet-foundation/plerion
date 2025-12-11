@@ -1,12 +1,11 @@
-using Plerion.VPS;
-using UnityEngine;
-using UnityEngine.Android;
-using Cysharp.Threading.Tasks;
-using System.Linq;
-using FofX.Stateful;
 using System;
 using System.Collections.Generic;
-
+using Cysharp.Threading.Tasks;
+using FofX.Stateful;
+using Plerion.VPS;
+using PlerionApiClient.Model;
+using UnityEngine;
+using UnityEngine.Android;
 #if !UNITY_EDITOR
 using Plerion.VPS.ARFoundation;
 #endif
@@ -15,8 +14,6 @@ namespace PlerionClient.Client
 {
     public class LocalizationManager : MonoBehaviour
     {
-        public LocalizationMapVisualizer mapVisualizer;
-
         private void Start()
         {
             CameraLocalization.SetProvider(GetCameraProvider());
@@ -30,11 +27,9 @@ namespace PlerionClient.Client
                 App.DeregisterObserver(HandleLocalizationSessionStatusChanged);
                 App.DeregisterObserver(HandleLocalizingChanged);
                 CameraLocalization.Stop();
-                mapVisualizer.enabled = false;
                 return;
             }
 
-            mapVisualizer.enabled = true;
             App.RegisterObserver(HandleLocalizationSessionStatusChanged, App.state.localizationSessionStatus);
         }
 
@@ -60,7 +55,7 @@ namespace PlerionClient.Client
             if (args.initialize)
             {
                 if (App.state.mapForLocalization.value != Guid.Empty)
-                    VisualPositioningSystem.LoadLocalizationMaps(App.state.mapForLocalization.value);
+                    VisualPositioningSystem.AddLocalizationMaps(App.state.mapForLocalization.value);
 
                 return;
             }
@@ -68,8 +63,8 @@ namespace PlerionClient.Client
             var previousValue = GetPreviousValue(App.state.mapForLocalization, args.changes);
             if (previousValue != App.state.mapForLocalization.value)
             {
-                VisualPositioningSystem.UnloadLocalizationMap(previousValue).Forget();
-                VisualPositioningSystem.LoadLocalizationMaps(App.state.mapForLocalization.value);
+                VisualPositioningSystem.RemoveLocalizationMap(previousValue).Forget();
+                VisualPositioningSystem.AddLocalizationMaps(App.state.mapForLocalization.value);
             }
         }
 
@@ -111,12 +106,19 @@ namespace PlerionClient.Client
 
                 await UniTask.SwitchToMainThread();
 
-                await VisualPositioningSystem.StartLocalizationSession(new CameraIntrinsics()
-                {
-                    resolution = intrinsics.resolution,
-                    focalLength = intrinsics.focalLength,
-                    principlePoint = intrinsics.principalPoint,
-                });
+                await VisualPositioningSystem.StartLocalizationSession(
+                    new PinholeCameraConfig(
+                        model: PinholeCameraConfig.ModelEnum.PINHOLE,
+                        width: intrinsics.resolution.x,
+                        height: intrinsics.resolution.y,
+                        mirroring: PinholeCameraConfig.MirroringEnum.None,
+                        rotation: PinholeCameraConfig.RotationEnum._90CCW,
+                        fx: intrinsics.focalLength.x,
+                        fy: intrinsics.focalLength.y,
+                        cx: intrinsics.resolution.x - 1 - intrinsics.principalPoint.x,
+                        cy: intrinsics.principalPoint.y
+                    )
+                );
 
                 await UniTask.SwitchToMainThread();
                 App.state.localizationSessionStatus.ExecuteSetOrDelay(LocalizationSessionStatus.Active);

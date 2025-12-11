@@ -1,10 +1,7 @@
-using System;
-using System.Linq;
 using System.Threading;
-
+using PlerionApiClient.Model;
 using UnityEngine;
-
-using Cysharp.Threading.Tasks;
+using Color = UnityEngine.Color;
 
 namespace Plerion.VPS
 {
@@ -19,37 +16,9 @@ namespace Plerion.VPS
             _loadMapCancellationTokenSource?.Dispose();
         }
 
-        private async UniTask DownloadMapAndLoadPoints(Guid id, CancellationToken cancellationToken = default)
-        {
-            _loadingMap = true;
+        protected abstract void LoadPointsInternal(PointCloudPoint[] points);
 
-            Log.Info(LogGroup.MapVisualization, $"Downloading map {id}.");
-
-            var pointData = await VisualPositioningSystem.GetLocalizationMapPointsAsync(id, cancellationToken);
-
-            if (pointData == null)
-                throw new Exception($"Map not found. ID {id}");
-
-            Log.Info(LogGroup.MapVisualization, $"Downloaded map {id}.");
-
-            await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
-
-            _loadingMap = false;
-
-            Load(pointData.ToArray());
-        }
-
-        protected abstract void LoadPointsInternal(Point[] points);
-
-        public void Load(Guid localizationMapID)
-        {
-            _loadMapCancellationTokenSource?.Cancel();
-            _loadMapCancellationTokenSource?.Dispose();
-            _loadMapCancellationTokenSource = new CancellationTokenSource();
-            DownloadMapAndLoadPoints(localizationMapID, _loadMapCancellationTokenSource.Token).Forget();
-        }
-
-        public void Load(Point[] points)
+        public void Load(PointCloudPoint[] points)
         {
             if (_loadingMap)
             {

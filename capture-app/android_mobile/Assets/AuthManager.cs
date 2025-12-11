@@ -1,10 +1,10 @@
-using UnityEngine;
-using FofX.Stateful;
-using FofX;
-using Cysharp.Threading.Tasks;
-using Plerion.VPS;
-using System.Threading;
 using System;
+using System.Threading;
+using Cysharp.Threading.Tasks;
+using FofX;
+using FofX.Stateful;
+using Plerion.VPS;
+using UnityEngine;
 
 namespace PlerionClient.Client
 {
@@ -30,23 +30,42 @@ namespace PlerionClient.Client
             if (!App.state.loginRequested.value)
                 return;
 
-            _loginTask = TaskHandle.Execute(token => LogIn(
-                App.state.plerionApiUrl.value,
-                App.state.plerionAuthUrl.value,
-                App.state.plerionAuthClient.value,
-                App.state.username.value,
-                App.state.password.value,
-                token
-            ));
+            _loginTask = TaskHandle.Execute(token =>
+                LogIn(
+                    App.state.plerionApiUrl.value,
+                    App.state.plerionAuthUrl.value,
+                    App.state.plerionAuthClient.value,
+                    App.state.username.value,
+                    App.state.password.value,
+                    token
+                )
+            );
         }
 
-        private async UniTask LogIn(string apiUrl, string authUrl, string authClient, string username, string password, CancellationToken cancellationToken = default)
+        private async UniTask LogIn(
+            string apiUrl,
+            string authUrl,
+            string authClient,
+            string username,
+            string password,
+            CancellationToken cancellationToken = default
+        )
         {
             App.ExecuteActionOrDelay(new SetAuthStatusAction(AuthStatus.LoggingIn));
 
             try
             {
-                await VisualPositioningSystem.Initialize(apiUrl, authUrl, authClient, username, password);
+                await VisualPositioningSystem.Initialize(
+                    apiUrl,
+                    authUrl,
+                    authClient,
+                    username,
+                    password,
+                    message => Log.Info(LogGroup.Localizer, message),
+                    message => Log.Warn(LogGroup.Localizer, message),
+                    message => Log.Error(LogGroup.Localizer, message),
+                    (message, exception) => Log.Error(LogGroup.Localizer, exception, message)
+                );
             }
             catch (Exception exc)
             {

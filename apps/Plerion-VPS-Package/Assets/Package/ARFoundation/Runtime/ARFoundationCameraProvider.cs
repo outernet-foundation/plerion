@@ -1,7 +1,6 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
-
 using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -42,8 +41,7 @@ namespace Plerion.VPS.ARFoundation
             _cancellationTokenSource = null;
         }
 
-        public UniTask<byte[]> GetFrameJPG()
-            => GetFrameJPG(_cancellationTokenSource.Token);
+        public UniTask<byte[]> GetFrameJPG() => GetFrameJPG(_cancellationTokenSource.Token);
 
         public async UniTask<byte[]> GetFrameJPG(CancellationToken cancellationToken = default)
         {

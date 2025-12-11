@@ -16,7 +16,9 @@ namespace Plerion.VPS
         public static void SetProvider(ICameraProvider cameraProvider)
         {
             if (Enabled)
-                throw new Exception($"Cannot set provider while localization is active. Call {nameof(CameraLocalization)}.{nameof(Stop)} first.");
+                throw new Exception(
+                    $"Cannot set provider while localization is active. Call {nameof(CameraLocalization)}.{nameof(Stop)} first."
+                );
 
             _cameraProvider = cameraProvider;
         }
@@ -74,7 +76,7 @@ namespace Plerion.VPS
                         );
                     }
 
-                    // if this process doesn't take at least one frame, 
+                    // if this process doesn't take at least one frame,
                     // this loop will become infinite and block the main thread
                     if (Time.frameCount == lastFrameCount)
                         await UniTask.WaitForEndOfFrame();
@@ -86,7 +88,7 @@ namespace Plerion.VPS
                     if (exception is TaskCanceledException)
                         break;
 
-                    Log.Error(LogGroup.CameraLocalization, "Exception thrown during localization", exception);
+                    VisualPositioningSystem.LogException("Exception thrown during localization", exception);
                 }
             }
         }
