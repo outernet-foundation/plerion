@@ -14,6 +14,7 @@ using FofX.Stateful;
 using CesiumForUnity;
 using PlerionApiClient.Model;
 using Plerion.Core;
+using static Plerion.Core.LocationUtilities;
 
 namespace Outernet.MapRegistrationTool
 {
@@ -146,30 +147,26 @@ namespace Outernet.MapRegistrationTool
                 Destroy(dialog.gameObject);
             });
 
-            var heights = await CesiumAPI.GetHeights(new List<(double latitude, double longitude)> { (latitude, longitude) });
-            cancellationToken.ThrowIfCancellationRequested();
+            // Determine ground level (height above WGS84 ellipsoid) at the specified latitude and longitude
+            SceneReferences.GroundTileset.suspendUpdate = false;
+            var heightSamplingResult = await SceneReferences.GroundTileset.SampleHeightMostDetailed(new double3(longitude, latitude, 0));
+            var groundLevelHeightAboveWGS84Ellipsoid = heightSamplingResult.longitudeLatitudeHeightPositions[0].z;
+            SceneReferences.GroundTileset.suspendUpdate = true;
 
-            if (heights == null || heights.Count == 0)
-                throw new Exception("No heights found.");
+            // Convert cartographic coordinates to ECEF coordinates, and use the EUN frame at that location for orientation
+            var ecefPosition = WGS84.CartographicToEcef(CartographicCoordinates.FromLongitudeLatitudeHeight(longitude, latitude, groundLevelHeightAboveWGS84Ellipsoid));
+            var ecefRotation = WGS84.GetEastNorthUpFrameInEcef(ecefPosition);
 
-            var height = heights[0];
-            var ecefCoordinates = CesiumWgs84Ellipsoid.LongitudeLatitudeHeightToEarthCenteredEarthFixed(new double3(longitude, latitude, height));
+            // Set Cesium georeference to that position and orientation
+            SceneReferences.CesiumGeoreference.SetOriginEarthCenteredEarthFixed(ecefPosition.x, ecefPosition.y, ecefPosition.z);
+            SceneReferences.CesiumGeoreference.transform.rotation = math.inverse(ecefRotation.ToQuaternion());
 
-            var translationEcefFromMap = ecefCoordinates;
-            var rotationEcefFromMap = (quaternion)Utility.GetEUNRotationFromECEFPosition(ecefCoordinates);
-
-            double3x3 rotationEcefFromMapMatrix;
-            (translationEcefFromMap, rotationEcefFromMapMatrix) = Plerion.Core.LocationUtilities.ChangeBasisEcefToUnity(
-                translationEcefFromMap,
-                rotationEcefFromMap.ToDouble3x3()
-            );
-
-            App.state.ecefToUnityWorldMatrix.ExecuteSetOrDelay(
-                math.inverse(Double4x4.FromTranslationRotation(
-                    translationEcefFromMap,
-                    rotationEcefFromMapMatrix
-                ))
-            );
+            // Update the application's ECEF to Unity world matrix.
+            var (ecefPositionUnityBasis, ecefRotationUnityBasis) = ChangeBasisUnityFromEcef(ecefPosition, ecefRotation);
+            var ecefFromUnityTransformUnityBasis = Double4x4.FromTranslationRotation(ecefPositionUnityBasis, ecefRotationUnityBasis);
+            App.state.unityWorldToEcefMatrix.ExecuteSetOrDelay(ecefFromUnityTransformUnityBasis);
+            var unityFromEcefTransformUnityBasis = math.inverse(ecefFromUnityTransformUnityBasis);
+            App.state.ecefToUnityWorldMatrix.ExecuteSetOrDelay(unityFromEcefTransformUnityBasis);
 
             List<LocalizationMapRead> maps = default;
 

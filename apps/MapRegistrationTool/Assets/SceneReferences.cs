@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using CesiumForUnity;
 using UnityEngine;
 
 namespace Outernet.MapRegistrationTool
@@ -16,12 +17,15 @@ namespace Outernet.MapRegistrationTool
 
         public static CesiumForUnity.CesiumGeoreference CesiumGeoreference => _instance._cesiumGeoreference;
         public static IEnumerable<TilesetReference> Tilesets => _instance._tilesets;
+        public static Cesium3DTileset GroundTileset => _instance._groundTileset;
 
         [SerializeField]
         private CesiumForUnity.CesiumGeoreference _cesiumGeoreference;
 
         [SerializeField]
         private TilesetReference[] _tilesets;
+        [SerializeField]
+        private Cesium3DTileset _groundTileset;
 
         private void Awake()
         {

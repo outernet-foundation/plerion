@@ -11,6 +11,7 @@ using UnityEngine.UI;
 using FofX.Stateful;
 
 using TMPro;
+using Plerion.Core;
 
 namespace Outernet.MapRegistrationTool
 {
@@ -652,22 +653,22 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-        public static ValueControl<double3> LongLatHeightControl(
+        public static ValueControl<CartographicCoordinates> CartographicCoordinatesControl(
             string label = null,
             LabelType labelType = LabelType.None,
             bool interactable = true,
             params Attribute[] attributes)
         {
-            var xControl = DoubleControl("longitude", LabelType.Tight, interactable: interactable);
-            var yControl = DoubleControl("latitude", LabelType.Tight, interactable: interactable);
-            var zControl = DoubleControl("height", LabelType.Tight, interactable: interactable);
+            var latitude = DoubleControl("latitude", LabelType.Tight, interactable: interactable);
+            var longitude = DoubleControl("longitude", LabelType.Tight, interactable: interactable);
+            var height = DoubleControl("height", LabelType.Tight, interactable: interactable);
 
             var control = HandleLabel(
                 label,
                 labelType,
                 LabelType.Adaptive,
-                VerticalLayout(xControl, yControl, zControl)
-            ).gameObject.AddComponent<Double3ValueControl>();
+                VerticalLayout(latitude, longitude, height)
+            ).gameObject.AddComponent<CartographicValueControl>();
 
             bool pushingChanges = false;
 
@@ -676,23 +677,23 @@ namespace Outernet.MapRegistrationTool
                 if (pushingChanges)
                     return;
 
-                control.value = new double3(
-                    xControl.value,
-                    yControl.value,
-                    zControl.value
+                control.value = CartographicCoordinates.FromLatitudeLongitudeHeight(
+                    latitude.value,
+                    longitude.value,
+                    height.value
                 );
             };
 
-            xControl.onValueChanged += handleChildChanged;
-            yControl.onValueChanged += handleChildChanged;
-            zControl.onValueChanged += handleChildChanged;
+            latitude.onValueChanged += handleChildChanged;
+            longitude.onValueChanged += handleChildChanged;
+            height.onValueChanged += handleChildChanged;
 
             control.onValueChanged += () =>
             {
                 pushingChanges = true;
-                xControl.value = control.value.x;
-                yControl.value = control.value.y;
-                zControl.value = control.value.z;
+                latitude.value = control.value.Latitude;
+                longitude.value = control.value.Longitude;
+                height.value = control.value.Height;
                 pushingChanges = false;
             };
 
@@ -1151,6 +1152,7 @@ namespace Outernet.MapRegistrationTool
         private class QuaternionValueControl : ValueControl<Quaternion> { }
         private class Double2ValueControl : ValueControl<double2> { }
         private class Double3ValueControl : ValueControl<double3> { }
+        private class CartographicValueControl : ValueControl<CartographicCoordinates> { }
         private class BoundsValueControl : ValueControl<Bounds> { }
         private class HorizontalLayoutGroupView : ComponentView<HorizontalLayoutGroup> { }
         private class VerticalLayoutGroupView : ComponentView<VerticalLayoutGroup> { }

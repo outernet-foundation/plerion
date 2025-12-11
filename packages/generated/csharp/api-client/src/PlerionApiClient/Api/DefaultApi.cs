@@ -590,15 +590,15 @@ namespace PlerionApiClient.Api
         /// <returns>ApiResponse of ReconstructionRead</returns>
         ApiResponse<ReconstructionRead> GetReconstructionWithHttpInfo(Guid id);
         /// <summary>
-        /// Get Reconstruction Image Poses
+        /// Get Reconstruction Frame Poses
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>List&lt;Transform&gt;</returns>
-        List<Transform> GetReconstructionImagePoses(Guid id);
+        List<Transform> GetReconstructionFramePoses(Guid id);
 
         /// <summary>
-        /// Get Reconstruction Image Poses
+        /// Get Reconstruction Frame Poses
         /// </summary>
         /// <remarks>
         /// 
@@ -606,7 +606,7 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>ApiResponse of List&lt;Transform&gt;</returns>
-        ApiResponse<List<Transform>> GetReconstructionImagePosesWithHttpInfo(Guid id);
+        ApiResponse<List<Transform>> GetReconstructionFramePosesWithHttpInfo(Guid id);
         /// <summary>
         /// Get Reconstruction Localization Map
         /// </summary>
@@ -1704,7 +1704,7 @@ namespace PlerionApiClient.Api
         /// <returns>Task of ApiResponse (ReconstructionRead)</returns>
         System.Threading.Tasks.Task<ApiResponse<ReconstructionRead>> GetReconstructionWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
-        /// Get Reconstruction Image Poses
+        /// Get Reconstruction Frame Poses
         /// </summary>
         /// <remarks>
         /// 
@@ -1713,10 +1713,10 @@ namespace PlerionApiClient.Api
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;Transform&gt;</returns>
-        System.Threading.Tasks.Task<List<Transform>> GetReconstructionImagePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<Transform>> GetReconstructionFramePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
-        /// Get Reconstruction Image Poses
+        /// Get Reconstruction Frame Poses
         /// </summary>
         /// <remarks>
         /// 
@@ -1725,7 +1725,7 @@ namespace PlerionApiClient.Api
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;Transform&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<Transform>>> GetReconstructionImagePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<Transform>>> GetReconstructionFramePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Reconstruction Localization Map
         /// </summary>
@@ -5882,24 +5882,24 @@ namespace PlerionApiClient.Api
         }
 
         /// <summary>
-        /// Get Reconstruction Image Poses 
+        /// Get Reconstruction Frame Poses 
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>List&lt;Transform&gt;</returns>
-        public List<Transform> GetReconstructionImagePoses(Guid id)
+        public List<Transform> GetReconstructionFramePoses(Guid id)
         {
-            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = GetReconstructionImagePosesWithHttpInfo(id);
+            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = GetReconstructionFramePosesWithHttpInfo(id);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Get Reconstruction Image Poses 
+        /// Get Reconstruction Frame Poses 
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <returns>ApiResponse of List&lt;Transform&gt;</returns>
-        public PlerionApiClient.Client.ApiResponse<List<Transform>> GetReconstructionImagePosesWithHttpInfo(Guid id)
+        public PlerionApiClient.Client.ApiResponse<List<Transform>> GetReconstructionFramePosesWithHttpInfo(Guid id)
         {
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
 
@@ -5921,11 +5921,11 @@ namespace PlerionApiClient.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<List<Transform>>("/reconstructions/{id}/image_poses", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<List<Transform>>("/reconstructions/{id}/frame_poses", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("GetReconstructionImagePoses", localVarResponse);
+                Exception _exception = this.ExceptionFactory("GetReconstructionFramePoses", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -5933,26 +5933,26 @@ namespace PlerionApiClient.Api
         }
 
         /// <summary>
-        /// Get Reconstruction Image Poses 
+        /// Get Reconstruction Frame Poses 
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;Transform&gt;</returns>
-        public async System.Threading.Tasks.Task<List<Transform>> GetReconstructionImagePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<Transform>> GetReconstructionFramePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = await GetReconstructionImagePosesWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
+            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = await GetReconstructionFramePosesWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
         /// <summary>
-        /// Get Reconstruction Image Poses 
+        /// Get Reconstruction Frame Poses 
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;Transform&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<Transform>>> GetReconstructionImagePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<Transform>>> GetReconstructionFramePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
@@ -5977,11 +5977,11 @@ namespace PlerionApiClient.Api
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.GetAsync<List<Transform>>("/reconstructions/{id}/image_poses", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.GetAsync<List<Transform>>("/reconstructions/{id}/frame_poses", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {
-                Exception _exception = this.ExceptionFactory("GetReconstructionImagePoses", localVarResponse);
+                Exception _exception = this.ExceptionFactory("GetReconstructionFramePoses", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

@@ -3,16 +3,20 @@
     {
       "name": "Magic Leap",
       "url": "https://registry.npmjs.org",
-      "scopes": ["com.magicleap"]
+      "scopes": [
+        "com.magicleap"
+      ]
     },
     {
       "name": "Cesium",
       "url": "https://unity.pkg.cesium.com",
-      "scopes": ["com.cesium.unity"]
+      "scopes": [
+        "com.cesium.unity"
+      ]
     }
   ],
   "dependencies": {
-    "com.cesium.unity": "1.15.4",
+    "com.cesium.unity": "1.20.0",
     "com.cysharp.unitask": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
     "com.cysharp.yetanotherhttphandler": "https://github.com/Cysharp/YetAnotherHttpHandler.git?path=src/YetAnotherHttpHandler#1.5.3",
     "com.github-glitchenzo.nugetforunity": "https://github.com/GlitchEnzo/NuGetForUnity.git?path=/src/NuGetForUnity",

@@ -662,9 +662,9 @@ paths:
       summary: Get Reconstruction Points3D Ply
       tags:
       - Default
-  /reconstructions/{id}/image_poses:
+  /reconstructions/{id}/frame_poses:
     get:
-      operationId: get_reconstruction_image_poses
+      operationId: get_reconstruction_frame_poses
       parameters:
       - explode: false
         in: path
@@ -690,7 +690,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
-      summary: Get Reconstruction Image Poses
+      summary: Get Reconstruction Frame Poses
       tags:
       - Default
   /localization_maps:
