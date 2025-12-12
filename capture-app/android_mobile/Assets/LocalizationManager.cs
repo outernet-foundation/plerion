@@ -16,7 +16,17 @@ namespace PlerionClient.Client
     {
         private void Start()
         {
-            CameraLocalization.SetProvider(GetCameraProvider());
+            VisualPositioningSystem.Initialize(
+                GetCameraProvider(),
+                App.state.plerionApiUrl.value,
+                App.state.plerionAuthUrl.value,
+                App.state.plerionAuthClient.value,
+                message => Log.Info(LogGroup.Localizer, message),
+                message => Log.Warn(LogGroup.Localizer, message),
+                message => Log.Error(LogGroup.Localizer, message),
+                (message, exception) => Log.Error(LogGroup.Localizer, exception, message)
+            );
+
             App.RegisterObserver(HandleAppModeChanged, App.state.mode, App.state.loggedIn);
         }
 
@@ -26,7 +36,7 @@ namespace PlerionClient.Client
             {
                 App.DeregisterObserver(HandleLocalizationSessionStatusChanged);
                 App.DeregisterObserver(HandleLocalizingChanged);
-                CameraLocalization.Stop();
+                VisualPositioningSystem.StopLocalizing();
                 return;
             }
 
@@ -72,11 +82,11 @@ namespace PlerionClient.Client
         {
             if (App.state.localizing.value)
             {
-                CameraLocalization.Start();
+                VisualPositioningSystem.StartLocalizing();
             }
             else
             {
-                CameraLocalization.Stop();
+                VisualPositioningSystem.StopLocalizing();
             }
         }
 

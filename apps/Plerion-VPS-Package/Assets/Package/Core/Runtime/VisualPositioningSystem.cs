@@ -24,9 +24,10 @@ namespace Plerion.VPS
         {
             public bool loaded;
             public LocalizationMapRead map;
-            public LocalizationMapRenderer visualization;
+            public LocalizationMapVisualizer visualization;
         }
 
+        private static ICameraProvider _cameraProvider = null;
         private static PrefabReferences _prefabReferences = null;
         private static Dictionary<Guid, MapData> _maps = new Dictionary<Guid, MapData>();
         private static DefaultApi api;
@@ -54,18 +55,18 @@ namespace Plerion.VPS
         internal static void LogException(string message, Exception exception = null) =>
             _logExceptionCallback?.Invoke(message, exception);
 
-        public static async UniTask Initialize(
+        public static void Initialize(
+            ICameraProvider cameraProvider,
             string apiUrl,
             string authUrl,
             string authClient,
-            string username,
-            string password,
             Action<string> logCallback,
             Action<string> warnCallback,
             Action<string> errorCallback,
             Action<string, Exception> logException
         )
         {
+            _cameraProvider = cameraProvider;
             _logCallback = logCallback;
             _warnCallback = warnCallback;
             _errorCallback = errorCallback;
@@ -73,7 +74,7 @@ namespace Plerion.VPS
 
             _prefabReferences = Resources.Load<PrefabReferences>("PrefabReferences");
 
-            Auth.Initialize(authUrl, authClient, username, password, logCallback, warnCallback, errorCallback);
+            Auth.Initialize(authUrl, authClient, logCallback, warnCallback, errorCallback);
 
             api = new DefaultApi(
                 new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })
@@ -82,9 +83,9 @@ namespace Plerion.VPS
                 },
                 apiUrl
             );
-
-            await Auth.Login();
         }
+
+        public static async UniTask Login(string username, string password) => await Auth.Login(username, password);
 
         public static UniTask StartLocalizationSession(PinholeCameraConfig intrinsics)
         {
@@ -251,6 +252,73 @@ namespace Plerion.VPS
             _maps.Remove(map);
 
             await api.UnloadMapAsync(localizationSessionId, map);
+        }
+
+        public static bool Enabled { get; private set; } = false;
+        static CancellationTokenSource _cancellationTokenSource;
+
+        public static void StartLocalizing()
+        {
+            if (Enabled)
+                return;
+
+            if (_cameraProvider == null)
+                throw new Exception("Camera provider must be set before calling Start.");
+
+            Enabled = true;
+
+            _cameraProvider.Start();
+
+            _cancellationTokenSource = new CancellationTokenSource();
+            ExecuteCameraLocalization(_cancellationTokenSource.Token).Forget();
+        }
+
+        public static void StopLocalizing()
+        {
+            Enabled = false;
+
+            _cameraProvider.Stop();
+
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = null;
+        }
+
+        private static async UniTask ExecuteCameraLocalization(CancellationToken cancellationToken = default)
+        {
+            int lastFrameCount = Time.frameCount;
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    var (cameraImage, cameraPosition, cameraRotation) = await _cameraProvider.GetFrameJPG();
+
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
+                    await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
+
+                    if (cameraImage != null)
+                    {
+                        await LocalizeFromCameraImage(cameraImage, cameraPosition, cameraRotation);
+                    }
+
+                    // if this process doesn't take at least one frame,
+                    // this loop will become infinite and block the main thread
+                    if (Time.frameCount == lastFrameCount)
+                        await UniTask.WaitForEndOfFrame();
+
+                    lastFrameCount = Time.frameCount;
+                }
+                catch (Exception exception)
+                {
+                    if (exception is TaskCanceledException)
+                        break;
+
+                    LogException("Exception thrown during localization", exception);
+                }
+            }
         }
 
         public static async UniTask LocalizeFromCameraImage(

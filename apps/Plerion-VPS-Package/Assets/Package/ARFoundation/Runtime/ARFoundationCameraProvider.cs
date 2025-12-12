@@ -41,9 +41,9 @@ namespace Plerion.VPS.ARFoundation
             _cancellationTokenSource = null;
         }
 
-        public UniTask<byte[]> GetFrameJPG() => GetFrameJPG(_cancellationTokenSource.Token);
+        public UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG() => GetFrameJPG(_cancellationTokenSource.Token);
 
-        public async UniTask<byte[]> GetFrameJPG(CancellationToken cancellationToken = default)
+        public async UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG(CancellationToken cancellationToken = default)
         {
             bool frameReceived = false;
             Action<ARCameraFrameEventArgs> receivedFrame = args => frameReceived = true;
@@ -67,7 +67,7 @@ namespace Plerion.VPS.ARFoundation
             var result = await ConvertToJPG(cpuImage, flipped: true);
             cpuImage.Dispose();
 
-            return result;
+            return (result, Camera.main.transform.position, Camera.main.transform.rotation);
         }
 
         private static async UniTask<byte[]> ConvertToJPG(XRCpuImage cpuImage, bool flipped = false)

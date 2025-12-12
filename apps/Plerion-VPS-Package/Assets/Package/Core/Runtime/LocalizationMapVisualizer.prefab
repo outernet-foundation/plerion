@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: -5772665285345291868}
   - component: {fileID: 8410913971276956591}
   m_Layer: 0
-  m_Name: ParticleSystemLocalizationMapRenderer
+  m_Name: LocalizationMapVisualizer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

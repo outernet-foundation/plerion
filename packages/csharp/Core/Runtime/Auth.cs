@@ -67,8 +67,6 @@ namespace Plerion.Core
         public static void Initialize(
             string url,
             string clientId,
-            string username,
-            string password,
             Action<string> logInfo,
             Action<string> logWarning,
             Action<string> logError
@@ -76,15 +74,20 @@ namespace Plerion.Core
         {
             URL = url;
             ClientId = clientId;
-            Username = username;
-            Password = password;
             LogInfo = logInfo;
             LogWarning = logWarning;
             LogError = logError;
             Initialized = true;
         }
 
-        public static async UniTask Login()
+        public static async UniTask Login(string username, string password)
+        {
+            Username = username;
+            Password = password;
+            await LoginInternal();
+        }
+
+        private static async UniTask LoginInternal()
         {
             if (!Initialized)
                 throw new InvalidOperationException("Auth.Initialize() must be called before calling Login()");
@@ -200,7 +203,7 @@ namespace Plerion.Core
             }
 
             // If refresh is invalid/expired or refresh request failed, do a full login
-            await Login();
+            await LoginInternal();
             return tokenResponse.access_token;
         }
     }

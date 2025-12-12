@@ -4,6 +4,6 @@ namespace Plerion.VPS
 {
     public class PrefabReferences : ScriptableObject
     {
-        public LocalizationMapRenderer mapRendererPrefab;
+        public LocalizationMapVisualizer mapRendererPrefab;
     }
 }

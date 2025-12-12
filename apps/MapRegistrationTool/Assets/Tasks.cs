@@ -11,13 +11,12 @@ namespace Outernet.MapRegistrationTool
             Auth.Initialize(
                 authUrl,
                 authClient,
-                username,
-                password,
                 message => Debug.Log(message),
                 message => Debug.LogWarning(message),
-                message => Debug.LogError(message));
+                message => Debug.LogError(message)
+            );
 
-            await Auth.Login();
+            await Auth.Login(username, password);
             await UniTask.SwitchToMainThread();
             App.state.loggedIn.ExecuteSet(true);
         }
