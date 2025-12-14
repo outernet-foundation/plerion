@@ -119,13 +119,13 @@ namespace PlerionClient.Client
                 await VisualPositioningSystem.StartLocalizationSession(
                     new PinholeCameraConfig(
                         model: PinholeCameraConfig.ModelEnum.PINHOLE,
+                        mirroring: PinholeCameraConfig.MirroringEnum.X, // On (at least) AndroidMobile, the image is mirrored along X
+                        rotation: PinholeCameraConfig.RotationEnum._90CCW, // On (at least) AndroidMobile, the image is rotated 90 CCW
                         width: intrinsics.resolution.x,
                         height: intrinsics.resolution.y,
-                        mirroring: PinholeCameraConfig.MirroringEnum.None,
-                        rotation: PinholeCameraConfig.RotationEnum._90CCW,
                         fx: intrinsics.focalLength.x,
                         fy: intrinsics.focalLength.y,
-                        cx: intrinsics.resolution.x - 1 - intrinsics.principalPoint.x,
+                        cx: intrinsics.principalPoint.x,
                         cy: intrinsics.principalPoint.y
                     )
                 );

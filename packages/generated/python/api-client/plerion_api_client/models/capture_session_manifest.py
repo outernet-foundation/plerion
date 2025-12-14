@@ -19,17 +19,19 @@ import json
 
 from pydantic import BaseModel, ConfigDict
 from typing import Any, ClassVar, Dict, List
+from plerion_api_client.models.axis_convention import AxisConvention
 from plerion_api_client.models.rig_config import RigConfig
 from typing import Optional, Set
 from typing_extensions import Self
 
-class Config(BaseModel):
+class CaptureSessionManifest(BaseModel):
     """
-    Config
+    CaptureSessionManifest
     """ # noqa: E501
+    axis_convention: AxisConvention
     rigs: List[RigConfig]
     additional_properties: Dict[str, Any] = {}
-    __properties: ClassVar[List[str]] = ["rigs"]
+    __properties: ClassVar[List[str]] = ["axis_convention", "rigs"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -49,7 +51,7 @@ class Config(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of Config from a JSON string"""
+        """Create an instance of CaptureSessionManifest from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -88,7 +90,7 @@ class Config(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of Config from a dict"""
+        """Create an instance of CaptureSessionManifest from a dict"""
         if obj is None:
             return None
 
@@ -96,6 +98,7 @@ class Config(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
+            "axis_convention": obj.get("axis_convention"),
             "rigs": [RigConfig.from_dict(_item) for _item in obj["rigs"]] if obj.get("rigs") is not None else None
         })
         # store additional fields in additional_properties

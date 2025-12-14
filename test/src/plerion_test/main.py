@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import MutableMapping, cast
 from uuid import UUID
 
-from plerion_api_client import ApiClient, Configuration
+from plerion_api_client import ApiClient, AxisConvention, Configuration
 from plerion_api_client.api.default_api import DefaultApi
 from plerion_api_client.models.camera import Camera
 from plerion_api_client.models.load_state import LoadState
@@ -169,7 +169,9 @@ async def main_async():
 
         print("Localizing test image")
         image_bytes = TEST_IMAGE_PATH.read_bytes()
-        localizations: list[MapLocalization] = await api.localize_image(session_id, (TEST_IMAGE_PATH.name, image_bytes))
+        localizations: list[MapLocalization] = await api.localize_image(
+            session_id, AxisConvention.OPENCV, (TEST_IMAGE_PATH.name, image_bytes)
+        )
 
         print("Localization result:")
         print(json.dumps([loc.model_dump(mode="json") for loc in localizations], indent=2))
@@ -181,7 +183,7 @@ async def main_async():
         reconstruction_frame_poses: list[Transform] = await api.get_reconstruction_frame_poses(reconstruction_id)
 
         print(f"Generating visualization → {OUTPUT_HTML_PATH}")
-        localization_dict = {loc.id: loc.transform for loc in localizations}
+        localization_dict = {loc.id: loc.camera_from_map_transform for loc in localizations}
         html = generate_visualization(
             point_cloud_models, reconstruction_frame_poses, localization_dict[localization_map_id], intrinsics
         )

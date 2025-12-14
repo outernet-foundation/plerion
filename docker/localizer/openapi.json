@@ -200,15 +200,25 @@
       "post": {
         "summary": "Localize Image",
         "operationId": "localize_image",
+        "parameters": [
+          {
+            "name": "axis_convention",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AxisConvention"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/Body_localize_image"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -216,10 +226,10 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/Localization"
                   },
-                  "type": "array",
                   "title": "Response Localize Image"
                 }
               }
@@ -241,6 +251,14 @@
   },
   "components": {
     "schemas": {
+      "AxisConvention": {
+        "type": "string",
+        "enum": [
+          "OPENCV",
+          "UNITY"
+        ],
+        "title": "AxisConvention"
+      },
       "Body_localize_image": {
         "properties": {
           "image": {

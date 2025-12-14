@@ -332,6 +332,7 @@ namespace Plerion.VPS
 
             var localizationResults = await api.LocalizeImageAsync(
                 localizationSessionId,
+                AxisConvention.UNITY,
                 new FileParameter(new MemoryStream(image))
             );
 
@@ -344,8 +345,8 @@ namespace Plerion.VPS
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
 
             unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
-                localizationResult.Transform.Position.ToDouble3(),
-                localizationResult.Transform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
+                localizationResult.CameraFromMapTransform.Position.ToDouble3(),
+                localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
                 localizationResult.MapTransform.Position.ToDouble3(),
                 localizationResult.MapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
                 cameraTranslationUnityWorldFromCamera,

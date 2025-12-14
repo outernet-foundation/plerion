@@ -525,7 +525,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Config"
+                  "$ref": "#/components/schemas/CaptureSessionManifest"
                 }
               }
             }
@@ -1861,6 +1861,14 @@
               "format": "uuid",
               "title": "Localization Session Id"
             }
+          },
+          {
+            "name": "axis_convention",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AxisConvention"
+            }
           }
         ],
         "requestBody": {
@@ -2502,6 +2510,14 @@
   },
   "components": {
     "schemas": {
+      "AxisConvention": {
+        "type": "string",
+        "enum": [
+          "OPENCV",
+          "UNITY"
+        ],
+        "title": "AxisConvention"
+      },
       "Body_localize_image": {
         "properties": {
           "image": {
@@ -2594,6 +2610,26 @@
         ],
         "title": "CaptureSessionCreate"
       },
+      "CaptureSessionManifest": {
+        "properties": {
+          "axis_convention": {
+            "$ref": "#/components/schemas/AxisConvention"
+          },
+          "rigs": {
+            "items": {
+              "$ref": "#/components/schemas/RigConfig"
+            },
+            "type": "array",
+            "title": "Rigs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "axis_convention",
+          "rigs"
+        ],
+        "title": "CaptureSessionManifest"
+      },
       "CaptureSessionRead": {
         "properties": {
           "id": {
@@ -2678,22 +2714,6 @@
           "b"
         ],
         "title": "Color"
-      },
-      "Config": {
-        "properties": {
-          "rigs": {
-            "items": {
-              "$ref": "#/components/schemas/RigConfig"
-            },
-            "type": "array",
-            "title": "Rigs"
-          }
-        },
-        "type": "object",
-        "required": [
-          "rigs"
-        ],
-        "title": "Config"
       },
       "DeviceType": {
         "type": "string",
@@ -3599,7 +3619,7 @@
             "format": "uuid",
             "title": "Id"
           },
-          "transform": {
+          "camera_from_map_transform": {
             "$ref": "#/components/schemas/Transform"
           },
           "map_transform": {
@@ -3612,7 +3632,7 @@
         "type": "object",
         "required": [
           "id",
-          "transform",
+          "camera_from_map_transform",
           "map_transform",
           "metrics"
         ],

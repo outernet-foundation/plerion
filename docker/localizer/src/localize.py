@@ -3,12 +3,13 @@ from __future__ import annotations
 from typing import Any, cast
 
 import numpy as np
+from core.axis_convention import AxisConvention
+from core.camera_transformations import transform_image, transform_intrinsics
+from core.capture_session_manifest import PinholeCameraConfig
 from core.classes import Quaternion, Transform, Vector3
-from core.create_image_tensors import create_image_tensors
 from core.lightglue import lightglue_match_tensors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import decode_descriptors
-from core.rig import PinholeCameraConfig, transform_intrinsics
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions
 from pycolmap import Camera as ColmapCamera
 from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
@@ -37,10 +38,17 @@ def load_models(max_keypoints: int):
 
 
 def localize_image_against_reconstruction(
-    map: Map, camera: PinholeCameraConfig, image_buffer: bytes, retrieval_top_k: int, ransac_threshold: float
+    map: Map,
+    camera: PinholeCameraConfig,
+    axis_convention: AxisConvention,
+    image_buffer: bytes,
+    retrieval_top_k: int,
+    ransac_threshold: float,
 ) -> tuple[Transform, LocalizationMetrics]:
     # Extract features from query image
-    (image, rgb_tensor, gray_tensor) = create_image_tensors(image_buffer, camera.rotation)
+    image = transform_image(image_buffer, camera)
+    rgb_tensor = from_numpy(np.asarray(image, dtype=np.float32)).permute(2, 0, 1).div(255.0)
+    gray_tensor = from_numpy(np.asarray(image.convert("L"), dtype=np.float32)).unsqueeze(0).div(255.0)
     superpoint_output = superpoint({"image": gray_tensor.unsqueeze(0).to(device=DEVICE)})
     query_global_descriptor = dir({"image": rgb_tensor.unsqueeze(0).to(device=DEVICE)})["global_descriptor"][0]
 

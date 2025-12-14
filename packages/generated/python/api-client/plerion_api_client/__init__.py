@@ -28,14 +28,15 @@ __all__ = [
     "ApiKeyError",
     "ApiAttributeError",
     "ApiException",
+    "AxisConvention",
     "Camera",
     "CameraConfig",
     "CaptureSessionBatchUpdate",
     "CaptureSessionCreate",
+    "CaptureSessionManifest",
     "CaptureSessionRead",
     "CaptureSessionUpdate",
     "Color",
-    "Config",
     "DeviceType",
     "FullOpenCVCameraConfig",
     "GroupBatchUpdate",
@@ -91,14 +92,15 @@ from plerion_api_client.exceptions import ApiAttributeError as ApiAttributeError
 from plerion_api_client.exceptions import ApiException as ApiException
 
 # import models into sdk package
+from plerion_api_client.models.axis_convention import AxisConvention as AxisConvention
 from plerion_api_client.models.camera import Camera as Camera
 from plerion_api_client.models.camera_config import CameraConfig as CameraConfig
 from plerion_api_client.models.capture_session_batch_update import CaptureSessionBatchUpdate as CaptureSessionBatchUpdate
 from plerion_api_client.models.capture_session_create import CaptureSessionCreate as CaptureSessionCreate
+from plerion_api_client.models.capture_session_manifest import CaptureSessionManifest as CaptureSessionManifest
 from plerion_api_client.models.capture_session_read import CaptureSessionRead as CaptureSessionRead
 from plerion_api_client.models.capture_session_update import CaptureSessionUpdate as CaptureSessionUpdate
 from plerion_api_client.models.color import Color as Color
-from plerion_api_client.models.config import Config as Config
 from plerion_api_client.models.device_type import DeviceType as DeviceType
 from plerion_api_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig as FullOpenCVCameraConfig
 from plerion_api_client.models.group_batch_update import GroupBatchUpdate as GroupBatchUpdate

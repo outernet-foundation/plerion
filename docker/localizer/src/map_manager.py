@@ -9,11 +9,12 @@ from typing import Any, Mapping, cast
 from uuid import UUID
 
 from common.boto_clients import create_s3_client
+from core.axis_convention import AxisConvention
+from core.capture_session_manifest import PinholeCameraConfig
 from core.classes import Transform
 from core.h5 import FEATURES_FILE, GLOBAL_DESCRIPTORS_FILE, read_features, read_global_descriptors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import OPQ_MATRIX_FILE, PQ_QUANTIZER_FILE, read_opq_matrix, read_pq_quantizer
-from core.rig import PinholeCameraConfig
 from numpy import float32, stack, uint8
 from numpy.typing import NDArray
 from pycolmap import Reconstruction
@@ -95,7 +96,7 @@ def get_load_state(id: UUID):
         return LoadStateResponse(status=_load_state.get(id, LoadState.PENDING), error=_load_error.get(id))
 
 
-def localize(camera: PinholeCameraConfig, image: bytes):
+def localize(camera: PinholeCameraConfig, axis_convention: AxisConvention, image: bytes):
     return [
         Localization(id=id, transform=result[0], metrics=result[1])
         for id, result in zip(
@@ -104,6 +105,7 @@ def localize(camera: PinholeCameraConfig, image: bytes):
                 localize_image_against_reconstruction(
                     map=_maps[id],
                     camera=camera,
+                    axis_convention=axis_convention,
                     image_buffer=image,
                     retrieval_top_k=RETRIEVAL_TOP_K,
                     ransac_threshold=RANSAC_THRESHOLD,

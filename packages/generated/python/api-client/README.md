@@ -140,14 +140,15 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AxisConvention](docs/AxisConvention.md)
  - [Camera](docs/Camera.md)
  - [CameraConfig](docs/CameraConfig.md)
  - [CaptureSessionBatchUpdate](docs/CaptureSessionBatchUpdate.md)
  - [CaptureSessionCreate](docs/CaptureSessionCreate.md)
+ - [CaptureSessionManifest](docs/CaptureSessionManifest.md)
  - [CaptureSessionRead](docs/CaptureSessionRead.md)
  - [CaptureSessionUpdate](docs/CaptureSessionUpdate.md)
  - [Color](docs/Color.md)
- - [Config](docs/Config.md)
  - [DeviceType](docs/DeviceType.md)
  - [FullOpenCVCameraConfig](docs/FullOpenCVCameraConfig.md)
  - [GroupBatchUpdate](docs/GroupBatchUpdate.md)

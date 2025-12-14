@@ -27,26 +27,54 @@ namespace PlerionApiClient.Model
 {
     // fuck
     /// <summary>
-    /// Config
+    /// CaptureSessionManifest
     /// </summary>
-    [DataContract(Name = "Config")]
-    public partial class Config
+    [DataContract(Name = "CaptureSessionManifest")]
+    public partial class CaptureSessionManifest
     {
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="Config" /> class.
+        /// Gets or Sets AxisConvention
+        /// </summary>
+
+        [DataMember(Name = "axis_convention", IsRequired = true, EmitDefaultValue = true)]
+        public AxisConvention AxisConvention
+        {
+            get{ return _AxisConvention;}
+            set
+            {
+                _AxisConvention = value;
+                _flagAxisConvention = true;
+            }
+        }
+        private AxisConvention _AxisConvention;
+        private bool _flagAxisConvention;
+
+        /// <summary>
+        /// Returns false as AxisConvention should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeAxisConvention()
+        {
+            return _flagAxisConvention;
+        }
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CaptureSessionManifest" /> class.
         /// </summary>
         [JsonConstructorAttribute]
-        protected Config() { }
+        protected CaptureSessionManifest() { }
         /// <summary>
-        /// Initializes a new instance of the <see cref="Config" /> class.
+        /// Initializes a new instance of the <see cref="CaptureSessionManifest" /> class.
         /// </summary>
+        /// <param name="axisConvention">axisConvention (required).</param>
         /// <param name="rigs">rigs (required).</param>
-        public Config(List<RigConfig> rigs)
+        public CaptureSessionManifest(AxisConvention axisConvention, List<RigConfig> rigs)
         {
+            this.AxisConvention = axisConvention;
             // to ensure "rigs" is required (not null)
             if (rigs == null)
             {
-                throw new ArgumentNullException("rigs is a required property for Config and cannot be null");
+                throw new ArgumentNullException("rigs is a required property for CaptureSessionManifest and cannot be null");
             }
             this.Rigs = rigs;
         }
@@ -82,7 +110,8 @@ namespace PlerionApiClient.Model
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class Config {\n");
+            sb.Append("class CaptureSessionManifest {\n");
+            sb.Append("  AxisConvention: ").Append(AxisConvention).Append("\n");
             sb.Append("  Rigs: ").Append(Rigs).Append("\n");
             sb.Append("}\n");
             return sb.ToString();

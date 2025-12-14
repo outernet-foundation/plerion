@@ -374,8 +374,8 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>Config</returns>
-        Config GetCaptureSessionRigConfig(Guid id);
+        /// <returns>CaptureSessionManifest</returns>
+        CaptureSessionManifest GetCaptureSessionRigConfig(Guid id);
 
         /// <summary>
         /// Get Capture Session Rig Config
@@ -385,8 +385,8 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>ApiResponse of Config</returns>
-        ApiResponse<Config> GetCaptureSessionRigConfigWithHttpInfo(Guid id);
+        /// <returns>ApiResponse of CaptureSessionManifest</returns>
+        ApiResponse<CaptureSessionManifest> GetCaptureSessionRigConfigWithHttpInfo(Guid id);
         /// <summary>
         /// Get Capture Sessions
         /// </summary>
@@ -744,9 +744,10 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <returns>List&lt;MapLocalization&gt;</returns>
-        List<MapLocalization> LocalizeImage(Guid localizationSessionId, FileParameter image);
+        List<MapLocalization> LocalizeImage(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image);
 
         /// <summary>
         /// Localize Image
@@ -756,9 +757,10 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <returns>ApiResponse of List&lt;MapLocalization&gt;</returns>
-        ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image);
+        ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image);
         /// <summary>
         /// Set Localization Session Camera Intrinsics
         /// </summary>
@@ -1432,8 +1434,8 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Config</returns>
-        System.Threading.Tasks.Task<Config> GetCaptureSessionRigConfigAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of CaptureSessionManifest</returns>
+        System.Threading.Tasks.Task<CaptureSessionManifest> GetCaptureSessionRigConfigAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get Capture Session Rig Config
@@ -1444,8 +1446,8 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Config)</returns>
-        System.Threading.Tasks.Task<ApiResponse<Config>> GetCaptureSessionRigConfigWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of ApiResponse (CaptureSessionManifest)</returns>
+        System.Threading.Tasks.Task<ApiResponse<CaptureSessionManifest>> GetCaptureSessionRigConfigWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Capture Sessions
         /// </summary>
@@ -1901,10 +1903,11 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;MapLocalization&gt;</returns>
-        System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Localize Image
@@ -1914,10 +1917,11 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;MapLocalization&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Set Localization Session Camera Intrinsics
         /// </summary>
@@ -4552,10 +4556,10 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>Config</returns>
-        public Config GetCaptureSessionRigConfig(Guid id)
+        /// <returns>CaptureSessionManifest</returns>
+        public CaptureSessionManifest GetCaptureSessionRigConfig(Guid id)
         {
-            PlerionApiClient.Client.ApiResponse<Config> localVarResponse = GetCaptureSessionRigConfigWithHttpInfo(id);
+            PlerionApiClient.Client.ApiResponse<CaptureSessionManifest> localVarResponse = GetCaptureSessionRigConfigWithHttpInfo(id);
             return localVarResponse.Data;
         }
 
@@ -4564,8 +4568,8 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>ApiResponse of Config</returns>
-        public PlerionApiClient.Client.ApiResponse<Config> GetCaptureSessionRigConfigWithHttpInfo(Guid id)
+        /// <returns>ApiResponse of CaptureSessionManifest</returns>
+        public PlerionApiClient.Client.ApiResponse<CaptureSessionManifest> GetCaptureSessionRigConfigWithHttpInfo(Guid id)
         {
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
 
@@ -4587,7 +4591,7 @@ namespace PlerionApiClient.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<Config>("/capture_sessions/{id}/rig_config", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<CaptureSessionManifest>("/capture_sessions/{id}/rig_config", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -4604,10 +4608,10 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of Config</returns>
-        public async System.Threading.Tasks.Task<Config> GetCaptureSessionRigConfigAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of CaptureSessionManifest</returns>
+        public async System.Threading.Tasks.Task<CaptureSessionManifest> GetCaptureSessionRigConfigAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionApiClient.Client.ApiResponse<Config> localVarResponse = await GetCaptureSessionRigConfigWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
+            PlerionApiClient.Client.ApiResponse<CaptureSessionManifest> localVarResponse = await GetCaptureSessionRigConfigWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -4617,8 +4621,8 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (Config)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<Config>> GetCaptureSessionRigConfigWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of ApiResponse (CaptureSessionManifest)</returns>
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<CaptureSessionManifest>> GetCaptureSessionRigConfigWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
@@ -4643,7 +4647,7 @@ namespace PlerionApiClient.Api
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.GetAsync<Config>("/capture_sessions/{id}/rig_config", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.GetAsync<CaptureSessionManifest>("/capture_sessions/{id}/rig_config", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {
@@ -6790,11 +6794,12 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <returns>List&lt;MapLocalization&gt;</returns>
-        public List<MapLocalization> LocalizeImage(Guid localizationSessionId, FileParameter image)
+        public List<MapLocalization> LocalizeImage(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image)
         {
-            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, image);
+            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, axisConvention, image);
             return localVarResponse.Data;
         }
 
@@ -6803,9 +6808,10 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <returns>ApiResponse of List&lt;MapLocalization&gt;</returns>
-        public PlerionApiClient.Client.ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, FileParameter image)
+        public PlerionApiClient.Client.ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image)
         {
             // verify the required parameter 'image' is set
             if (image == null)
@@ -6829,6 +6835,7 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
+            localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
             localVarRequestOptions.FileParameters.Add("image", image);
 
 
@@ -6849,12 +6856,13 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;MapLocalization&gt;</returns>
-        public async System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, image, cancellationToken).ConfigureAwait(false);
+            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, axisConvention, image, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -6863,10 +6871,11 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
+        /// <param name="axisConvention"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;MapLocalization&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
             // verify the required parameter 'image' is set
             if (image == null)
@@ -6892,6 +6901,7 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
+            localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
             localVarRequestOptions.FileParameters.Add("image", image);
 
 

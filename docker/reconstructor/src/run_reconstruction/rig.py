@@ -1,25 +1,23 @@
-from io import BytesIO
-from pathlib import Path
-from tarfile import open as open_tar
-from typing import TYPE_CHECKING, Any
-
+from core.axis_convention import AxisConvention, change_basis_opencv_from_unity
+from core.camera_transformations import transform_intrinsics
+from core.capture_session_manifest import RigCameraConfig, RigConfig
 from core.classes import Quaternion, Vector3
-from core.rig import Config, RigCameraConfig, RigConfig, Transform, transform_intrinsics
-from numpy import array, float64
+from numpy import array, float64, ndarray
 from pycolmap import Camera as ColmapCamera
 from pycolmap import RigConfig as ColmapRigConfig
 from pycolmap import RigConfigCamera as ColmapRigConfigCamera
 from pycolmap import Rigid3d, Rotation3d
 from scipy.spatial.transform import Rotation
 
-if TYPE_CHECKING:
-    from mypy_boto3_s3 import S3Client
-else:
-    S3Client = Any
+
+class Transform:
+    def __init__(self, rotation: ndarray, translation: ndarray):
+        self.rotation = rotation
+        self.translation = translation
 
 
 class Rig:
-    def __init__(self, rig_config: RigConfig, frames_csv: str):
+    def __init__(self, rig_config: RigConfig, axis_convention: AxisConvention, frames_csv: str):
         ref_sensors = [camera for camera in rig_config.cameras if camera.ref_sensor]
         if len(ref_sensors) != 1:
             raise ValueError(f"Rig {rig_config.id} must have exactly one reference sensor")
@@ -28,6 +26,10 @@ class Rig:
             raise ValueError(f"Reference sensor {ref_sensor.id} in rig {rig_config.id} must have identity rotation")
         if ref_sensor.translation != Vector3(x=0.0, y=0.0, z=0.0):
             raise ValueError(f"Reference sensor {ref_sensor.id} in rig {rig_config.id} must have zero translation")
+
+        # We should support this case, but it is not currently used anywhere, so I am punting on implementing it, and rasising an error instead.
+        if len(rig_config.cameras) > 1 and axis_convention != AxisConvention.OPENCV:
+            raise ValueError("Rigs with multiple cameras only support OPENCV axis convention")
 
         self.cameras: dict[str, tuple[RigCameraConfig, ColmapCamera]] = {}
         rig_camera_configs: list[ColmapRigConfigCamera] = []
@@ -67,23 +69,14 @@ class Rig:
         self.frame_poses: dict[str, Transform] = {}
         for frame in frames_csv.splitlines()[1:]:  # Skip header
             frame_id, tx, ty, tz, qx, qy, qz, qw = frame.strip().split(",")
-            rotation_world_from_rig = Rotation.from_quat([float(qx), float(qy), float(qz), float(qw)])
+            rotation_world_from_rig = Rotation.from_quat([float(qx), float(qy), float(qz), float(qw)]).as_matrix()
             translation_world_from_rig = array([float(tx), float(ty), float(tz)], dtype=float)
+
+            if axis_convention == AxisConvention.UNITY:
+                (translation_world_from_rig, rotation_world_from_rig) = change_basis_opencv_from_unity(
+                    translation_world_from_rig, rotation_world_from_rig
+                )
+
             self.frame_poses[frame_id] = Transform(
-                rotation=rotation_world_from_rig.as_matrix(), translation=translation_world_from_rig
+                rotation=rotation_world_from_rig, translation=translation_world_from_rig
             )
-
-
-def load_capture_session_manifest(
-    captures_bucket: str, capture_id: str, s3_client: S3Client, capture_session_directory: Path
-):
-    with open_tar(
-        fileobj=BytesIO(s3_client.get_object(Bucket=captures_bucket, Key=f"{capture_id}.tar")["Body"].read()),
-        mode="r:*",
-    ) as tar:
-        tar.extractall(path=capture_session_directory)
-
-    with open(capture_session_directory / "config.json", "rb") as file:
-        config = Config.model_validate_json(file.read().decode("utf-8"))
-
-    return {rig.id: Rig(rig, (capture_session_directory / f"{rig.id}/frames.csv").read_text()) for rig in config.rigs}

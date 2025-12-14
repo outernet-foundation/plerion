@@ -28,6 +28,7 @@ __all__ = [
     "ApiKeyError",
     "ApiAttributeError",
     "ApiException",
+    "AxisConvention",
     "Camera",
     "FullOpenCVCameraConfig",
     "HTTPValidationError",
@@ -59,6 +60,7 @@ from plerion_localizer_client.exceptions import ApiAttributeError as ApiAttribut
 from plerion_localizer_client.exceptions import ApiException as ApiException
 
 # import models into sdk package
+from plerion_localizer_client.models.axis_convention import AxisConvention as AxisConvention
 from plerion_localizer_client.models.camera import Camera as Camera
 from plerion_localizer_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig as FullOpenCVCameraConfig
 from plerion_localizer_client.models.http_validation_error import HTTPValidationError as HTTPValidationError
