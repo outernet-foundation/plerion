@@ -110,10 +110,6 @@ namespace PlerionClient.Client
                 if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
                     Permission.RequestUserPermission(Permission.Camera);
 
-                UnityEngine.XR.ARSubsystems.XRCameraIntrinsics intrinsics = default;
-                while (!SceneReferences.ARCameraManager.TryGetIntrinsics(out intrinsics))
-                    await UniTask.WaitForEndOfFrame();
-
                 await UniTask.SwitchToMainThread();
 
                 await VisualPositioningSystem.StartLocalizationSession();

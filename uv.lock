@@ -2067,6 +2067,7 @@ dependencies = [
     { name = "numpy" },
     { name = "piccolo", extra = ["postgres"] },
     { name = "plerion-localizer-client" },
+    { name = "plyfile" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic-settings" },
     { name = "pyjwt" },
@@ -2098,6 +2099,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3.4" },
     { name = "piccolo", extras = ["postgres"], specifier = ">=1.27.1" },
     { name = "plerion-localizer-client", editable = "packages/generated/python/localizer-client" },
+    { name = "plyfile", specifier = ">=1.1.3" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.10" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
     { name = "pyjwt", specifier = ">=2.10.1" },
@@ -2283,6 +2285,18 @@ requires-dist = [
 name = "plerion-workspace"
 version = "0.0.1"
 source = { virtual = "." }
+
+[[package]]
+name = "plyfile"
+version = "1.1.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/78/d8/f68ec9a54568236ba4c00fc0b002f74d2a559841c1fce86ab356599da032/plyfile-1.1.3.tar.gz", hash = "sha256:1c37720cb0470b762cec2dfef573ee7996a616c359c0ec34fdd766ace3ea0634", size = 36163, upload-time = "2025-10-22T01:58:40.06Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/22/22/1755bb4c7db15bb1ed63b4eb7a7fc133bf42a3f9cc806c0d5941e107ba90/plyfile-1.1.3-py3-none-any.whl", hash = "sha256:581302f07b1c298431dcaa9038bba2ae80f3f7868b29ccb826a07bc4488ff38a", size = 36455, upload-time = "2025-10-22T01:58:38.614Z" },
+]
 
 [[package]]
 name = "propcache"

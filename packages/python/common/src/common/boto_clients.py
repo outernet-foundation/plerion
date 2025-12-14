@@ -59,7 +59,6 @@ def create_s3_client(
 ) -> S3Client:
 
     kwargs: dict[str, Any] = {}
-
     if minio_endpoint_url:
         kwargs.update(
             endpoint_url=str(minio_endpoint_url),

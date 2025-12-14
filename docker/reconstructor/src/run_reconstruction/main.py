@@ -33,6 +33,9 @@ def main():
     print(f"Using device: {device}")
 
     settings = get_settings()
+    print(settings.minio_endpoint_url)
+    print(settings.minio_access_key)
+    print(settings.minio_secret_key)
     s3_client = create_s3_client(
         minio_endpoint_url=settings.minio_endpoint_url,
         minio_access_key=settings.minio_access_key,
@@ -106,7 +109,11 @@ def main():
 
         image_path = CAPTURE_SESSION_DIRECTORY / image_name
         # (image, rgb_tensor, gray_tensor) = create_image_tensors(image_path.read_bytes(), camera_config)
+<<<<<<< HEAD
         image = transform_image(image_path.read_bytes(), camera_config.orientation)
+=======
+        image = transform_image(image_path.read_bytes(), camera_config)
+>>>>>>> bb2c83f (wip broken)
         rgb_tensor = from_numpy(asarray(image, dtype=float32)).permute(2, 0, 1).div(255.0)
         gray_tensor = from_numpy(asarray(image.convert("L"), dtype=float32)).unsqueeze(0).div(255.0)
 
@@ -172,7 +179,6 @@ def main():
     )
 
     # Verify reconstruction was successful and write to storage
-
     if reconstruction is None:
         print("Reconstruction failed, no model was created")
         manifest.status = "failed"

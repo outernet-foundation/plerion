@@ -323,6 +323,23 @@ namespace Plerion.Core
 
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
 
+            var cameraFromMapRotationEuler = (
+                (UnityEngine.Quaternion)localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion()
+            ).eulerAngles;
+            var mapRotationEuler = (
+                (UnityEngine.Quaternion)localizationResult.MapTransform.Rotation.ToMathematicsQuaternion()
+            ).eulerAngles;
+            var unityCameraRotationEuler = cameraRotationUnityWorldFromCamera.eulerAngles;
+
+            LogDebug(
+                $"CameraFromMapTranslation: {localizationResult.CameraFromMapTransform.Position.X}, {localizationResult.CameraFromMapTransform.Position.Y}, {localizationResult.CameraFromMapTransform.Position.Z}"
+                    + $"\nCameraFromMapRotationEuler: {cameraFromMapRotationEuler.x}, {cameraFromMapRotationEuler.y}, {cameraFromMapRotationEuler.z}"
+                    + $"\nMapTranslation: {localizationResult.MapTransform.Position.X}, {localizationResult.MapTransform.Position.Y}, {localizationResult.MapTransform.Position.Z}"
+                    + $"\nMapRotationEuler: {mapRotationEuler.x}, {mapRotationEuler.y}, {mapRotationEuler.z}"
+                    + $"\nUnityWorldFromCamera Translation: {cameraTranslationUnityWorldFromCamera.x}, {cameraTranslationUnityWorldFromCamera.y}, {cameraTranslationUnityWorldFromCamera.z}"
+                    + $"\nUnityWorldFromCamera RotationEuler: {unityCameraRotationEuler.x}, {unityCameraRotationEuler.y}, {unityCameraRotationEuler.z}"
+            );
+
             unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
                 localizationResult.CameraFromMapTransform.Position.ToDouble3(),
                 localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),

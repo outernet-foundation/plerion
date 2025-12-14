@@ -206,7 +206,7 @@ class Zed(Thread):
         positionTrackingParameters.set_floor_as_origin = False
         enable_positional_tracking(self._camera, positionTrackingParameters)
 
-        print("Writing config.json")
+        print("Writing manifest.json")
 
         cam_info = get_camera_information(self._camera)
         # calibration_parameters = cam_info.camera_configuration.calibration_parameters_raw
@@ -222,7 +222,7 @@ class Zed(Thread):
             list[float], Rotation.from_matrix(stereo_transform_matrix[:3, :3]).as_quat().tolist()
         )
 
-        with open(self._output_directory() / "config.json", "w") as config_file:
+        with open(self._output_directory() / "manifest.json", "w") as config_file:
             config_file.write(
                 CaptureSessionManifest(
                     axis_convention=AxisConvention.OPENCV,
