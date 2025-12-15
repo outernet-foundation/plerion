@@ -110,7 +110,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**get_layers**](docs/DefaultApi.md#get_layers) | **GET** /layers | Get Layers
 *DefaultApi* | [**get_localization_map**](docs/DefaultApi.md#get_localization_map) | **GET** /localization_maps/{id} | Get Localization Map
 *DefaultApi* | [**get_localization_map_points**](docs/DefaultApi.md#get_localization_map_points) | **GET** /localization_maps/{id}/points | Get Localization Map Points
-*DefaultApi* | [**get_localization_map_points_ply**](docs/DefaultApi.md#get_localization_map_points_ply) | **GET** /localization_maps/{id}/points.ply | Get Localization Map Points Ply
 *DefaultApi* | [**get_localization_maps**](docs/DefaultApi.md#get_localization_maps) | **GET** /localization_maps | Get Localization Maps
 *DefaultApi* | [**get_localization_session_status**](docs/DefaultApi.md#get_localization_session_status) | **GET** /localization_sessions/{localization_session_id}/status | Get Localization Session Status
 *DefaultApi* | [**get_map_load_status**](docs/DefaultApi.md#get_map_load_status) | **GET** /localization_sessions/{localization_session_id}/maps/{map_id}/status | Get Map Load Status
@@ -120,7 +119,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**get_reconstruction_localization_map**](docs/DefaultApi.md#get_reconstruction_localization_map) | **GET** /reconstructions/{id}/localization_map | Get Reconstruction Localization Map
 *DefaultApi* | [**get_reconstruction_manifest**](docs/DefaultApi.md#get_reconstruction_manifest) | **GET** /reconstructions/{id}/manifest | Get Reconstruction Manifest
 *DefaultApi* | [**get_reconstruction_points**](docs/DefaultApi.md#get_reconstruction_points) | **GET** /reconstructions/{id}/points | Get Reconstruction Points
-*DefaultApi* | [**get_reconstruction_points3_d_ply**](docs/DefaultApi.md#get_reconstruction_points3_d_ply) | **GET** /reconstructions/{id}/points.ply | Get Reconstruction Points3D Ply
 *DefaultApi* | [**get_reconstruction_status**](docs/DefaultApi.md#get_reconstruction_status) | **GET** /reconstructions/{id}/status | Get Reconstruction Status
 *DefaultApi* | [**get_reconstructions**](docs/DefaultApi.md#get_reconstructions) | **GET** /reconstructions | Get Reconstructions
 *DefaultApi* | [**load_localization_maps**](docs/DefaultApi.md#load_localization_maps) | **POST** /localization_sessions/{localization_session_id}/maps | Load Localization Maps
@@ -148,7 +146,6 @@ Class | Method | HTTP request | Description
  - [CaptureSessionManifest](docs/CaptureSessionManifest.md)
  - [CaptureSessionRead](docs/CaptureSessionRead.md)
  - [CaptureSessionUpdate](docs/CaptureSessionUpdate.md)
- - [Color](docs/Color.md)
  - [DeviceType](docs/DeviceType.md)
  - [FullOpenCVCameraConfig](docs/FullOpenCVCameraConfig.md)
  - [GroupBatchUpdate](docs/GroupBatchUpdate.md)
@@ -173,7 +170,6 @@ Class | Method | HTTP request | Description
  - [OpenCVCameraConfig](docs/OpenCVCameraConfig.md)
  - [OrchestrationStatus](docs/OrchestrationStatus.md)
  - [PinholeCameraConfig](docs/PinholeCameraConfig.md)
- - [PointCloudPoint](docs/PointCloudPoint.md)
  - [Quaternion](docs/Quaternion.md)
  - [ReconstructionCreate](docs/ReconstructionCreate.md)
  - [ReconstructionCreateWithOptions](docs/ReconstructionCreateWithOptions.md)

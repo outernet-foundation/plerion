@@ -18,3 +18,7 @@ def change_basis_opencv_from_unity(translation: ndarray, rotation: ndarray) -> t
     new_translation = basis_change_opencv_from_unity @ translation
     new_rotation = basis_change_opencv_from_unity @ rotation @ basic_change_unity_from_opencv
     return new_translation, new_rotation
+
+
+def change_basis_unity_from_opencv_points(points: ndarray) -> ndarray:
+    return (basic_change_unity_from_opencv @ points.T).T

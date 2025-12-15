@@ -6,11 +6,11 @@ using CesiumForUnity;
 using Cysharp.Threading.Tasks;
 using FofX;
 using FofX.Stateful;
-using Plerion.Core;
+using Plerion.VPS;
 using PlerionApiClient.Model;
 using Unity.Mathematics;
 using UnityEngine;
-using static Plerion.Core.LocationUtilities;
+using static Plerion.VPS.LocationUtilities;
 
 namespace Outernet.MapRegistrationTool
 {

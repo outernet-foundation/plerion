@@ -36,7 +36,6 @@ __all__ = [
     "CaptureSessionManifest",
     "CaptureSessionRead",
     "CaptureSessionUpdate",
-    "Color",
     "DeviceType",
     "FullOpenCVCameraConfig",
     "GroupBatchUpdate",
@@ -61,7 +60,6 @@ __all__ = [
     "OpenCVCameraConfig",
     "OrchestrationStatus",
     "PinholeCameraConfig",
-    "PointCloudPoint",
     "Quaternion",
     "ReconstructionCreate",
     "ReconstructionCreateWithOptions",
@@ -100,7 +98,6 @@ from plerion_api_client.models.capture_session_create import CaptureSessionCreat
 from plerion_api_client.models.capture_session_manifest import CaptureSessionManifest as CaptureSessionManifest
 from plerion_api_client.models.capture_session_read import CaptureSessionRead as CaptureSessionRead
 from plerion_api_client.models.capture_session_update import CaptureSessionUpdate as CaptureSessionUpdate
-from plerion_api_client.models.color import Color as Color
 from plerion_api_client.models.device_type import DeviceType as DeviceType
 from plerion_api_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig as FullOpenCVCameraConfig
 from plerion_api_client.models.group_batch_update import GroupBatchUpdate as GroupBatchUpdate
@@ -125,7 +122,6 @@ from plerion_api_client.models.node_read import NodeRead as NodeRead
 from plerion_api_client.models.open_cv_camera_config import OpenCVCameraConfig as OpenCVCameraConfig
 from plerion_api_client.models.orchestration_status import OrchestrationStatus as OrchestrationStatus
 from plerion_api_client.models.pinhole_camera_config import PinholeCameraConfig as PinholeCameraConfig
-from plerion_api_client.models.point_cloud_point import PointCloudPoint as PointCloudPoint
 from plerion_api_client.models.quaternion import Quaternion as Quaternion
 from plerion_api_client.models.reconstruction_create import ReconstructionCreate as ReconstructionCreate
 from plerion_api_client.models.reconstruction_create_with_options import ReconstructionCreateWithOptions as ReconstructionCreateWithOptions

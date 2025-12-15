@@ -1,17 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using FofX.Stateful;
+using Plerion.VPS;
+using TMPro;
 using Unity.Mathematics;
-
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
-
-using FofX.Stateful;
-
-using TMPro;
-using Plerion.Core;
 
 namespace Outernet.MapRegistrationTool
 {
@@ -23,11 +19,13 @@ namespace Outernet.MapRegistrationTool
         Adaptive,
         Foldout,
         Header,
-        Default
+        Default,
     }
 
     public class UpdateInputImmediatelyAttribute : Attribute { }
+
     public class HideInInspectorUIAttribute : Attribute { }
+
     public class ReadonlyInUIAttribute : Attribute { }
 
     public class InspectorTypeAttribute : Attribute
@@ -72,7 +70,11 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<T> ControlChildSize<T>(this ComponentView<T> view, bool? controlWidth = default, bool? controlHeight = default)
+        public static ComponentView<T> ControlChildSize<T>(
+            this ComponentView<T> view,
+            bool? controlWidth = default,
+            bool? controlHeight = default
+        )
             where T : HorizontalOrVerticalLayoutGroup
         {
             view.component.childControlWidth = controlWidth ?? view.component.childControlWidth;
@@ -80,7 +82,11 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<T> UseChildScale<T>(this ComponentView<T> view, bool? useWidth = default, bool? useHeight = default)
+        public static ComponentView<T> UseChildScale<T>(
+            this ComponentView<T> view,
+            bool? useWidth = default,
+            bool? useHeight = default
+        )
             where T : HorizontalOrVerticalLayoutGroup
         {
             view.component.childScaleWidth = useWidth ?? view.component.childScaleWidth;
@@ -88,7 +94,11 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<T> ForceChildExpand<T>(this ComponentView<T> view, bool? forceExpandWidth = default, bool? forceExpandHeight = default)
+        public static ComponentView<T> ForceChildExpand<T>(
+            this ComponentView<T> view,
+            bool? forceExpandWidth = default,
+            bool? forceExpandHeight = default
+        )
             where T : HorizontalOrVerticalLayoutGroup
         {
             view.component.childForceExpandWidth = forceExpandWidth ?? view.component.childForceExpandWidth;
@@ -103,8 +113,8 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<T> WithChildren<T>(this ComponentView<T> view, params Component[] children)
-            => view.WithChildren((IEnumerable<Component>)children);
+        public static ComponentView<T> WithChildren<T>(this ComponentView<T> view, params Component[] children) =>
+            view.WithChildren((IEnumerable<Component>)children);
 
         public static ComponentView<T> WithChildren<T>(this ComponentView<T> view, IEnumerable<Component> children)
         {
@@ -117,10 +127,15 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<ScrollRect> WithChildren(this ComponentView<ScrollRect> view, params Component[] children)
-            => view.WithChildren((IEnumerable<Component>)children);
+        public static ComponentView<ScrollRect> WithChildren(
+            this ComponentView<ScrollRect> view,
+            params Component[] children
+        ) => view.WithChildren((IEnumerable<Component>)children);
 
-        public static ComponentView<ScrollRect> WithChildren(this ComponentView<ScrollRect> view, IEnumerable<Component> children)
+        public static ComponentView<ScrollRect> WithChildren(
+            this ComponentView<ScrollRect> view,
+            IEnumerable<Component> children
+        )
         {
             if (children == null)
                 return view;
@@ -141,8 +156,16 @@ namespace Outernet.MapRegistrationTool
 
     public static partial class UIBuilder
     {
-        private delegate ValueControl ValueControlConstructorDelegate(string label, LabelType labelType, bool interactable, params Attribute[] attributes);
-        private static Dictionary<Type, ValueControlConstructorDelegate> _valueControlConstructors = new Dictionary<Type, ValueControlConstructorDelegate>()
+        private delegate ValueControl ValueControlConstructorDelegate(
+            string label,
+            LabelType labelType,
+            bool interactable,
+            params Attribute[] attributes
+        );
+        private static Dictionary<Type, ValueControlConstructorDelegate> _valueControlConstructors = new Dictionary<
+            Type,
+            ValueControlConstructorDelegate
+        >()
         {
             { typeof(bool), BoolControl },
             { typeof(string), StringControl },
@@ -155,7 +178,7 @@ namespace Outernet.MapRegistrationTool
             { typeof(Vector3), Vector3Control },
             { typeof(Vector4), Vector4Control },
             { typeof(Quaternion), QuaternionControl },
-            { typeof(Bounds), BoundsControl }
+            { typeof(Bounds), BoundsControl },
         };
 
         private static ComponentView<TComponent> AsView<TComponent, TView>(this TComponent component)
@@ -167,7 +190,12 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static Control NodeInspector(string label, IObservableNode node, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static Control NodeInspector(
+            string label,
+            IObservableNode node,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             if (node.HasAttribute<HideInInspectorUIAttribute>())
             {
@@ -179,7 +207,13 @@ namespace Outernet.MapRegistrationTool
             }
             else if (node.TryGetAttribute(out InspectorTypeAttribute attribute))
             {
-                return CustomObservableNodeInspector(label, node, attribute.type, labelType == LabelType.Default ? attribute.labelType : labelType, interactable);
+                return CustomObservableNodeInspector(
+                    label,
+                    node,
+                    attribute.type,
+                    labelType == LabelType.Default ? attribute.labelType : labelType,
+                    interactable
+                );
             }
             else if (node is ObservableObject obj)
             {
@@ -215,10 +249,16 @@ namespace Outernet.MapRegistrationTool
             }
         }
 
-        public static ObservableNodeInspector<ObservableObject> ObservableObjectInspector(string label, ObservableObject target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<ObservableObject> ObservableObjectInspector(
+            string label,
+            ObservableObject target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent<ObservableObjectInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout)
+                .gameObject.AddComponent<ObservableObjectInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -226,10 +266,16 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ObservableNodeInspector<IObservableDictionary> ObservableDictionaryInspector(string label, IObservableDictionary target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<IObservableDictionary> ObservableDictionaryInspector(
+            string label,
+            IObservableDictionary target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent<ObservableDictionaryInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout)
+                .gameObject.AddComponent<ObservableDictionaryInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -237,10 +283,16 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ObservableNodeInspector<IObservableList> ObservableListInspector(string label, IObservableList target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<IObservableList> ObservableListInspector(
+            string label,
+            IObservableList target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent<ObservableListInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout)
+                .gameObject.AddComponent<ObservableListInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -248,10 +300,16 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ObservableNodeInspector<IObservableSet> ObservableSetInspector(string label, IObservableSet target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<IObservableSet> ObservableSetInspector(
+            string label,
+            IObservableSet target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent<ObservableSetInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout)
+                .gameObject.AddComponent<ObservableSetInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -259,10 +317,16 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ObservableNodeInspector<IObservableNode> DefaultObservableNodeInspector(string label, IObservableNode target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<IObservableNode> DefaultObservableNodeInspector(
+            string label,
+            IObservableNode target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent<DefaultObservableNodeInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout)
+                .gameObject.AddComponent<DefaultObservableNodeInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -270,10 +334,16 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ObservableNodeInspector<IObservablePrimitiveMap> ObservablePrimitiveMapInspector(string label, IObservablePrimitiveMap target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<IObservablePrimitiveMap> ObservablePrimitiveMapInspector(
+            string label,
+            IObservablePrimitiveMap target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent<ObservablePrimitiveMapInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout)
+                .gameObject.AddComponent<ObservablePrimitiveMapInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -281,10 +351,16 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ObservableNodeInspector<IObservablePrimitiveArray> ObservablePrimitiveArrayInspector(string label, IObservablePrimitiveArray target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<IObservablePrimitiveArray> ObservablePrimitiveArrayInspector(
+            string label,
+            IObservablePrimitiveArray target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent<ObservablePrimitiveArrayInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Foldout, layout)
+                .gameObject.AddComponent<ObservablePrimitiveArrayInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -292,11 +368,17 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ObservableNodeInspector<IObservablePrimitive> ObservablePrimitiveInspector(string label, IObservablePrimitive target, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static ObservableNodeInspector<IObservablePrimitive> ObservablePrimitiveInspector(
+            string label,
+            IObservablePrimitive target,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
             layout.component.childForceExpandWidth = false;
-            var instance = HandleLabel(label, labelType, LabelType.Adaptive, layout).gameObject.AddComponent<ObservablePrimitiveInspector>();
+            var instance = HandleLabel(label, labelType, LabelType.Adaptive, layout)
+                .gameObject.AddComponent<ObservablePrimitiveInspector>();
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -304,10 +386,17 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static CustomObservableNodeInspector CustomObservableNodeInspector(string label, IObservableNode target, Type inspectorType, LabelType labelType = LabelType.Default, bool interactable = true)
+        public static CustomObservableNodeInspector CustomObservableNodeInspector(
+            string label,
+            IObservableNode target,
+            Type inspectorType,
+            LabelType labelType = LabelType.Default,
+            bool interactable = true
+        )
         {
             var layout = VerticalLayout();
-            var instance = (CustomObservableNodeInspector)HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent(inspectorType);
+            var instance = (CustomObservableNodeInspector)
+                HandleLabel(label, labelType, LabelType.Foldout, layout).gameObject.AddComponent(inspectorType);
             instance.gameObject.name = target.nodePath;
             instance.rect = (RectTransform)layout.transform;
             instance.Setup(target.nodePath, interactable);
@@ -315,7 +404,13 @@ namespace Outernet.MapRegistrationTool
             return instance;
         }
 
-        public static ValueControl ValueControl(Type type, string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl ValueControl(
+            Type type,
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             foreach (var attribute in attributes)
             {
@@ -332,69 +427,104 @@ namespace Outernet.MapRegistrationTool
             return DefaultControl(label, labelType, interactable);
         }
 
-        public static ValueControl<object> EnumControl(Type enumType, string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<object> EnumControl(
+            Type enumType,
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var names = new List<string>(Enum.GetNames(enumType));
             var dropdown = Dropdown(names);
-            var control = HandleLabel(label, labelType, LabelType.Adaptive, dropdown).gameObject.AddComponent<ObjectValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, dropdown)
+                .gameObject.AddComponent<ObjectValueControl>();
 
             dropdown.component.interactable = interactable;
             dropdown.component.onValueChanged.AddListener(x => control.value = Enum.Parse(enumType, names[x]));
 
-            control.onValueChanged += () => dropdown.component.value = names.IndexOf(Enum.GetName(enumType, control.value));
+            control.onValueChanged += () =>
+                dropdown.component.value = names.IndexOf(Enum.GetName(enumType, control.value));
 
             return control;
         }
 
-        public static ValueControl<object> DefaultControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<object> DefaultControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var text = Text("null");
-            var control = HandleLabel(label, labelType, LabelType.Adaptive, text).gameObject.AddComponent<ObjectValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, text)
+                .gameObject.AddComponent<ObjectValueControl>();
             control.onValueChanged += () => text.component.text = control.value?.ToString() ?? "null";
             return control;
         }
 
-        public static ValueControl<bool> BoolControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<bool> BoolControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var toggle = Toggle();
             toggle.component.interactable = interactable;
-            var control = HandleLabel(label, labelType, LabelType.Adaptive, toggle).gameObject.AddComponent<BoolValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, toggle)
+                .gameObject.AddComponent<BoolValueControl>();
             toggle.component.onValueChanged.AddListener(x => control.value = x);
             control.onValueChanged += () => toggle.component.isOn = control.value;
             return control;
         }
 
-        public static ValueControl<string> StringControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<string> StringControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var inputField = InputField();
             inputField.component.interactable = interactable;
-            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField).gameObject.AddComponent<StringValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField)
+                .gameObject.AddComponent<StringValueControl>();
             control.onValueChanged += () => inputField.component.text = control.value;
 
-            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute) ?
-                inputField.component.onValueChanged : inputField.component.onEndEdit;
+            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute)
+                ? inputField.component.onValueChanged
+                : inputField.component.onEndEdit;
 
             inputUpdateEvent.AddListener(x => control.value = x);
 
             return control;
         }
 
-        public static ValueControl<float> FloatControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<float> FloatControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var inputField = InputField("0", TMP_InputField.ContentType.DecimalNumber);
             inputField.component.interactable = interactable;
-            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField).gameObject.AddComponent<FloatValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField)
+                .gameObject.AddComponent<FloatValueControl>();
 
             bool pushingChanges = false;
             control.onValueChanged += () =>
             {
                 pushingChanges = true;
-                inputField.component.text = Mathf.Abs(control.value) > Mathf.Epsilon ? Math.Round(control.value, 7).ToString() : "0";
+                inputField.component.text =
+                    Mathf.Abs(control.value) > Mathf.Epsilon ? Math.Round(control.value, 7).ToString() : "0";
                 pushingChanges = false;
             };
 
-            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute) ?
-                inputField.component.onValueChanged : inputField.component.onEndEdit;
+            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute)
+                ? inputField.component.onValueChanged
+                : inputField.component.onEndEdit;
 
             inputUpdateEvent.AddListener(x =>
             {
@@ -407,48 +537,62 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-
-        public static ValueControl<double> DoubleControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<double> DoubleControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var inputField = InputField("0", TMP_InputField.ContentType.DecimalNumber);
             inputField.component.interactable = interactable;
-            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField).gameObject.AddComponent<DoubleValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField)
+                .gameObject.AddComponent<DoubleValueControl>();
             control.onValueChanged += () => inputField.component.text = Math.Round(control.value, 7).ToString();
 
-            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute) ?
-                inputField.component.onValueChanged : inputField.component.onEndEdit;
+            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute)
+                ? inputField.component.onValueChanged
+                : inputField.component.onEndEdit;
 
             inputUpdateEvent.AddListener(x => control.value = double.TryParse(x, out var result) ? result : default);
 
             return control;
         }
 
-        public static ValueControl<int> IntControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<int> IntControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var inputField = InputField("0", TMP_InputField.ContentType.IntegerNumber);
             inputField.component.interactable = interactable;
-            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField).gameObject.AddComponent<IntValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, inputField)
+                .gameObject.AddComponent<IntValueControl>();
             control.onValueChanged += () => inputField.component.text = control.value.ToString();
 
-            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute) ?
-                inputField.component.onValueChanged : inputField.component.onEndEdit;
+            UnityEvent<string> inputUpdateEvent = attributes.Any(x => x is UpdateInputImmediatelyAttribute)
+                ? inputField.component.onValueChanged
+                : inputField.component.onEndEdit;
 
             inputUpdateEvent.AddListener(x => control.value = int.TryParse(x, out var result) ? result : default);
 
             return control;
         }
 
-        public static ValueControl<Vector2> Vector2Control(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<Vector2> Vector2Control(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var xControl = FloatControl("x", LabelType.Tight, interactable: interactable);
             var yControl = FloatControl("y", LabelType.Tight, interactable: interactable);
 
-            var control = HandleLabel(
-                label,
-                labelType,
-                LabelType.Adaptive,
-                HorizontalLayout(xControl, yControl)
-            ).gameObject.AddComponent<Vector2ValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, HorizontalLayout(xControl, yControl))
+                .gameObject.AddComponent<Vector2ValueControl>();
 
             bool pushingChanges = false;
 
@@ -457,10 +601,7 @@ namespace Outernet.MapRegistrationTool
                 if (pushingChanges)
                     return;
 
-                control.value = new Vector2(
-                    xControl.value,
-                    yControl.value
-                );
+                control.value = new Vector2(xControl.value, yControl.value);
             };
 
             xControl.onValueChanged += handleChildChanged;
@@ -477,7 +618,12 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-        public static ValueControl<Vector3> Vector3Control(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<Vector3> Vector3Control(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var xControl = FloatControl("x", LabelType.Tight, interactable: interactable);
             var yControl = FloatControl("y", LabelType.Tight, interactable: interactable);
@@ -488,7 +634,8 @@ namespace Outernet.MapRegistrationTool
                 labelType,
                 LabelType.Adaptive,
                 HorizontalLayout(xControl, yControl, zControl)
-            ).gameObject.AddComponent<Vector3ValueControl>();
+            )
+                .gameObject.AddComponent<Vector3ValueControl>();
 
             bool pushingChanges = false;
 
@@ -497,11 +644,7 @@ namespace Outernet.MapRegistrationTool
                 if (pushingChanges)
                     return;
 
-                control.value = new Vector3(
-                    xControl.value,
-                    yControl.value,
-                    zControl.value
-                );
+                control.value = new Vector3(xControl.value, yControl.value, zControl.value);
             };
 
             xControl.onValueChanged += handleChildChanged;
@@ -520,7 +663,12 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-        public static ValueControl<Vector4> Vector4Control(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<Vector4> Vector4Control(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var xControl = FloatControl("x", LabelType.Tight, interactable: interactable);
             var yControl = FloatControl("y", LabelType.Tight, interactable: interactable);
@@ -532,7 +680,8 @@ namespace Outernet.MapRegistrationTool
                 labelType,
                 LabelType.Adaptive,
                 HorizontalLayout(xControl, yControl, zControl, wControl)
-            ).gameObject.AddComponent<Vector4ValueControl>();
+            )
+                .gameObject.AddComponent<Vector4ValueControl>();
 
             bool pushingChanges = false;
 
@@ -541,12 +690,7 @@ namespace Outernet.MapRegistrationTool
                 if (pushingChanges)
                     return;
 
-                control.value = new Vector4(
-                    xControl.value,
-                    yControl.value,
-                    zControl.value,
-                    wControl.value
-                );
+                control.value = new Vector4(xControl.value, yControl.value, zControl.value, wControl.value);
             };
 
             xControl.onValueChanged += handleChildChanged;
@@ -567,17 +711,18 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-        public static ValueControl<double2> Double2Control(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<double2> Double2Control(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var xControl = DoubleControl("x", LabelType.Tight, interactable: interactable);
             var yControl = DoubleControl("y", LabelType.Tight, interactable: interactable);
 
-            var control = HandleLabel(
-                label,
-                labelType,
-                LabelType.Adaptive,
-                VerticalLayout(xControl, yControl)
-            ).gameObject.AddComponent<Double2ValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, VerticalLayout(xControl, yControl))
+                .gameObject.AddComponent<Double2ValueControl>();
 
             bool pushingChanges = false;
 
@@ -586,10 +731,7 @@ namespace Outernet.MapRegistrationTool
                 if (pushingChanges)
                     return;
 
-                control.value = new double2(
-                    xControl.value,
-                    yControl.value
-                );
+                control.value = new double2(xControl.value, yControl.value);
             };
 
             xControl.onValueChanged += handleChildChanged;
@@ -610,7 +752,8 @@ namespace Outernet.MapRegistrationTool
             string label = null,
             LabelType labelType = LabelType.None,
             bool interactable = true,
-            params Attribute[] attributes)
+            params Attribute[] attributes
+        )
         {
             var xControl = DoubleControl("x", LabelType.Tight, interactable: interactable);
             var yControl = DoubleControl("y", LabelType.Tight, interactable: interactable);
@@ -621,7 +764,8 @@ namespace Outernet.MapRegistrationTool
                 labelType,
                 LabelType.Adaptive,
                 VerticalLayout(xControl, yControl, zControl)
-            ).gameObject.AddComponent<Double3ValueControl>();
+            )
+                .gameObject.AddComponent<Double3ValueControl>();
 
             bool pushingChanges = false;
 
@@ -630,11 +774,7 @@ namespace Outernet.MapRegistrationTool
                 if (pushingChanges)
                     return;
 
-                control.value = new double3(
-                    xControl.value,
-                    yControl.value,
-                    zControl.value
-                );
+                control.value = new double3(xControl.value, yControl.value, zControl.value);
             };
 
             xControl.onValueChanged += handleChildChanged;
@@ -657,18 +797,15 @@ namespace Outernet.MapRegistrationTool
             string label = null,
             LabelType labelType = LabelType.None,
             bool interactable = true,
-            params Attribute[] attributes)
+            params Attribute[] attributes
+        )
         {
             var latitude = DoubleControl("latitude", LabelType.Tight, interactable: interactable);
             var longitude = DoubleControl("longitude", LabelType.Tight, interactable: interactable);
             var height = DoubleControl("height", LabelType.Tight, interactable: interactable);
 
-            var control = HandleLabel(
-                label,
-                labelType,
-                LabelType.Adaptive,
-                VerticalLayout(latitude, longitude, height)
-            ).gameObject.AddComponent<CartographicValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, VerticalLayout(latitude, longitude, height))
+                .gameObject.AddComponent<CartographicValueControl>();
 
             bool pushingChanges = false;
 
@@ -700,7 +837,12 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-        public static ValueControl<Quaternion> QuaternionControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<Quaternion> QuaternionControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var xControl = FloatControl("x", LabelType.Tight, interactable: interactable);
             var yControl = FloatControl("y", LabelType.Tight, interactable: interactable);
@@ -711,7 +853,8 @@ namespace Outernet.MapRegistrationTool
                 labelType,
                 LabelType.Adaptive,
                 HorizontalLayout(xControl, yControl, zControl)
-            ).gameObject.AddComponent<QuaternionValueControl>();
+            )
+                .gameObject.AddComponent<QuaternionValueControl>();
 
             bool pushingChanges = false;
 
@@ -739,17 +882,18 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-        public static ValueControl<Bounds> BoundsControl(string label = null, LabelType labelType = LabelType.None, bool interactable = true, params Attribute[] attributes)
+        public static ValueControl<Bounds> BoundsControl(
+            string label = null,
+            LabelType labelType = LabelType.None,
+            bool interactable = true,
+            params Attribute[] attributes
+        )
         {
             var centerControl = Vector3Control("Center", LabelType.Adaptive, interactable: interactable);
             var sizeControl = Vector3Control("Size", LabelType.Adaptive, interactable: interactable);
 
-            var control = HandleLabel(
-                label,
-                labelType,
-                LabelType.Adaptive,
-                VerticalLayout(centerControl, sizeControl)
-            ).gameObject.AddComponent<BoundsValueControl>();
+            var control = HandleLabel(label, labelType, LabelType.Adaptive, VerticalLayout(centerControl, sizeControl))
+                .gameObject.AddComponent<BoundsValueControl>();
 
             bool pushingChanges = false;
 
@@ -775,7 +919,11 @@ namespace Outernet.MapRegistrationTool
             return control;
         }
 
-        public static ComponentView<TextMeshProUGUI> Text(ObservablePrimitive<string> bindTo, VerticalAlignmentOptions verticalAlignment = VerticalAlignmentOptions.Top, HorizontalAlignmentOptions horizontalAlignment = HorizontalAlignmentOptions.Left)
+        public static ComponentView<TextMeshProUGUI> Text(
+            ObservablePrimitive<string> bindTo,
+            VerticalAlignmentOptions verticalAlignment = VerticalAlignmentOptions.Top,
+            HorizontalAlignmentOptions horizontalAlignment = HorizontalAlignmentOptions.Left
+        )
         {
             var text = Text(bindTo.value, verticalAlignment, horizontalAlignment);
             text.AddBinding(text.component.BindText(bindTo));
@@ -787,23 +935,19 @@ namespace Outernet.MapRegistrationTool
             var editableLabel = EditableLabel(bindTo.value);
             bool applyingFromState = false;
             editableLabel.AddBinding(
-                bindTo.OnChange(
-                    value =>
-                    {
-                        applyingFromState = true;
-                        editableLabel.text = bindTo.value;
-                        applyingFromState = false;
-                    }
-                ),
-                editableLabel.onValueChanged.OnRaised(
-                    x =>
-                    {
-                        if (applyingFromState)
-                            return;
+                bindTo.OnChange(value =>
+                {
+                    applyingFromState = true;
+                    editableLabel.text = bindTo.value;
+                    applyingFromState = false;
+                }),
+                editableLabel.onValueChanged.OnRaised(x =>
+                {
+                    if (applyingFromState)
+                        return;
 
-                        bindTo.ExecuteSetOrDelay(editableLabel.text);
-                    }
-                )
+                    bindTo.ExecuteSetOrDelay(editableLabel.text);
+                })
             );
 
             return editableLabel;
@@ -816,7 +960,10 @@ namespace Outernet.MapRegistrationTool
             return editableLabel;
         }
 
-        public static ComponentView<LayoutElement> FlexibleSpace(bool flexibleWidth = false, bool flexibleHeight = false)
+        public static ComponentView<LayoutElement> FlexibleSpace(
+            bool flexibleWidth = false,
+            bool flexibleHeight = false
+        )
         {
             var space = new GameObject("FlexibleSpace", typeof(RectTransform), typeof(LayoutElement));
             var layoutElement = space.GetComponent<LayoutElement>();
@@ -825,7 +972,11 @@ namespace Outernet.MapRegistrationTool
             return layoutElement.AsView<LayoutElement, LayoutElementView>();
         }
 
-        public static ComponentView<TextMeshProUGUI> Text(string text = null, VerticalAlignmentOptions verticalAlignment = VerticalAlignmentOptions.Top, HorizontalAlignmentOptions horizontalAlignment = HorizontalAlignmentOptions.Left)
+        public static ComponentView<TextMeshProUGUI> Text(
+            string text = null,
+            VerticalAlignmentOptions verticalAlignment = VerticalAlignmentOptions.Top,
+            HorizontalAlignmentOptions horizontalAlignment = HorizontalAlignmentOptions.Left
+        )
         {
             var result = UnityEngine.Object.Instantiate(Prefabs.Text);
             result.text = text;
@@ -873,13 +1024,17 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ListElementContainer ListElement(params Component[] elements)
-            => ListElement(true, content: VerticalLayout(elements).transform);
+        public static ListElementContainer ListElement(params Component[] elements) =>
+            ListElement(true, content: VerticalLayout(elements).transform);
 
-        public static ListElementContainer ListElement(bool interactable = true, params Component[] elements)
-            => ListElement(interactable, content: VerticalLayout(elements).transform);
+        public static ListElementContainer ListElement(bool interactable = true, params Component[] elements) =>
+            ListElement(interactable, content: VerticalLayout(elements).transform);
 
-        public static ListElementContainer ListElement(bool interactable = true, Action onRemoved = null, params Component[] content)
+        public static ListElementContainer ListElement(
+            bool interactable = true,
+            Action onRemoved = null,
+            params Component[] content
+        )
         {
             var listElement = UnityEngine.Object.Instantiate(Prefabs.ListElement);
             listElement.removeButton.interactable = interactable;
@@ -911,14 +1066,20 @@ namespace Outernet.MapRegistrationTool
             return inputField;
         }
 
-        public static ComponentView<TMP_InputField> InputField(ObservablePrimitive<string> bindTo, TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard)
+        public static ComponentView<TMP_InputField> InputField(
+            ObservablePrimitive<string> bindTo,
+            TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard
+        )
         {
             var inputField = InputField(bindTo.value, contentType);
             inputField.AddBinding(inputField.component.BindInput(bindTo));
             return inputField;
         }
 
-        public static ComponentView<TMP_InputField> InputField(string text = null, TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard)
+        public static ComponentView<TMP_InputField> InputField(
+            string text = null,
+            TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard
+        )
         {
             var inputField = UnityEngine.Object.Instantiate(Prefabs.InputField);
             inputField.text = text;
@@ -928,14 +1089,20 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<TMP_InputField> InputRegion(ObservablePrimitive<string> bindTo, TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard)
+        public static ComponentView<TMP_InputField> InputRegion(
+            ObservablePrimitive<string> bindTo,
+            TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard
+        )
         {
             var inputRegion = InputRegion(bindTo.value, contentType);
             inputRegion.AddBinding(inputRegion.component.BindInput(bindTo));
             return inputRegion;
         }
 
-        public static ComponentView<TMP_InputField> InputRegion(string text = null, TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard)
+        public static ComponentView<TMP_InputField> InputRegion(
+            string text = null,
+            TMP_InputField.ContentType contentType = TMP_InputField.ContentType.Standard
+        )
         {
             var inputRegion = UnityEngine.Object.Instantiate(Prefabs.InputRegion);
             inputRegion.text = text;
@@ -976,8 +1143,8 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<TMP_Dropdown> Dropdown(IEnumerable<string> options)
-            => Dropdown(options.Select(x => new TMP_Dropdown.OptionData(x)).ToList());
+        public static ComponentView<TMP_Dropdown> Dropdown(IEnumerable<string> options) =>
+            Dropdown(options.Select(x => new TMP_Dropdown.OptionData(x)).ToList());
 
         public static ComponentView<TMP_Dropdown> Dropdown(List<TMP_Dropdown.OptionData> options)
         {
@@ -994,35 +1161,37 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static Foldout Foldout(ObservablePrimitive<string> label = null, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.Foldout, content);
+        public static Foldout Foldout(ObservablePrimitive<string> label = null, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.Foldout, content);
 
-        public static Foldout Foldout(string label = null, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.Foldout, content);
+        public static Foldout Foldout(string label = null, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.Foldout, content);
 
-        public static PropertyLabel Header(ObservablePrimitive<string> label = null, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.Header, content);
+        public static PropertyLabel Header(ObservablePrimitive<string> label = null, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.Header, content);
 
-        public static PropertyLabel Header(string label = null, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.Header, content);
+        public static PropertyLabel Header(string label = null, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.Header, content);
 
-        public static PropertyLabel TightPropertyLabel(ObservablePrimitive<string> label, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.TightPropertyLabel, content);
+        public static PropertyLabel TightPropertyLabel(ObservablePrimitive<string> label, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.TightPropertyLabel, content);
 
-        public static PropertyLabel TightPropertyLabel(string label, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.TightPropertyLabel, content);
+        public static PropertyLabel TightPropertyLabel(string label, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.TightPropertyLabel, content);
 
-        public static PropertyLabel PropertyLabel(ObservablePrimitive<string> label, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
+        public static PropertyLabel PropertyLabel(ObservablePrimitive<string> label, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
 
-        public static PropertyLabel PropertyLabel(string label, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
+        public static PropertyLabel PropertyLabel(string label, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
 
-        public static AdaptivePropertyLabel AdaptivePropertyLabel(ObservablePrimitive<string> label, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
+        public static AdaptivePropertyLabel AdaptivePropertyLabel(
+            ObservablePrimitive<string> label,
+            params Component[] content
+        ) => SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
 
-        public static AdaptivePropertyLabel AdaptivePropertyLabel(string label, params Component[] content)
-            => SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
+        public static AdaptivePropertyLabel AdaptivePropertyLabel(string label, params Component[] content) =>
+            SetupPropertyLabel(label, Prefabs.AdaptivePropertyLabel, content);
 
         public static T SetupPropertyLabel<T>(ObservablePrimitive<string> label, T prefab, params Component[] content)
             where T : PropertyLabel
@@ -1046,8 +1215,8 @@ namespace Outernet.MapRegistrationTool
             return propertyLabel;
         }
 
-        public static ComponentView<HorizontalLayoutGroup> HorizontalLayout(params Component[] elements)
-            => HorizontalLayout((IEnumerable<Component>)elements);
+        public static ComponentView<HorizontalLayoutGroup> HorizontalLayout(params Component[] elements) =>
+            HorizontalLayout((IEnumerable<Component>)elements);
 
         public static ComponentView<HorizontalLayoutGroup> HorizontalLayout(IEnumerable<Component> elements)
         {
@@ -1061,8 +1230,8 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<VerticalLayoutGroup> VerticalLayout(params Component[] elements)
-            => VerticalLayout((IEnumerable<Component>)elements);
+        public static ComponentView<VerticalLayoutGroup> VerticalLayout(params Component[] elements) =>
+            VerticalLayout((IEnumerable<Component>)elements);
 
         public static ComponentView<VerticalLayoutGroup> VerticalLayout(IEnumerable<Component> elements)
         {
@@ -1076,8 +1245,8 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static ComponentView<ScrollRect> ScrollRect(params Component[] elements)
-            => ScrollRect((IEnumerable<Component>)elements);
+        public static ComponentView<ScrollRect> ScrollRect(params Component[] elements) =>
+            ScrollRect((IEnumerable<Component>)elements);
 
         public static ComponentView<ScrollRect> ScrollRect(IEnumerable<Component> elements)
         {
@@ -1091,7 +1260,11 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static T WithDropReceiver<T>(this T view, Func<GameObject, bool> filter = null, Action<GameObject> onDrop = null)
+        public static T WithDropReceiver<T>(
+            this T view,
+            Func<GameObject, bool> filter = null,
+            Action<GameObject> onDrop = null
+        )
             where T : Component
         {
             var dropReceiver = view.gameObject.AddComponent<DropReceiver>();
@@ -1101,7 +1274,17 @@ namespace Outernet.MapRegistrationTool
             return view;
         }
 
-        public static T WithLayoutProperties<T>(this T view, bool? ignoreLayout = default, float? minWidth = default, float? minHeight = default, float? preferredWidth = default, float? preferredHeight = default, bool? flexibleWidth = default, bool? flexibleHeight = default, int? layoutPriority = 1)
+        public static T WithLayoutProperties<T>(
+            this T view,
+            bool? ignoreLayout = default,
+            float? minWidth = default,
+            float? minHeight = default,
+            float? preferredWidth = default,
+            float? preferredHeight = default,
+            bool? flexibleWidth = default,
+            bool? flexibleHeight = default,
+            int? layoutPriority = 1
+        )
             where T : Component
         {
             var layoutElement = view.gameObject.GetOrAddComponent<LayoutElement>();
@@ -1110,13 +1293,24 @@ namespace Outernet.MapRegistrationTool
             layoutElement.minHeight = minHeight ?? layoutElement.minHeight;
             layoutElement.preferredWidth = preferredWidth ?? layoutElement.preferredWidth;
             layoutElement.preferredHeight = preferredHeight ?? layoutElement.preferredHeight;
-            layoutElement.flexibleWidth = flexibleWidth == null ? layoutElement.flexibleWidth : flexibleWidth.Value ? 1 : 0;
-            layoutElement.flexibleHeight = flexibleHeight == null ? layoutElement.flexibleHeight : flexibleHeight.Value ? 1 : 0;
+            layoutElement.flexibleWidth =
+                flexibleWidth == null ? layoutElement.flexibleWidth
+                : flexibleWidth.Value ? 1
+                : 0;
+            layoutElement.flexibleHeight =
+                flexibleHeight == null ? layoutElement.flexibleHeight
+                : flexibleHeight.Value ? 1
+                : 0;
             layoutElement.layoutPriority = layoutPriority ?? layoutElement.layoutPriority;
             return view;
         }
 
-        private static Transform HandleLabel(string label, LabelType labelType, LabelType defaultLabelType, params Component[] content)
+        private static Transform HandleLabel(
+            string label,
+            LabelType labelType,
+            LabelType defaultLabelType,
+            params Component[] content
+        )
         {
             if (labelType == LabelType.Default)
                 labelType = defaultLabelType == LabelType.Default ? LabelType.None : defaultLabelType;
@@ -1141,25 +1335,45 @@ namespace Outernet.MapRegistrationTool
         }
 
         private class ObjectValueControl : ValueControl<object> { }
+
         private class StringValueControl : ValueControl<string> { }
+
         private class BoolValueControl : ValueControl<bool> { }
+
         private class FloatValueControl : ValueControl<float> { }
+
         private class DoubleValueControl : ValueControl<double> { }
+
         private class IntValueControl : ValueControl<int> { }
+
         private class Vector2ValueControl : ValueControl<Vector2> { }
+
         private class Vector3ValueControl : ValueControl<Vector3> { }
+
         private class Vector4ValueControl : ValueControl<Vector4> { }
+
         private class QuaternionValueControl : ValueControl<Quaternion> { }
+
         private class Double2ValueControl : ValueControl<double2> { }
+
         private class Double3ValueControl : ValueControl<double3> { }
+
         private class CartographicValueControl : ValueControl<CartographicCoordinates> { }
+
         private class BoundsValueControl : ValueControl<Bounds> { }
+
         private class HorizontalLayoutGroupView : ComponentView<HorizontalLayoutGroup> { }
+
         private class VerticalLayoutGroupView : ComponentView<VerticalLayoutGroup> { }
+
         private class ScrollRectView : ComponentView<ScrollRect> { }
+
         private class TextView : ComponentView<TextMeshProUGUI> { }
+
         private class ToggleView : ComponentView<Toggle> { }
+
         private class LayoutElementView : ComponentView<LayoutElement> { }
+
         private class InputFieldView : ComponentView<TMP_InputField>
         {
             private void OnTransformParentChanged()

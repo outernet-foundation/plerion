@@ -1,5 +1,5 @@
 using Cysharp.Threading.Tasks;
-using Plerion.Core;
+using Plerion.VPS;
 using UnityEngine;
 
 namespace Outernet.MapRegistrationTool

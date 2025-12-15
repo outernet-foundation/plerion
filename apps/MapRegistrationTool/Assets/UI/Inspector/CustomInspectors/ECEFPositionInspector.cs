@@ -1,8 +1,7 @@
-using Unity.Mathematics;
-
-using FofX.Stateful;
 using System;
-using Plerion.Core;
+using FofX.Stateful;
+using Plerion.VPS;
+using Unity.Mathematics;
 
 namespace Outernet.MapRegistrationTool
 {
@@ -12,7 +11,11 @@ namespace Outernet.MapRegistrationTool
         {
             var ecefPosition = (ObservablePrimitive<double3>)target;
             var ecefInput = UIBuilder.Double3Control("ECEF", LabelType.Adaptive, props.interactable.value);
-            var gpsInput = UIBuilder.CartographicCoordinatesControl("GPS", LabelType.Adaptive, props.interactable.value);
+            var gpsInput = UIBuilder.CartographicCoordinatesControl(
+                "GPS",
+                LabelType.Adaptive,
+                props.interactable.value
+            );
             var localInput = UIBuilder.Vector3Control("Local", LabelType.Adaptive, props.interactable.value);
 
             ecefInput.transform.SetParent(rect, false);
@@ -36,8 +39,15 @@ namespace Outernet.MapRegistrationTool
                     return;
 
                 UndoRedoManager.RegisterUndo("Set Position");
-                ecefPosition.ExecuteSet(WGS84.CartographicToEcef(CartographicCoordinates.FromLatitudeLongitudeHeight(
-                    gpsInput.value.Latitude, gpsInput.value.Longitude, gpsInput.value.Height)));
+                ecefPosition.ExecuteSet(
+                    WGS84.CartographicToEcef(
+                        CartographicCoordinates.FromLatitudeLongitudeHeight(
+                            gpsInput.value.Latitude,
+                            gpsInput.value.Longitude,
+                            gpsInput.value.Height
+                        )
+                    )
+                );
             };
 
             localInput.onValueChanged += () =>

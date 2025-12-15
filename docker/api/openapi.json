@@ -903,53 +903,14 @@
               "format": "uuid",
               "title": "Id"
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PointCloudPoint",
-                    "x-schema-name": "get_reconstruction_points_resp_200_application_json_item",
-                    "nullable": false
-                  }
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/reconstructions/{id}/points.ply": {
-      "get": {
-        "tags": [
-          "reconstructions"
-        ],
-        "summary": "Get Reconstruction Points3D Ply",
-        "operationId": "get_reconstruction_points3D_ply",
-        "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
+            "name": "axis_convention",
+            "in": "query",
+            "required": false,
             "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "$ref": "#/components/schemas/AxisConvention",
+              "default": "OPENCV"
             }
           }
         ],
@@ -1391,53 +1352,14 @@
               "format": "uuid",
               "title": "Id"
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PointCloudPoint",
-                    "x-schema-name": "get_localization_map_points_resp_200_application_json_item",
-                    "nullable": false
-                  }
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_maps/{id}/points.ply": {
-      "get": {
-        "tags": [
-          "localization_maps"
-        ],
-        "summary": "Get Localization Map Points Ply",
-        "operationId": "get_localization_map_points_ply",
-        "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
+            "name": "axis_convention",
+            "in": "query",
+            "required": false,
             "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "$ref": "#/components/schemas/AxisConvention",
+              "default": "OPENCV"
             }
           }
         ],
@@ -2691,29 +2613,6 @@
         },
         "type": "object",
         "title": "CaptureSessionUpdate"
-      },
-      "Color": {
-        "properties": {
-          "r": {
-            "type": "integer",
-            "title": "R"
-          },
-          "g": {
-            "type": "integer",
-            "title": "G"
-          },
-          "b": {
-            "type": "integer",
-            "title": "B"
-          }
-        },
-        "type": "object",
-        "required": [
-          "r",
-          "g",
-          "b"
-        ],
-        "title": "Color"
       },
       "DeviceType": {
         "type": "string",
@@ -4362,22 +4261,6 @@
           "cy"
         ],
         "title": "PinholeCameraConfig"
-      },
-      "PointCloudPoint": {
-        "properties": {
-          "position": {
-            "$ref": "#/components/schemas/Vector3"
-          },
-          "color": {
-            "$ref": "#/components/schemas/Color"
-          }
-        },
-        "type": "object",
-        "required": [
-          "position",
-          "color"
-        ],
-        "title": "PointCloudPoint"
       },
       "Quaternion": {
         "properties": {

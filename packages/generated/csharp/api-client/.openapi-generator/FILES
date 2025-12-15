@@ -30,7 +30,6 @@ src/PlerionApiClient/Model/CaptureSessionCreate.cs
 src/PlerionApiClient/Model/CaptureSessionManifest.cs
 src/PlerionApiClient/Model/CaptureSessionRead.cs
 src/PlerionApiClient/Model/CaptureSessionUpdate.cs
-src/PlerionApiClient/Model/Color.cs
 src/PlerionApiClient/Model/DeviceType.cs
 src/PlerionApiClient/Model/FullOpenCVCameraConfig.cs
 src/PlerionApiClient/Model/GroupBatchUpdate.cs
@@ -55,7 +54,6 @@ src/PlerionApiClient/Model/NodeRead.cs
 src/PlerionApiClient/Model/OpenCVCameraConfig.cs
 src/PlerionApiClient/Model/OrchestrationStatus.cs
 src/PlerionApiClient/Model/PinholeCameraConfig.cs
-src/PlerionApiClient/Model/PointCloudPoint.cs
 src/PlerionApiClient/Model/Quaternion.cs
 src/PlerionApiClient/Model/ReconstructionCreate.cs
 src/PlerionApiClient/Model/ReconstructionCreateWithOptions.cs

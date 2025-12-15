@@ -1,6 +1,6 @@
 using Unity.Mathematics;
 
-namespace Plerion.Core
+namespace Plerion.VPS
 {
     public static class Double4x4
     {

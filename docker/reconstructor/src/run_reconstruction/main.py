@@ -58,6 +58,7 @@ def main():
     with open(CAPTURE_SESSION_DIRECTORY / "manifest.json", "rb") as file:
         capture_session_manifest = CaptureSessionManifest.model_validate_json(file.read().decode("utf-8"))
 
+    # Load rigs (applying axis convention transformations as needed)
     rigs = {
         rig.id: Rig(
             rig,

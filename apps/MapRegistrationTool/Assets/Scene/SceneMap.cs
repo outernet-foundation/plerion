@@ -4,7 +4,6 @@ using System.Linq;
 using Cysharp.Threading.Tasks;
 using FofX;
 using FofX.Stateful;
-using Plerion.Core;
 using Plerion.VPS;
 using Unity.Mathematics;
 using UnityEngine;
@@ -94,11 +93,16 @@ namespace Outernet.MapRegistrationTool
 
                     _loadPointsTask = TaskHandle.Execute(async token =>
                     {
-                        List<PlerionApiClient.Model.PointCloudPoint> points = default;
                         List<PlerionApiClient.Model.Transform> localInputPositions = default;
 
                         await UniTask.WhenAll(
-                            App.API.GetReconstructionPointsAsync(x, token).AsUniTask().ContinueWith(x => points = x),
+                            App.API.GetReconstructionPointsAsync(x, PlerionApiClient.Model.AxisConvention.UNITY)
+                                .AsUniTask()
+                                .ContinueWith(async x =>
+                                {
+                                    await UniTask.SwitchToMainThread(cancellationToken: token);
+                                    _localizationMapVisualizer.Load(x.Content);
+                                }),
                             App.API.GetReconstructionFramePosesAsync(x, token)
                                 .AsUniTask()
                                 .ContinueWith(x => localInputPositions = x)
@@ -109,7 +113,7 @@ namespace Outernet.MapRegistrationTool
                         _localInputPositions.AddRange(
                             localInputPositions.Select(x =>
                             {
-                                var unityBasis = Plerion.Core.LocationUtilities.ChangeBasisUnityFromOpenCV(
+                                var unityBasis = Plerion.VPS.LocationUtilities.ChangeBasisUnityFromOpenCV(
                                     new double3((double)x.Position.X, (double)x.Position.Y, (double)x.Position.Z),
                                     quaternion.identity.ToDouble3x3()
                                 );
@@ -120,23 +124,6 @@ namespace Outernet.MapRegistrationTool
                                     (float)unityBasis.Item1.z
                                 );
                             })
-                        );
-
-                        _localizationMapVisualizer.Load(
-                            points
-                                .Select(point =>
-                                {
-                                    var (positionUnityBasis, _) =
-                                        Plerion.Core.LocationUtilities.ChangeBasisUnityFromOpenCV(
-                                            point.Position.ToDouble3(),
-                                            double3x3.identity
-                                        );
-                                    point.Position.X = positionUnityBasis.x;
-                                    point.Position.Y = positionUnityBasis.y;
-                                    point.Position.Z = positionUnityBasis.z;
-                                    return point;
-                                })
-                                .ToArray()
                         );
                     });
                 })

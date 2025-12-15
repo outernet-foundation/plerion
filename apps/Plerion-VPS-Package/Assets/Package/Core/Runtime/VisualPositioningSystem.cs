@@ -6,7 +6,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using Plerion.Core;
+using Plerion.VPS;
 using PlerionApiClient.Api;
 using PlerionApiClient.Client;
 using PlerionApiClient.Model;
@@ -205,29 +205,7 @@ namespace Plerion.VPS
                 );
 
                 // Create task to fetch points
-                tasks.Add(
-                    api.GetLocalizationMapPointsAsync(mapId)
-                        .AsUniTask()
-                        .ContinueWith(points =>
-                        {
-                            _maps[mapId]
-                                .visualization.Load(
-                                    points
-                                        .Select(point =>
-                                        {
-                                            var (positionUnityBasis, _) = LocationUtilities.ChangeBasisUnityFromOpenCV(
-                                                point.Position.ToDouble3(),
-                                                double3x3.identity
-                                            );
-                                            point.Position.X = positionUnityBasis.x;
-                                            point.Position.Y = positionUnityBasis.y;
-                                            point.Position.Z = positionUnityBasis.z;
-                                            return point;
-                                        })
-                                        .ToArray()
-                                );
-                        })
-                );
+                tasks.Add(_maps[mapId].visualization.Load(api, mapId));
             }
 
             // Run all tasks in parallel and wait for them to complete

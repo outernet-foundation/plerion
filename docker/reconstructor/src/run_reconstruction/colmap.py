@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, cast
+from typing import Any, ValuesView, cast
 
-from numpy import concatenate, eye, float64, intp, stack, uint32
+from numpy import concatenate, empty, eye, float32, float64, intp, savez_compressed, stack, uint8, uint32
 from numpy.typing import NDArray
 from pycolmap import Database, PosePrior, PosePriorCoordinateSystem
 from pycolmap import Image as pycolmapImage
-from pycolmap._core import Frame, Rigid3d, Sim3d, apply_rig_config, incremental_mapping, match_spatial
+from pycolmap._core import Frame, Point3D, Rigid3d, Sim3d, apply_rig_config, incremental_mapping, match_spatial
 
 from .metrics_builder import MetricsBuilder
 from .options_builder import OptionsBuilder
@@ -130,5 +130,19 @@ def run_reconstruction(
             )
         )
     )
+
+    # Write point cloud to disk in NPZ format
+    point_cloud_point_count = len(best_reconstruction.points3D)
+    point_cloud_positions = empty((point_cloud_point_count, 3), dtype=float32)
+    point_cloud_colors = empty((point_cloud_point_count, 3), dtype=uint8)
+
+    for point_cloud_point_index, point_cloud_point in enumerate(
+        cast(ValuesView[Point3D], best_reconstruction.points3D.values())  # type: ignore
+    ):
+        point_cloud_positions[point_cloud_point_index] = point_cloud_point.xyz
+        point_cloud_colors[point_cloud_point_index] = point_cloud_point.color
+
+    point_cloud_npz_file_path = colmap_sfm_directory / "points3D.npz"
+    savez_compressed(str(point_cloud_npz_file_path), positions=point_cloud_positions, colors=point_cloud_colors)
 
     return best_reconstruction
