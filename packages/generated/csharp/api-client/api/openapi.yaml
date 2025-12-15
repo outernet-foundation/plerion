@@ -651,14 +651,20 @@ paths:
           title: Id
           type: string
         style: simple
+      - explode: true
+        in: query
+        name: axis_convention
+        required: false
+        schema:
+          $ref: "#/components/schemas/AxisConvention"
+        style: form
       responses:
         "200":
           content:
-            application/json:
+            application/octet-stream:
               schema:
-                items:
-                  $ref: "#/components/schemas/Transform"
-                type: array
+                format: binary
+                type: string
           description: Successful Response
         "422":
           content:
@@ -938,37 +944,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Get Localization Map Points
-      tags:
-      - Default
-  /localization_maps/{id}/image_poses:
-    patch:
-      operationId: update_localization_map_image_poses
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: "#/components/schemas/Transform"
-                type: array
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Update Localization Map Image Poses
       tags:
       - Default
   /localization_sessions:

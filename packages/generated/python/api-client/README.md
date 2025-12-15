@@ -130,7 +130,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**update_groups**](docs/DefaultApi.md#update_groups) | **PATCH** /groups | Update Groups
 *DefaultApi* | [**update_layers**](docs/DefaultApi.md#update_layers) | **PATCH** /layers | Update Layers
 *DefaultApi* | [**update_localization_map**](docs/DefaultApi.md#update_localization_map) | **PATCH** /localization_maps/{id} | Update Localization Map
-*DefaultApi* | [**update_localization_map_image_poses**](docs/DefaultApi.md#update_localization_map_image_poses) | **PATCH** /localization_maps/{id}/image_poses | Update Localization Map Image Poses
 *DefaultApi* | [**update_localization_maps**](docs/DefaultApi.md#update_localization_maps) | **PATCH** /localization_maps | Update Localization Maps
 *DefaultApi* | [**update_nodes**](docs/DefaultApi.md#update_nodes) | **PATCH** /nodes | Update Nodes
 *DefaultApi* | [**upload_capture_session_tar**](docs/DefaultApi.md#upload_capture_session_tar) | **PUT** /capture_sessions/{id}/tar | Upload Capture Session Tar

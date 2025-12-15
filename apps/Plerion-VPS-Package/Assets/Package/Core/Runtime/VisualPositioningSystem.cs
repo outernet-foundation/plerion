@@ -28,7 +28,6 @@ namespace Plerion.VPS
         }
 
         private static ICameraProvider _cameraProvider = null;
-        private static PrefabReferences _prefabReferences = null;
         private static Dictionary<Guid, MapData> _maps = new Dictionary<Guid, MapData>();
         private static DefaultApi api;
         private static CancellationTokenSource startSessionTokenSource = new CancellationTokenSource();
@@ -41,6 +40,7 @@ namespace Plerion.VPS
         private static Action<string> _errorCallback;
         private static Action<string, Exception> _logExceptionCallback;
 
+        public static Prefabs Prefabs { get; private set; }
         public static bool LocalizationSessionActive => localizationSessionId != Guid.Empty;
         public static double4x4 EcefToUnityWorldTransform => unityFromEcefTransform;
         public static double4x4 UnityWorldToEcefTransform => ecefFromUnityTransform;
@@ -72,7 +72,7 @@ namespace Plerion.VPS
             _errorCallback = errorCallback;
             _logExceptionCallback = logException;
 
-            _prefabReferences = Resources.Load<PrefabReferences>("PrefabReferences");
+            Prefabs = Resources.Load<Prefabs>("PrefabReferences");
 
             Auth.Initialize(authUrl, authClient, logCallback, warnCallback, errorCallback);
 
@@ -176,7 +176,7 @@ namespace Plerion.VPS
                 _maps[mapId] = new MapData()
                 {
                     visualization = GameObject.Instantiate(
-                        _prefabReferences.mapRendererPrefab,
+                        Prefabs.mapRendererPrefab,
                         Vector3.zero,
                         Quaternion.identity
                     ),

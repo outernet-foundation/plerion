@@ -2,8 +2,10 @@ using UnityEngine;
 
 namespace Plerion.VPS
 {
-    public class PrefabReferences : ScriptableObject
+    public class Prefabs : ScriptableObject
     {
         public LocalizationMapVisualizer mapRendererPrefab;
+        public Material GizmoMaterial;
+        public Mesh CylinderMesh;
     }
 }

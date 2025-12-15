@@ -578,8 +578,9 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>List&lt;Transform&gt;</returns>
-        List<Transform> GetReconstructionFramePoses(Guid id);
+        /// <param name="axisConvention"> (optional)</param>
+        /// <returns>FileParameter</returns>
+        FileParameter GetReconstructionFramePoses(Guid id, AxisConvention? axisConvention = default);
 
         /// <summary>
         /// Get Reconstruction Frame Poses
@@ -589,8 +590,9 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>ApiResponse of List&lt;Transform&gt;</returns>
-        ApiResponse<List<Transform>> GetReconstructionFramePosesWithHttpInfo(Guid id);
+        /// <param name="axisConvention"> (optional)</param>
+        /// <returns>ApiResponse of FileParameter</returns>
+        ApiResponse<FileParameter> GetReconstructionFramePosesWithHttpInfo(Guid id, AxisConvention? axisConvention = default);
         /// <summary>
         /// Get Reconstruction Localization Map
         /// </summary>
@@ -869,24 +871,6 @@ namespace PlerionApiClient.Api
         /// <param name="localizationMapUpdate"></param>
         /// <returns>ApiResponse of LocalizationMapRead</returns>
         ApiResponse<LocalizationMapRead> UpdateLocalizationMapWithHttpInfo(Guid id, LocalizationMapUpdate localizationMapUpdate);
-        /// <summary>
-        /// Update Localization Map Image Poses
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>List&lt;Transform&gt;</returns>
-        List<Transform> UpdateLocalizationMapImagePoses(Guid id);
-
-        /// <summary>
-        /// Update Localization Map Image Poses
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of List&lt;Transform&gt;</returns>
-        ApiResponse<List<Transform>> UpdateLocalizationMapImagePosesWithHttpInfo(Guid id);
         /// <summary>
         /// Update Localization Maps
         /// </summary>
@@ -1660,9 +1644,10 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
+        /// <param name="axisConvention"> (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of List&lt;Transform&gt;</returns>
-        System.Threading.Tasks.Task<List<Transform>> GetReconstructionFramePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of FileParameter</returns>
+        System.Threading.Tasks.Task<FileParameter> GetReconstructionFramePosesAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Get Reconstruction Frame Poses
@@ -1672,9 +1657,10 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
+        /// <param name="axisConvention"> (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (List&lt;Transform&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<Transform>>> GetReconstructionFramePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of ApiResponse (FileParameter)</returns>
+        System.Threading.Tasks.Task<ApiResponse<FileParameter>> GetReconstructionFramePosesWithHttpInfoAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Reconstruction Localization Map
         /// </summary>
@@ -2023,29 +2009,6 @@ namespace PlerionApiClient.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (LocalizationMapRead)</returns>
         System.Threading.Tasks.Task<ApiResponse<LocalizationMapRead>> UpdateLocalizationMapWithHttpInfoAsync(Guid id, LocalizationMapUpdate localizationMapUpdate, System.Threading.CancellationToken cancellationToken = default);
-        /// <summary>
-        /// Update Localization Map Image Poses
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of List&lt;Transform&gt;</returns>
-        System.Threading.Tasks.Task<List<Transform>> UpdateLocalizationMapImagePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Update Localization Map Image Poses
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (List&lt;Transform&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<Transform>>> UpdateLocalizationMapImagePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Update Localization Maps
         /// </summary>
@@ -5721,10 +5684,11 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>List&lt;Transform&gt;</returns>
-        public List<Transform> GetReconstructionFramePoses(Guid id)
+        /// <param name="axisConvention"> (optional)</param>
+        /// <returns>FileParameter</returns>
+        public FileParameter GetReconstructionFramePoses(Guid id, AxisConvention? axisConvention = default)
         {
-            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = GetReconstructionFramePosesWithHttpInfo(id);
+            PlerionApiClient.Client.ApiResponse<FileParameter> localVarResponse = GetReconstructionFramePosesWithHttpInfo(id, axisConvention);
             return localVarResponse.Data;
         }
 
@@ -5733,8 +5697,9 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>ApiResponse of List&lt;Transform&gt;</returns>
-        public PlerionApiClient.Client.ApiResponse<List<Transform>> GetReconstructionFramePosesWithHttpInfo(Guid id)
+        /// <param name="axisConvention"> (optional)</param>
+        /// <returns>ApiResponse of FileParameter</returns>
+        public PlerionApiClient.Client.ApiResponse<FileParameter> GetReconstructionFramePosesWithHttpInfo(Guid id, AxisConvention? axisConvention = default)
         {
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
 
@@ -5743,6 +5708,7 @@ namespace PlerionApiClient.Api
 
             // to determine the Accept header
             string[] _accepts = new string[] {
+                "application/octet-stream",
                 "application/json"
             };
 
@@ -5753,10 +5719,14 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            if (axisConvention != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
+            }
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<List<Transform>>("/reconstructions/{id}/frame_poses", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<FileParameter>("/reconstructions/{id}/frame_poses", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -5772,11 +5742,12 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
+        /// <param name="axisConvention"> (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of List&lt;Transform&gt;</returns>
-        public async System.Threading.Tasks.Task<List<Transform>> GetReconstructionFramePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of FileParameter</returns>
+        public async System.Threading.Tasks.Task<FileParameter> GetReconstructionFramePosesAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = await GetReconstructionFramePosesWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
+            PlerionApiClient.Client.ApiResponse<FileParameter> localVarResponse = await GetReconstructionFramePosesWithHttpInfoAsync(id, axisConvention, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -5785,9 +5756,10 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
+        /// <param name="axisConvention"> (optional)</param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (List&lt;Transform&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<Transform>>> GetReconstructionFramePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of ApiResponse (FileParameter)</returns>
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<FileParameter>> GetReconstructionFramePosesWithHttpInfoAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
@@ -5797,6 +5769,7 @@ namespace PlerionApiClient.Api
 
             // to determine the Accept header
             string[] _accepts = new string[] {
+                "application/octet-stream",
                 "application/json"
             };
 
@@ -5808,11 +5781,15 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+            if (axisConvention != null)
+            {
+                localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
+            }
 
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.GetAsync<List<Transform>>("/reconstructions/{id}/frame_poses", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.GetAsync<FileParameter>("/reconstructions/{id}/frame_poses", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {
@@ -7517,113 +7494,6 @@ namespace PlerionApiClient.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("UpdateLocalizationMap", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Update Localization Map Image Poses 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>List&lt;Transform&gt;</returns>
-        public List<Transform> UpdateLocalizationMapImagePoses(Guid id)
-        {
-            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = UpdateLocalizationMapImagePosesWithHttpInfo(id);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Update Localization Map Image Poses 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <returns>ApiResponse of List&lt;Transform&gt;</returns>
-        public PlerionApiClient.Client.ApiResponse<List<Transform>> UpdateLocalizationMapImagePosesWithHttpInfo(Guid id)
-        {
-            PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-            var localVarContentType = PlerionApiClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Patch<List<Transform>>("/localization_maps/{id}/image_poses", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("UpdateLocalizationMapImagePoses", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Update Localization Map Image Poses 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of List&lt;Transform&gt;</returns>
-        public async System.Threading.Tasks.Task<List<Transform>> UpdateLocalizationMapImagePosesAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-            PlerionApiClient.Client.ApiResponse<List<Transform>> localVarResponse = await UpdateLocalizationMapImagePosesWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Update Localization Map Image Poses 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (List&lt;Transform&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<Transform>>> UpdateLocalizationMapImagePosesWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
-        {
-
-            PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = PlerionApiClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.PatchAsync<List<Transform>>("/localization_maps/{id}/image_poses", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("UpdateLocalizationMapImagePoses", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

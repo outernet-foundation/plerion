@@ -3,7 +3,6 @@ from uuid import UUID
 
 from common.schemas import binary_schema
 from core.axis_convention import AxisConvention
-from core.classes import Transform
 from datamodels.public_dtos import (
     LocalizationMapBatchUpdate,
     LocalizationMapCreate,
@@ -22,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..settings import get_settings
-from .reconstructions import get_reconstruction_frame_poses, get_reconstruction_points, get_reconstruction_status
+from .reconstructions import get_reconstruction_points, get_reconstruction_status
 
 settings = get_settings()
 
@@ -126,16 +125,6 @@ async def get_localization_map_points(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"LocalizationMap with id {id} not found")
 
     return await get_reconstruction_points(row.reconstruction_id, axis_convention, session)
-
-
-@router.patch("/{id}/image_poses")
-async def update_localization_map_image_poses(
-    id: UUID, session: AsyncSession = Depends(get_session)
-) -> list[Transform]:
-    row = await session.get(LocalizationMap, id)
-    if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"LocalizationMap with id {id} not found")
-    return await get_reconstruction_frame_poses(row.reconstruction_id, session)
 
 
 @router.patch("/{id}")

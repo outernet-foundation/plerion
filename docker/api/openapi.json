@@ -956,20 +956,25 @@
               "format": "uuid",
               "title": "Id"
             }
+          },
+          {
+            "name": "axis_convention",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AxisConvention",
+              "default": "OPENCV"
+            }
           }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": {
+              "application/octet-stream": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Transform",
-                    "x-schema-name": "get_reconstruction_frame_poses_resp_200_application_json_item",
-                    "nullable": false
-                  }
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -1371,54 +1376,6 @@
                 "schema": {
                   "type": "string",
                   "format": "binary"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_maps/{id}/image_poses": {
-      "patch": {
-        "tags": [
-          "localization_maps"
-        ],
-        "summary": "Update Localization Map Image Poses",
-        "operationId": "update_localization_map_image_poses",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Transform",
-                    "x-schema-name": "update_localization_map_image_poses_resp_200_application_json_item",
-                    "nullable": false
-                  }
                 }
               }
             }

@@ -170,7 +170,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**UpdateGroups**](docs/DefaultApi.md#updategroups) | **PATCH** /groups | Update Groups
 *DefaultApi* | [**UpdateLayers**](docs/DefaultApi.md#updatelayers) | **PATCH** /layers | Update Layers
 *DefaultApi* | [**UpdateLocalizationMap**](docs/DefaultApi.md#updatelocalizationmap) | **PATCH** /localization_maps/{id} | Update Localization Map
-*DefaultApi* | [**UpdateLocalizationMapImagePoses**](docs/DefaultApi.md#updatelocalizationmapimageposes) | **PATCH** /localization_maps/{id}/image_poses | Update Localization Map Image Poses
 *DefaultApi* | [**UpdateLocalizationMaps**](docs/DefaultApi.md#updatelocalizationmaps) | **PATCH** /localization_maps | Update Localization Maps
 *DefaultApi* | [**UpdateNodes**](docs/DefaultApi.md#updatenodes) | **PATCH** /nodes | Update Nodes
 *DefaultApi* | [**UploadCaptureSessionTar**](docs/DefaultApi.md#uploadcapturesessiontar) | **PUT** /capture_sessions/{id}/tar | Upload Capture Session Tar

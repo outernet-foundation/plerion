@@ -145,4 +145,17 @@ def run_reconstruction(
     point_cloud_npz_file_path = colmap_sfm_directory / "points3D.npz"
     savez_compressed(str(point_cloud_npz_file_path), positions=point_cloud_positions, colors=point_cloud_colors)
 
+    # Write frame poses to disk in NPZ format
+    frame_count = len(best_reconstruction.frames)
+    frame_positions = empty((frame_count, 3), dtype=float32)
+    frame_orientations = empty((frame_count, 4), dtype=float32)
+
+    for frame_index, frame in enumerate(cast(ValuesView[Frame], best_reconstruction.frames.values())):  # type: ignore
+        rig_from_world = cast(Rigid3d, frame.rig_from_world)
+        frame_positions[frame_index] = rig_from_world.translation
+        frame_orientations[frame_index] = rig_from_world.rotation.quat
+
+    frame_poses_npz_file_path = colmap_sfm_directory / "frame_poses.npz"
+    savez_compressed(str(frame_poses_npz_file_path), positions=frame_positions, orientations=frame_orientations)
+
     return best_reconstruction
