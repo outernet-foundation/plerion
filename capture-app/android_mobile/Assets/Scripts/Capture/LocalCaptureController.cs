@@ -25,7 +25,6 @@ public static class LocalCaptureController
     static Guid sessionId;
     static string sessionDirectory;
     static StreamWriter poseWriter;
-    static readonly object inputOutputLock = new();
 
     static bool first_frame = true;
     static float nextCaptureTime;
@@ -58,8 +57,8 @@ public static class LocalCaptureController
         Debug.Log($"Capture root: {root}");
         Directory.CreateDirectory(recordingsRoot); // ensure root exists
 
-        cameraManager = UnityEngine.Object.FindObjectOfType<ARCameraManager>();
-        anchorManager = UnityEngine.Object.FindObjectOfType<ARAnchorManager>();
+        cameraManager = UnityEngine.Object.FindAnyObjectByType<ARCameraManager>();
+        anchorManager = UnityEngine.Object.FindAnyObjectByType<ARAnchorManager>();
         captureIntervalSeconds = requestedCaptureIntervalSeconds;
 
         await UniTask.WaitUntil(

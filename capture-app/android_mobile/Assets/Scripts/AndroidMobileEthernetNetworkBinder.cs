@@ -8,8 +8,9 @@ public static class AndroidMobileEthernetNetworkBinder
 
     public static void Initialize()
     {
-        var activity   = new AndroidJavaClass("com.unity3d.player.UnityPlayer")
-            .GetStatic<AndroidJavaObject>("currentActivity");
+        var activity = new AndroidJavaClass("com.unity3d.player.UnityPlayer").GetStatic<AndroidJavaObject>(
+            "currentActivity"
+        );
         var appContext = activity.Call<AndroidJavaObject>("getApplicationContext");
         connectivityManager = appContext.Call<AndroidJavaObject>("getSystemService", new object[] { "connectivity" });
     }
@@ -17,7 +18,8 @@ public static class AndroidMobileEthernetNetworkBinder
     // Fail-fast: returns false if no ethernet network is currently up.
     public static UniTask<bool> Enter()
     {
-        if (connectivityManager == null) throw new System.InvalidOperationException("Call Initialize() first.");
+        if (connectivityManager == null)
+            throw new System.InvalidOperationException("Call Initialize() first.");
 
         var capsClass = new AndroidJavaClass("android.net.NetworkCapabilities");
         int TRANSPORT_ETHERNET = capsClass.GetStatic<int>("TRANSPORT_ETHERNET");
@@ -42,7 +44,8 @@ public static class AndroidMobileEthernetNetworkBinder
 
     public static void Exit()
     {
-        if (connectivityManager == null) throw new System.InvalidOperationException("Call Initialize() first.");
+        if (connectivityManager == null)
+            throw new System.InvalidOperationException("Call Initialize() first.");
         connectivityManager.Call<bool>("bindProcessToNetwork", new object[] { null });
     }
 }

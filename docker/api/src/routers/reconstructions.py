@@ -38,7 +38,9 @@ BUCKET = "dev-reconstructions"
 router = APIRouter(prefix="/reconstructions", tags=["reconstructions"])
 
 s3_client = create_s3_client(
-    s3_endpoint_url=settings.s3_endpoint_url, s3_access_key=settings.s3_access_key, s3_secret_key=settings.s3_secret_key
+    minio_endpoint_url=settings.minio_endpoint_url,
+    minio_access_key=settings.minio_access_key,
+    minio_secret_key=settings.minio_secret_key,
 )
 
 
@@ -217,11 +219,9 @@ async def get_reconstruction_points(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Reconstruction with id {id} not found")
 
     # Load point cloud from S3
-    npz_bytes = (
-        create_s3_client(settings.s3_endpoint_url, settings.s3_access_key, settings.s3_secret_key)
-        .get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/points3D.npz")["Body"]
-        .read()
-    )
+    npz_bytes = s3_client.get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/points3D.npz")[
+        "Body"
+    ].read()
 
     # Extract positions and colors
     with load(BytesIO(npz_bytes)) as npz:
@@ -256,11 +256,9 @@ async def get_reconstruction_frame_poses(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Reconstruction with id {id} not found")
 
     # Load frame poses from S3
-    npz_bytes = (
-        create_s3_client(settings.s3_endpoint_url, settings.s3_access_key, settings.s3_secret_key)
-        .get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/frames.npz")["Body"]
-        .read()
-    )
+    npz_bytes = s3_client.get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/frames.npz")[
+        "Body"
+    ].read()
 
     # Extract positions and orientations
     with load(BytesIO(npz_bytes)) as npz:

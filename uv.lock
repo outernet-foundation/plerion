@@ -651,6 +651,7 @@ version = "0.1.0"
 source = { editable = "docker/database-manager" }
 dependencies = [
     { name = "boto3" },
+    { name = "common" },
     { name = "docker" },
     { name = "psycopg", extra = ["binary"] },
     { name = "pydantic-settings" },
@@ -665,6 +666,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.40.29" },
+    { name = "common", editable = "packages/python/common" },
     { name = "docker", specifier = ">=7.1.0" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.10" },
     { name = "pydantic-settings", specifier = ">=2.10.1" },

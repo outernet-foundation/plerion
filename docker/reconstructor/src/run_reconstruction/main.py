@@ -34,10 +34,13 @@ def main():
     print(f"Using device: {device}")
 
     settings = get_settings()
+    print(settings.minio_endpoint_url)
+    print(settings.minio_access_key)
+    print(settings.minio_secret_key)
     s3_client = create_s3_client(
-        s3_endpoint_url=settings.s3_endpoint_url,
-        s3_access_key=settings.s3_access_key,
-        s3_secret_key=settings.s3_secret_key,
+        minio_endpoint_url=settings.minio_endpoint_url,
+        minio_access_key=settings.minio_access_key,
+        minio_secret_key=settings.minio_secret_key,
     )
 
     def _put_reconstruction_object(key: str, body: bytes):
@@ -46,13 +49,13 @@ def main():
             Bucket=settings.reconstructions_bucket, Key=f"{settings.reconstruction_id}/{key}", Body=body
         )
 
+    print(
+        f"Downloading capture session archive for capture session ID: {settings.capture_id} from bucket {settings.captures_bucket}"
+    )
+    bytes = s3_client.get_object(Bucket=settings.captures_bucket, Key=f"{settings.capture_id}.tar")["Body"].read()
+    print(f"Downloaded capture session archive, size: {len(bytes)} bytes")
     # Download and validate capture session manifest
-    with tarfile.open(
-        fileobj=BytesIO(
-            s3_client.get_object(Bucket=settings.captures_bucket, Key=f"{settings.capture_id}.tar")["Body"].read()
-        ),
-        mode="r:*",
-    ) as tar:
+    with tarfile.open(fileobj=BytesIO(bytes), mode="r:*") as tar:
         tar.extractall(path=CAPTURE_SESSION_DIRECTORY)
 
     with open(CAPTURE_SESSION_DIRECTORY / "manifest.json", "rb") as file:

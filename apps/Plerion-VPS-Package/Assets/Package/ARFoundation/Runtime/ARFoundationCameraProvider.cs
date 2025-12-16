@@ -64,13 +64,13 @@ namespace Plerion.VPS.ARFoundation
             cancellationToken.ThrowIfCancellationRequested();
 
             cameraManager.frameReceived -= receivedFrame;
-            var result = await ConvertToJPG(cpuImage, flipped: true);
+            var result = ConvertToJPG(cpuImage, flipped: true);
             cpuImage.Dispose();
 
             return (result, Camera.main.transform.position, Camera.main.transform.rotation);
         }
 
-        private static async UniTask<byte[]> ConvertToJPG(XRCpuImage cpuImage, bool flipped = false)
+        private static byte[] ConvertToJPG(XRCpuImage cpuImage, bool flipped = false)
         {
             var conversion = new XRCpuImage.ConversionParams(
                 cpuImage,

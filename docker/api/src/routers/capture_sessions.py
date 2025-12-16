@@ -172,6 +172,7 @@ async def upload_capture_session_tar(
         except Exception as exception:
             raise HTTPException(400, f"Capture session manifest.json is invalid: {exception}") from exception
 
+    tar.file.seek(0)
     # Upload tar file to storage
     try:
         get_storage().upload_fileobj(BUCKET, f"{id}.tar", tar.file, tar.content_type or "application/x-tar")

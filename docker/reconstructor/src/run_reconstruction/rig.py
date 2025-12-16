@@ -1,4 +1,4 @@
-from core.axis_convention import AxisConvention, change_basis_opencv_from_unity
+from core.axis_convention import AxisConvention, change_basis_opencv_from_unity_pose
 from core.camera_transformations import transform_intrinsics
 from core.capture_session_manifest import RigCameraConfig, RigConfig
 from core.classes import Quaternion, Vector3
@@ -73,7 +73,7 @@ class Rig:
             translation_world_from_rig = array([float(tx), float(ty), float(tz)], dtype=float)
 
             if axis_convention == AxisConvention.UNITY:
-                (translation_world_from_rig, rotation_world_from_rig) = change_basis_opencv_from_unity(
+                (translation_world_from_rig, rotation_world_from_rig) = change_basis_opencv_from_unity_pose(
                     translation_world_from_rig, rotation_world_from_rig
                 )
 

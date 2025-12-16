@@ -28,8 +28,11 @@ RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.toml
 
 # Install project
-COPY docker/database-manager/ .
-RUN uv pip install --no-deps --no-sources /app/docker/database-manager
+COPY packages/python/common/ /app/packages/python/common
+COPY docker/database-manager/ /app/docker/database-manager/
+RUN uv pip install --no-deps --no-sources \
+    /app/packages/python/common \
+    /app/docker/database-manager
 
 # Verify that all declared dependencies were installed
 RUN uv pip check

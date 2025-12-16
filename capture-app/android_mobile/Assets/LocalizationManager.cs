@@ -14,7 +14,7 @@ namespace PlerionClient.Client
 {
     public class LocalizationManager : MonoBehaviour
     {
-        private void Start()
+        private void Awake()
         {
             VisualPositioningSystem.Initialize(
                 GetCameraProvider(),
