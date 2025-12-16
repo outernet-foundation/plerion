@@ -16,7 +16,7 @@ using Vector3 = UnityEngine.Vector3;
 namespace Plerion.VPS
 {
     [RequireComponent(typeof(ParticleSystem))]
-    public class LocalizationMapVisualizer : MonoBehaviour
+    public class ReconstructionVisualizer : MonoBehaviour
     {
         private static readonly Color DefaultColor = Color.white;
         private static readonly float DefaultThickness = 0.01f;
@@ -77,7 +77,7 @@ namespace Plerion.VPS
             m.startColor = color;
         }
 
-        public async UniTask Load(DefaultApi api, Guid mapId, CancellationToken cancellationToken = default)
+        public async UniTask Load(DefaultApi api, Guid reconstructionId, CancellationToken cancellationToken = default)
         {
             if (_loadingMap)
             {
@@ -96,12 +96,12 @@ namespace Plerion.VPS
             {
                 (pointPayload, framePayload) = await UniTask.WhenAll(
                     FetchPayloadAsync(
-                        api.GetLocalizationMapPointsAsync(mapId, AxisConvention.UNITY).AsUniTask(),
+                        api.GetReconstructionPointsAsync(reconstructionId, AxisConvention.UNITY).AsUniTask(),
                         bytesPerElement: (3 * sizeof(float)) + 3,
                         loadCancellationToken
                     ),
                     FetchPayloadAsync(
-                        api.GetReconstructionFramePosesAsync(mapId, AxisConvention.UNITY).AsUniTask(),
+                        api.GetReconstructionFramePosesAsync(reconstructionId, AxisConvention.UNITY).AsUniTask(),
                         bytesPerElement: (3 * sizeof(float)) + (4 * sizeof(float)),
                         loadCancellationToken
                     )

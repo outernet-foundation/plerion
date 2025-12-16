@@ -109,7 +109,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**get_groups**](docs/DefaultApi.md#get_groups) | **GET** /groups | Get Groups
 *DefaultApi* | [**get_layers**](docs/DefaultApi.md#get_layers) | **GET** /layers | Get Layers
 *DefaultApi* | [**get_localization_map**](docs/DefaultApi.md#get_localization_map) | **GET** /localization_maps/{id} | Get Localization Map
-*DefaultApi* | [**get_localization_map_points**](docs/DefaultApi.md#get_localization_map_points) | **GET** /localization_maps/{id}/points | Get Localization Map Points
 *DefaultApi* | [**get_localization_maps**](docs/DefaultApi.md#get_localization_maps) | **GET** /localization_maps | Get Localization Maps
 *DefaultApi* | [**get_localization_session_status**](docs/DefaultApi.md#get_localization_session_status) | **GET** /localization_sessions/{localization_session_id}/status | Get Localization Session Status
 *DefaultApi* | [**get_map_load_status**](docs/DefaultApi.md#get_map_load_status) | **GET** /localization_sessions/{localization_session_id}/maps/{map_id}/status | Get Map Load Status

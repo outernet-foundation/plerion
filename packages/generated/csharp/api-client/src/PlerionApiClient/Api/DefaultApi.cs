@@ -460,26 +460,6 @@ namespace PlerionApiClient.Api
         /// <returns>ApiResponse of LocalizationMapRead</returns>
         ApiResponse<LocalizationMapRead> GetLocalizationMapWithHttpInfo(Guid id);
         /// <summary>
-        /// Get Localization Map Points
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <returns>FileParameter</returns>
-        FileParameter GetLocalizationMapPoints(Guid id, AxisConvention? axisConvention = default);
-
-        /// <summary>
-        /// Get Localization Map Points
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <returns>ApiResponse of FileParameter</returns>
-        ApiResponse<FileParameter> GetLocalizationMapPointsWithHttpInfo(Guid id, AxisConvention? axisConvention = default);
-        /// <summary>
         /// Get Localization Maps
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
@@ -1492,31 +1472,6 @@ namespace PlerionApiClient.Api
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (LocalizationMapRead)</returns>
         System.Threading.Tasks.Task<ApiResponse<LocalizationMapRead>> GetLocalizationMapWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
-        /// <summary>
-        /// Get Localization Map Points
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of FileParameter</returns>
-        System.Threading.Tasks.Task<FileParameter> GetLocalizationMapPointsAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// Get Localization Map Points
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (FileParameter)</returns>
-        System.Threading.Tasks.Task<ApiResponse<FileParameter>> GetLocalizationMapPointsWithHttpInfoAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// Get Localization Maps
         /// </summary>
@@ -4987,127 +4942,6 @@ namespace PlerionApiClient.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("GetLocalizationMap", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Localization Map Points 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <returns>FileParameter</returns>
-        public FileParameter GetLocalizationMapPoints(Guid id, AxisConvention? axisConvention = default)
-        {
-            PlerionApiClient.Client.ApiResponse<FileParameter> localVarResponse = GetLocalizationMapPointsWithHttpInfo(id, axisConvention);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Localization Map Points 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <returns>ApiResponse of FileParameter</returns>
-        public PlerionApiClient.Client.ApiResponse<FileParameter> GetLocalizationMapPointsWithHttpInfo(Guid id, AxisConvention? axisConvention = default)
-        {
-            PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/octet-stream",
-                "application/json"
-            };
-
-            var localVarContentType = PlerionApiClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-            if (axisConvention != null)
-            {
-                localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
-            }
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Get<FileParameter>("/localization_maps/{id}/points", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetLocalizationMapPoints", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// Get Localization Map Points 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of FileParameter</returns>
-        public async System.Threading.Tasks.Task<FileParameter> GetLocalizationMapPointsAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default)
-        {
-            PlerionApiClient.Client.ApiResponse<FileParameter> localVarResponse = await GetLocalizationMapPointsWithHttpInfoAsync(id, axisConvention, cancellationToken).ConfigureAwait(false);
-            return localVarResponse.Data;
-        }
-
-        /// <summary>
-        /// Get Localization Map Points 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="id"></param>
-        /// <param name="axisConvention"> (optional)</param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (FileParameter)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<FileParameter>> GetLocalizationMapPointsWithHttpInfoAsync(Guid id, AxisConvention? axisConvention = default, System.Threading.CancellationToken cancellationToken = default)
-        {
-
-            PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/octet-stream",
-                "application/json"
-            };
-
-
-            var localVarContentType = PlerionApiClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
-            if (axisConvention != null)
-            {
-                localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
-            }
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.GetAsync<FileParameter>("/localization_maps/{id}/points", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("GetLocalizationMapPoints", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 

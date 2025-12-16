@@ -24,7 +24,7 @@ namespace Plerion.VPS
         {
             public bool loaded;
             public LocalizationMapRead map;
-            public LocalizationMapVisualizer visualization;
+            public ReconstructionVisualizer reconstructionVisualizer;
         }
 
         private static ICameraProvider _cameraProvider = null;
@@ -87,7 +87,7 @@ namespace Plerion.VPS
 
         public static async UniTask Login(string username, string password) => await Auth.Login(username, password);
 
-        public static UniTask StartLocalizationSession(PinholeCameraConfig intrinsics)
+        public static UniTask StartLocalizationSession()
         {
             if (localizationSessionId != Guid.Empty)
                 return UniTask.CompletedTask;
@@ -97,15 +97,12 @@ namespace Plerion.VPS
 
             startSessionTokenSource?.Dispose();
             startSessionTokenSource = new CancellationTokenSource();
-            startSessionTask = StartSessionInternal(new Camera(intrinsics), startSessionTokenSource.Token);
+            startSessionTask = StartSessionInternal(startSessionTokenSource.Token);
 
             return startSessionTask.AsUniTask();
         }
 
-        private static async Task StartSessionInternal(
-            Camera cameraIntrinsics,
-            CancellationToken cancellationToken = default
-        )
+        private static async Task StartSessionInternal(CancellationToken cancellationToken = default)
         {
             LocalizationSessionRead session = default;
 
@@ -126,7 +123,12 @@ namespace Plerion.VPS
                     await UniTask.WaitForSeconds(1, cancellationToken: cancellationToken);
                 }
 
-                await api.SetLocalizationSessionCameraIntrinsicsAsync(session.Id, cameraIntrinsics, cancellationToken);
+                var cameraConfig = await _cameraProvider.GetCameraConfig();
+                await api.SetLocalizationSessionCameraIntrinsicsAsync(
+                    session.Id,
+                    new Camera(cameraConfig),
+                    cancellationToken
+                );
 
                 await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
             }
@@ -175,7 +177,7 @@ namespace Plerion.VPS
             {
                 _maps[mapId] = new MapData()
                 {
-                    visualization = GameObject.Instantiate(
+                    reconstructionVisualizer = GameObject.Instantiate(
                         Prefabs.mapRendererPrefab,
                         Vector3.zero,
                         Quaternion.identity
@@ -186,12 +188,12 @@ namespace Plerion.VPS
                 tasks.Add(
                     api.GetLocalizationMapAsync(mapId)
                         .AsUniTask()
-                        .ContinueWith(map =>
+                        .ContinueWith(async map =>
                         {
                             _maps[mapId].loaded = false;
                             _maps[mapId].map = map;
                             _maps[mapId]
-                                .visualization.GetComponent<Anchor>()
+                                .reconstructionVisualizer.GetComponent<Anchor>()
                                 .SetEcefTransform(
                                     new double3(map.PositionX, map.PositionY, map.PositionZ),
                                     new quaternion(
@@ -201,11 +203,10 @@ namespace Plerion.VPS
                                         (float)map.RotationW
                                     )
                                 );
+
+                            await _maps[mapId].reconstructionVisualizer.Load(api, _maps[mapId].map.ReconstructionId);
                         })
                 );
-
-                // Create task to fetch points
-                tasks.Add(_maps[mapId].visualization.Load(api, mapId));
             }
 
             // Run all tasks in parallel and wait for them to complete
@@ -226,7 +227,7 @@ namespace Plerion.VPS
                 throw new Exception($"Map {map} has not finished loading");
 
             var mapData = _maps[map];
-            GameObject.Destroy(mapData.visualization.gameObject);
+            GameObject.Destroy(mapData.reconstructionVisualizer.gameObject);
             _maps.Remove(map);
 
             await api.UnloadMapAsync(localizationSessionId, map);

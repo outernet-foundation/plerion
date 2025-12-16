@@ -1340,59 +1340,6 @@
         }
       }
     },
-    "/localization_maps/{id}/points": {
-      "get": {
-        "tags": [
-          "localization_maps"
-        ],
-        "summary": "Get Localization Map Points",
-        "operationId": "get_localization_map_points",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          },
-          {
-            "name": "axis_convention",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "$ref": "#/components/schemas/AxisConvention",
-              "default": "OPENCV"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/localization_sessions": {
       "post": {
         "tags": [

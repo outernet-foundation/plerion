@@ -909,43 +909,6 @@ paths:
       summary: Update Localization Map
       tags:
       - Default
-  /localization_maps/{id}/points:
-    get:
-      operationId: get_localization_map_points
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      - explode: true
-        in: query
-        name: axis_convention
-        required: false
-        schema:
-          $ref: "#/components/schemas/AxisConvention"
-        style: form
-      responses:
-        "200":
-          content:
-            application/octet-stream:
-              schema:
-                format: binary
-                type: string
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Localization Map Points
-      tags:
-      - Default
   /localization_sessions:
     post:
       operationId: create_localization_session

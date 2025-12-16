@@ -110,25 +110,9 @@ namespace PlerionClient.Client
                 if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
                     Permission.RequestUserPermission(Permission.Camera);
 
-                UnityEngine.XR.ARSubsystems.XRCameraIntrinsics intrinsics = default;
-                while (!SceneReferences.ARCameraManager.TryGetIntrinsics(out intrinsics))
-                    await UniTask.WaitForEndOfFrame();
-
                 await UniTask.SwitchToMainThread();
 
-                await VisualPositioningSystem.StartLocalizationSession(
-                    new PinholeCameraConfig(
-                        model: PinholeCameraConfig.ModelEnum.PINHOLE,
-                        mirroring: PinholeCameraConfig.MirroringEnum.X, // On (at least) AndroidMobile, the image is mirrored along X
-                        rotation: PinholeCameraConfig.RotationEnum._90CCW, // On (at least) AndroidMobile, the image is rotated 90 CCW
-                        width: intrinsics.resolution.x,
-                        height: intrinsics.resolution.y,
-                        fx: intrinsics.focalLength.x,
-                        fy: intrinsics.focalLength.y,
-                        cx: intrinsics.principalPoint.x,
-                        cy: intrinsics.principalPoint.y
-                    )
-                );
+                await VisualPositioningSystem.StartLocalizationSession();
 
                 await UniTask.SwitchToMainThread();
                 App.state.localizationSessionStatus.ExecuteSetOrDelay(LocalizationSessionStatus.Active);

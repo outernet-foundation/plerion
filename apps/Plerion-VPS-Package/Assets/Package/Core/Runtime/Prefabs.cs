@@ -4,7 +4,7 @@ namespace Plerion.VPS
 {
     public class Prefabs : ScriptableObject
     {
-        public LocalizationMapVisualizer mapRendererPrefab;
+        public ReconstructionVisualizer mapRendererPrefab;
         public Material GizmoMaterial;
         public Mesh CylinderMesh;
     }

@@ -5,6 +5,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using PinholeCameraConfig = PlerionApiClient.Model.PinholeCameraConfig;
 
 namespace Plerion.VPS.ARFoundation
 {
@@ -41,6 +42,25 @@ namespace Plerion.VPS.ARFoundation
             _cancellationTokenSource = null;
         }
 
+        public async UniTask<PinholeCameraConfig> GetCameraConfig()
+        {
+            XRCameraIntrinsics intrinsics;
+            while (!cameraManager.TryGetIntrinsics(out intrinsics))
+                await UniTask.WaitForEndOfFrame();
+
+            return new PinholeCameraConfig(
+                model: PinholeCameraConfig.ModelEnum.PINHOLE,
+                mirroring: PinholeCameraConfig.MirroringEnum.X, // On (at least) ARFoundation, the image is mirrored along X
+                rotation: PinholeCameraConfig.RotationEnum._90CCW, // On (at least) ARFoundation, the image is rotated 90 CCW
+                width: intrinsics.resolution.x,
+                height: intrinsics.resolution.y,
+                fx: intrinsics.focalLength.x,
+                fy: intrinsics.focalLength.y,
+                cx: intrinsics.principalPoint.x,
+                cy: intrinsics.principalPoint.y
+            );
+        }
+
         public UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG() => GetFrameJPG(_cancellationTokenSource.Token);
 
         public async UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG(CancellationToken cancellationToken = default)
@@ -72,13 +92,7 @@ namespace Plerion.VPS.ARFoundation
 
         private static byte[] ConvertToJPG(XRCpuImage cpuImage, bool flipped = false)
         {
-            var conversion = new XRCpuImage.ConversionParams(
-                cpuImage,
-                TextureFormat.RGBA32,
-                // Mirror the image on the X axis to match the display orientation
-                flipped ? XRCpuImage.Transformation.MirrorX : XRCpuImage.Transformation.None
-            );
-
+            var conversion = new XRCpuImage.ConversionParams(cpuImage, TextureFormat.RGBA32);
             int byteCount = cpuImage.GetConvertedDataSize(conversion);
             using var pixelBuffer = new NativeArray<byte>(byteCount, Allocator.TempJob);
             cpuImage.Convert(conversion, pixelBuffer);
