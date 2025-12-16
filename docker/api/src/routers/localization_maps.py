@@ -1,8 +1,6 @@
 from typing import Optional
 from uuid import UUID
 
-from common.schemas import binary_schema
-from core.axis_convention import AxisConvention
 from datamodels.public_dtos import (
     LocalizationMapBatchUpdate,
     LocalizationMapCreate,
@@ -15,13 +13,12 @@ from datamodels.public_dtos import (
 )
 from datamodels.public_tables import LocalizationMap
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import StreamingResponse
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
 from ..settings import get_settings
-from .reconstructions import get_reconstruction_points, get_reconstruction_status
+from .reconstructions import get_reconstruction_status
 
 settings = get_settings()
 
@@ -112,19 +109,6 @@ async def get_localization_map(id: UUID, session: AsyncSession = Depends(get_ses
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"LocalizationMap with id {id} not found")
 
     return localization_map_to_dto(row)
-
-
-@router.get("/{id}/points", response_class=StreamingResponse, responses={200: {"content": binary_schema}})
-async def get_localization_map_points(
-    id: UUID,
-    axis_convention: AxisConvention = Query(AxisConvention.OPENCV),
-    session: AsyncSession = Depends(get_session),
-) -> StreamingResponse:
-    row = await session.get(LocalizationMap, id)
-    if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"LocalizationMap with id {id} not found")
-
-    return await get_reconstruction_points(row.reconstruction_id, axis_convention, session)
 
 
 @router.patch("/{id}")

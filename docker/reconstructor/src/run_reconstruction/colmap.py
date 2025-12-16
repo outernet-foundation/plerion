@@ -19,6 +19,7 @@ COLMAP_SFM_DIRECTORY = "sfm_model"
 
 def run_reconstruction(
     root_path: Path,
+    output_path: Path,
     images_path: Path,
     options: OptionsBuilder,
     metrics: MetricsBuilder,
@@ -131,6 +132,9 @@ def run_reconstruction(
         )
     )
 
+    # Write the best reconstruction to disk in COLMAP format
+    best_reconstruction.write_text(str(output_path))
+
     # Write point cloud to disk in NPZ format
     point_cloud_point_count = len(best_reconstruction.points3D)
     point_cloud_positions = empty((point_cloud_point_count, 3), dtype=float32)
@@ -142,7 +146,7 @@ def run_reconstruction(
         point_cloud_positions[point_cloud_point_index] = point_cloud_point.xyz
         point_cloud_colors[point_cloud_point_index] = point_cloud_point.color
 
-    point_cloud_npz_file_path = colmap_sfm_directory / "points3D.npz"
+    point_cloud_npz_file_path = output_path / "points3D.npz"
     savez_compressed(str(point_cloud_npz_file_path), positions=point_cloud_positions, colors=point_cloud_colors)
 
     # Write frame poses to disk in NPZ format
@@ -155,7 +159,7 @@ def run_reconstruction(
         frame_positions[frame_index] = rig_from_world.translation
         frame_orientations[frame_index] = rig_from_world.rotation.quat
 
-    frame_poses_npz_file_path = colmap_sfm_directory / "frame_poses.npz"
+    frame_poses_npz_file_path = output_path / "frame_poses.npz"
     savez_compressed(str(frame_poses_npz_file_path), positions=frame_positions, orientations=frame_orientations)
 
     return best_reconstruction
