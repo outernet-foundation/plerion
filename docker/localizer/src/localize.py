@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-import numpy as np
 from core.axis_convention import AxisConvention
 from core.camera_transformations import transform_image, transform_intrinsics
 from core.capture_session_manifest import PinholeCameraConfig
@@ -10,9 +9,11 @@ from core.classes import Quaternion, Transform, Vector3
 from core.lightglue import lightglue_match_tensors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import decode_descriptors
+from numpy import asarray, float32, vstack
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions
 from pycolmap import Camera as ColmapCamera
-from pycolmap._core import estimate_and_refine_absolute_pose  # type: ignore
+from pycolmap._core import Rigid3d, estimate_and_refine_absolute_pose  # type: ignore
+from scipy.spatial.transform import Rotation
 from torch import cuda, from_numpy, mv, topk  # type: ignore
 
 from .build_metrics import build_localization_metrics
@@ -47,8 +48,8 @@ def localize_image_against_reconstruction(
 ) -> tuple[Transform, LocalizationMetrics]:
     # Extract features from query image
     image = transform_image(image_buffer, camera)
-    rgb_tensor = from_numpy(np.asarray(image, dtype=np.float32)).permute(2, 0, 1).div(255.0)
-    gray_tensor = from_numpy(np.asarray(image.convert("L"), dtype=np.float32)).unsqueeze(0).div(255.0)
+    rgb_tensor = from_numpy(asarray(image, dtype=float32)).permute(2, 0, 1).div(255.0)
+    gray_tensor = from_numpy(asarray(image.convert("L"), dtype=float32)).unsqueeze(0).div(255.0)
     superpoint_output = superpoint({"image": gray_tensor.unsqueeze(0).to(device=DEVICE)})
     query_global_descriptor = dir({"image": rgb_tensor.unsqueeze(0).to(device=DEVICE)})["global_descriptor"][0]
 
@@ -106,7 +107,7 @@ def localize_image_against_reconstruction(
 
     # Estimate pose
     points2D = keypoints["query"][query_keypoint_indices].cpu().numpy()
-    points3D = np.vstack([map.points3D[i].xyz for i in point3d_indices])
+    points3D = vstack([map.points3D[i].xyz for i in point3d_indices])
     pnp_result = cast(
         dict[str, Any] | None,
         estimate_and_refine_absolute_pose(points2D, points3D, pycolmap_camera, estimation_options),
@@ -116,19 +117,18 @@ def localize_image_against_reconstruction(
     if pnp_result is None:
         raise ValueError("Pose estimation failed")
 
+    # Change basis if needed
+    cam_from_world = cast(Rigid3d, pnp_result["cam_from_world"])
+    translation = cam_from_world.translation
+    rotation = cam_from_world.rotation.matrix()
+    # if axis_convention == AxisConvention.UNITY:
+    #     translation, rotation = change_basis_unity_from_opencv_pose(translation, rotation)
+    rotation = Rotation.from_matrix(rotation).as_quat()
+
     # Build final transform
     transform = Transform(
-        position=Vector3(
-            x=float(pnp_result["cam_from_world"].translation[0]),
-            y=float(pnp_result["cam_from_world"].translation[1]),
-            z=float(pnp_result["cam_from_world"].translation[2]),
-        ),
-        rotation=Quaternion(
-            x=float(pnp_result["cam_from_world"].rotation.quat[0]),
-            y=float(pnp_result["cam_from_world"].rotation.quat[1]),
-            z=float(pnp_result["cam_from_world"].rotation.quat[2]),
-            w=float(pnp_result["cam_from_world"].rotation.quat[3]),
-        ),
+        position=Vector3(x=translation[0], y=translation[1], z=translation[2]),
+        rotation=Quaternion(x=rotation[0], y=rotation[1], z=rotation[2], w=rotation[3]),
     )
 
     # Build metrics

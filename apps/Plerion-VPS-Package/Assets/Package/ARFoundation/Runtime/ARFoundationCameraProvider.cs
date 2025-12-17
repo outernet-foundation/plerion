@@ -50,8 +50,8 @@ namespace Plerion.VPS.ARFoundation
 
             return new PinholeCameraConfig(
                 model: PinholeCameraConfig.ModelEnum.PINHOLE,
-                mirroring: PinholeCameraConfig.MirroringEnum.X, // On (at least) ARFoundation, the image is mirrored along X
-                rotation: PinholeCameraConfig.RotationEnum._90CCW, // On (at least) ARFoundation, the image is rotated 90 CCW
+                mirroring: PinholeCameraConfig.MirroringEnum.X, // On (at least) Android Mobile, the image is mirrored along X
+                rotation: PinholeCameraConfig.RotationEnum._90CCW, // On (at least) Android Mobile, the image is rotated 90 CCW
                 width: intrinsics.resolution.x,
                 height: intrinsics.resolution.y,
                 fx: intrinsics.focalLength.x,

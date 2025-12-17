@@ -2,7 +2,8 @@ from core.axis_convention import AxisConvention, change_basis_opencv_from_unity_
 from core.camera_transformations import transform_intrinsics
 from core.capture_session_manifest import RigCameraConfig, RigConfig
 from core.classes import Quaternion, Vector3
-from numpy import array, float64, ndarray
+from numpy import array, float64
+from numpy.typing import NDArray
 from pycolmap import Camera as ColmapCamera
 from pycolmap import RigConfig as ColmapRigConfig
 from pycolmap import RigConfigCamera as ColmapRigConfigCamera
@@ -11,7 +12,7 @@ from scipy.spatial.transform import Rotation
 
 
 class Transform:
-    def __init__(self, rotation: ndarray, translation: ndarray):
+    def __init__(self, rotation: NDArray[float64], translation: NDArray[float64]):
         self.rotation = rotation
         self.translation = translation
 
