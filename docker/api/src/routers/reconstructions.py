@@ -33,8 +33,11 @@ BUCKET = "dev-reconstructions"
 
 router = APIRouter(prefix="/reconstructions", tags=["reconstructions"])
 
+
 s3_client = create_s3_client(
-    s3_endpoint_url=settings.s3_endpoint_url, s3_access_key=settings.s3_access_key, s3_secret_key=settings.s3_secret_key
+    minio_endpoint_url=settings.minio_endpoint_url,
+    minio_access_key=settings.minio_access_key,
+    minio_secret_key=settings.minio_secret_key,
 )
 
 
@@ -220,9 +223,9 @@ async def get_reconstruction_points(id: UUID, session: AsyncSession = Depends(ge
             line.split()
             for line in [
                 line.decode("utf-8").strip()
-                for line in create_s3_client(settings.s3_endpoint_url, settings.s3_access_key, settings.s3_secret_key)
-                .get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/points3D.txt")["Body"]
-                .iter_lines()
+                for line in s3_client.get_object(
+                    Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/points3D.txt"
+                )["Body"].iter_lines()
             ]
             if line and not line.startswith("#")
         ]
@@ -239,9 +242,7 @@ async def get_reconstruction_points3D_ply(id: UUID, session: AsyncSession = Depe
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Reconstruction with id {id} not found")
 
     return StreamingResponse(
-        create_s3_client(settings.s3_endpoint_url, settings.s3_access_key, settings.s3_secret_key).get_object(
-            Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/points3D.ply"
-        )["Body"],
+        s3_client.get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/points3D.ply")["Body"],
         media_type="application/octet-stream",
     )
 
@@ -261,9 +262,9 @@ async def get_reconstruction_frame_poses(id: UUID, session: AsyncSession = Depen
             line
             for line in [
                 line.decode("utf-8").strip()
-                for line in create_s3_client(settings.s3_endpoint_url, settings.s3_access_key, settings.s3_secret_key)
-                .get_object(Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/frames.txt")["Body"]
-                .iter_lines()
+                for line in s3_client.get_object(
+                    Bucket=settings.reconstructions_bucket, Key=f"{row.id}/sfm_model/frames.txt"
+                )["Body"].iter_lines()
             ]
             if line and not line.startswith("#")
         ])

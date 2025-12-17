@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "common",
     "boto3>=1.40.29",
     "pydantic-settings>=2.10.1",
     "typer>=0.17.4",
@@ -14,6 +15,9 @@ dependencies = [
 
 [dependency-groups]
 dev = ["boto3-stubs[batch,ecs,secretsmanager,s3,lambda]>=1.40.29"]
+
+[tool.uv.sources]
+common = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
