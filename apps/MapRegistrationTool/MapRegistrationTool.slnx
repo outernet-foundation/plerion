@@ -74,7 +74,6 @@
   <Project Path="Unity.Mathematics.Editor.csproj" />
   <Project Path="Unity.VisualScripting.SettingsProvider.Editor.csproj" />
   <Project Path="UniTask.TextMeshPro.csproj" />
-  <Project Path="Plerion.Core.csproj" />
   <Project Path="Unity.Settings.Editor.csproj" />
   <Project Path="Unity.InputSystem.TestFramework.csproj" />
   <Project Path="UnityEditor.XR.LegacyInputHelpers.csproj" />
@@ -84,6 +83,7 @@
   <Project Path="Unity.XR.ARFoundation.Editor.csproj" />
   <Project Path="Unity.EditorCoroutines.Editor.csproj" />
   <Project Path="Unity.RenderPipeline.Universal.ShaderLibrary.csproj" />
+  <Project Path="Plerion.Core.csproj" />
   <Project Path="UniTask.Editor.csproj" />
   <Project Path="UnityEngine.SpatialTracking.csproj" />
   <Project Path="UnityEngine.XR.LegacyInputHelpers.csproj" />

@@ -903,53 +903,14 @@
               "format": "uuid",
               "title": "Id"
             }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PointCloudPoint",
-                    "x-schema-name": "get_reconstruction_points_resp_200_application_json_item",
-                    "nullable": false
-                  }
-                }
-              }
-            }
           },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/reconstructions/{id}/points.ply": {
-      "get": {
-        "tags": [
-          "reconstructions"
-        ],
-        "summary": "Get Reconstruction Points3D Ply",
-        "operationId": "get_reconstruction_points3D_ply",
-        "parameters": [
           {
-            "name": "id",
-            "in": "path",
-            "required": true,
+            "name": "axis_convention",
+            "in": "query",
+            "required": false,
             "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
+              "$ref": "#/components/schemas/AxisConvention",
+              "default": "OPENCV"
             }
           }
         ],
@@ -995,20 +956,25 @@
               "format": "uuid",
               "title": "Id"
             }
+          },
+          {
+            "name": "axis_convention",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "$ref": "#/components/schemas/AxisConvention",
+              "default": "OPENCV"
+            }
           }
         ],
         "responses": {
           "200": {
             "description": "Successful Response",
             "content": {
-              "application/json": {
+              "application/octet-stream": {
                 "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Transform",
-                    "x-schema-name": "get_reconstruction_frame_poses_resp_200_application_json_item",
-                    "nullable": false
-                  }
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -1357,146 +1323,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/LocalizationMapRead"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_maps/{id}/points": {
-      "get": {
-        "tags": [
-          "localization_maps"
-        ],
-        "summary": "Get Localization Map Points",
-        "operationId": "get_localization_map_points",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/PointCloudPoint",
-                    "x-schema-name": "get_localization_map_points_resp_200_application_json_item",
-                    "nullable": false
-                  }
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_maps/{id}/points.ply": {
-      "get": {
-        "tags": [
-          "localization_maps"
-        ],
-        "summary": "Get Localization Map Points Ply",
-        "operationId": "get_localization_map_points_ply",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/octet-stream": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_maps/{id}/image_poses": {
-      "patch": {
-        "tags": [
-          "localization_maps"
-        ],
-        "summary": "Update Localization Map Image Poses",
-        "operationId": "update_localization_map_image_poses",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/Transform",
-                    "x-schema-name": "update_localization_map_image_poses_resp_200_application_json_item",
-                    "nullable": false
-                  }
                 }
               }
             }
@@ -2502,6 +2328,14 @@
   },
   "components": {
     "schemas": {
+      "AxisConvention": {
+        "type": "string",
+        "enum": [
+          "OPENCV",
+          "UNITY"
+        ],
+        "title": "AxisConvention"
+      },
       "Body_localize_image": {
         "properties": {
           "image": {
@@ -2655,29 +2489,6 @@
         },
         "type": "object",
         "title": "CaptureSessionUpdate"
-      },
-      "Color": {
-        "properties": {
-          "r": {
-            "type": "integer",
-            "title": "R"
-          },
-          "g": {
-            "type": "integer",
-            "title": "G"
-          },
-          "b": {
-            "type": "integer",
-            "title": "B"
-          }
-        },
-        "type": "object",
-        "required": [
-          "r",
-          "g",
-          "b"
-        ],
-        "title": "Color"
       },
       "Config": {
         "properties": {
@@ -4342,22 +4153,6 @@
           "cy"
         ],
         "title": "PinholeCameraConfig"
-      },
-      "PointCloudPoint": {
-        "properties": {
-          "position": {
-            "$ref": "#/components/schemas/Vector3"
-          },
-          "color": {
-            "$ref": "#/components/schemas/Color"
-          }
-        },
-        "type": "object",
-        "required": [
-          "position",
-          "color"
-        ],
-        "title": "PointCloudPoint"
       },
       "Quaternion": {
         "properties": {

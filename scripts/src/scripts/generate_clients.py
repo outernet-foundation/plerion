@@ -131,6 +131,9 @@ def _generate_client(openapi_spec: str, project: str, client: str):
                 indent=2,
             )
         )
+        # Tell the C# compiler to enable nullable annotations
+        (client_path / "src" / client_package_name_camel / "csc.rsp").write_text("-nullable:annotations")
+
     elif client == "python":
         run_command(f"uv pip install {client_path.resolve().as_posix()}", log=True)
 

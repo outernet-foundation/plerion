@@ -13,3 +13,5 @@ MonoBehaviour:
   m_Name: PrefabReferences
   m_EditorClassIdentifier: 
   mapRendererPrefab: {fileID: 8410913971276956591, guid: a340c74884937b44fa1b0c65053d84c2, type: 3}
+  GizmoMaterial: {fileID: 2100000, guid: 708a5f2e1bb305c489e3190839eeab49, type: 2}
+  CylinderMesh: {fileID: 546404529894870380, guid: 2531532d450bc2f43a6a2ae4e0218a8b, type: 3}

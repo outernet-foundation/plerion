@@ -24,11 +24,10 @@ namespace Plerion.Core
         {
             public bool loaded;
             public LocalizationMapRead map;
-            public LocalizationMapVisualizer visualization;
+            public ReconstructionVisualizer reconstructionVisualizer;
         }
 
         private static ICameraProvider _cameraProvider = null;
-        private static PrefabReferences _prefabReferences = null;
         private static Dictionary<Guid, MapData> _maps = new Dictionary<Guid, MapData>();
         private static DefaultApi api;
         private static CancellationTokenSource startSessionTokenSource = new CancellationTokenSource();
@@ -41,6 +40,7 @@ namespace Plerion.Core
         private static Action<string> _errorCallback;
         private static Action<string, Exception> _logExceptionCallback;
 
+        public static Prefabs Prefabs { get; private set; }
         public static bool LocalizationSessionActive => localizationSessionId != Guid.Empty;
         public static double4x4 EcefToUnityWorldTransform => unityFromEcefTransform;
         public static double4x4 UnityWorldToEcefTransform => ecefFromUnityTransform;
@@ -72,7 +72,7 @@ namespace Plerion.Core
             _errorCallback = errorCallback;
             _logExceptionCallback = logException;
 
-            _prefabReferences = Resources.Load<PrefabReferences>("PrefabReferences");
+            Prefabs = Resources.Load<Prefabs>("PrefabReferences");
 
             Auth.Initialize(authUrl, authClient, logCallback, warnCallback, errorCallback);
 
@@ -175,8 +175,8 @@ namespace Plerion.Core
             {
                 _maps[mapId] = new MapData()
                 {
-                    visualization = GameObject.Instantiate(
-                        _prefabReferences.mapRendererPrefab,
+                    reconstructionVisualizer = GameObject.Instantiate(
+                        Prefabs.mapRendererPrefab,
                         Vector3.zero,
                         Quaternion.identity
                     ),
@@ -186,12 +186,12 @@ namespace Plerion.Core
                 tasks.Add(
                     api.GetLocalizationMapAsync(mapId)
                         .AsUniTask()
-                        .ContinueWith(map =>
+                        .ContinueWith(async map =>
                         {
                             _maps[mapId].loaded = false;
                             _maps[mapId].map = map;
                             _maps[mapId]
-                                .visualization.GetComponent<Anchor>()
+                                .reconstructionVisualizer.GetComponent<Anchor>()
                                 .SetEcefTransform(
                                     new double3(map.PositionX, map.PositionY, map.PositionZ),
                                     new quaternion(
@@ -201,31 +201,8 @@ namespace Plerion.Core
                                         (float)map.RotationW
                                     )
                                 );
-                        })
-                );
 
-                // Create task to fetch points
-                tasks.Add(
-                    api.GetLocalizationMapPointsAsync(mapId)
-                        .AsUniTask()
-                        .ContinueWith(points =>
-                        {
-                            _maps[mapId]
-                                .visualization.Load(
-                                    points
-                                        .Select(point =>
-                                        {
-                                            var (positionUnityBasis, _) = LocationUtilities.ChangeBasisUnityFromOpenCV(
-                                                point.Position.ToDouble3(),
-                                                double3x3.identity
-                                            );
-                                            point.Position.X = positionUnityBasis.x;
-                                            point.Position.Y = positionUnityBasis.y;
-                                            point.Position.Z = positionUnityBasis.z;
-                                            return point;
-                                        })
-                                        .ToArray()
-                                );
+                            await _maps[mapId].reconstructionVisualizer.Load(api, _maps[mapId].map.ReconstructionId);
                         })
                 );
             }
@@ -248,7 +225,7 @@ namespace Plerion.Core
                 throw new Exception($"Map {map} has not finished loading");
 
             var mapData = _maps[map];
-            GameObject.Destroy(mapData.visualization.gameObject);
+            GameObject.Destroy(mapData.reconstructionVisualizer.gameObject);
             _maps.Remove(map);
 
             await api.UnloadMapAsync(localizationSessionId, map);

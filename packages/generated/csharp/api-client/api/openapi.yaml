@@ -614,37 +614,13 @@ paths:
           title: Id
           type: string
         style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: "#/components/schemas/PointCloudPoint"
-                type: array
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Reconstruction Points
-      tags:
-      - Default
-  /reconstructions/{id}/points.ply:
-    get:
-      operationId: get_reconstruction_points3D_ply
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
+      - explode: true
+        in: query
+        name: axis_convention
+        required: false
         schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
+          $ref: "#/components/schemas/AxisConvention"
+        style: form
       responses:
         "200":
           content:
@@ -659,7 +635,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
-      summary: Get Reconstruction Points3D Ply
+      summary: Get Reconstruction Points
       tags:
       - Default
   /reconstructions/{id}/frame_poses:
@@ -675,14 +651,20 @@ paths:
           title: Id
           type: string
         style: simple
+      - explode: true
+        in: query
+        name: axis_convention
+        required: false
+        schema:
+          $ref: "#/components/schemas/AxisConvention"
+        style: form
       responses:
         "200":
           content:
-            application/json:
+            application/octet-stream:
               schema:
-                items:
-                  $ref: "#/components/schemas/Transform"
-                type: array
+                format: binary
+                type: string
           description: Successful Response
         "422":
           content:
@@ -925,98 +907,6 @@ paths:
                 $ref: "#/components/schemas/HTTPValidationError"
           description: Validation Error
       summary: Update Localization Map
-      tags:
-      - Default
-  /localization_maps/{id}/points:
-    get:
-      operationId: get_localization_map_points
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: "#/components/schemas/PointCloudPoint"
-                type: array
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Localization Map Points
-      tags:
-      - Default
-  /localization_maps/{id}/points.ply:
-    get:
-      operationId: get_localization_map_points_ply
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/octet-stream:
-              schema:
-                format: binary
-                type: string
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Get Localization Map Points Ply
-      tags:
-      - Default
-  /localization_maps/{id}/image_poses:
-    patch:
-      operationId: update_localization_map_image_poses
-      parameters:
-      - explode: false
-        in: path
-        name: id
-        required: true
-        schema:
-          format: uuid
-          title: Id
-          type: string
-        style: simple
-      responses:
-        "200":
-          content:
-            application/json:
-              schema:
-                items:
-                  $ref: "#/components/schemas/Transform"
-                type: array
-          description: Successful Response
-        "422":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/HTTPValidationError"
-          description: Validation Error
-      summary: Update Localization Map Image Poses
       tags:
       - Default
   /localization_sessions:
@@ -1668,6 +1558,12 @@ paths:
       - Default
 components:
   schemas:
+    AxisConvention:
+      enum:
+      - OPENCV
+      - UNITY
+      title: AxisConvention
+      type: string
     Body_localize_image:
       properties:
         image:
@@ -1766,26 +1662,6 @@ components:
           nullable: true
           type: string
       title: CaptureSessionUpdate
-    Color:
-      example:
-        r: 0
-        b: 1
-        g: 6
-      properties:
-        r:
-          title: R
-          type: integer
-        g:
-          title: G
-          type: integer
-        b:
-          title: B
-          type: integer
-      required:
-      - b
-      - g
-      - r
-      title: Color
     Config:
       example:
         rigs:
@@ -2926,25 +2802,6 @@ components:
       - rotation
       - width
       title: PinholeCameraConfig
-    PointCloudPoint:
-      example:
-        color:
-          r: 0
-          b: 1
-          g: 6
-        position:
-          x: 5.637376656633329
-          "y": 2.3021358869347655
-          z: 7.061401241503109
-      properties:
-        position:
-          $ref: "#/components/schemas/Vector3"
-        color:
-          $ref: "#/components/schemas/Color"
-      required:
-      - color
-      - position
-      title: PointCloudPoint
     Quaternion:
       example:
         w: 5.962133916683182

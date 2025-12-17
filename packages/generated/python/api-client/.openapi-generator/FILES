@@ -11,13 +11,13 @@ plerion_api_client/api_response.py
 plerion_api_client/configuration.py
 plerion_api_client/exceptions.py
 plerion_api_client/models/__init__.py
+plerion_api_client/models/axis_convention.py
 plerion_api_client/models/camera.py
 plerion_api_client/models/camera_config.py
 plerion_api_client/models/capture_session_batch_update.py
 plerion_api_client/models/capture_session_create.py
 plerion_api_client/models/capture_session_read.py
 plerion_api_client/models/capture_session_update.py
-plerion_api_client/models/color.py
 plerion_api_client/models/config.py
 plerion_api_client/models/device_type.py
 plerion_api_client/models/full_open_cv_camera_config.py
@@ -43,7 +43,6 @@ plerion_api_client/models/node_read.py
 plerion_api_client/models/open_cv_camera_config.py
 plerion_api_client/models/orchestration_status.py
 plerion_api_client/models/pinhole_camera_config.py
-plerion_api_client/models/point_cloud_point.py
 plerion_api_client/models/quaternion.py
 plerion_api_client/models/reconstruction_create.py
 plerion_api_client/models/reconstruction_create_with_options.py

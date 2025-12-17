@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-from tempfile import TemporaryDirectory
 from typing import Literal
 
 from common.boto_clients import create_s3_client
@@ -144,26 +143,24 @@ def main():
     match_indices = lightglue_match(lightglue, pairs, keypoints, descriptors, sizes, batch_size=32, device=device)
 
     # Run COLMAP reconstruction
+    sfm_output_path = WORK_DIR / "sfm_output"
+    sfm_output_path.mkdir(parents=True, exist_ok=True)
     reconstruction = run_reconstruction(
-        WORK_DIR, CAPTURE_SESSION_DIRECTORY, options, metrics, rigs, keypoints, pairs, match_indices
+        WORK_DIR, sfm_output_path, CAPTURE_SESSION_DIRECTORY, options, metrics, rigs, keypoints, pairs, match_indices
     )
 
-    # Verify reconstruction was successful
+    # Verify reconstruction was successful and write to storage
+
     if reconstruction is None:
         print("Reconstruction failed, no model was created")
         manifest.status = "failed"
         manifest.error = "No model was created"
     else:
-        # Write reconstruction to storage
-        with TemporaryDirectory() as temp_dir:
-            temp_path = Path(temp_dir)
-            reconstruction.write_text(str(temp_path))
-            reconstruction.export_PLY(str(temp_path / "points3D.ply"))
-            for file_path in temp_path.rglob("*"):
-                if file_path.is_file():
-                    _put_reconstruction_object(
-                        key=f"sfm_model/{file_path.relative_to(temp_path)}", body=file_path.read_bytes()
-                    )
+        for file_path in sfm_output_path.rglob("*"):
+            if file_path.is_file():
+                _put_reconstruction_object(
+                    key=f"sfm_model/{file_path.relative_to(sfm_output_path)}", body=file_path.read_bytes()
+                )
 
     # Update and write reconstruction manifest
     manifest.metrics = metrics.metrics
