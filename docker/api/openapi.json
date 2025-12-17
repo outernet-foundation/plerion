@@ -525,7 +525,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Config"
+                  "$ref": "#/components/schemas/CaptureSessionManifest"
                 }
               }
             }
@@ -907,10 +907,9 @@
           {
             "name": "axis_convention",
             "in": "query",
-            "required": false,
+            "required": true,
             "schema": {
-              "$ref": "#/components/schemas/AxisConvention",
-              "default": "OPENCV"
+              "$ref": "#/components/schemas/AxisConvention"
             }
           }
         ],
@@ -960,10 +959,9 @@
           {
             "name": "axis_convention",
             "in": "query",
-            "required": false,
+            "required": true,
             "schema": {
-              "$ref": "#/components/schemas/AxisConvention",
-              "default": "OPENCV"
+              "$ref": "#/components/schemas/AxisConvention"
             }
           }
         ],
@@ -1686,6 +1684,14 @@
               "type": "string",
               "format": "uuid",
               "title": "Localization Session Id"
+            }
+          },
+          {
+            "name": "axis_convention",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AxisConvention"
             }
           }
         ],
@@ -2428,6 +2434,26 @@
         ],
         "title": "CaptureSessionCreate"
       },
+      "CaptureSessionManifest": {
+        "properties": {
+          "axis_convention": {
+            "$ref": "#/components/schemas/AxisConvention"
+          },
+          "rigs": {
+            "items": {
+              "$ref": "#/components/schemas/RigConfig"
+            },
+            "type": "array",
+            "title": "Rigs"
+          }
+        },
+        "type": "object",
+        "required": [
+          "axis_convention",
+          "rigs"
+        ],
+        "title": "CaptureSessionManifest"
+      },
       "CaptureSessionRead": {
         "properties": {
           "id": {
@@ -2490,22 +2516,6 @@
         "type": "object",
         "title": "CaptureSessionUpdate"
       },
-      "Config": {
-        "properties": {
-          "rigs": {
-            "items": {
-              "$ref": "#/components/schemas/RigConfig"
-            },
-            "type": "array",
-            "title": "Rigs"
-          }
-        },
-        "type": "object",
-        "required": [
-          "rigs"
-        ],
-        "title": "Config"
-      },
       "DeviceType": {
         "type": "string",
         "enum": [
@@ -2524,24 +2534,19 @@
             "type": "integer",
             "title": "Height"
           },
-          "mirroring": {
+          "orientation": {
             "type": "string",
             "enum": [
-              "None",
-              "X",
-              "Y"
+              "TOP_LEFT",
+              "TOP_RIGHT",
+              "BOTTOM_RIGHT",
+              "BOTTOM_LEFT",
+              "LEFT_TOP",
+              "RIGHT_TOP",
+              "RIGHT_BOTTOM",
+              "LEFT_BOTTOM"
             ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
+            "title": "Orientation"
           },
           "model": {
             "type": "string",
@@ -2601,8 +2606,7 @@
         "required": [
           "width",
           "height",
-          "mirroring",
-          "rotation",
+          "orientation",
           "model",
           "fx",
           "fy",
@@ -3410,7 +3414,7 @@
             "format": "uuid",
             "title": "Id"
           },
-          "transform": {
+          "camera_from_map_transform": {
             "$ref": "#/components/schemas/Transform"
           },
           "map_transform": {
@@ -3423,7 +3427,7 @@
         "type": "object",
         "required": [
           "id",
-          "transform",
+          "camera_from_map_transform",
           "map_transform",
           "metrics"
         ],
@@ -3997,24 +4001,19 @@
             "type": "integer",
             "title": "Height"
           },
-          "mirroring": {
+          "orientation": {
             "type": "string",
             "enum": [
-              "None",
-              "X",
-              "Y"
+              "TOP_LEFT",
+              "TOP_RIGHT",
+              "BOTTOM_RIGHT",
+              "BOTTOM_LEFT",
+              "LEFT_TOP",
+              "RIGHT_TOP",
+              "RIGHT_BOTTOM",
+              "LEFT_BOTTOM"
             ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
+            "title": "Orientation"
           },
           "model": {
             "type": "string",
@@ -4062,8 +4061,7 @@
         "required": [
           "width",
           "height",
-          "mirroring",
-          "rotation",
+          "orientation",
           "model",
           "fx",
           "fy",
@@ -4099,24 +4097,19 @@
             "type": "integer",
             "title": "Height"
           },
-          "mirroring": {
+          "orientation": {
             "type": "string",
             "enum": [
-              "None",
-              "X",
-              "Y"
+              "TOP_LEFT",
+              "TOP_RIGHT",
+              "BOTTOM_RIGHT",
+              "BOTTOM_LEFT",
+              "LEFT_TOP",
+              "RIGHT_TOP",
+              "RIGHT_BOTTOM",
+              "LEFT_BOTTOM"
             ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
+            "title": "Orientation"
           },
           "model": {
             "type": "string",
@@ -4144,8 +4137,7 @@
         "required": [
           "width",
           "height",
-          "mirroring",
-          "rotation",
+          "orientation",
           "model",
           "fx",
           "fy",

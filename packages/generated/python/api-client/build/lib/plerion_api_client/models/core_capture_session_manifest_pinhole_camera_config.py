@@ -17,20 +17,47 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictInt
-from typing import Any, ClassVar, Dict, List
+from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Union
 from typing import Optional, Set
 from typing_extensions import Self
 
-class Color(BaseModel):
+class CoreCaptureSessionManifestPinholeCameraConfig(BaseModel):
     """
-    Color
+    CoreCaptureSessionManifestPinholeCameraConfig
     """ # noqa: E501
-    r: StrictInt
-    g: StrictInt
-    b: StrictInt
+    width: StrictInt
+    height: StrictInt
+    mirroring: StrictStr
+    rotation: StrictStr
+    model: StrictStr
+    fx: Union[StrictFloat, StrictInt]
+    fy: Union[StrictFloat, StrictInt]
+    cx: Union[StrictFloat, StrictInt]
+    cy: Union[StrictFloat, StrictInt]
     additional_properties: Dict[str, Any] = {}
-    __properties: ClassVar[List[str]] = ["r", "g", "b"]
+    __properties: ClassVar[List[str]] = ["width", "height", "mirroring", "rotation", "model", "fx", "fy", "cx", "cy"]
+
+    @field_validator('mirroring')
+    def mirroring_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['None', 'X', 'Y']):
+            raise ValueError("must be one of enum values ('None', 'X', 'Y')")
+        return value
+
+    @field_validator('rotation')
+    def rotation_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['None', '90_CW', '180', '90_CCW']):
+            raise ValueError("must be one of enum values ('None', '90_CW', '180', '90_CCW')")
+        return value
+
+    @field_validator('model')
+    def model_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['PINHOLE']):
+            raise ValueError("must be one of enum values ('PINHOLE')")
+        return value
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -50,7 +77,7 @@ class Color(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of Color from a JSON string"""
+        """Create an instance of CoreCaptureSessionManifestPinholeCameraConfig from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -82,7 +109,7 @@ class Color(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of Color from a dict"""
+        """Create an instance of CoreCaptureSessionManifestPinholeCameraConfig from a dict"""
         if obj is None:
             return None
 
@@ -90,9 +117,15 @@ class Color(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "r": obj.get("r"),
-            "g": obj.get("g"),
-            "b": obj.get("b")
+            "width": obj.get("width"),
+            "height": obj.get("height"),
+            "mirroring": obj.get("mirroring"),
+            "rotation": obj.get("rotation"),
+            "model": obj.get("model"),
+            "fx": obj.get("fx"),
+            "fy": obj.get("fy"),
+            "cx": obj.get("cx"),
+            "cy": obj.get("cy")
         })
         # store additional fields in additional_properties
         for _key in obj.keys():

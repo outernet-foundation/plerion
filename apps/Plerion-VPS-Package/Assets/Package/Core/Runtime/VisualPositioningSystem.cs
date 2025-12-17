@@ -87,7 +87,7 @@ namespace Plerion.Core
 
         public static async UniTask Login(string username, string password) => await Auth.Login(username, password);
 
-        public static UniTask StartLocalizationSession(PinholeCameraConfig intrinsics)
+        public static UniTask StartLocalizationSession()
         {
             if (localizationSessionId != Guid.Empty)
                 return UniTask.CompletedTask;
@@ -97,15 +97,12 @@ namespace Plerion.Core
 
             startSessionTokenSource?.Dispose();
             startSessionTokenSource = new CancellationTokenSource();
-            startSessionTask = StartSessionInternal(new Camera(intrinsics), startSessionTokenSource.Token);
+            startSessionTask = StartSessionInternal(startSessionTokenSource.Token);
 
             return startSessionTask.AsUniTask();
         }
 
-        private static async Task StartSessionInternal(
-            Camera cameraIntrinsics,
-            CancellationToken cancellationToken = default
-        )
+        private static async Task StartSessionInternal(CancellationToken cancellationToken = default)
         {
             LocalizationSessionRead session = default;
 
@@ -126,7 +123,12 @@ namespace Plerion.Core
                     await UniTask.WaitForSeconds(1, cancellationToken: cancellationToken);
                 }
 
-                await api.SetLocalizationSessionCameraIntrinsicsAsync(session.Id, cameraIntrinsics, cancellationToken);
+                var cameraConfig = await _cameraProvider.GetCameraConfig();
+                await api.SetLocalizationSessionCameraIntrinsicsAsync(
+                    session.Id,
+                    new Camera(cameraConfig),
+                    cancellationToken
+                );
 
                 await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
             }
@@ -309,6 +311,7 @@ namespace Plerion.Core
 
             var localizationResults = await api.LocalizeImageAsync(
                 localizationSessionId,
+                AxisConvention.UNITY,
                 new FileParameter(new MemoryStream(image))
             );
 
@@ -321,8 +324,8 @@ namespace Plerion.Core
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
 
             unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
-                localizationResult.Transform.Position.ToDouble3(),
-                localizationResult.Transform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
+                localizationResult.CameraFromMapTransform.Position.ToDouble3(),
+                localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
                 localizationResult.MapTransform.Position.ToDouble3(),
                 localizationResult.MapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
                 cameraTranslationUnityWorldFromCamera,

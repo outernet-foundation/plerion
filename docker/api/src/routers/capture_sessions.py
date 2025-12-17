@@ -2,7 +2,8 @@ from typing import Optional
 from uuid import UUID
 
 from common.schemas import tar_schema
-from core.rig import Config
+from core.axis_convention import AxisConvention
+from core.capture_session_manifest import CaptureSessionManifest
 from datamodels.public_dtos import (
     CaptureSessionBatchUpdate,
     CaptureSessionCreate,
@@ -188,8 +189,10 @@ async def download_capture_session_tar(id: UUID, session: AsyncSession = Depends
 
 # dummy method, just to get RigConfig into the OpenAPI schema
 @router.get("/{id}/rig_config")
-async def get_capture_session_rig_config(id: UUID, session: AsyncSession = Depends(get_session)) -> Config:
-    rig_config = Config(rigs=[])
+async def get_capture_session_rig_config(
+    id: UUID, session: AsyncSession = Depends(get_session)
+) -> CaptureSessionManifest:
+    rig_config = CaptureSessionManifest(axis_convention=AxisConvention.OPENCV, rigs=[])
 
     return rig_config
 

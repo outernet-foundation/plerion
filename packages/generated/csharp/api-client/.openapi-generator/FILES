@@ -27,9 +27,9 @@ src/PlerionApiClient/Model/Camera.cs
 src/PlerionApiClient/Model/CameraConfig.cs
 src/PlerionApiClient/Model/CaptureSessionBatchUpdate.cs
 src/PlerionApiClient/Model/CaptureSessionCreate.cs
+src/PlerionApiClient/Model/CaptureSessionManifest.cs
 src/PlerionApiClient/Model/CaptureSessionRead.cs
 src/PlerionApiClient/Model/CaptureSessionUpdate.cs
-src/PlerionApiClient/Model/Config.cs
 src/PlerionApiClient/Model/DeviceType.cs
 src/PlerionApiClient/Model/FullOpenCVCameraConfig.cs
 src/PlerionApiClient/Model/GroupBatchUpdate.cs

@@ -353,7 +353,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Config"
+                $ref: "#/components/schemas/CaptureSessionManifest"
           description: Successful Response
         "422":
           content:
@@ -617,7 +617,7 @@ paths:
       - explode: true
         in: query
         name: axis_convention
-        required: false
+        required: true
         schema:
           $ref: "#/components/schemas/AxisConvention"
         style: form
@@ -654,7 +654,7 @@ paths:
       - explode: true
         in: query
         name: axis_convention
-        required: false
+        required: true
         schema:
           $ref: "#/components/schemas/AxisConvention"
         style: form
@@ -1142,6 +1142,13 @@ paths:
           title: Localization Session Id
           type: string
         style: simple
+      - explode: true
+        in: query
+        name: axis_convention
+        required: true
+        schema:
+          $ref: "#/components/schemas/AxisConvention"
+        style: form
       requestBody:
         content:
           multipart/form-data:
@@ -1619,6 +1626,105 @@ components:
       - device_type
       - name
       title: CaptureSessionCreate
+    CaptureSessionManifest:
+      example:
+        rigs:
+        - cameras:
+          - camera_config:
+              orientation: TOP_LEFT
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              width: 9
+              model: PINHOLE
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          - camera_config:
+              orientation: TOP_LEFT
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              width: 9
+              model: PINHOLE
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          id: id
+        - cameras:
+          - camera_config:
+              orientation: TOP_LEFT
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              width: 9
+              model: PINHOLE
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          - camera_config:
+              orientation: TOP_LEFT
+              fx: 2.027123023002322
+              fy: 4.145608029883936
+              cx: 7.386281948385884
+              cy: 1.2315135367772556
+              width: 9
+              model: PINHOLE
+              height: 3
+            rotation:
+              w: 5.962133916683182
+              x: 0.8008281904610115
+              "y": 6.027456183070403
+              z: 1.4658129805029452
+            translation:
+              x: 5.637376656633329
+              "y": 2.3021358869347655
+              z: 7.061401241503109
+            ref_sensor: true
+            id: id
+          id: id
+        axis_convention: OPENCV
+      properties:
+        axis_convention:
+          $ref: "#/components/schemas/AxisConvention"
+        rigs:
+          items:
+            $ref: "#/components/schemas/RigConfig"
+          type: array
+      required:
+      - axis_convention
+      - rigs
+      title: CaptureSessionManifest
     CaptureSessionRead:
       example:
         updated_at: 2000-01-23T04:56:07.000+00:00
@@ -1662,105 +1768,6 @@ components:
           nullable: true
           type: string
       title: CaptureSessionUpdate
-    Config:
-      example:
-        rigs:
-        - cameras:
-          - camera_config:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            ref_sensor: true
-            id: id
-          - camera_config:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            ref_sensor: true
-            id: id
-          id: id
-        - cameras:
-          - camera_config:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            ref_sensor: true
-            id: id
-          - camera_config:
-              fx: 2.027123023002322
-              fy: 4.145608029883936
-              cx: 7.386281948385884
-              cy: 1.2315135367772556
-              rotation: None
-              width: 9
-              model: PINHOLE
-              mirroring: None
-              height: 3
-            rotation:
-              w: 5.962133916683182
-              x: 0.8008281904610115
-              "y": 6.027456183070403
-              z: 1.4658129805029452
-            translation:
-              x: 5.637376656633329
-              "y": 2.3021358869347655
-              z: 7.061401241503109
-            ref_sensor: true
-            id: id
-          id: id
-      properties:
-        rigs:
-          items:
-            $ref: "#/components/schemas/RigConfig"
-          type: array
-      required:
-      - rigs
-      title: Config
     DeviceType:
       enum:
       - ARFoundation
@@ -1775,20 +1782,17 @@ components:
         height:
           title: Height
           type: integer
-        mirroring:
+        orientation:
           enum:
-          - None
-          - X
-          - "Y"
-          title: Mirroring
-          type: string
-        rotation:
-          enum:
-          - None
-          - 90_CW
-          - "180"
-          - 90_CCW
-          title: Rotation
+          - TOP_LEFT
+          - TOP_RIGHT
+          - BOTTOM_RIGHT
+          - BOTTOM_LEFT
+          - LEFT_TOP
+          - RIGHT_TOP
+          - RIGHT_BOTTOM
+          - LEFT_BOTTOM
+          title: Orientation
           type: string
         model:
           enum:
@@ -1843,11 +1847,10 @@ components:
       - k4
       - k5
       - k6
-      - mirroring
       - model
+      - orientation
       - p1
       - p2
-      - rotation
       - width
       title: FullOpenCVCameraConfig
     GroupBatchUpdate:
@@ -2336,7 +2339,7 @@ components:
       title: LocalizationSessionRead
     MapLocalization:
       example:
-        transform:
+        camera_from_map_transform:
           rotation:
             w: 5.962133916683182
             x: 0.8008281904610115
@@ -2365,17 +2368,17 @@ components:
           format: uuid
           title: Id
           type: string
-        transform:
+        camera_from_map_transform:
           $ref: "#/components/schemas/Transform"
         map_transform:
           $ref: "#/components/schemas/Transform"
         metrics:
           $ref: "#/components/schemas/LocalizationMetrics"
       required:
+      - camera_from_map_transform
       - id
       - map_transform
       - metrics
-      - transform
       title: MapLocalization
     NodeBatchUpdate:
       example:
@@ -2668,20 +2671,17 @@ components:
         height:
           title: Height
           type: integer
-        mirroring:
+        orientation:
           enum:
-          - None
-          - X
-          - "Y"
-          title: Mirroring
-          type: string
-        rotation:
-          enum:
-          - None
-          - 90_CW
-          - "180"
-          - 90_CCW
-          title: Rotation
+          - TOP_LEFT
+          - TOP_RIGHT
+          - BOTTOM_RIGHT
+          - BOTTOM_LEFT
+          - LEFT_TOP
+          - RIGHT_TOP
+          - RIGHT_BOTTOM
+          - LEFT_BOTTOM
+          title: Orientation
           type: string
         model:
           enum:
@@ -2724,11 +2724,10 @@ components:
       - k1
       - k2
       - k3
-      - mirroring
       - model
+      - orientation
       - p1
       - p2
-      - rotation
       - width
       title: OpenCVCameraConfig
     OrchestrationStatus:
@@ -2743,14 +2742,13 @@ components:
       type: string
     PinholeCameraConfig:
       example:
+        orientation: TOP_LEFT
         fx: 2.027123023002322
         fy: 4.145608029883936
         cx: 7.386281948385884
         cy: 1.2315135367772556
-        rotation: None
         width: 9
         model: PINHOLE
-        mirroring: None
         height: 3
       properties:
         width:
@@ -2759,20 +2757,17 @@ components:
         height:
           title: Height
           type: integer
-        mirroring:
+        orientation:
           enum:
-          - None
-          - X
-          - "Y"
-          title: Mirroring
-          type: string
-        rotation:
-          enum:
-          - None
-          - 90_CW
-          - "180"
-          - 90_CCW
-          title: Rotation
+          - TOP_LEFT
+          - TOP_RIGHT
+          - BOTTOM_RIGHT
+          - BOTTOM_LEFT
+          - LEFT_TOP
+          - RIGHT_TOP
+          - RIGHT_BOTTOM
+          - LEFT_BOTTOM
+          title: Orientation
           type: string
         model:
           enum:
@@ -2797,9 +2792,8 @@ components:
       - fx
       - fy
       - height
-      - mirroring
       - model
-      - rotation
+      - orientation
       - width
       title: PinholeCameraConfig
     Quaternion:
@@ -3195,14 +3189,13 @@ components:
     RigCameraConfig:
       example:
         camera_config:
+          orientation: TOP_LEFT
           fx: 2.027123023002322
           fy: 4.145608029883936
           cx: 7.386281948385884
           cy: 1.2315135367772556
-          rotation: None
           width: 9
           model: PINHOLE
-          mirroring: None
           height: 3
         rotation:
           w: 5.962133916683182
@@ -3239,14 +3232,13 @@ components:
       example:
         cameras:
         - camera_config:
+            orientation: TOP_LEFT
             fx: 2.027123023002322
             fy: 4.145608029883936
             cx: 7.386281948385884
             cy: 1.2315135367772556
-            rotation: None
             width: 9
             model: PINHOLE
-            mirroring: None
             height: 3
           rotation:
             w: 5.962133916683182
@@ -3260,14 +3252,13 @@ components:
           ref_sensor: true
           id: id
         - camera_config:
+            orientation: TOP_LEFT
             fx: 2.027123023002322
             fy: 4.145608029883936
             cx: 7.386281948385884
             cy: 1.2315135367772556
-            rotation: None
             width: 9
             model: PINHOLE
-            mirroring: None
             height: 3
           rotation:
             w: 5.962133916683182

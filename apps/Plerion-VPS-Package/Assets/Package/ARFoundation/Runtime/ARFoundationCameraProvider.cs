@@ -5,6 +5,7 @@ using Unity.Collections;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using PinholeCameraConfig = PlerionApiClient.Model.PinholeCameraConfig;
 
 namespace Plerion.Core.ARFoundation
 {
@@ -41,6 +42,30 @@ namespace Plerion.Core.ARFoundation
             _cancellationTokenSource = null;
         }
 
+        public async UniTask<PinholeCameraConfig> GetCameraConfig()
+        {
+            XRCameraIntrinsics intrinsics;
+            while (!cameraManager.TryGetIntrinsics(out intrinsics))
+                await UniTask.WaitForEndOfFrame();
+
+            return new PinholeCameraConfig(
+                model: PinholeCameraConfig.ModelEnum.PINHOLE,
+                // ARFoundation on Android Mobile returns images in LEFT_TOP orientation (EXIF/TIFF Orientation=5):
+                //  - 0th row is the visual left edge
+                //  - 0th column is the visual top edge
+                // To display canonically (TOP_LEFT), apply a transpose (swap X/Y), e.g.:
+                //  - rotate 90° CW, then flip left↔right, OR
+                //  - flip top↔bottom, then rotate 90° CW
+                orientation: PinholeCameraConfig.OrientationEnum.LEFTTOP,
+                width: intrinsics.resolution.x,
+                height: intrinsics.resolution.y,
+                fx: intrinsics.focalLength.x,
+                fy: intrinsics.focalLength.y,
+                cx: intrinsics.principalPoint.x,
+                cy: intrinsics.principalPoint.y
+            );
+        }
+
         public UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG() => GetFrameJPG(_cancellationTokenSource.Token);
 
         public async UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG(CancellationToken cancellationToken = default)
@@ -64,21 +89,15 @@ namespace Plerion.Core.ARFoundation
             cancellationToken.ThrowIfCancellationRequested();
 
             cameraManager.frameReceived -= receivedFrame;
-            var result = await ConvertToJPG(cpuImage, flipped: true);
+            var result = ConvertToJPG(cpuImage);
             cpuImage.Dispose();
 
             return (result, Camera.main.transform.position, Camera.main.transform.rotation);
         }
 
-        private static async UniTask<byte[]> ConvertToJPG(XRCpuImage cpuImage, bool flipped = false)
+        private static byte[] ConvertToJPG(XRCpuImage cpuImage)
         {
-            var conversion = new XRCpuImage.ConversionParams(
-                cpuImage,
-                TextureFormat.RGBA32,
-                // Mirror the image on the X axis to match the display orientation
-                flipped ? XRCpuImage.Transformation.MirrorX : XRCpuImage.Transformation.None
-            );
-
+            var conversion = new XRCpuImage.ConversionParams(cpuImage, TextureFormat.RGBA32);
             int byteCount = cpuImage.GetConvertedDataSize(conversion);
             using var pixelBuffer = new NativeArray<byte>(byteCount, Allocator.TempJob);
             cpuImage.Convert(conversion, pixelBuffer);

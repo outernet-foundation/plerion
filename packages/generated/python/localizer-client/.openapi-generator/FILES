@@ -11,6 +11,7 @@ plerion_localizer_client/api_response.py
 plerion_localizer_client/configuration.py
 plerion_localizer_client/exceptions.py
 plerion_localizer_client/models/__init__.py
+plerion_localizer_client/models/axis_convention.py
 plerion_localizer_client/models/camera.py
 plerion_localizer_client/models/full_open_cv_camera_config.py
 plerion_localizer_client/models/http_validation_error.py

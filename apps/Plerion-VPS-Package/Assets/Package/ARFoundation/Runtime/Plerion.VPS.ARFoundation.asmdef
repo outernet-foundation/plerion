@@ -5,7 +5,8 @@
     "UniTask",
     "Unity.XR.ARFoundation",
     "Unity.XR.ARSubsystems",
-    "Plerion.Core"
+    "Plerion.Core",
+    "PlerionApiClient"
   ],
   "includePlatforms": [],
   "excludePlatforms": [],

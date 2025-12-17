@@ -12,8 +12,9 @@ from traceback import format_exception
 from typing import Union, cast
 from uuid import UUID, uuid4
 
+from core.axis_convention import AxisConvention
+from core.capture_session_manifest import CaptureSessionManifest, PinholeCameraConfig, RigCameraConfig, RigConfig
 from core.classes import Quaternion, Vector3
-from core.rig import Config, PinholeCameraConfig, RigCameraConfig, RigConfig
 from numpy import asarray, float64
 from PIL import Image
 from pyzed.sl import (
@@ -223,7 +224,8 @@ class Zed(Thread):
 
         with open(self._output_directory() / "config.json", "w") as config_file:
             config_file.write(
-                Config(
+                CaptureSessionManifest(
+                    axis_convention=AxisConvention.OPENCV,
                     rigs=[
                         RigConfig(
                             id="rig0",
@@ -237,8 +239,7 @@ class Zed(Thread):
                                         model="PINHOLE",
                                         width=left_camera.image_size.width,
                                         height=left_camera.image_size.height,
-                                        mirroring="None",
-                                        rotation="None",
+                                        orientation="TOP_LEFT",
                                         fx=left_camera.fx,
                                         fy=left_camera.fy,
                                         cx=left_camera.cx,
@@ -264,8 +265,7 @@ class Zed(Thread):
                                         model="PINHOLE",
                                         width=right_camera.image_size.width,
                                         height=right_camera.image_size.height,
-                                        mirroring="None",
-                                        rotation="None",
+                                        orientation="TOP_LEFT",
                                         fx=right_camera.fx,
                                         fy=right_camera.fy,
                                         cx=right_camera.cx,
@@ -274,7 +274,7 @@ class Zed(Thread):
                                 ),
                             ],
                         )
-                    ]
+                    ],
                 ).model_dump_json(indent=4)
             )
 

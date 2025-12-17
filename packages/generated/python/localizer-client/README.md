@@ -95,6 +95,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AxisConvention](docs/AxisConvention.md)
  - [Camera](docs/Camera.md)
  - [FullOpenCVCameraConfig](docs/FullOpenCVCameraConfig.md)
  - [HTTPValidationError](docs/HTTPValidationError.md)

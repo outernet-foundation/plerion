@@ -200,15 +200,25 @@
       "post": {
         "summary": "Localize Image",
         "operationId": "localize_image",
+        "parameters": [
+          {
+            "name": "axis_convention",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/AxisConvention"
+            }
+          }
+        ],
         "requestBody": {
+          "required": true,
           "content": {
             "multipart/form-data": {
               "schema": {
                 "$ref": "#/components/schemas/Body_localize_image"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -216,10 +226,10 @@
             "content": {
               "application/json": {
                 "schema": {
+                  "type": "array",
                   "items": {
                     "$ref": "#/components/schemas/Localization"
                   },
-                  "type": "array",
                   "title": "Response Localize Image"
                 }
               }
@@ -241,6 +251,14 @@
   },
   "components": {
     "schemas": {
+      "AxisConvention": {
+        "type": "string",
+        "enum": [
+          "OPENCV",
+          "UNITY"
+        ],
+        "title": "AxisConvention"
+      },
       "Body_localize_image": {
         "properties": {
           "image": {
@@ -265,24 +283,19 @@
             "type": "integer",
             "title": "Height"
           },
-          "mirroring": {
+          "orientation": {
             "type": "string",
             "enum": [
-              "None",
-              "X",
-              "Y"
+              "TOP_LEFT",
+              "TOP_RIGHT",
+              "BOTTOM_RIGHT",
+              "BOTTOM_LEFT",
+              "LEFT_TOP",
+              "RIGHT_TOP",
+              "RIGHT_BOTTOM",
+              "LEFT_BOTTOM"
             ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
+            "title": "Orientation"
           },
           "model": {
             "type": "string",
@@ -342,8 +355,7 @@
         "required": [
           "width",
           "height",
-          "mirroring",
-          "rotation",
+          "orientation",
           "model",
           "fx",
           "fy",
@@ -456,24 +468,19 @@
             "type": "integer",
             "title": "Height"
           },
-          "mirroring": {
+          "orientation": {
             "type": "string",
             "enum": [
-              "None",
-              "X",
-              "Y"
+              "TOP_LEFT",
+              "TOP_RIGHT",
+              "BOTTOM_RIGHT",
+              "BOTTOM_LEFT",
+              "LEFT_TOP",
+              "RIGHT_TOP",
+              "RIGHT_BOTTOM",
+              "LEFT_BOTTOM"
             ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
+            "title": "Orientation"
           },
           "model": {
             "type": "string",
@@ -521,8 +528,7 @@
         "required": [
           "width",
           "height",
-          "mirroring",
-          "rotation",
+          "orientation",
           "model",
           "fx",
           "fy",
@@ -546,24 +552,19 @@
             "type": "integer",
             "title": "Height"
           },
-          "mirroring": {
+          "orientation": {
             "type": "string",
             "enum": [
-              "None",
-              "X",
-              "Y"
+              "TOP_LEFT",
+              "TOP_RIGHT",
+              "BOTTOM_RIGHT",
+              "BOTTOM_LEFT",
+              "LEFT_TOP",
+              "RIGHT_TOP",
+              "RIGHT_BOTTOM",
+              "LEFT_BOTTOM"
             ],
-            "title": "Mirroring"
-          },
-          "rotation": {
-            "type": "string",
-            "enum": [
-              "None",
-              "90_CW",
-              "180",
-              "90_CCW"
-            ],
-            "title": "Rotation"
+            "title": "Orientation"
           },
           "model": {
             "type": "string",
@@ -591,8 +592,7 @@
         "required": [
           "width",
           "height",
-          "mirroring",
-          "rotation",
+          "orientation",
           "model",
           "fx",
           "fy",

@@ -17,21 +17,52 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict
-from typing import Any, ClassVar, Dict, List
-from plerion_api_client.models.color import Color
-from plerion_api_client.models.vector3 import Vector3
+from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from typing import Any, ClassVar, Dict, List, Union
 from typing import Optional, Set
 from typing_extensions import Self
 
-class PointCloudPoint(BaseModel):
+class CoreRigOpenCVCameraConfig(BaseModel):
     """
-    PointCloudPoint
+    CoreRigOpenCVCameraConfig
     """ # noqa: E501
-    position: Vector3
-    color: Color
+    width: StrictInt
+    height: StrictInt
+    mirroring: StrictStr
+    rotation: StrictStr
+    model: StrictStr
+    fx: Union[StrictFloat, StrictInt]
+    fy: Union[StrictFloat, StrictInt]
+    cx: Union[StrictFloat, StrictInt]
+    cy: Union[StrictFloat, StrictInt]
+    k1: Union[StrictFloat, StrictInt]
+    k2: Union[StrictFloat, StrictInt]
+    p1: Union[StrictFloat, StrictInt]
+    p2: Union[StrictFloat, StrictInt]
+    k3: Union[StrictFloat, StrictInt]
     additional_properties: Dict[str, Any] = {}
-    __properties: ClassVar[List[str]] = ["position", "color"]
+    __properties: ClassVar[List[str]] = ["width", "height", "mirroring", "rotation", "model", "fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2", "k3"]
+
+    @field_validator('mirroring')
+    def mirroring_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['None', 'X', 'Y']):
+            raise ValueError("must be one of enum values ('None', 'X', 'Y')")
+        return value
+
+    @field_validator('rotation')
+    def rotation_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['None', '90_CW', '180', '90_CCW']):
+            raise ValueError("must be one of enum values ('None', '90_CW', '180', '90_CCW')")
+        return value
+
+    @field_validator('model')
+    def model_validate_enum(cls, value):
+        """Validates the enum"""
+        if value not in set(['OPENCV']):
+            raise ValueError("must be one of enum values ('OPENCV')")
+        return value
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -51,7 +82,7 @@ class PointCloudPoint(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of PointCloudPoint from a JSON string"""
+        """Create an instance of CoreRigOpenCVCameraConfig from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -74,12 +105,6 @@ class PointCloudPoint(BaseModel):
             exclude=excluded_fields,
             exclude_none=True,
         )
-        # override the default output from pydantic by calling `to_dict()` of position
-        if self.position:
-            _dict['position'] = self.position.to_dict()
-        # override the default output from pydantic by calling `to_dict()` of color
-        if self.color:
-            _dict['color'] = self.color.to_dict()
         # puts key-value pairs in additional_properties in the top level
         if self.additional_properties is not None:
             for _key, _value in self.additional_properties.items():
@@ -89,7 +114,7 @@ class PointCloudPoint(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of PointCloudPoint from a dict"""
+        """Create an instance of CoreRigOpenCVCameraConfig from a dict"""
         if obj is None:
             return None
 
@@ -97,8 +122,20 @@ class PointCloudPoint(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "position": Vector3.from_dict(obj["position"]) if obj.get("position") is not None else None,
-            "color": Color.from_dict(obj["color"]) if obj.get("color") is not None else None
+            "width": obj.get("width"),
+            "height": obj.get("height"),
+            "mirroring": obj.get("mirroring"),
+            "rotation": obj.get("rotation"),
+            "model": obj.get("model"),
+            "fx": obj.get("fx"),
+            "fy": obj.get("fy"),
+            "cx": obj.get("cx"),
+            "cy": obj.get("cy"),
+            "k1": obj.get("k1"),
+            "k2": obj.get("k2"),
+            "p1": obj.get("p1"),
+            "p2": obj.get("p2"),
+            "k3": obj.get("k3")
         })
         # store additional fields in additional_properties
         for _key in obj.keys():

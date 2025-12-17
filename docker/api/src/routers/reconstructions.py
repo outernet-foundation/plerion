@@ -211,9 +211,7 @@ async def get_reconstruction_status(id: UUID, session: AsyncSession = Depends(ge
 
 @router.get("/{id}/points", response_class=StreamingResponse, responses={200: {"content": binary_schema}})
 async def get_reconstruction_points(
-    id: UUID,
-    axis_convention: AxisConvention = Query(AxisConvention.OPENCV),
-    session: AsyncSession = Depends(get_session),
+    id: UUID, axis_convention: AxisConvention = Query(...), session: AsyncSession = Depends(get_session)
 ) -> StreamingResponse:
     row = await session.get(Reconstruction, id)
     if not row:
@@ -248,9 +246,7 @@ async def get_reconstruction_points(
 
 @router.get("/{id}/frame_poses", response_class=StreamingResponse, responses={200: {"content": binary_schema}})
 async def get_reconstruction_frame_poses(
-    id: UUID,
-    axis_convention: AxisConvention = Query(AxisConvention.OPENCV),
-    session: AsyncSession = Depends(get_session),
+    id: UUID, axis_convention: AxisConvention = Query(...), session: AsyncSession = Depends(get_session)
 ) -> StreamingResponse:
     row = await session.get(Reconstruction, id)
     if not row:

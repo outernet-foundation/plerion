@@ -116,19 +116,7 @@ namespace PlerionClient.Client
 
                 await UniTask.SwitchToMainThread();
 
-                await VisualPositioningSystem.StartLocalizationSession(
-                    new PinholeCameraConfig(
-                        model: PinholeCameraConfig.ModelEnum.PINHOLE,
-                        width: intrinsics.resolution.x,
-                        height: intrinsics.resolution.y,
-                        mirroring: PinholeCameraConfig.MirroringEnum.None,
-                        rotation: PinholeCameraConfig.RotationEnum._90CCW,
-                        fx: intrinsics.focalLength.x,
-                        fy: intrinsics.focalLength.y,
-                        cx: intrinsics.resolution.x - 1 - intrinsics.principalPoint.x,
-                        cy: intrinsics.principalPoint.y
-                    )
-                );
+                await VisualPositioningSystem.StartLocalizationSession();
 
                 await UniTask.SwitchToMainThread();
                 App.state.localizationSessionStatus.ExecuteSetOrDelay(LocalizationSessionStatus.Active);

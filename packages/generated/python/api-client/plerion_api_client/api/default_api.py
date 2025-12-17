@@ -24,9 +24,9 @@ from plerion_api_client.models.axis_convention import AxisConvention
 from plerion_api_client.models.camera import Camera
 from plerion_api_client.models.capture_session_batch_update import CaptureSessionBatchUpdate
 from plerion_api_client.models.capture_session_create import CaptureSessionCreate
+from plerion_api_client.models.capture_session_manifest import CaptureSessionManifest
 from plerion_api_client.models.capture_session_read import CaptureSessionRead
 from plerion_api_client.models.capture_session_update import CaptureSessionUpdate
-from plerion_api_client.models.config import Config
 from plerion_api_client.models.group_batch_update import GroupBatchUpdate
 from plerion_api_client.models.group_create import GroupCreate
 from plerion_api_client.models.group_read import GroupRead
@@ -5125,7 +5125,7 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> Config:
+    ) -> CaptureSessionManifest:
         """Get Capture Session Rig Config
 
 
@@ -5162,7 +5162,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Config",
+            '200': "CaptureSessionManifest",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -5192,7 +5192,7 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[Config]:
+    ) -> ApiResponse[CaptureSessionManifest]:
         """Get Capture Session Rig Config
 
 
@@ -5229,7 +5229,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Config",
+            '200': "CaptureSessionManifest",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -5296,7 +5296,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "Config",
+            '200': "CaptureSessionManifest",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -7761,7 +7761,7 @@ class DefaultApi:
     async def get_reconstruction_frame_poses(
         self,
         id: UUID,
-        axis_convention: Optional[AxisConvention] = None,
+        axis_convention: AxisConvention,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -7780,7 +7780,7 @@ class DefaultApi:
 
         :param id: (required)
         :type id: str
-        :param axis_convention:
+        :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -7832,7 +7832,7 @@ class DefaultApi:
     async def get_reconstruction_frame_poses_with_http_info(
         self,
         id: UUID,
-        axis_convention: Optional[AxisConvention] = None,
+        axis_convention: AxisConvention,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -7851,7 +7851,7 @@ class DefaultApi:
 
         :param id: (required)
         :type id: str
-        :param axis_convention:
+        :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -7903,7 +7903,7 @@ class DefaultApi:
     async def get_reconstruction_frame_poses_without_preload_content(
         self,
         id: UUID,
-        axis_convention: Optional[AxisConvention] = None,
+        axis_convention: AxisConvention,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -7922,7 +7922,7 @@ class DefaultApi:
 
         :param id: (required)
         :type id: str
-        :param axis_convention:
+        :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -8559,7 +8559,7 @@ class DefaultApi:
     async def get_reconstruction_points(
         self,
         id: UUID,
-        axis_convention: Optional[AxisConvention] = None,
+        axis_convention: AxisConvention,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -8578,7 +8578,7 @@ class DefaultApi:
 
         :param id: (required)
         :type id: str
-        :param axis_convention:
+        :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -8630,7 +8630,7 @@ class DefaultApi:
     async def get_reconstruction_points_with_http_info(
         self,
         id: UUID,
-        axis_convention: Optional[AxisConvention] = None,
+        axis_convention: AxisConvention,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -8649,7 +8649,7 @@ class DefaultApi:
 
         :param id: (required)
         :type id: str
-        :param axis_convention:
+        :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -8701,7 +8701,7 @@ class DefaultApi:
     async def get_reconstruction_points_without_preload_content(
         self,
         id: UUID,
-        axis_convention: Optional[AxisConvention] = None,
+        axis_convention: AxisConvention,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -8720,7 +8720,7 @@ class DefaultApi:
 
         :param id: (required)
         :type id: str
-        :param axis_convention:
+        :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -9683,6 +9683,7 @@ class DefaultApi:
     async def localize_image(
         self,
         localization_session_id: UUID,
+        axis_convention: AxisConvention,
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9702,6 +9703,8 @@ class DefaultApi:
 
         :param localization_session_id: (required)
         :type localization_session_id: str
+        :param axis_convention: (required)
+        :type axis_convention: AxisConvention
         :param image: (required)
         :type image: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -9728,6 +9731,7 @@ class DefaultApi:
 
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
+            axis_convention=axis_convention,
             image=image,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -9754,6 +9758,7 @@ class DefaultApi:
     async def localize_image_with_http_info(
         self,
         localization_session_id: UUID,
+        axis_convention: AxisConvention,
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9773,6 +9778,8 @@ class DefaultApi:
 
         :param localization_session_id: (required)
         :type localization_session_id: str
+        :param axis_convention: (required)
+        :type axis_convention: AxisConvention
         :param image: (required)
         :type image: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -9799,6 +9806,7 @@ class DefaultApi:
 
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
+            axis_convention=axis_convention,
             image=image,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -9825,6 +9833,7 @@ class DefaultApi:
     async def localize_image_without_preload_content(
         self,
         localization_session_id: UUID,
+        axis_convention: AxisConvention,
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9844,6 +9853,8 @@ class DefaultApi:
 
         :param localization_session_id: (required)
         :type localization_session_id: str
+        :param axis_convention: (required)
+        :type axis_convention: AxisConvention
         :param image: (required)
         :type image: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -9870,6 +9881,7 @@ class DefaultApi:
 
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
+            axis_convention=axis_convention,
             image=image,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -9891,6 +9903,7 @@ class DefaultApi:
     def _localize_image_serialize(
         self,
         localization_session_id,
+        axis_convention,
         image,
         _request_auth,
         _content_type,
@@ -9916,6 +9929,10 @@ class DefaultApi:
         if localization_session_id is not None:
             _path_params['localization_session_id'] = localization_session_id
         # process the query parameters
+        if axis_convention is not None:
+            
+            _query_params.append(('axis_convention', axis_convention.value))
+            
         # process the header parameters
         # process the form parameters
         if image is not None:

@@ -102,10 +102,10 @@ namespace Plerion.Core
             double3x3 rotationUnityWorldFromCamera
         )
         {
-            (translationCameraFromMap, rotationCameraFromMap) = ChangeBasisUnityFromOpenCV(
-                translationCameraFromMap,
-                rotationCameraFromMap
-            );
+            // (translationCameraFromMap, rotationCameraFromMap) = ChangeBasisUnityFromOpenCV(
+            //     translationCameraFromMap,
+            //     rotationCameraFromMap
+            // );
             (translationEcefFromMap, rotationEcefFromMap) = ChangeBasisUnityFromEcef(
                 translationEcefFromMap,
                 rotationEcefFromMap

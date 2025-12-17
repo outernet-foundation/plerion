@@ -18,9 +18,9 @@ from plerion_api_client.models.camera import Camera
 from plerion_api_client.models.camera_config import CameraConfig
 from plerion_api_client.models.capture_session_batch_update import CaptureSessionBatchUpdate
 from plerion_api_client.models.capture_session_create import CaptureSessionCreate
+from plerion_api_client.models.capture_session_manifest import CaptureSessionManifest
 from plerion_api_client.models.capture_session_read import CaptureSessionRead
 from plerion_api_client.models.capture_session_update import CaptureSessionUpdate
-from plerion_api_client.models.config import Config
 from plerion_api_client.models.device_type import DeviceType
 from plerion_api_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig
 from plerion_api_client.models.group_batch_update import GroupBatchUpdate

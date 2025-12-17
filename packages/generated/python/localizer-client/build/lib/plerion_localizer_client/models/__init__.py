@@ -13,6 +13,7 @@
 """  # noqa: E501
 
 # import models into model package
+from plerion_localizer_client.models.axis_convention import AxisConvention
 from plerion_localizer_client.models.camera import Camera
 from plerion_localizer_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig
 from plerion_localizer_client.models.http_validation_error import HTTPValidationError

@@ -68,6 +68,7 @@
   <Project Path="NuGetForUnity.csproj" />
   <Project Path="Unity.2D.Sprite.Editor.csproj" />
   <Project Path="Unity.Multiplayer.Center.Common.csproj" />
+  <Project Path="glTFast.Documentation.Examples.csproj" />
   <Project Path="Unity.InputSystem.ForUI.csproj" />
   <Project Path="Unity.Collections.CodeGen.csproj" />
   <Project Path="Unity.XR.Management.csproj" />
@@ -87,13 +88,13 @@
   <Project Path="UniTask.Editor.csproj" />
   <Project Path="UnityEngine.SpatialTracking.csproj" />
   <Project Path="UnityEngine.XR.LegacyInputHelpers.csproj" />
+  <Project Path="glTFast.dots.csproj" />
   <Project Path="Unity.Rendering.LightTransport.Editor.csproj" />
   <Project Path="Unity.InputSystem.DocCodeSamples.csproj" />
   <Project Path="Unity.RenderPipelines.Universal.Shaders.csproj" />
   <Project Path="Unity.RenderPipelines.Core.Runtime.Shared.csproj" />
   <Project Path="Unity.XR.ARAnalytics.Editor.csproj" />
   <Project Path="Unity.XR.ARFoundation.InternalUtils.Editor.csproj" />
-  <Project Path="glTFast.dots.csproj" />
   <Project Path="Plerion.Core.Editor.csproj" />
   <Project Path="UnityEditor.SpatialTracking.csproj" />
   <Project Path="UniTask.Addressables.csproj" />
