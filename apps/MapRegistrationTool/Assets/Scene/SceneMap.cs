@@ -5,7 +5,6 @@ using Cysharp.Threading.Tasks;
 using FofX;
 using FofX.Stateful;
 using Plerion.Core;
-using Plerion.VPS;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.EventSystems;

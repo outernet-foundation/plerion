@@ -1,7 +1,7 @@
 using Cysharp.Threading.Tasks;
 using UnityEngine;
 
-namespace Plerion.VPS
+namespace Plerion.Core
 {
     public interface ICameraProvider
     {

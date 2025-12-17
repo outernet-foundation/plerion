@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
-namespace Plerion.VPS.ARFoundation
+namespace Plerion.Core.ARFoundation
 {
     public class ARFoundationCameraProvider : ICameraProvider
     {

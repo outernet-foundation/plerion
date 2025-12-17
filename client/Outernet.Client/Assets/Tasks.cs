@@ -1,5 +1,5 @@
-using Plerion.VPS;
 using Cysharp.Threading.Tasks;
+using Plerion.Core;
 
 namespace Outernet.Client.AuthoringTools
 {

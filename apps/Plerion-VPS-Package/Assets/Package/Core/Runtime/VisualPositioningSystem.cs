@@ -16,7 +16,7 @@ using Camera = PlerionApiClient.Model.Camera;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
-namespace Plerion.VPS
+namespace Plerion.Core
 {
     public static class VisualPositioningSystem
     {

@@ -2,12 +2,12 @@ using System;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using FofX.Stateful;
-using Plerion.VPS;
+using Plerion.Core;
 using PlerionApiClient.Model;
 using UnityEngine;
 using UnityEngine.Android;
 #if !UNITY_EDITOR
-using Plerion.VPS.ARFoundation;
+using Plerion.Core.ARFoundation;
 #endif
 
 namespace PlerionClient.Client

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Plerion.VPS
+namespace Plerion.Core
 {
     public class PrefabReferences : ScriptableObject
     {

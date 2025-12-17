@@ -1,7 +1,7 @@
 using Unity.Mathematics;
 using UnityEngine;
 
-namespace Plerion.VPS
+namespace Plerion.Core
 {
     [ExecuteInEditMode]
     public class Anchor : MonoBehaviour

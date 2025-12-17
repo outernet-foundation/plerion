@@ -5,7 +5,7 @@ using UnityEngine;
 using Color = UnityEngine.Color;
 using Vector3 = UnityEngine.Vector3;
 
-namespace Plerion.VPS
+namespace Plerion.Core
 {
     [RequireComponent(typeof(ParticleSystem))]
     public class LocalizationMapVisualizer : MonoBehaviour
