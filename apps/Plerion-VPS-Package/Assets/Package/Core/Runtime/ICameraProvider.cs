@@ -21,8 +21,6 @@ namespace Plerion.Core
         public async UniTask<PinholeCameraConfig> GetCameraConfig() =>
             new PinholeCameraConfig(
                 model: PinholeCameraConfig.ModelEnum.PINHOLE,
-                // mirroring: PinholeCameraConfig.MirroringEnum.None, // On (at least) AndroidMobile, the image is mirrored along X
-                // rotation: PinholeCameraConfig.RotationEnum.None, // On (at least) AndroidMobile, the image is rotated 90 CCW
                 orientation: PinholeCameraConfig.OrientationEnum.TOPLEFT,
                 width: 0,
                 height: 0,

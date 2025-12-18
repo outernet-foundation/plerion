@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using FofX.Stateful;
 using Plerion.Core;
-using PlerionApiClient.Model;
 using UnityEngine;
 using UnityEngine.Android;
 #if !UNITY_EDITOR
@@ -109,10 +108,6 @@ namespace PlerionClient.Client
             {
                 if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
                     Permission.RequestUserPermission(Permission.Camera);
-
-                UnityEngine.XR.ARSubsystems.XRCameraIntrinsics intrinsics = default;
-                while (!SceneReferences.ARCameraManager.TryGetIntrinsics(out intrinsics))
-                    await UniTask.WaitForEndOfFrame();
 
                 await UniTask.SwitchToMainThread();
 
