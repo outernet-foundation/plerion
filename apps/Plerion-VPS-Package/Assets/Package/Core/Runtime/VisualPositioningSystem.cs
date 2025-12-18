@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
-using Plerion.Core;
 using PlerionApiClient.Api;
 using PlerionApiClient.Client;
 using PlerionApiClient.Model;
@@ -27,7 +26,6 @@ namespace Plerion.Core
             public ReconstructionVisualizer reconstructionVisualizer;
         }
 
-        private static ICameraProvider _cameraProvider = null;
         private static Dictionary<Guid, MapData> _maps = new Dictionary<Guid, MapData>();
         private static DefaultApi api;
         private static CancellationTokenSource startSessionTokenSource = new CancellationTokenSource();
@@ -40,6 +38,7 @@ namespace Plerion.Core
         private static Action<string> _errorCallback;
         private static Action<string, Exception> _logExceptionCallback;
 
+        public static ICameraProvider CameraProvider { get; private set; }
         public static Prefabs Prefabs { get; private set; }
         public static bool LocalizationSessionActive => localizationSessionId != Guid.Empty;
         public static double4x4 EcefToUnityWorldTransform => unityFromEcefTransform;
@@ -66,7 +65,9 @@ namespace Plerion.Core
             Action<string, Exception> logException
         )
         {
-            _cameraProvider = cameraProvider;
+            CameraProvider = cameraProvider;
+            CameraProvider.Initialize();
+
             _logCallback = logCallback;
             _warnCallback = warnCallback;
             _errorCallback = errorCallback;
@@ -123,7 +124,10 @@ namespace Plerion.Core
                     await UniTask.WaitForSeconds(1, cancellationToken: cancellationToken);
                 }
 
-                var cameraConfig = await _cameraProvider.GetCameraConfig();
+                PinholeCameraConfig cameraConfig;
+                while (!CameraProvider.GetCameraConfig(out cameraConfig))
+                    LogDebug("Waiting for camera intrinsics...");
+
                 await api.SetLocalizationSessionCameraIntrinsicsAsync(
                     session.Id,
                     new Camera(cameraConfig),
@@ -241,12 +245,12 @@ namespace Plerion.Core
             if (Enabled)
                 return;
 
-            if (_cameraProvider == null)
+            if (CameraProvider == null)
                 throw new Exception("Camera provider must be set before calling Start.");
 
             Enabled = true;
 
-            _cameraProvider.Start();
+            CameraProvider.Start();
 
             _cancellationTokenSource = new CancellationTokenSource();
             ExecuteCameraLocalization(_cancellationTokenSource.Token).Forget();
@@ -256,7 +260,7 @@ namespace Plerion.Core
         {
             Enabled = false;
 
-            _cameraProvider.Stop();
+            CameraProvider.Stop();
 
             _cancellationTokenSource?.Cancel();
             _cancellationTokenSource?.Dispose();
@@ -271,7 +275,7 @@ namespace Plerion.Core
             {
                 try
                 {
-                    var (cameraImage, cameraPosition, cameraRotation) = await _cameraProvider.GetFrameJPG();
+                    var (cameraImage, cameraPosition, cameraRotation) = await CameraProvider.GetFrame();
 
                     if (cancellationToken.IsCancellationRequested)
                         break;

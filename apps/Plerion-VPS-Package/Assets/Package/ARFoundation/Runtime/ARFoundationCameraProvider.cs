@@ -3,6 +3,8 @@ using System.Threading;
 using Cysharp.Threading.Tasks;
 using Unity.Collections;
 using UnityEngine;
+using UnityEngine.Android;
+using UnityEngine.Experimental.Rendering;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 using PinholeCameraConfig = PlerionApiClient.Model.PinholeCameraConfig;
@@ -14,6 +16,7 @@ namespace Plerion.Core.ARFoundation
         public ARCameraManager cameraManager;
         public bool manageCameraEnabledState;
         private CancellationTokenSource _cancellationTokenSource;
+        static XRCameraConfiguration? bestConfig = null;
 
         public ARFoundationCameraProvider(ARCameraManager cameraManager, bool manageCameraEnabledState = true)
         {
@@ -22,6 +25,34 @@ namespace Plerion.Core.ARFoundation
 
             if (manageCameraEnabledState)
                 cameraManager.enabled = false;
+        }
+
+        public void Initialize()
+        {
+            if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
+                Permission.RequestUserPermission(Permission.Camera);
+
+            foreach (var config in cameraManager.GetConfigurations(Allocator.Temp))
+            {
+                if (
+                    bestConfig == null
+                    || (config.width * config.height) > (bestConfig.Value.width * bestConfig.Value.height)
+                )
+                {
+                    bestConfig = config;
+                }
+            }
+            if (bestConfig.HasValue)
+            {
+                cameraManager.currentConfiguration = bestConfig;
+                Debug.Log(
+                    $"Selected camera configuration: {bestConfig.Value.width}x{bestConfig.Value.height} @ {bestConfig.Value.framerate}fps"
+                );
+            }
+            else
+            {
+                Debug.LogWarning("No camera configurations available.");
+            }
         }
 
         public void Start()
@@ -42,13 +73,19 @@ namespace Plerion.Core.ARFoundation
             _cancellationTokenSource = null;
         }
 
-        public async UniTask<PinholeCameraConfig> GetCameraConfig()
+        public bool GetCameraConfig(out PinholeCameraConfig cameraConfig)
         {
-            XRCameraIntrinsics intrinsics;
-            while (!cameraManager.TryGetIntrinsics(out intrinsics))
-                await UniTask.WaitForEndOfFrame();
+            if (
+                !cameraManager.TryGetIntrinsics(out XRCameraIntrinsics intrinsics)
+                || intrinsics.resolution.x != bestConfig?.width
+                || intrinsics.resolution.y != bestConfig?.height
+            )
+            {
+                cameraConfig = null;
+                return false;
+            }
 
-            return new PinholeCameraConfig(
+            cameraConfig = new PinholeCameraConfig(
                 model: PinholeCameraConfig.ModelEnum.PINHOLE,
                 // ARFoundation on Android Mobile returns images in LEFT_TOP orientation (EXIF/TIFF Orientation=5):
                 //  - 0th row is the visual left edge
@@ -64,57 +101,51 @@ namespace Plerion.Core.ARFoundation
                 cx: intrinsics.principalPoint.x,
                 cy: intrinsics.principalPoint.y
             );
+
+            return true;
         }
 
-        public UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG() => GetFrameJPG(_cancellationTokenSource.Token);
-
-        public async UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG(CancellationToken cancellationToken = default)
+        public async UniTask<(byte[], Vector3, Quaternion)> GetFrame()
         {
-            bool frameReceived = false;
-            Action<ARCameraFrameEventArgs> receivedFrame = args => frameReceived = true;
-            cameraManager.frameReceived += receivedFrame;
+            if (!cameraManager.TryAcquireLatestCpuImage(out var cpuImage))
+                return (null, default, default);
 
-            cancellationToken.Register(() => cameraManager.frameReceived -= receivedFrame);
-
-            XRCpuImage cpuImage = default;
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                await UniTask.WaitUntil(() => frameReceived, cancellationToken: cancellationToken);
-                await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
-                if (cameraManager.TryAcquireLatestCpuImage(out cpuImage))
-                    break;
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            cameraManager.frameReceived -= receivedFrame;
-            var result = ConvertToJPG(cpuImage);
-            cpuImage.Dispose();
-
-            return (result, Camera.main.transform.position, Camera.main.transform.rotation);
-        }
-
-        private static byte[] ConvertToJPG(XRCpuImage cpuImage)
-        {
             var conversion = new XRCpuImage.ConversionParams(cpuImage, TextureFormat.RGBA32);
-            int byteCount = cpuImage.GetConvertedDataSize(conversion);
-            using var pixelBuffer = new NativeArray<byte>(byteCount, Allocator.TempJob);
-            cpuImage.Convert(conversion, pixelBuffer);
 
-            var texture = new Texture2D(
-                conversion.outputDimensions.x,
-                conversion.outputDimensions.y,
-                TextureFormat.RGBA32,
-                false
+            int byteCount = cpuImage.GetConvertedDataSize(conversion);
+            byte[] pixelBuffer = default;
+            XRCpuImage.AsyncConversionStatus conversionStatus = XRCpuImage.AsyncConversionStatus.Pending;
+
+            cpuImage.ConvertAsync(
+                conversion,
+                (status, _, result) =>
+                {
+                    conversionStatus = status;
+                    pixelBuffer = result.ToArray();
+                }
             );
 
-            texture.LoadRawTextureData(pixelBuffer);
-            texture.Apply(false, false);
-            byte[] jpgBytes = texture.EncodeToJPG();
-            UnityEngine.Object.Destroy(texture);
+            await UniTask.WaitUntil(() =>
+                conversionStatus == XRCpuImage.AsyncConversionStatus.Ready
+                || conversionStatus == XRCpuImage.AsyncConversionStatus.Failed
+                || conversionStatus == XRCpuImage.AsyncConversionStatus.Disposed
+            );
 
-            return jpgBytes;
+            if (conversionStatus == XRCpuImage.AsyncConversionStatus.Disposed)
+                throw new Exception("Conversion disposed unexpectedly");
+
+            if (conversionStatus == XRCpuImage.AsyncConversionStatus.Failed)
+                throw new Exception("XRCpuImage conversion failed");
+
+            uint width = (uint)cpuImage.width;
+            uint height = (uint)cpuImage.height;
+            cpuImage.Dispose();
+
+            var jpgBytes = await UniTask.RunOnThreadPool(() =>
+                ImageConversion.EncodeArrayToJPG(pixelBuffer, GraphicsFormat.R8G8B8A8_SRGB, width, height)
+            );
+
+            return (jpgBytes, Camera.main.transform.position, Camera.main.transform.rotation);
         }
     }
 }

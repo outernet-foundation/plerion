@@ -6,20 +6,24 @@ namespace Plerion.Core
 {
     public interface ICameraProvider
     {
+        void Initialize();
         void Start();
         void Stop();
-        UniTask<PinholeCameraConfig> GetCameraConfig();
-        UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG();
+        bool GetCameraConfig(out PinholeCameraConfig cameraConfig);
+        UniTask<(byte[], Vector3, Quaternion)> GetFrame();
     }
 
     public class NoOpCameraProvider : ICameraProvider
     {
+        public void Initialize() { }
+
         public void Start() { }
 
         public void Stop() { }
 
-        public async UniTask<PinholeCameraConfig> GetCameraConfig() =>
-            new PinholeCameraConfig(
+        public bool GetCameraConfig(out PinholeCameraConfig cameraConfig)
+        {
+            cameraConfig = new PinholeCameraConfig(
                 model: PinholeCameraConfig.ModelEnum.PINHOLE,
                 orientation: PinholeCameraConfig.OrientationEnum.TOPLEFT,
                 width: 0,
@@ -29,8 +33,10 @@ namespace Plerion.Core
                 cx: 0,
                 cy: 0
             );
+            return true;
+        }
 
-        public UniTask<(byte[], Vector3, Quaternion)> GetFrameJPG() =>
-            UniTask.FromResult((default(byte[]), default(Vector3), default(Quaternion)));
+        public async UniTask<(byte[], Vector3, Quaternion)> GetFrame() =>
+            await UniTask.FromResult<(byte[], Vector3, Quaternion)>((null, default, default));
     }
 }

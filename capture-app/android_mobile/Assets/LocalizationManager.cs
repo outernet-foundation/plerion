@@ -106,9 +106,6 @@ namespace PlerionClient.Client
 
             try
             {
-                if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
-                    Permission.RequestUserPermission(Permission.Camera);
-
                 await UniTask.SwitchToMainThread();
 
                 await VisualPositioningSystem.StartLocalizationSession();

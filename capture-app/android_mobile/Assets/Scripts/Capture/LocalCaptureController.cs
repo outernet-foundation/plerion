@@ -5,12 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Plerion.Core;
 using PlerionApiClient.Model;
-using Unity.Collections;
-using Unity.Mathematics;
 using UnityEngine;
-using UnityEngine.Android;
-using UnityEngine.Experimental.Rendering;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -20,7 +17,6 @@ public static class LocalCaptureController
     static ARAnchorManager anchorManager;
     static ARAnchor captureAnchor;
     static float captureIntervalSeconds;
-    static XRCameraConfiguration? bestConfig = null;
 
     static Guid sessionId;
     static string sessionDirectory;
@@ -38,6 +34,9 @@ public static class LocalCaptureController
     public static void Initialize()
     {
         recordingsRoot = Path.Combine(Application.persistentDataPath, "Captures");
+        Directory.CreateDirectory(recordingsRoot);
+
+        anchorManager = UnityEngine.Object.FindAnyObjectByType<ARAnchorManager>();
     }
 
     public static IEnumerable<Guid> GetCaptures()
@@ -53,40 +52,15 @@ public static class LocalCaptureController
 
     public static async UniTask StartCapture(CancellationToken cancellationToken, float requestedCaptureIntervalSeconds)
     {
-        var root = recordingsRoot;
-        Debug.Log($"Capture root: {root}");
-        Directory.CreateDirectory(recordingsRoot); // ensure root exists
-
-        cameraManager = UnityEngine.Object.FindAnyObjectByType<ARCameraManager>();
-        anchorManager = UnityEngine.Object.FindAnyObjectByType<ARAnchorManager>();
         captureIntervalSeconds = requestedCaptureIntervalSeconds;
 
-        await UniTask.WaitUntil(
-            () => Permission.HasUserAuthorizedPermission(Permission.Camera),
-            cancellationToken: cancellationToken
-        );
+        sessionId = Guid.NewGuid();
+        sessionDirectory = SessionDir(sessionId.ToString());
+        Directory.CreateDirectory(Path.Combine(sessionDirectory, "rig0"));
+        Directory.CreateDirectory(Path.Combine(sessionDirectory, "rig0", "camera0"));
 
-        foreach (var config in cameraManager.GetConfigurations(Allocator.Temp))
-        {
-            if (
-                bestConfig == null
-                || (config.width * config.height) > (bestConfig.Value.width * bestConfig.Value.height)
-            )
-            {
-                bestConfig = config;
-            }
-        }
-        if (bestConfig.HasValue)
-        {
-            cameraManager.currentConfiguration = bestConfig;
-            Debug.Log(
-                $"Selected camera configuration: {bestConfig.Value.width}x{bestConfig.Value.height} @ {bestConfig.Value.framerate}fps"
-            );
-        }
-        else
-        {
-            Debug.LogWarning("No camera configurations available.");
-        }
+        poseWriter = new StreamWriter(Path.Combine(sessionDirectory, "rig0", "frames.csv")) { AutoFlush = true };
+        poseWriter.WriteLine("timestamp,tx,ty,tz,qx,qy,qz,qw");
 
         await UniTask.WaitUntil(
             () => ARSession.state == ARSessionState.SessionTracking,
@@ -105,14 +79,6 @@ public static class LocalCaptureController
             cancellationToken: cancellationToken
         );
 
-        sessionId = Guid.NewGuid();
-        sessionDirectory = SessionDir(sessionId.ToString());
-        Directory.CreateDirectory(Path.Combine(sessionDirectory, "rig0"));
-        Directory.CreateDirectory(Path.Combine(sessionDirectory, "rig0", "camera0"));
-
-        poseWriter = new StreamWriter(Path.Combine(sessionDirectory, "rig0", "frames.csv")) { AutoFlush = true };
-        poseWriter.WriteLine("timestamp,tx,ty,tz,qx,qy,qz,qw");
-
         cameraManager.frameReceived += OnCameraFrameReceived;
     }
 
@@ -130,9 +96,7 @@ public static class LocalCaptureController
         first_frame = true;
         nextCaptureTime = 0;
 
-        // Put the zip *next to* the sessionDirectory
-        string zipFilePath = ZipPath(sessionId.ToString());
-        System.IO.Compression.ZipFile.CreateFromDirectory(sessionDirectory, zipFilePath);
+        System.IO.Compression.ZipFile.CreateFromDirectory(sessionDirectory, ZipPath(sessionId.ToString()));
     }
 
     public static bool CaptureExists(Guid id) => File.Exists(ZipPath(id.ToString()));
@@ -162,12 +126,8 @@ public static class LocalCaptureController
 
         if (first_frame)
         {
-            // Wait until we get intrinsics and they match the selected config
-            if (
-                !cameraManager.TryGetIntrinsics(out var intrinsics)
-                || intrinsics.resolution.x != bestConfig?.width
-                || intrinsics.resolution.y != bestConfig?.height
-            )
+            PinholeCameraConfig cameraConfig;
+            if (!VisualPositioningSystem.CameraProvider.GetCameraConfig(out cameraConfig))
             {
                 return;
             }
@@ -188,24 +148,7 @@ public static class LocalCaptureController
                                     true,
                                     new PlerionApiClient.Model.Quaternion(0, 0, 0, 1),
                                     new PlerionApiClient.Model.Vector3(0, 0, 0),
-                                    new CameraConfig(
-                                        new PinholeCameraConfig(
-                                            model: PinholeCameraConfig.ModelEnum.PINHOLE,
-                                            // ARFoundation on Android Mobile returns images in LEFT_TOP orientation (EXIF/TIFF Orientation=5):
-                                            //  - 0th row is the visual left edge
-                                            //  - 0th column is the visual top edge
-                                            // To display canonically (TOP_LEFT), apply a transpose (swap X/Y), e.g.:
-                                            //  - rotate 90° CW, then flip left↔right, OR
-                                            //  - flip top↔bottom, then rotate 90° CW
-                                            orientation: PinholeCameraConfig.OrientationEnum.LEFTTOP,
-                                            width: intrinsics.resolution.x,
-                                            height: intrinsics.resolution.y,
-                                            fx: intrinsics.focalLength.x,
-                                            fy: intrinsics.focalLength.y,
-                                            cx: intrinsics.principalPoint.x,
-                                            cy: intrinsics.principalPoint.y
-                                        )
-                                    )
+                                    new CameraConfig(cameraConfig)
                                 ),
                             }
                         ),
@@ -217,76 +160,45 @@ public static class LocalCaptureController
             first_frame = false;
         }
 
-        // Acquire the latest CPU image.
-        if (!cameraManager.TryAcquireLatestCpuImage(out var cpuImage))
-            return;
-
-        long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-        // Compute camera pose relative to the capture anchor
-        var framePosition = captureAnchor.transform.InverseTransformPoint(cameraManager.transform.position);
-        var frameRotation =
-            UnityEngine.Quaternion.Inverse(captureAnchor.transform.rotation) * cameraManager.transform.rotation;
-
-        // Write out pose
-        poseWriter.WriteLine(
-            string.Format(
-                CultureInfo.InvariantCulture,
-                "{0},{1},{2},{3},{4},{5},{6},{7}",
-                timestampMilliseconds,
-                framePosition.x,
-                framePosition.y,
-                framePosition.z,
-                frameRotation.x,
-                frameRotation.y,
-                frameRotation.z,
-                frameRotation.w
-            )
-        );
-
-        // Save jpeg
-        SaveImageAsync(cpuImage, Path.Combine(sessionDirectory, "rig0", "camera0", $"{timestampMilliseconds}.jpg"))
-            .Forget();
-    }
-
-    static async UniTask SaveImageAsync(XRCpuImage cpuImage, string absoluteImagePath)
-    {
-        var conversion = new XRCpuImage.ConversionParams(cpuImage, TextureFormat.RGBA32);
-
-        int byteCount = cpuImage.GetConvertedDataSize(conversion);
-        byte[] pixelBuffer = default;
-        XRCpuImage.AsyncConversionStatus conversionStatus = XRCpuImage.AsyncConversionStatus.Pending;
-
-        cpuImage.ConvertAsync(
-            conversion,
-            (status, _, result) =>
+        VisualPositioningSystem
+            .CameraProvider.GetFrame()
+            .ContinueWith(async result =>
             {
-                conversionStatus = status;
-                pixelBuffer = result.ToArray();
-            }
-        );
+                var bytes = result.Item1;
+                var cameraPosition = result.Item2;
+                var cameraRotation = result.Item3;
 
-        await UniTask.WaitUntil(() =>
-            conversionStatus == XRCpuImage.AsyncConversionStatus.Ready
-            || conversionStatus == XRCpuImage.AsyncConversionStatus.Failed
-            || conversionStatus == XRCpuImage.AsyncConversionStatus.Disposed
-        );
+                long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
 
-        if (conversionStatus == XRCpuImage.AsyncConversionStatus.Disposed)
-            throw new Exception("Conversion disposed unexpectedly");
+                var absoluteImagePath = Path.Combine(
+                    sessionDirectory,
+                    "rig0",
+                    "camera0",
+                    $"{timestampMilliseconds}.jpg"
+                );
+                Directory.CreateDirectory(Path.GetDirectoryName(absoluteImagePath)!);
+                await File.WriteAllBytesAsync(absoluteImagePath, bytes);
 
-        if (conversionStatus == XRCpuImage.AsyncConversionStatus.Failed)
-            throw new Exception("XRCpuImage conversion failed");
+                // Compute camera pose relative to the capture anchor
+                var framePosition = captureAnchor.transform.InverseTransformPoint(cameraPosition);
+                var frameRotation = UnityEngine.Quaternion.Inverse(captureAnchor.transform.rotation) * cameraRotation;
 
-        uint width = (uint)cpuImage.width;
-        uint height = (uint)cpuImage.height;
-        cpuImage.Dispose();
-
-        var jpgBytes = await UniTask.RunOnThreadPool(() =>
-            ImageConversion.EncodeArrayToJPG(pixelBuffer, GraphicsFormat.R8G8B8A8_SRGB, width, height)
-        );
-
-        Directory.CreateDirectory(Path.GetDirectoryName(absoluteImagePath)!);
-        await File.WriteAllBytesAsync(absoluteImagePath, jpgBytes);
+                // Write out pose
+                poseWriter.WriteLine(
+                    string.Format(
+                        CultureInfo.InvariantCulture,
+                        "{0},{1},{2},{3},{4},{5},{6},{7}",
+                        timestampMilliseconds,
+                        framePosition.x,
+                        framePosition.y,
+                        framePosition.z,
+                        frameRotation.x,
+                        frameRotation.y,
+                        frameRotation.z,
+                        frameRotation.w
+                    )
+                );
+            })
+            .Forget();
     }
 }
