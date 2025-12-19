@@ -101,6 +101,7 @@ GameObject:
   - component: {fileID: 6197261707834792044}
   - component: {fileID: 5427211874269421598}
   - component: {fileID: 626164673108719325}
+  - component: {fileID: 2202200205274303073}
   m_Layer: 5
   m_Name: ScrollRect
   m_TagString: Untagged
@@ -198,6 +199,19 @@ MonoBehaviour:
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &2202200205274303073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8411137653702336407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0409765957bb70042b76d54f7177eb91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _childParentOverride: {fileID: 0}
 --- !u!1001 &6052556239030565699
 PrefabInstance:
   m_ObjectHideFlags: 0

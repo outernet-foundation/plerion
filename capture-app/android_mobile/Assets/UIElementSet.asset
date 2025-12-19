@@ -18,7 +18,12 @@ MonoBehaviour:
   _deepBackgroundColor: {r: 0.078431375, g: 0.078431375, b: 0.078431375, a: 1}
   _highlightColor: {r: 0, g: 1, b: 1, a: 1}
   _roundedRect: {fileID: 21300000, guid: 279705d78db976546957b09b60ba25fd, type: 3}
-  _recordButton: {fileID: 8009883041236555062, guid: e8afd0db0bab2834ea948d5f82f08cd1,
+  _moreMenuSprite: {fileID: 21300000, guid: 0f2d98e9e8849764aa3eb45d262b1e60, type: 3}
+  _recordButton: {fileID: 4719178206647858757, guid: e8afd0db0bab2834ea948d5f82f08cd1,
     type: 3}
-  _playButton: {fileID: 840525966171652147, guid: e7e33a97e16716d42970aeb9b3f3aebd,
+  _playButton: {fileID: 9085263546912391941, guid: e7e33a97e16716d42970aeb9b3f3aebd,
+    type: 3}
+  _foldout: {fileID: 1291972905126121711, guid: fe71c0ac1474b29449a7bb37cec8cf6f,
+    type: 3}
+  _roundButton: {fileID: 971299075232593601, guid: 9cdf37fa963f17a4f8a4fb8ddadb4705,
     type: 3}
