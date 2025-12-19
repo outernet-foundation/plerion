@@ -82,6 +82,9 @@ namespace Plerion.Core
 
         public static async UniTask Login(string username, string password)
         {
+            if (!Initialized)
+                throw new InvalidOperationException("Auth.Initialize() must be called before calling Login()");
+
             Username = username;
             Password = password;
             await LoginInternal();
@@ -89,9 +92,6 @@ namespace Plerion.Core
 
         private static async UniTask LoginInternal()
         {
-            if (!Initialized)
-                throw new InvalidOperationException("Auth.Initialize() must be called before calling Login()");
-
             Info($"[Auth] Logging in to {URL} as {Username}");
 
             HttpResponseMessage response;

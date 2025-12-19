@@ -35,7 +35,12 @@ namespace PlerionClient.Client
             {
                 App.DeregisterObserver(HandleLocalizationSessionStatusChanged);
                 App.DeregisterObserver(HandleLocalizingChanged);
-                VisualPositioningSystem.StopLocalizing();
+
+                if (App.state.localizing.value)
+                {
+                    VisualPositioningSystem.StopLocalizing().Forget();
+                }
+
                 return;
             }
 
@@ -81,11 +86,11 @@ namespace PlerionClient.Client
         {
             if (App.state.localizing.value)
             {
-                VisualPositioningSystem.StartLocalizing();
+                VisualPositioningSystem.StartLocalizing().Forget();
             }
             else
             {
-                VisualPositioningSystem.StopLocalizing();
+                VisualPositioningSystem.StopLocalizing().Forget();
             }
         }
 
@@ -125,7 +130,7 @@ namespace PlerionClient.Client
 #if UNITY_EDITOR
             return new NoOpCameraProvider();
 #else
-            return new ARFoundationCameraProvider(SceneReferences.ARCameraManager, manageCameraEnabledState: false);
+            return new ARFoundationCameraProvider(SceneReferences.ARCameraManager);
 #endif
         }
     }

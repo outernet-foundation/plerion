@@ -545,6 +545,7 @@ dependencies = [
     { name = "common" },
     { name = "faiss-cpu" },
     { name = "opencv-python" },
+    { name = "pillow" },
     { name = "scipy" },
 ]
 
@@ -558,6 +559,7 @@ requires-dist = [
     { name = "common", editable = "packages/python/common" },
     { name = "faiss-cpu", specifier = ">=1.12.0" },
     { name = "opencv-python", specifier = ">=4.10.0" },
+    { name = "pillow", specifier = ">=12.0.0" },
     { name = "scipy", specifier = ">=1.16.3" },
 ]
 
@@ -3641,7 +3643,6 @@ dependencies = [
     { name = "core" },
     { name = "fastapi" },
     { name = "openapi-generator-cli" },
-    { name = "pillow" },
     { name = "pyzed", version = "1.3.0", source = { registry = "https://pypi.org/simple" }, marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine != 'AMD64' and sys_platform == 'win32') or (sys_platform != 'linux' and sys_platform != 'win32')" },
     { name = "pyzed", version = "5.1", source = { path = "capture-app/zed/third-party/pyzed/pyzed-5.1-cp313-cp313-linux_aarch64.whl" }, marker = "platform_machine == 'aarch64' and sys_platform == 'linux'" },
     { name = "pyzed", version = "5.1", source = { path = "capture-app/zed/third-party/pyzed/pyzed-5.1-cp313-cp313-win_amd64.whl" }, marker = "platform_machine == 'AMD64' and sys_platform == 'win32'" },
@@ -3661,7 +3662,6 @@ requires-dist = [
     { name = "core", editable = "packages/python/core" },
     { name = "fastapi", specifier = ">=0.116.1" },
     { name = "openapi-generator-cli", specifier = ">=7.14.0" },
-    { name = "pillow", specifier = ">=12.0.0" },
     { name = "pyzed", marker = "(platform_machine != 'aarch64' and sys_platform == 'linux') or (platform_machine != 'AMD64' and sys_platform == 'win32') or (sys_platform != 'linux' and sys_platform != 'win32')" },
     { name = "pyzed", marker = "platform_machine == 'aarch64' and sys_platform == 'linux'", path = "capture-app/zed/third-party/pyzed/pyzed-5.1-cp313-cp313-linux_aarch64.whl" },
     { name = "pyzed", marker = "platform_machine == 'AMD64' and sys_platform == 'win32'", path = "capture-app/zed/third-party/pyzed/pyzed-5.1-cp313-cp313-win_amd64.whl" },

@@ -12,8 +12,6 @@ using PlerionApiClient.Model;
 using Unity.Mathematics;
 using UnityEngine;
 using Camera = PlerionApiClient.Model.Camera;
-using Quaternion = UnityEngine.Quaternion;
-using Vector3 = UnityEngine.Vector3;
 
 namespace Plerion.Core
 {
@@ -28,8 +26,9 @@ namespace Plerion.Core
 
         private static Dictionary<Guid, MapData> _maps = new Dictionary<Guid, MapData>();
         private static DefaultApi api;
-        private static CancellationTokenSource startSessionTokenSource = new CancellationTokenSource();
-        private static Task startSessionTask;
+        private static UniTask? startSessionTask;
+        private static SystemState _localizationSessionState = SystemState.Idle;
+        private static SystemState _localizingState = SystemState.Idle;
         private static Guid localizationSessionId = Guid.Empty;
         private static double4x4 unityFromEcefTransform = double4x4.identity;
         private static double4x4 ecefFromUnityTransform = math.inverse(unityFromEcefTransform);
@@ -65,9 +64,10 @@ namespace Plerion.Core
             Action<string, Exception> logException
         )
         {
-            CameraProvider = cameraProvider;
-            CameraProvider.Initialize();
+            if (CameraProvider != null)
+                throw new InvalidOperationException("VisualPositioningSystem is already initialized");
 
+            CameraProvider = cameraProvider;
             _logCallback = logCallback;
             _warnCallback = warnCallback;
             _errorCallback = errorCallback;
@@ -88,32 +88,22 @@ namespace Plerion.Core
 
         public static async UniTask Login(string username, string password) => await Auth.Login(username, password);
 
-        public static UniTask StartLocalizationSession()
+        public static async UniTask StartLocalizationSession()
         {
-            if (localizationSessionId != Guid.Empty)
-                return UniTask.CompletedTask;
+            if (_localizationSessionState != SystemState.Idle)
+                throw new InvalidOperationException("Localization session is not idle");
 
-            if (startSessionTask != null && !startSessionTask.IsCompleted)
-                return startSessionTask.AsUniTask();
+            _localizationSessionState = SystemState.Starting;
 
-            startSessionTokenSource?.Dispose();
-            startSessionTokenSource = new CancellationTokenSource();
-            startSessionTask = StartSessionInternal(startSessionTokenSource.Token);
-
-            return startSessionTask.AsUniTask();
-        }
-
-        private static async Task StartSessionInternal(CancellationToken cancellationToken = default)
-        {
             LocalizationSessionRead session = default;
 
             try
             {
-                session = await api.CreateLocalizationSessionAsync(cancellationToken);
+                session = await api.CreateLocalizationSessionAsync();
 
                 while (true)
                 {
-                    var status = await api.GetLocalizationSessionStatusAsync(session.Id, cancellationToken);
+                    var status = await api.GetLocalizationSessionStatusAsync(session.Id);
 
                     if (status == "\"failed\"" || status == "\"exited\"")
                         throw new Exception("Session failed to start.");
@@ -121,43 +111,38 @@ namespace Plerion.Core
                     if (status == "\"ready\"")
                         break;
 
-                    await UniTask.WaitForSeconds(1, cancellationToken: cancellationToken);
+                    await UniTask.WaitForSeconds(1);
                 }
 
-                PinholeCameraConfig cameraConfig;
-                while (!CameraProvider.GetCameraConfig(out cameraConfig))
-                    LogDebug("Waiting for camera intrinsics...");
-
-                await api.SetLocalizationSessionCameraIntrinsicsAsync(
-                    session.Id,
-                    new Camera(cameraConfig),
-                    cancellationToken
-                );
-
-                await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
+                await UniTask.SwitchToMainThread();
             }
-            catch (Exception exc)
+            catch (Exception)
             {
                 if (session != null)
                     api.DeleteLocalizationSessionAsync(session.Id).AsUniTask().Forget();
 
-                throw exc;
+                throw;
             }
 
             localizationSessionId = session.Id;
+
+            _localizationSessionState = SystemState.Running;
         }
 
-        public static void StopLocalizationSession()
+        public static async UniTask StopLocalizationSession()
         {
-            startSessionTokenSource?.Cancel();
-            startSessionTokenSource?.Dispose();
-            startSessionTokenSource = null;
+            if (_localizationSessionState != SystemState.Running)
+                throw new InvalidOperationException("Localization session is not running");
+
+            _localizationSessionState = SystemState.Stopping;
 
             if (localizationSessionId != Guid.Empty)
             {
-                api.DeleteLocalizationSessionAsync(localizationSessionId).AsUniTask().Forget();
+                await api.DeleteLocalizationSessionAsync(localizationSessionId).AsUniTask();
                 localizationSessionId = Guid.Empty;
             }
+
+            _localizationSessionState = SystemState.Idle;
         }
 
         public static UniTask AddLocalizationMaps(IEnumerable<Guid> maps) => AddLocalizationMaps(maps.ToList());
@@ -237,111 +222,81 @@ namespace Plerion.Core
             await api.UnloadMapAsync(localizationSessionId, map);
         }
 
-        public static bool Enabled { get; private set; } = false;
-        static CancellationTokenSource _cancellationTokenSource;
-
-        public static void StartLocalizing()
+        public static async UniTask StartLocalizing()
         {
-            if (Enabled)
-                return;
+            if (_localizingState != SystemState.Idle)
+                throw new InvalidOperationException("Localizing is already started");
 
             if (CameraProvider == null)
                 throw new Exception("Camera provider must be set before calling Start.");
 
-            Enabled = true;
-
-            CameraProvider.Start();
-
-            _cancellationTokenSource = new CancellationTokenSource();
-            ExecuteCameraLocalization(_cancellationTokenSource.Token).Forget();
-        }
-
-        public static void StopLocalizing()
-        {
-            Enabled = false;
-
-            CameraProvider.Stop();
-
-            _cancellationTokenSource?.Cancel();
-            _cancellationTokenSource?.Dispose();
-            _cancellationTokenSource = null;
-        }
-
-        private static async UniTask ExecuteCameraLocalization(CancellationToken cancellationToken = default)
-        {
-            int lastFrameCount = Time.frameCount;
-
-            while (!cancellationToken.IsCancellationRequested)
-            {
-                try
+            var cameraConfig = await CameraProvider.Start(
+                intervalSeconds: 0,
+                cameraPoseProvider: () =>
                 {
-                    var (cameraImage, cameraPosition, cameraRotation) = await CameraProvider.GetFrame();
+                    var cameraTransform = UnityEngine.Camera.main.transform;
+                    return (cameraTransform.position, cameraTransform.rotation);
+                },
+                onFrameReceived: async (
+                    image,
+                    cameraTranslationUnityWorldFromCamera,
+                    cameraRotationUnityWorldFromCamera
+                ) =>
+                {
+                    if (image == null)
+                        return;
 
-                    if (cancellationToken.IsCancellationRequested)
-                        break;
+                    using var memoryStream = new MemoryStream(image);
+                    var localizationResults = await api.LocalizeImageAsync(
+                        localizationSessionId,
+                        AxisConvention.UNITY,
+                        new FileParameter(memoryStream)
+                    );
 
-                    await UniTask.SwitchToMainThread(cancellationToken: cancellationToken);
-
-                    if (cameraImage != null)
+                    if (localizationResults.Count == 0)
                     {
-                        await LocalizeFromCameraImage(cameraImage, cameraPosition, cameraRotation);
+                        LogDebug("Localization failed");
+                        return;
                     }
 
-                    // if this process doesn't take at least one frame,
-                    // this loop will become infinite and block the main thread
-                    if (Time.frameCount == lastFrameCount)
-                        await UniTask.WaitForEndOfFrame();
+                    var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
 
-                    lastFrameCount = Time.frameCount;
-                }
-                catch (Exception exception)
-                {
-                    if (exception is TaskCanceledException)
-                        break;
+                    // Updating transforms should be done on the main thread
+                    await UniTask.SwitchToMainThread();
 
-                    LogException("Exception thrown during localization", exception);
+                    unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
+                        localizationResult.CameraFromMapTransform.Translation.ToDouble3(),
+                        localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
+                        localizationResult.MapTransform.Translation.ToDouble3(),
+                        localizationResult.MapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
+                        cameraTranslationUnityWorldFromCamera,
+                        // TODO: Adjust unity rotation to account for phone orientation (portrait vs landscape)
+                        math.mul(
+                            ((quaternion)cameraRotationUnityWorldFromCamera).ToDouble3x3(),
+                            quaternion.AxisAngle(new float3(0f, 0f, 1f), math.radians(0f)).ToDouble3x3()
+                        )
+                    );
+                    ecefFromUnityTransform = math.inverse(unityFromEcefTransform);
+
+                    OnEcefToUnityWorldTransformUpdated?.Invoke();
                 }
-            }
+            );
+
+            await api.SetLocalizationSessionCameraIntrinsicsAsync(localizationSessionId, new Camera(cameraConfig));
+
+            _localizingState = SystemState.Running;
         }
 
-        public static async UniTask LocalizeFromCameraImage(
-            byte[] image,
-            Vector3 cameraTranslationUnityWorldFromCamera,
-            Quaternion cameraRotationUnityWorldFromCamera
-        )
+        public static async UniTask StopLocalizing()
         {
-            if (image == null)
-                return;
+            if (_localizingState != SystemState.Running)
+                throw new InvalidOperationException("Localizing is not started");
 
-            var localizationResults = await api.LocalizeImageAsync(
-                localizationSessionId,
-                AxisConvention.UNITY,
-                new FileParameter(new MemoryStream(image))
-            );
+            _localizingState = SystemState.Stopping;
 
-            if (localizationResults.Count == 0)
-            {
-                LogDebug("Localization failed");
-                return;
-            }
+            await CameraProvider.Stop();
 
-            var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
-
-            unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
-                localizationResult.CameraFromMapTransform.Position.ToDouble3(),
-                localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
-                localizationResult.MapTransform.Position.ToDouble3(),
-                localizationResult.MapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
-                cameraTranslationUnityWorldFromCamera,
-                // TODO: Adjust unity rotation to account for phone orientation (portrait vs landscape)
-                math.mul(
-                    ((quaternion)cameraRotationUnityWorldFromCamera).ToDouble3x3(),
-                    quaternion.AxisAngle(new float3(0f, 0f, 1f), math.radians(0f)).ToDouble3x3()
-                )
-            );
-            ecefFromUnityTransform = math.inverse(unityFromEcefTransform);
-
-            OnEcefToUnityWorldTransformUpdated?.Invoke();
+            _localizingState = SystemState.Idle;
         }
 
         public static (Vector3 position, Quaternion rotation) EcefToUnityWorld(

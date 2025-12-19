@@ -1,7 +1,7 @@
 from core.axis_convention import AxisConvention, change_basis_opencv_from_unity_pose
-from core.camera_transformations import transform_intrinsics
 from core.capture_session_manifest import RigCameraConfig, RigConfig
-from core.classes import Quaternion, Vector3
+from core.image_orientation import transform_intrinsics
+from core.transform import Float3, Float4
 from numpy import array, float64
 from numpy.typing import NDArray
 from pycolmap import Camera as ColmapCamera
@@ -23,9 +23,9 @@ class Rig:
         if len(ref_sensors) != 1:
             raise ValueError(f"Rig {rig_config.id} must have exactly one reference sensor")
         ref_sensor = ref_sensors[0]
-        if ref_sensor.rotation != Quaternion(w=1.0, x=0.0, y=0.0, z=0.0):
+        if ref_sensor.rotation != Float4(w=1.0, x=0.0, y=0.0, z=0.0):
             raise ValueError(f"Reference sensor {ref_sensor.id} in rig {rig_config.id} must have identity rotation")
-        if ref_sensor.translation != Vector3(x=0.0, y=0.0, z=0.0):
+        if ref_sensor.translation != Float3(x=0.0, y=0.0, z=0.0):
             raise ValueError(f"Reference sensor {ref_sensor.id} in rig {rig_config.id} must have zero translation")
 
         # We should support this case, but it is not currently used anywhere, so I am punting on implementing it, and rasising an error instead.

@@ -10,11 +10,11 @@ from uuid import UUID
 
 from common.boto_clients import create_s3_client
 from core.axis_convention import AxisConvention
-from core.capture_session_manifest import PinholeCameraConfig
-from core.classes import Transform
+from core.camera_config import PinholeCameraConfig
 from core.h5 import FEATURES_FILE, GLOBAL_DESCRIPTORS_FILE, read_features, read_global_descriptors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import OPQ_MATRIX_FILE, PQ_QUANTIZER_FILE, read_opq_matrix, read_pq_quantizer
+from core.transform import Transform
 from numpy import float32, stack, uint8
 from numpy.typing import NDArray
 from pycolmap import Reconstruction

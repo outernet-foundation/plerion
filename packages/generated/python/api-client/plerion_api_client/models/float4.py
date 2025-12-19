@@ -17,52 +17,21 @@ import pprint
 import re  # noqa: F401
 import json
 
-from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, StrictFloat, StrictInt
 from typing import Any, ClassVar, Dict, List, Union
 from typing import Optional, Set
 from typing_extensions import Self
 
-class CoreRigOpenCVCameraConfig(BaseModel):
+class Float4(BaseModel):
     """
-    CoreRigOpenCVCameraConfig
+    Float4
     """ # noqa: E501
-    width: StrictInt
-    height: StrictInt
-    mirroring: StrictStr
-    rotation: StrictStr
-    model: StrictStr
-    fx: Union[StrictFloat, StrictInt]
-    fy: Union[StrictFloat, StrictInt]
-    cx: Union[StrictFloat, StrictInt]
-    cy: Union[StrictFloat, StrictInt]
-    k1: Union[StrictFloat, StrictInt]
-    k2: Union[StrictFloat, StrictInt]
-    p1: Union[StrictFloat, StrictInt]
-    p2: Union[StrictFloat, StrictInt]
-    k3: Union[StrictFloat, StrictInt]
+    x: Union[StrictFloat, StrictInt]
+    y: Union[StrictFloat, StrictInt]
+    z: Union[StrictFloat, StrictInt]
+    w: Union[StrictFloat, StrictInt]
     additional_properties: Dict[str, Any] = {}
-    __properties: ClassVar[List[str]] = ["width", "height", "mirroring", "rotation", "model", "fx", "fy", "cx", "cy", "k1", "k2", "p1", "p2", "k3"]
-
-    @field_validator('mirroring')
-    def mirroring_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(['None', 'X', 'Y']):
-            raise ValueError("must be one of enum values ('None', 'X', 'Y')")
-        return value
-
-    @field_validator('rotation')
-    def rotation_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(['None', '90_CW', '180', '90_CCW']):
-            raise ValueError("must be one of enum values ('None', '90_CW', '180', '90_CCW')")
-        return value
-
-    @field_validator('model')
-    def model_validate_enum(cls, value):
-        """Validates the enum"""
-        if value not in set(['OPENCV']):
-            raise ValueError("must be one of enum values ('OPENCV')")
-        return value
+    __properties: ClassVar[List[str]] = ["x", "y", "z", "w"]
 
     model_config = ConfigDict(
         populate_by_name=True,
@@ -82,7 +51,7 @@ class CoreRigOpenCVCameraConfig(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Optional[Self]:
-        """Create an instance of CoreRigOpenCVCameraConfig from a JSON string"""
+        """Create an instance of Float4 from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -114,7 +83,7 @@ class CoreRigOpenCVCameraConfig(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Optional[Dict[str, Any]]) -> Optional[Self]:
-        """Create an instance of CoreRigOpenCVCameraConfig from a dict"""
+        """Create an instance of Float4 from a dict"""
         if obj is None:
             return None
 
@@ -122,20 +91,10 @@ class CoreRigOpenCVCameraConfig(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate({
-            "width": obj.get("width"),
-            "height": obj.get("height"),
-            "mirroring": obj.get("mirroring"),
-            "rotation": obj.get("rotation"),
-            "model": obj.get("model"),
-            "fx": obj.get("fx"),
-            "fy": obj.get("fy"),
-            "cx": obj.get("cx"),
-            "cy": obj.get("cy"),
-            "k1": obj.get("k1"),
-            "k2": obj.get("k2"),
-            "p1": obj.get("p1"),
-            "p2": obj.get("p2"),
-            "k3": obj.get("k3")
+            "x": obj.get("x"),
+            "y": obj.get("y"),
+            "z": obj.get("z"),
+            "w": obj.get("w")
         })
         # store additional fields in additional_properties
         for _key in obj.keys():

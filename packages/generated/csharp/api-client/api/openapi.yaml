@@ -1774,6 +1774,51 @@ components:
       - Zed
       title: DeviceType
       type: string
+    Float3:
+      example:
+        x: 5.637376656633329
+        "y": 2.3021358869347655
+        z: 7.061401241503109
+      properties:
+        x:
+          title: X
+          type: number
+        "y":
+          title: "Y"
+          type: number
+        z:
+          title: Z
+          type: number
+      required:
+      - x
+      - "y"
+      - z
+      title: Float3
+    Float4:
+      example:
+        w: 5.962133916683182
+        x: 0.8008281904610115
+        "y": 6.027456183070403
+        z: 1.4658129805029452
+      properties:
+        x:
+          title: X
+          type: number
+        "y":
+          title: "Y"
+          type: number
+        z:
+          title: Z
+          type: number
+        w:
+          title: W
+          type: number
+      required:
+      - w
+      - x
+      - "y"
+      - z
+      title: Float4
     FullOpenCVCameraConfig:
       properties:
         width:
@@ -2345,7 +2390,7 @@ components:
             x: 0.8008281904610115
             "y": 6.027456183070403
             z: 1.4658129805029452
-          position:
+          translation:
             x: 5.637376656633329
             "y": 2.3021358869347655
             z: 7.061401241503109
@@ -2359,7 +2404,7 @@ components:
             x: 0.8008281904610115
             "y": 6.027456183070403
             z: 1.4658129805029452
-          position:
+          translation:
             x: 5.637376656633329
             "y": 2.3021358869347655
             z: 7.061401241503109
@@ -2796,31 +2841,6 @@ components:
       - orientation
       - width
       title: PinholeCameraConfig
-    Quaternion:
-      example:
-        w: 5.962133916683182
-        x: 0.8008281904610115
-        "y": 6.027456183070403
-        z: 1.4658129805029452
-      properties:
-        x:
-          title: X
-          type: number
-        "y":
-          title: "Y"
-          type: number
-        z:
-          title: Z
-          type: number
-        w:
-          title: W
-          type: number
-      required:
-      - w
-      - x
-      - "y"
-      - z
-      title: Quaternion
     ReconstructionCreate:
       example:
         capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
@@ -3216,9 +3236,9 @@ components:
           nullable: true
           type: boolean
         rotation:
-          $ref: "#/components/schemas/Quaternion"
+          $ref: "#/components/schemas/Float4"
         translation:
-          $ref: "#/components/schemas/Vector3"
+          $ref: "#/components/schemas/Float3"
         camera_config:
           $ref: "#/components/schemas/Camera_Config"
       required:
@@ -3291,18 +3311,18 @@ components:
           x: 0.8008281904610115
           "y": 6.027456183070403
           z: 1.4658129805029452
-        position:
+        translation:
           x: 5.637376656633329
           "y": 2.3021358869347655
           z: 7.061401241503109
       properties:
-        position:
-          $ref: "#/components/schemas/Vector3"
+        translation:
+          $ref: "#/components/schemas/Float3"
         rotation:
-          $ref: "#/components/schemas/Quaternion"
+          $ref: "#/components/schemas/Float4"
       required:
-      - position
       - rotation
+      - translation
       title: Transform
     ValidationError:
       example:
@@ -3327,26 +3347,6 @@ components:
       - msg
       - type
       title: ValidationError
-    Vector3:
-      example:
-        x: 5.637376656633329
-        "y": 2.3021358869347655
-        z: 7.061401241503109
-      properties:
-        x:
-          title: X
-          type: number
-        "y":
-          title: "Y"
-          type: number
-        z:
-          title: Z
-          type: number
-      required:
-      - x
-      - "y"
-      - z
-      title: Vector3
     Camera:
       anyOf:
       - $ref: "#/components/schemas/PinholeCameraConfig"

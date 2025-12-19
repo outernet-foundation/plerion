@@ -1,5 +1,6 @@
 .github/workflows/python.yml
 .gitlab-ci.yml
+.openapi-generator-ignore
 .travis.yml
 README.md
 git_push.sh
@@ -20,6 +21,8 @@ plerion_api_client/models/capture_session_manifest.py
 plerion_api_client/models/capture_session_read.py
 plerion_api_client/models/capture_session_update.py
 plerion_api_client/models/device_type.py
+plerion_api_client/models/float3.py
+plerion_api_client/models/float4.py
 plerion_api_client/models/full_open_cv_camera_config.py
 plerion_api_client/models/group_batch_update.py
 plerion_api_client/models/group_create.py
@@ -43,7 +46,6 @@ plerion_api_client/models/node_read.py
 plerion_api_client/models/open_cv_camera_config.py
 plerion_api_client/models/orchestration_status.py
 plerion_api_client/models/pinhole_camera_config.py
-plerion_api_client/models/quaternion.py
 plerion_api_client/models/reconstruction_create.py
 plerion_api_client/models/reconstruction_create_with_options.py
 plerion_api_client/models/reconstruction_manifest.py
@@ -55,7 +57,6 @@ plerion_api_client/models/rig_config.py
 plerion_api_client/models/transform.py
 plerion_api_client/models/validation_error.py
 plerion_api_client/models/validation_error_loc_inner.py
-plerion_api_client/models/vector3.py
 plerion_api_client/py.typed
 plerion_api_client/rest.py
 pyproject.toml

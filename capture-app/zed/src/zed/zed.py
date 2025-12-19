@@ -13,8 +13,9 @@ from typing import Union, cast
 from uuid import UUID, uuid4
 
 from core.axis_convention import AxisConvention
-from core.capture_session_manifest import CaptureSessionManifest, PinholeCameraConfig, RigCameraConfig, RigConfig
-from core.classes import Quaternion, Vector3
+from core.camera_config import PinholeCameraConfig
+from core.capture_session_manifest import CaptureSessionManifest, RigCameraConfig, RigConfig
+from core.transform import Float3, Float4
 from numpy import asarray, float64
 from PIL import Image
 from pyzed.sl import (
@@ -233,8 +234,8 @@ class Zed(Thread):
                                 RigCameraConfig(
                                     id="camera0",
                                     ref_sensor=True,
-                                    rotation=Quaternion(x=0.0, y=0.0, z=0.0, w=1.0),
-                                    translation=Vector3(x=0.0, y=0.0, z=0.0),
+                                    rotation=Float4(x=0.0, y=0.0, z=0.0, w=1.0),
+                                    translation=Float3(x=0.0, y=0.0, z=0.0),
                                     camera_config=PinholeCameraConfig(
                                         model="PINHOLE",
                                         width=left_camera.image_size.width,
@@ -249,13 +250,13 @@ class Zed(Thread):
                                 RigCameraConfig(
                                     id="camera1",
                                     ref_sensor=False,
-                                    rotation=Quaternion(
+                                    rotation=Float4(
                                         x=stereo_transform_rotation[0],
                                         y=stereo_transform_rotation[1],
                                         z=stereo_transform_rotation[2],
                                         w=stereo_transform_rotation[3],
                                     ),
-                                    translation=Vector3(
+                                    translation=Float3(
                                         # TODO: Figure out why the x component needs to be negated
                                         x=-stereo_transform_translation[0],
                                         y=stereo_transform_translation[1],

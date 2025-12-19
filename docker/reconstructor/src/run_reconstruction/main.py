@@ -5,9 +5,10 @@ from io import BytesIO
 from pathlib import Path
 
 from common.boto_clients import create_s3_client
-from core.camera_transformations import transform_image
-from core.capture_session_manifest import CameraConfig, CaptureSessionManifest
+from core.camera_config import CameraConfig
+from core.capture_session_manifest import CaptureSessionManifest
 from core.h5 import write_features, write_global_descriptors
+from core.image_orientation import transform_image
 from core.lightglue import lightglue_match
 from core.opq import encode_descriptors, train_opq_matrix, train_pq_quantizer, write_opq_matrix, write_pq_quantizer
 from core.reconstruction_manifest import ReconstructionManifest

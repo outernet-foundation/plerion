@@ -27,24 +27,24 @@ namespace PlerionApiClient.Model
 {
     // fuck
     /// <summary>
-    /// Quaternion
+    /// Float4
     /// </summary>
-    [DataContract(Name = "Quaternion")]
-    public partial class Quaternion
+    [DataContract(Name = "Float4")]
+    public partial class Float4
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Quaternion" /> class.
+        /// Initializes a new instance of the <see cref="Float4" /> class.
         /// </summary>
         [JsonConstructorAttribute]
-        protected Quaternion() { }
+        protected Float4() { }
         /// <summary>
-        /// Initializes a new instance of the <see cref="Quaternion" /> class.
+        /// Initializes a new instance of the <see cref="Float4" /> class.
         /// </summary>
         /// <param name="x">x (required).</param>
         /// <param name="y">y (required).</param>
         /// <param name="z">z (required).</param>
         /// <param name="w">w (required).</param>
-        public Quaternion(double x, double y, double z, double w)
+        public Float4(double x, double y, double z, double w)
         {
             this.X = x;
             this.Y = y;
@@ -155,7 +155,7 @@ namespace PlerionApiClient.Model
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class Quaternion {\n");
+            sb.Append("class Float4 {\n");
             sb.Append("  X: ").Append(X).Append("\n");
             sb.Append("  Y: ").Append(Y).Append("\n");
             sb.Append("  Z: ").Append(Z).Append("\n");

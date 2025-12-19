@@ -1,10 +1,18 @@
 from __future__ import annotations
 
 from io import BytesIO
+from typing import TYPE_CHECKING, Literal
 
-from core.capture_session_manifest import CameraConfig, ImageOrientation
 from PIL import Image as PILImage
 from PIL.Image import Transpose
+
+if TYPE_CHECKING:
+    from core.camera_config import CameraConfig
+
+# See "Orientation" property here: https://exiv2.org/tags-xmp-tiff.html
+ImageOrientation = Literal[
+    "TOP_LEFT", "TOP_RIGHT", "BOTTOM_RIGHT", "BOTTOM_LEFT", "LEFT_TOP", "RIGHT_TOP", "RIGHT_BOTTOM", "LEFT_BOTTOM"
+]
 
 
 def transform_image(image_buffer: bytes, orientation: ImageOrientation) -> PILImage.Image:

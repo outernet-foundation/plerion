@@ -186,6 +186,8 @@ Class | Method | HTTP request | Description
  - [Model.CaptureSessionRead](docs/CaptureSessionRead.md)
  - [Model.CaptureSessionUpdate](docs/CaptureSessionUpdate.md)
  - [Model.DeviceType](docs/DeviceType.md)
+ - [Model.Float3](docs/Float3.md)
+ - [Model.Float4](docs/Float4.md)
  - [Model.FullOpenCVCameraConfig](docs/FullOpenCVCameraConfig.md)
  - [Model.GroupBatchUpdate](docs/GroupBatchUpdate.md)
  - [Model.GroupCreate](docs/GroupCreate.md)
@@ -209,7 +211,6 @@ Class | Method | HTTP request | Description
  - [Model.OpenCVCameraConfig](docs/OpenCVCameraConfig.md)
  - [Model.OrchestrationStatus](docs/OrchestrationStatus.md)
  - [Model.PinholeCameraConfig](docs/PinholeCameraConfig.md)
- - [Model.Quaternion](docs/Quaternion.md)
  - [Model.ReconstructionCreate](docs/ReconstructionCreate.md)
  - [Model.ReconstructionCreateWithOptions](docs/ReconstructionCreateWithOptions.md)
  - [Model.ReconstructionManifest](docs/ReconstructionManifest.md)
@@ -221,7 +222,6 @@ Class | Method | HTTP request | Description
  - [Model.Transform](docs/Transform.md)
  - [Model.ValidationError](docs/ValidationError.md)
  - [Model.ValidationErrorLocInner](docs/ValidationErrorLocInner.md)
- - [Model.Vector3](docs/Vector3.md)
 
 
 <a id="documentation-for-authorization"></a>

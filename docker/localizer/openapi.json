@@ -273,6 +273,57 @@
         ],
         "title": "Body_localize_image"
       },
+      "Float3": {
+        "properties": {
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          },
+          "z": {
+            "type": "number",
+            "title": "Z"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "z"
+        ],
+        "title": "Float3"
+      },
+      "Float4": {
+        "properties": {
+          "x": {
+            "type": "number",
+            "title": "X"
+          },
+          "y": {
+            "type": "number",
+            "title": "Y"
+          },
+          "z": {
+            "type": "number",
+            "title": "Z"
+          },
+          "w": {
+            "type": "number",
+            "title": "W"
+          }
+        },
+        "type": "object",
+        "required": [
+          "x",
+          "y",
+          "z",
+          "w"
+        ],
+        "title": "Float4"
+      },
       "FullOpenCVCameraConfig": {
         "properties": {
           "width": {
@@ -601,46 +652,18 @@
         ],
         "title": "PinholeCameraConfig"
       },
-      "Quaternion": {
-        "properties": {
-          "x": {
-            "type": "number",
-            "title": "X"
-          },
-          "y": {
-            "type": "number",
-            "title": "Y"
-          },
-          "z": {
-            "type": "number",
-            "title": "Z"
-          },
-          "w": {
-            "type": "number",
-            "title": "W"
-          }
-        },
-        "type": "object",
-        "required": [
-          "x",
-          "y",
-          "z",
-          "w"
-        ],
-        "title": "Quaternion"
-      },
       "Transform": {
         "properties": {
-          "position": {
-            "$ref": "#/components/schemas/Vector3"
+          "translation": {
+            "$ref": "#/components/schemas/Float3"
           },
           "rotation": {
-            "$ref": "#/components/schemas/Quaternion"
+            "$ref": "#/components/schemas/Float4"
           }
         },
         "type": "object",
         "required": [
-          "position",
+          "translation",
           "rotation"
         ],
         "title": "Transform"
@@ -677,29 +700,6 @@
           "type"
         ],
         "title": "ValidationError"
-      },
-      "Vector3": {
-        "properties": {
-          "x": {
-            "type": "number",
-            "title": "X"
-          },
-          "y": {
-            "type": "number",
-            "title": "Y"
-          },
-          "z": {
-            "type": "number",
-            "title": "Z"
-          }
-        },
-        "type": "object",
-        "required": [
-          "x",
-          "y",
-          "z"
-        ],
-        "title": "Vector3"
       }
     }
   }

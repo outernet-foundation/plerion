@@ -3,12 +3,12 @@ from __future__ import annotations
 from typing import Any, cast
 
 from core.axis_convention import AxisConvention, change_basis_unity_from_opencv_pose
-from core.camera_transformations import transform_image, transform_intrinsics
-from core.capture_session_manifest import PinholeCameraConfig
-from core.classes import Quaternion, Transform, Vector3
+from core.camera_config import PinholeCameraConfig
+from core.image_orientation import transform_image, transform_intrinsics
 from core.lightglue import lightglue_match_tensors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import decode_descriptors
+from core.transform import Float3, Float4, Transform
 from numpy import asarray, float32, vstack
 from pycolmap import AbsolutePoseEstimationOptions, RANSACOptions
 from pycolmap import Camera as ColmapCamera
@@ -126,8 +126,8 @@ def localize_image_against_reconstruction(
 
     # Build final transform
     transform = Transform(
-        position=Vector3(x=translation[0], y=translation[1], z=translation[2]),
-        rotation=Quaternion(x=rotation[0], y=rotation[1], z=rotation[2], w=rotation[3]),
+        translation=Float3(x=translation[0], y=translation[1], z=translation[2]),
+        rotation=Float4(x=rotation[0], y=rotation[1], z=rotation[2], w=rotation[3]),
     )
 
     # Build metrics

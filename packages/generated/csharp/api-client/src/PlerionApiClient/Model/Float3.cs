@@ -27,23 +27,23 @@ namespace PlerionApiClient.Model
 {
     // fuck
     /// <summary>
-    /// Vector3
+    /// Float3
     /// </summary>
-    [DataContract(Name = "Vector3")]
-    public partial class Vector3
+    [DataContract(Name = "Float3")]
+    public partial class Float3
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Vector3" /> class.
+        /// Initializes a new instance of the <see cref="Float3" /> class.
         /// </summary>
         [JsonConstructorAttribute]
-        protected Vector3() { }
+        protected Float3() { }
         /// <summary>
-        /// Initializes a new instance of the <see cref="Vector3" /> class.
+        /// Initializes a new instance of the <see cref="Float3" /> class.
         /// </summary>
         /// <param name="x">x (required).</param>
         /// <param name="y">y (required).</param>
         /// <param name="z">z (required).</param>
-        public Vector3(double x, double y, double z)
+        public Float3(double x, double y, double z)
         {
             this.X = x;
             this.Y = y;
@@ -129,7 +129,7 @@ namespace PlerionApiClient.Model
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
-            sb.Append("class Vector3 {\n");
+            sb.Append("class Float3 {\n");
             sb.Append("  X: ").Append(X).Append("\n");
             sb.Append("  Y: ").Append(Y).Append("\n");
             sb.Append("  Z: ").Append(Z).Append("\n");

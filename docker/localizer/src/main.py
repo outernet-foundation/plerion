@@ -6,7 +6,7 @@ from uuid import UUID
 
 from common.fastapi import create_fastapi_app
 from core.axis_convention import AxisConvention
-from core.capture_session_manifest import CameraConfig, PinholeCameraConfig
+from core.camera_config import CameraConfig, PinholeCameraConfig
 from fastapi import File, HTTPException, UploadFile
 
 from .localize import load_models
