@@ -219,16 +219,18 @@ namespace PlerionClient.Client
                         {
                             value = Props.From(name),
                             style = new TextStyleProps() { outlineWidth = Props.From(.15f) }
-                        }).FlexibleWidth(true),
+                        }).MinWidth(470),
                         Text(new TextProps()
                         {
                             value = target.SelectDynamic(x => x == null ? "--" : getValue(x).ToString()),
                             style = new TextStyleProps()
                             {
                                 outlineWidth = Props.From(.15f),
-                                horizontalAlignment = Props.From(TMPro.HorizontalAlignmentOptions.Right)
+                                horizontalAlignment = Props.From(TMPro.HorizontalAlignmentOptions.Right),
+                                overflowMode = Props.From(TMPro.TextOverflowModes.Ellipsis),
+                                textWrappingMode = Props.From(TMPro.TextWrappingModes.NoWrap)
                             }
-                        })
+                        }).FlexibleWidth(true)
                     );
                 })
             );
