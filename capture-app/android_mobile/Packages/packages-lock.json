@@ -7,7 +7,7 @@
       "dependencies": {
         "com.unity.modules.imgui": "1.0.0"
       },
-      "hash": "fbc12b2c0b6a1ee5ce7d534f9db936bc59069219"
+      "hash": "24d04125d68719816e24dfb79c60dd97ca396038"
     },
     "com.cysharp.unitask": {
       "version": "https://github.com/Cysharp/UniTask.git?path=src/UniTask/Assets/Plugins/UniTask",
@@ -17,23 +17,13 @@
       "hash": "06067cd4c83e372310d6f79d1c625f6870ff7a2a"
     },
     "com.fofx.nessle": {
-      "version": "https://github.com/outernet-foundation/Nessle.git?path=Assets/Package/Core",
+      "version": "https://github.com/outernet-foundation/Nessle.git?path=Assets/Package/Core#feature/unidrectional-controls",
       "depth": 0,
       "source": "git",
       "dependencies": {
         "com.fofx.observething": "1.0.0"
       },
-      "hash": "79362755024d12c73012f8dad047740b8c122c02"
-    },
-    "com.fofx.nessle.statefulextensions": {
-      "version": "https://github.com/outernet-foundation/Nessle.git?path=Assets/Package/StatefulExtensions",
-      "depth": 0,
-      "source": "git",
-      "dependencies": {
-        "com.fofx.stateful": "1.0.0",
-        "com.fofx.observething.statefulextensions": "1.0.0"
-      },
-      "hash": "72f67a8516496de7eebf56937fc80b22d7d82918"
+      "hash": "51eab4181d226763243e56e978c3a6dee6ecc7f1"
     },
     "com.fofx.observething": {
       "version": "https://github.com/outernet-foundation/ObserveThing.git?path=Assets/Package/Core",
@@ -50,7 +40,7 @@
         "com.fofx.stateful": "1.0.0",
         "com.fofx.observething": "1.0.0"
       },
-      "hash": "b60822b01c12ba1fc9d62c25b91f87cc9367a09f"
+      "hash": "333202f0a14718e8cf84b77c170c7907e3be317b"
     },
     "com.fofx.stateful": {
       "version": "https://github.com/epjecha/StatefulUnity.git?path=Assets/Package",

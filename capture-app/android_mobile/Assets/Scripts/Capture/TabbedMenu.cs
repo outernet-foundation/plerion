@@ -9,152 +9,93 @@ namespace PlerionClient.Client
 {
     public static partial class UIElements
     {
-        public class TabbedMenuProps : IDisposable
+        public class TabbedMenuProps
         {
-            public ListObservable<string> tabs { get; } = new ListObservable<string>();
-            public ImageProps background { get; } = new ImageProps();
-            public ImageProps deselectedBackground { get; } = new ImageProps();
-            public ImageProps selectedBackground { get; } = new ImageProps();
-            public ValueObservable<float> tabHeight { get; } = new ValueObservable<float>(75);
-            public ValueObservable<float> tabSpacing { get; } = new ValueObservable<float>();
-            public ValueObservable<int> selectedTab { get; } = new ValueObservable<int>();
-
-            public void Dispose()
-            {
-                tabs.Dispose();
-                deselectedBackground.Dispose();
-                selectedBackground.Dispose();
-                tabHeight.Dispose();
-                tabSpacing.Dispose();
-                selectedTab.Dispose();
-            }
+            public IListObservable<string> tabs;
+            public ImageProps background;
+            public ImageProps deselectedBackground;
+            public ImageProps selectedBackground;
+            public IValueObservable<float> tabSpacing;
+            public IValueObservable<int> value;
+            public Action<int> onValueChanged;
         }
 
-        public static IControl<TabbedMenuProps> TabbedMenu(string identifier = "tabbedMenu", TabbedMenuProps props = default)
+        public static IControl TabbedMenu(TabbedMenuProps props = default)
         {
-            return Control(identifier, props ?? new TabbedMenuProps()).Setup(control =>
-            {
-                control.AddBinding(
-                    control.props.tabs.Subscribe(_ =>
-                    {
-                        if (control.props.tabs.count == 0)
+            props.selectedBackground.color = props.selectedBackground.color ?? Props.From(elements.foregroundColor);
+            props.selectedBackground.pixelsPerUnitMultiplier = props.selectedBackground.pixelsPerUnitMultiplier ?? Props.From(1.3f);
+            props.selectedBackground.imageType = props.selectedBackground.imageType ?? Props.From(UnityEngine.UI.Image.Type.Sliced);
+            props.selectedBackground.sprite = props.selectedBackground.sprite ?? Props.From(elements.roundedRect);
+            props.selectedBackground.fillCenter = props.selectedBackground.fillCenter ?? Props.From(true);
+
+            props.background.color = props.background.color ?? Props.From(elements.backgroundColor);
+            props.background.pixelsPerUnitMultiplier = props.background.pixelsPerUnitMultiplier ?? Props.From(1f);
+            props.background.imageType = props.background.imageType ?? Props.From(UnityEngine.UI.Image.Type.Sliced);
+            props.background.sprite = props.background.sprite ?? Props.From(elements.roundedRect);
+            props.background.fillCenter = props.background.fillCenter ?? Props.From(true);
+
+            ValueObservable<int> selectedTabIndex = new ValueObservable<int>(-1);
+
+            var control = Control(new GameObject("Tabbed Menu")).Children(
+                Image(props.background).FillParent(),
+                Columns(props.tabSpacing)
+                    .FillParent()
+                    .OffsetMin(new Vector2(10, 10))
+                    .OffsetMax(new Vector2(-10, -10))
+                    .Style(columns => columns.Children(
+                        props.tabs.CreateDynamic(tabLabel =>
                         {
-                            control.props.selectedTab.From(-1);
-                        }
-                        else if (control.props.selectedTab.value == -1)
-                        {
-                            control.props.selectedTab.From(0);
-                        }
-                        else if (control.props.selectedTab.value >= control.props.tabs.count)
-                        {
-                            control.props.selectedTab.From(control.props.tabs.count - 1);
-                        }
-                    })
-                );
+                            var tab = Control(new GameObject("tab"));
+                            var tabIndex = columns.children.IndexOfDynamic(tab);
+                            var currentTabIndex = -1;
+                            var currentBackground = Observables.Combine(
+                                tabIndex,
+                                selectedTabIndex,
+                                (index, selectedIndex) => index == selectedIndex ? props.selectedBackground : props.deselectedBackground
+                            );
 
-                control.props.selectedBackground.color.From(elements.foregroundColor);
-                control.props.selectedBackground.pixelsPerUnitMultiplier.From(1.3f);
-                control.props.selectedBackground.imageType.From(UnityEngine.UI.Image.Type.Sliced);
-                control.props.selectedBackground.sprite.From(elements.roundedRect);
+                            tab.AddBinding(tabIndex.Subscribe(x => currentTabIndex = x.currentValue));
 
-                control.props.background.color.From(elements.backgroundColor);
-                control.props.background.pixelsPerUnitMultiplier.From(1);
-                control.props.background.imageType.From(UnityEngine.UI.Image.Type.Sliced);
-                control.props.background.sprite.From(elements.roundedRect);
+                            var button = tab.gameObject.AddComponent<Button>();
+                            button.onClick.AddListener(() => selectedTabIndex.From(currentTabIndex));
 
-                control.Children(
-                    Image(props: control.props.background).Setup(background => background.FillParent()),
-                    Columns().Setup(columns =>
-                    {
-                        columns.FillParent();
-                        columns.OffsetMin(new Vector2(10, 10));
-                        columns.OffsetMax(new Vector2(-10, -10));
-                        columns.props.spacing.From(control.props.tabSpacing);
-                        columns.children.From(
-                            control.props.tabs.CreateDynamic(tabLabel => Image("tab").Setup(tab =>
-                            {
-                                var tabIndex = columns.children.IndexOfDynamic(tab);
-                                var isSelected = Observables.Combine(
-                                    tabIndex,
-                                    control.props.selectedTab,
-                                    (index, selectedIndex) => index == selectedIndex
-                                );
-
-                                tab.props.From(isSelected.SelectDynamic(
-                                    x => x ? control.props.selectedBackground : control.props.deselectedBackground
-                                ));
-
-                                var button = tab.gameObject.AddComponent<Button>();
-                                button.onClick.AddListener(() => control.props.selectedTab.From(tabIndex));
-
-                                tab.Children(Text().Setup(x =>
+                            return tab.Children(
+                                Image(new ImageProps()
                                 {
-                                    x.FillParent();
-                                    x.props.style.verticalAlignment.From(TMPro.VerticalAlignmentOptions.Capline);
-                                    x.props.style.horizontalAlignment.From(TMPro.HorizontalAlignmentOptions.Center);
-                                    x.props.text.From(tabLabel);
-                                }));
-                            }))
-                        );
-                    })
-                );
+                                    sprite = currentBackground.SelectDynamic(x => x.sprite),
+                                    color = currentBackground.SelectDynamic(x => x.color),
+                                    imageType = currentBackground.SelectDynamic(x => x.imageType),
+                                    fillCenter = currentBackground.SelectDynamic(x => x.fillCenter),
+                                    pixelsPerUnitMultiplier = currentBackground.SelectDynamic(x => x.pixelsPerUnitMultiplier),
+                                    raycastTarget = currentBackground.SelectDynamic(x => x.raycastTarget),
+                                    raycastPadding = currentBackground.SelectDynamic(x => x.raycastPadding),
+                                    useSpriteMesh = currentBackground.SelectDynamic(x => x.useSpriteMesh),
+                                    preserveAspect = currentBackground.SelectDynamic(x => x.preserveAspect),
+                                    fillOrigin = currentBackground.SelectDynamic(x => x.fillOrigin),
+                                    fillMethod = currentBackground.SelectDynamic(x => x.fillMethod),
+                                    fillAmount = currentBackground.SelectDynamic(x => x.fillAmount)
+                                }).FillParent(),
+                                Text(new TextProps()
+                                {
+                                    value = Props.From(tabLabel),
+                                    style = new TextStyleProps()
+                                    {
+                                        verticalAlignment = Props.From(TMPro.VerticalAlignmentOptions.Capline),
+                                        horizontalAlignment = Props.From(TMPro.HorizontalAlignmentOptions.Center)
+                                    }
+                                }).FillParent()
+                            );
+                        })
+                    ))
+            );
 
-                // control.Children(
-                //     VerticalLayout().Setup(layout =>
-                //     {
-                //         layout.FillParent();
-                //         layout.props.childControlWidth.From(true);
-                //         layout.props.childControlHeight.From(true);
-                //         layout.props.childForceExpandWidth.From(true);
-                //         layout.Children(
-                //             Control("topRegion").Setup(topRegion =>
-                //             {
-                //                 topRegion.MinHeight(control.props.tabHeight);
-                //                 topRegion.Children(
-                //                     Image().Setup(background =>
-                //                     {
-                //                         background.FillParent();
-                //                         background.props.color.From(new Color(0.07843138f, 0.07843138f, 0.07843138f, 1f));
-                //                     }),
-                //                     Columns().Setup(columns =>
-                //                     {
-                //                         columns.FillParent();
-                //                         columns.props.spacing.From(control.props.tabSpacing);
-                //                         columns.children.From(
-                //                             control.props.tabs.CreateDynamic(tabData => Image("tab").Setup(tab =>
-                //                             {
-                //                                 tab.props.From(control.props.selectedTab.SelectDynamic(
-                //                                     x => x == tabData ? control.props.selectedBackground : control.props.deselectedBackground
-                //                                 ));
+            control.AddBinding(
+                props.tabs.Subscribe(_ => selectedTabIndex.From(0)),
+                props.value.Subscribe(x => selectedTabIndex.From(x.currentValue)),
+                selectedTabIndex.Subscribe(x => props.onValueChanged?.Invoke(x.currentValue))
+            );
 
-                //                                 var button = tab.gameObject.AddComponent<Button>();
-                //                                 button.onClick.AddListener(() => control.props.selectedTab.From(tabData));
-
-                //                                 tab.Children(Text().Setup(x =>
-                //                                 {
-                //                                     x.FillParent();
-                //                                     x.props.style.verticalAlignment.From(TMPro.VerticalAlignmentOptions.Capline);
-                //                                     x.props.style.horizontalAlignment.From(TMPro.HorizontalAlignmentOptions.Center);
-                //                                     x.props.text.From(tabData.tabLabel);
-                //                                 }));
-                //                             }))
-                //                         );
-                //                     })
-                //                 );
-                //             }),
-                //             VerticalLayout("content").Setup(content =>
-                //             {
-                //                 content.FlexibleHeight(true);
-                //                 content.props.childControlWidth.From(true);
-                //                 content.props.childControlHeight.From(true);
-                //                 content.props.childForceExpandWidth.From(true);
-                //                 content.props.childForceExpandHeight.From(true);
-                //                 content.SingleChild(control.props.selectedTab.SelectDynamic(x => x?.generateContent()));
-                //             })
-                //         );
-                //     })
-                // );
-            });
+            return control;
         }
     }
 }

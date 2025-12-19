@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1520045968469047912}
   - component: {fileID: 245399730973470707}
+  - component: {fileID: 7701186392351276516}
   m_Layer: 0
   m_Name: HorizontalLayout
   m_TagString: Untagged
@@ -49,12 +50,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 30
-    m_Right: 30
-    m_Top: 30
-    m_Bottom: 30
+    m_Left: 0
+    m_Right: 0
+    m_Top: 0
+    m_Bottom: 0
   m_ChildAlignment: 0
-  m_Spacing: 30
+  m_Spacing: 10
   m_ChildForceExpandWidth: 0
   m_ChildForceExpandHeight: 0
   m_ChildControlWidth: 1
@@ -62,3 +63,16 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &7701186392351276516
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3849081060490260435}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07f56e5513618014ba840d3d0014c505, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _childParentOverride: {fileID: 0}

@@ -5,9 +5,9 @@ using static Nessle.UIBuilder;
 using ObserveThing;
 using System;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
 using Cysharp.Threading.Tasks;
 using TMPro;
+using UnityEngine.Events;
 
 namespace PlerionClient.Client
 {
@@ -15,40 +15,60 @@ namespace PlerionClient.Client
     {
         public static UIElementSet elements;
 
-        public static IControl<LayoutProps> Row(string identifier = "row", LayoutProps props = default, HorizontalLayoutGroup prefab = default, Action<IControl<LayoutProps>> setup = default)
+        public struct LabeledButtonProps
         {
-            var control = HorizontalLayout(identifier, props, prefab);
-            control.props.childControlWidth.From(true);
-            control.props.childControlHeight.From(true);
-            control.props.childAlignment.From(TextAnchor.MiddleLeft);
-            control.props.spacing.From(10);
-            return control;
+            public IValueObservable<string> label;
+            public TextStyleProps labelStyle;
+            public UnityAction onClick;
+            public IValueObservable<bool> interactable;
+            public ImageProps background;
         }
 
-        public static Control SafeArea(string identifier = "safeArea")
-            => new Control(identifier, typeof(SafeArea));
-
-        public class EditableLabelProps : IDisposable
+        public static IControl LabeledButton(LabeledButtonProps props = default)
         {
-            public InputFieldProps inputField { get; } = new InputFieldProps();
-            public TextProps label { get; } = new TextProps();
-            public ValueObservable<bool> inputFieldActive { get; } = new ValueObservable<bool>();
+            props.labelStyle.horizontalAlignment = props.labelStyle.horizontalAlignment ?? Props.From(HorizontalAlignmentOptions.Center);
+            props.labelStyle.verticalAlignment = props.labelStyle.verticalAlignment ?? Props.From(VerticalAlignmentOptions.Capline);
 
-            public void Dispose()
+            return Button(new ButtonProps()
             {
-                inputField.Dispose();
-                label.Dispose();
-            }
+                interactable = props.interactable,
+                background = props.background,
+                onClick = props.onClick
+            }).Children(Text(new TextProps() { style = props.labelStyle, value = props.label }));
         }
 
-        public static Control<EditableLabelProps> EditableLabel(string identifier = "editableLabel", EditableLabelProps props = default)
+        public static IControl Row(LayoutProps props = default, PrimitiveControl<LayoutProps> prefab = default)
         {
-            props = props ?? new EditableLabelProps();
-            var control = Control(identifier, props);
+            props.childControlWidth = props.childControlWidth ?? Props.From(true);
+            props.childControlHeight = props.childControlHeight ?? Props.From(true);
+            props.childAlignment = props.childAlignment ?? Props.From(TextAnchor.MiddleLeft);
+            props.spacing = props.spacing ?? Props.From(10f);
+            return HorizontalLayout(props, prefab);
+        }
 
-            control.Setup(editableLabel =>
+        public static IControl SafeArea()
+            => Control(new GameObject("Safe Area", typeof(SafeArea)));
+
+        public class EditableLabelProps
+        {
+            public InputFieldProps inputField;
+            public TextStyleProps label;
+            public IValueObservable<bool> inputFieldActive;
+        }
+
+        public static IControl EditableLabel(EditableLabelProps props = default)
+        {
+            UnityAction<string> onEndEdit = props.inputField.onEndEdit;
+            ValueObservable<bool> inputFieldActive = new ValueObservable<bool>();
+
+            props.inputField.onEndEdit = x =>
             {
-                editableLabel.OnPointerClick(x =>
+                inputFieldActive.From(false);
+                onEndEdit?.Invoke(x);
+            };
+
+            return Control(new GameObject("EditableLabel"))
+                .OnPointerClick(x =>
                 {
                     var eventSystem = EventSystem.current;
                     var target = x.pointerPress;
@@ -60,244 +80,209 @@ namespace PlerionClient.Client
                         if (eventSystem.currentSelectedGameObject != target)
                             return;
 
-                        props.inputFieldActive.From(true);
+                        inputFieldActive.From(true);
                     }).Forget();
-                });
-
-                editableLabel.Children(
-                    InputField("inputField", props: control.props.inputField).Setup(inputField =>
+                })
+                .Children(
+                    InputField(props.inputField)
+                        .FillParent()
+                        .Active(props.inputFieldActive)
+                        .Selected(props.inputFieldActive)
+                        .OnDeselect(_ => inputFieldActive.From(false)),
+                    Text(new TextProps()
                     {
-                        inputField.FillParent();
-                        inputField.Active(control.props.inputFieldActive);
-                        inputField.Selected(control.props.inputFieldActive);
-                        inputField.OnDeselect(_ => control.props.inputFieldActive.From(false));
-                        inputField.props.onEndEdit.From(input => control.props.inputFieldActive.From(false));
-                    }),
-                    Text("label", props: control.props.label).Setup(label =>
-                    {
-                        label.FillParent();
-                        label.Active(control.props.inputFieldActive.SelectDynamic(x => !x));
-                        label.props.text.From(
-                            Observables.Combine(
-                                control.props.inputField.inputText.text,
-                                control.props.inputField.placeholderText.text,
-                                (input, placeholder) => string.IsNullOrEmpty(input) ? placeholder : input
-                            )
-                        );
+                        style = props.label,
+                        value = Observables.Combine(
+                            props.inputField.value,
+                            props.inputField.placeholderValue,
+                            (input, placeholder) => string.IsNullOrEmpty(input) ? placeholder : input
+                        )
                     })
+                    .FillParent()
                 );
-            });
-
-            return control;
         }
 
-        public static T OnChanged<T>(this T control, Action<float> onChange)
-            where T : IControl<FloatFieldProps>
+        public static IControl PropertyLabel(IControl label, IControl control)
         {
-            control.AddBinding(control.props.value.Subscribe(x => onChange(x.currentValue)));
-            return control;
-        }
-
-        public static IControl PropertyLabel(string indentifer, IControl<TextProps> label, IControl control)
-        {
-            control.FlexibleWidth(true);
-
-            return HorizontalLayout(indentifer).Setup(propertyLabel =>
+            return HorizontalLayout(new LayoutProps()
             {
-                propertyLabel.props.childScaleHeight.From(true);
-                propertyLabel.props.childControlWidth.From(true);
-                propertyLabel.props.childForceExpandHeight.From(true);
-                propertyLabel.props.spacing.From(10);
-                propertyLabel.Children(label, control);
-            });
+                childScaleHeight = Props.From(true),
+                childControlWidth = Props.From(true),
+                childForceExpandHeight = Props.From(true),
+                spacing = Props.From(10f)
+            }).Children(label, control.FlexibleWidth(true));
         }
 
-        public static IControl<TextProps> Title(string identifier = "title", TextProps props = default, TextMeshProUGUI prefab = default)
+        public static IControl Title(TextProps props = default, PrimitiveControl<TextProps> prefab = default)
         {
-            return Text(identifier, props, prefab).Setup(text =>
-            {
-                text.props.style.horizontalAlignment.From(HorizontalAlignmentOptions.Center);
-                text.props.style.verticalAlignment.From(VerticalAlignmentOptions.Capline);
-                text.props.style.fontSize.From(48);
-            });
+            props.style.horizontalAlignment = props.style.horizontalAlignment ?? Props.From(HorizontalAlignmentOptions.Center);
+            props.style.verticalAlignment = props.style.verticalAlignment ?? Props.From(VerticalAlignmentOptions.Capline);
+            props.style.fontSize = props.style.fontSize ?? Props.From(48f);
+
+            return Text(props, prefab);
         }
 
-        public static IControl<LayoutProps> TightRowsWideColumns(string identifier = "verticalLayout.layout", LayoutProps props = default, VerticalLayoutGroup prefab = default)
+        public static IControl TightRowsWideColumns(LayoutProps props = default, PrimitiveControl<LayoutProps> prefab = default)
         {
-            return VerticalLayout(identifier, props, prefab).Setup(layout =>
-            {
-                layout.props.childControlWidth.From(true);
-                layout.props.childControlHeight.From(true);
-                layout.props.childForceExpandWidth.From(true);
-                layout.props.spacing.From(30);
-            });
+            props.childControlWidth = props.childControlWidth ?? Props.From(true);
+            props.childControlHeight = props.childControlHeight ?? Props.From(true);
+            props.childForceExpandWidth = props.childForceExpandWidth ?? Props.From(true);
+            props.spacing = props.spacing ?? Props.From(30f);
+
+            return VerticalLayout(props, prefab);
         }
 
-        public class Vector3Props
+        public struct LabeledControlProps
         {
-            public ValueObservable<Vector3> value { get; } = new ValueObservable<Vector3>();
-
-            public TextProps xLabel { get; } = new TextProps();
-            public FloatFieldProps xField { get; } = new FloatFieldProps();
-
-            public TextProps yLabel { get; } = new TextProps();
-            public FloatFieldProps yField { get; } = new FloatFieldProps();
-
-            public TextProps zLabel { get; } = new TextProps();
-            public FloatFieldProps zField { get; } = new FloatFieldProps();
+            public LayoutProps layout;
+            public TextProps label;
+            public IValueObservable<float> labelWidth;
+            public IControl control;
         }
 
-        public static Control<Vector3Props> Vector3(string identifier = "vector3", Vector3Props props = default)
+        public static IControl LabeledControl(LabeledControlProps props = default)
         {
-            return Control(identifier, props ?? new Vector3Props(), typeof(HorizontalLayoutGroup)).Setup(vector3 =>
-            {
-                vector3.PreferredHeight(30);
+            props.layout.childAlignment = props.layout.childAlignment ?? Props.From(TextAnchor.MiddleLeft);
+            props.layout.childControlWidth = props.layout.childControlWidth ?? Props.From(true);
+            props.layout.childControlHeight = props.layout.childControlHeight ?? Props.From(true);
 
-                vector3.AddBinding(vector3.props.value.Subscribe(x =>
-                {
-                    vector3.props.xField.value.From(x.currentValue.x);
-                    vector3.props.yField.value.From(x.currentValue.y);
-                    vector3.props.zField.value.From(x.currentValue.z);
-                }));
+            props.label.style.verticalAlignment = props.label.style.verticalAlignment ?? Props.From(VerticalAlignmentOptions.Capline);
+            props.label.style.overflowMode = props.label.style.overflowMode ?? Props.From(TextOverflowModes.Ellipsis);
+            props.label.style.textWrappingMode = props.label.style.textWrappingMode ?? Props.From(TextWrappingModes.NoWrap);
 
-                vector3.Columns(
-                    10,
-                    PropertyLabel(
-                        "xLabel",
-                        Text("text", vector3.props.xLabel).Setup(x => x.props.text.From("X")),
-                        FloatField("field", vector3.props.xField)
-                            .OnChanged(x => vector3.props.value.From(new Vector3(x, vector3.props.value.value.y, vector3.props.value.value.z)))
-                    ),
-                    PropertyLabel(
-                        "yLabel",
-                        Text("text", vector3.props.yLabel).Setup(x => x.props.text.From("Y")),
-                        FloatField("field", vector3.props.yField)
-                            .OnChanged(x => vector3.props.value.From(new Vector3(vector3.props.value.value.x, x, vector3.props.value.value.z)))
-                    ),
-                    PropertyLabel(
-                        "zLabel",
-                        Text("text", vector3.props.zLabel).Setup(x => x.props.text.From("Z")),
-                        FloatField("field", vector3.props.zField)
-                            .OnChanged(x => vector3.props.value.From(new Vector3(vector3.props.value.value.x, vector3.props.value.value.y, x)))
-                    )
-                );
-            });
-        }
+            props.labelWidth = props.labelWidth ?? Props.From(200f);
 
-        public static IControl LabeledControl(IValueObservable<string> label, float labelWidth, IControl control)
-        {
-            return HorizontalLayout().Setup(layout =>
-            {
-                layout.props.childAlignment.From(TextAnchor.MiddleLeft);
-                layout.props.childControlWidth.From(true);
-                layout.props.childControlHeight.From(true);
-                layout.Children(
-                    Text().Setup(labelObj =>
-                    {
-                        labelObj.props.text.From(label);
-                        labelObj.PreferredWidth(labelWidth);
-                        labelObj.MinWidth(labelWidth);
-                    }),
-                    control.Setup(control => control.FlexibleWidth(true))
-                );
-            });
-        }
-
-        public static IControl LabeledControl(string label, float labelWidth, IControl control)
-        {
-            return HorizontalLayout("labeledControl").Setup(layout =>
-            {
-                layout.props.childAlignment.From(TextAnchor.MiddleLeft);
-                layout.props.childControlWidth.From(true);
-                layout.props.childControlHeight.From(true);
-                layout.Children(
-                    Text().Setup(labelObj =>
-                    {
-                        labelObj.props.style.verticalAlignment.From(TMPro.VerticalAlignmentOptions.Capline);
-                        labelObj.props.text.From(label);
-                        labelObj.PreferredWidth(labelWidth);
-                        labelObj.MinWidth(labelWidth);
-                    }),
-                    control.Setup(control => control.FlexibleWidth(true))
-                );
-            });
-        }
-
-        public static IControl<LayoutProps> AdaptiveLabel(IControl label, IControl content)
-        {
-            return VerticalLayout().Setup(root =>
-            {
-                root.props.childControlWidth.From(true);
-                root.props.childControlHeight.From(true);
-                IControl narrowContentRegion = HorizontalLayout("narrowContent").Setup(narrowContentRegion =>
-                {
-                    narrowContentRegion.props.childControlWidth.From(true);
-                    narrowContentRegion.props.childControlHeight.From(true);
-                    narrowContentRegion.FlexibleWidth(true);
-                    narrowContentRegion.FlexibleHeight(true);
-                });
-
-                IControl wideContentRegion = VerticalLayout("wideContent").Setup(wideContentRegion =>
-                {
-                    wideContentRegion.FlexibleWidth(true);
-                    wideContentRegion.props.childControlWidth.From(true);
-                    wideContentRegion.props.childControlHeight.From(true);
-                });
-
-                var contentIsWide = Observables.Combine(
-                    content.rect, narrowContentRegion.rect,
-                    (_, region) =>
-                    {
-                        var tooWide = LayoutUtility.GetPreferredWidth(content.transform) > region.width;
-                        var tooTall = LayoutUtility.GetPreferredHeight(content.transform) > region.height;
-                        return tooWide || tooTall;
-                    }
+            var control = HorizontalLayout(props.layout)
+                .Children(
+                    Text(props.label)
+                        .MinWidth(props.labelWidth)
+                        .PreferredWidth(props.labelWidth)
                 );
 
-                wideContentRegion.Active(contentIsWide);
-                narrowContentRegion.Active(contentIsWide.SelectDynamic(x => !x));
-                content.parent.From(contentIsWide.SelectDynamic(x => x ? wideContentRegion : narrowContentRegion));
-
-                root.Children(
-                    Row().Setup(topRow => topRow.Children(label, narrowContentRegion)),
-                    wideContentRegion
-                );
-
-                content.FillParent();
-            });
-        }
-
-        public class ColumnsProps : IDisposable
-        {
-            public ValueObservable<float> spacing { get; } = new ValueObservable<float>();
-
-            public void Dispose()
+            if (props.control != null)
             {
-                spacing.Dispose();
+                control.children.Add(
+                    props.control.FlexibleWidth(true)
+                );
             }
+
+            return control;
         }
 
-        public static IControl<ColumnsProps> Columns()
+        public struct RoundIconButtonProps
         {
-            return Control("columns", new ColumnsProps()).Setup(columns =>
+            public ImageProps icon;
+            public UnityAction onClick;
+            public IValueObservable<bool> interactable;
+            public ImageProps background;
+        }
+
+        public static IControl RoundIconButton(RoundIconButtonProps props = default)
+        {
+            return RoundButton(new ButtonProps()
             {
-                columns.AddBinding(
-                    Observables.Any(columns.children, columns.props.spacing).Subscribe(_ =>
-                    {
-                        float step = 1f / columns.children.count;
+                background = props.background,
+                interactable = props.interactable,
+                onClick = props.onClick
+            }).Children(Image(props.icon));
+        }
 
-                        for (int i = 0; i < columns.children.count; i++)
+        public static IControl RoundButton(ButtonProps props = default)
+            => Control(props, elements.roundButton);
+
+        public static IControl Foldout(FoldoutProps props = default)
+            => Control(props, elements.foldout);
+
+        // public static IControl AdaptiveLabel(IControl label, IControl content)
+        // {
+        //     return VerticalLayout().Style(root =>
+        //     {
+        //         root.props.childControlWidth.From(true);
+        //         root.props.childControlHeight.From(true);
+        //         IControl narrowContentRegion = HorizontalLayout("narrowContent").Style(narrowContentRegion =>
+        //         {
+        //             narrowContentRegion.props.childControlWidth.From(true);
+        //             narrowContentRegion.props.childControlHeight.From(true);
+        //             narrowContentRegion.FlexibleWidth(true);
+        //             narrowContentRegion.FlexibleHeight(true);
+        //         });
+
+        //         IControl wideContentRegion = VerticalLayout("wideContent").Style(wideContentRegion =>
+        //         {
+        //             wideContentRegion.FlexibleWidth(true);
+        //             wideContentRegion.props.childControlWidth.From(true);
+        //             wideContentRegion.props.childControlHeight.From(true);
+        //         });
+
+        //         var contentIsWide = Observables.Combine(
+        //             content.rect, narrowContentRegion.rect,
+        //             (_, region) =>
+        //             {
+        //                 var tooWide = LayoutUtility.GetPreferredWidth(content.rectTransform) > region.width;
+        //                 var tooTall = LayoutUtility.GetPreferredHeight(content.rectTransform) > region.height;
+        //                 return tooWide || tooTall;
+        //             }
+        //         );
+
+        //         wideContentRegion.Active(contentIsWide);
+        //         narrowContentRegion.Active(contentIsWide.SelectDynamic(x => !x));
+        //         content.parent.From(contentIsWide.SelectDynamic(x => x ? wideContentRegion : narrowContentRegion));
+
+        //         root.Children(
+        //             Row().Children(label, narrowContentRegion),
+        //             wideContentRegion
+        //         );
+
+        //         content.FillParent();
+        //     });
+        // }
+
+        public static IControl Columns(IValueObservable<float> spacing)
+        {
+            spacing = spacing ?? Props.From(0f);
+            float spacingValue = 0;
+
+            return Control(new GameObject("Columns"))
+                .Style(columns =>
+                {
+                    columns.AddBinding(
+                        Observables.Any(columns.children, spacing).Subscribe(x =>
                         {
-                            var child = columns.children[i];
-                            child.transform.anchorMin = new Vector2(step * i, 0);
-                            child.transform.anchorMax = new Vector2(step * (i + 1), 1);
+                            if (x.source == spacing)
+                                spacingValue = ((IValueEventArgs<float>)x).currentValue;
 
-                            child.transform.offsetMin = new Vector2(Mathf.Lerp(0f, columns.props.spacing.value, i * step), 0);
-                            child.transform.offsetMax = new Vector2(Mathf.Lerp(-columns.props.spacing.value, 0f, (i + 1) * step), 0);
-                        }
-                    })
-                );
-            });
+                            float step = 1f / columns.children.count;
+
+                            for (int i = 0; i < columns.children.count; i++)
+                            {
+                                var child = columns.children[i];
+                                child.rectTransform.anchorMin = new Vector2(step * i, 0);
+                                child.rectTransform.anchorMax = new Vector2(step * (i + 1), 1);
+
+                                child.rectTransform.offsetMin = new Vector2(Mathf.Lerp(0f, spacingValue, i * step), 0);
+                                child.rectTransform.offsetMax = new Vector2(Mathf.Lerp(-spacingValue, 0f, (i + 1) * step), 0);
+                            }
+                        })
+                    );
+                });
+        }
+
+        public static T Columns<T>(this T control, float spacing, params IControl[] controls)
+            where T : IControl
+        {
+            control.children.From(controls);
+            float step = 1f / controls.Length;
+            for (int i = 0; i < controls.Length; i++)
+            {
+                var child = controls[i];
+                child.rectTransform.anchorMin = new Vector2(step * i, 0);
+                child.rectTransform.anchorMax = new Vector2(step * (i + 1), 1);
+
+                child.rectTransform.offsetMin = new Vector2(Mathf.Lerp(0f, spacing, i * step), 0);
+                child.rectTransform.offsetMax = new Vector2(Mathf.Lerp(-spacing, 0f, (i + 1) * step), 0);
+            }
+
+            return control;
         }
     }
 }

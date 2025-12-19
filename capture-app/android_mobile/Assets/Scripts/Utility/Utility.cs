@@ -13,29 +13,16 @@ namespace PlerionClient.Client
 {
     public static class Utility
     {
-        public static void SingleChild(this IControl control, IValueObservable<IControl> child)
+        public static T SingleChild<T>(this T control, IValueObservable<IControl> child)
+            where T : IControl
         {
             control.AddBinding(child.Subscribe(x =>
             {
                 x.previousValue?.Dispose();
                 x.currentValue?.parent.From(control);
             }));
-        }
 
-        public static void From(this ImageProps imageProps, IValueObservable<ImageProps> source)
-        {
-            imageProps.sprite.From(source.SelectDynamic<ImageProps, Sprite>(x => x.sprite));
-            imageProps.color.From(source.SelectDynamic<ImageProps, Color>(x => x.color));
-            imageProps.imageType.From(source.SelectDynamic<ImageProps, ImageType>(x => x.imageType));
-            imageProps.fillCenter.From(source.SelectDynamic<ImageProps, bool>(x => x.fillCenter));
-            imageProps.pixelsPerUnitMultiplier.From(source.SelectDynamic<ImageProps, float>(x => x.pixelsPerUnitMultiplier));
-            imageProps.raycastTarget.From(source.SelectDynamic<ImageProps, bool>(x => x.raycastTarget));
-            imageProps.raycastPadding.From(source.SelectDynamic<ImageProps, Vector4>(x => x.raycastPadding));
-            imageProps.useSpriteMesh.From(source.SelectDynamic<ImageProps, bool>(x => x.useSpriteMesh));
-            imageProps.preserveAspect.From(source.SelectDynamic<ImageProps, bool>(x => x.preserveAspect));
-            imageProps.fillOrigin.From(source.SelectDynamic<ImageProps, int>(x => x.fillOrigin));
-            imageProps.fillMethod.From(source.SelectDynamic<ImageProps, ImageFillMethod>(x => x.fillMethod));
-            imageProps.fillAmount.From(source.SelectDynamic<ImageProps, float>(x => x.fillAmount));
+            return control;
         }
 
         public static IDisposable SubscribeEach<T>(this ICollectionObservable<T> collection, Func<T, IDisposable> subscribe)
@@ -63,5 +50,8 @@ namespace PlerionClient.Client
                 }
             );
         }
+
+        public static IValueObservable<int> FollowIndexDynamic<T>(this IListObservable<T> list, int index)
+            => new FollowIndexObservable<T>(list, index);
     }
 }

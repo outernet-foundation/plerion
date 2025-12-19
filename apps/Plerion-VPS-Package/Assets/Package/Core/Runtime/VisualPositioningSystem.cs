@@ -32,6 +32,7 @@ namespace Plerion.VPS
         public static float? EstimatedFloorHeight { get; private set; } = null;
         public static float? FloorHeight => EstimatedFloorHeight ?? DetectedFloorHeight;
         public static bool LocalizationSessionActive => localizationSessionId != Guid.Empty;
+        public static LocalizationMetrics MostRecentMetrics { get; private set; }
 
         public static double4x4 EcefToUnityWorldTransform => unityFromEcefTransform;
         public static double4x4 UnityWorldToEcefTransform => ecefFromUnityTransform;
@@ -169,12 +170,11 @@ namespace Plerion.VPS
             );
 
             if (localizationResults.Count == 0)
-            {
-                Debug.Log("EP: LOCALIZATION FAILED");
                 return; //localization failed
-            }
 
             var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
+
+            MostRecentMetrics = localizationResult.Metrics;
 
             unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
                 localizationResult.Transform.Position.ToDouble3(),

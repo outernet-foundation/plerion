@@ -23,8 +23,6 @@ namespace Plerion.VPS
 
         public static void Start()
         {
-            Debug.Log("EP: Starting camera localization");
-
             if (Enabled)
                 return;
 

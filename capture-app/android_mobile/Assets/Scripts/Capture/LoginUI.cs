@@ -1,6 +1,5 @@
 using UnityEngine;
 using Nessle;
-using Nessle.StatefulExtensions;
 using TMPro;
 
 using static Nessle.UIBuilder;
@@ -15,54 +14,63 @@ namespace PlerionClient.Client
     {
         public static IControl LoginUI()
         {
-            return Control("loginUI").Setup(loginUI =>
-            {
-                loginUI.Children(
-                    Image().Setup(background =>
-                    {
-                        background.props.color.From(elements.midgroundColor);
-                        background.FillParent();
-                        background.Children(
-                            TightRowsWideColumns("login").Setup(content =>
-                            {
-                                content.Anchor(new Vector2(0.5f, 0.66f));
-                                content.SetPivot(new Vector2(0.5f, 1f));
-                                content.AnchoredPosition(Vector2.zero);
-                                content.SizeDelta(new Vector2(900, 0));
-                                content.FitContentVertical(ContentSizeFitter.FitMode.PreferredSize);
-                                content.Children(
-                                    LabeledControl("Username", 225, InputField().Setup(username => username.BindValue(x => x.inputText.text, App.state.username))),
-                                    LabeledControl("Password", 225, InputField().Setup(password =>
+            return Control(new GameObject("Login UI")).Children(
+                Image(new ImageProps() { color = Props.From(elements.midgroundColor) })
+                    .FillParent()
+                    .Children(
+                        TightRowsWideColumns()
+                            .Anchor(new Vector2(0.5f, 0.66f))
+                            .SetPivot(new Vector2(0.5f, 1f))
+                            .AnchoredPosition(Vector2.zero)
+                            .SizeDelta(new Vector2(900, 0))
+                            .FitContentVertical(ContentSizeFitter.FitMode.PreferredSize)
+                            .Children(
+                                LabeledControl(new LabeledControlProps()
+                                {
+                                    label = new TextProps() { value = Props.From("Username") },
+                                    labelWidth = Props.From(225f),
+                                    control = InputField(new InputFieldProps()
                                     {
-                                        password.props.contentType.From(TMP_InputField.ContentType.Password);
-                                        password.BindValue(x => x.inputText.text, App.state.password);
-                                    })),
-                                    HorizontalLayout().Setup(loginBar =>
-                                    {
-                                        loginBar.props.childControlWidth.From(true);
-                                        loginBar.props.childControlHeight.From(true);
-                                        loginBar.props.childAlignment.From(TextAnchor.UpperRight);
-                                        loginBar.Children(
-                                            Button().Setup(loginButton =>
-                                            {
-                                                loginButton.LabelFrom("Log In");
-                                                loginButton.props.onClick.From(() => App.state.loginRequested.ExecuteSetOrDelay(true));
-                                            })
-                                        );
-                                    }),
-                                    Text().Setup(errorText =>
-                                    {
-                                        errorText.props.style.color.From(Color.red);
-                                        errorText.Active(App.state.authError.AsObservable().SelectDynamic(x => !string.IsNullOrEmpty(x)));
-                                        errorText.props.text.From(App.state.authError.AsObservable());
-                                        errorText.props.style.horizontalAlignment.From(HorizontalAlignmentOptions.Center);
+                                        value = App.state.username.AsObservable(),
+                                        onValueChanged = x => App.state.username.ExecuteSetOrDelay(x)
                                     })
-                                );
-                            })
-                        );
-                    })
-                );
-            });
+                                }),
+                                LabeledControl(new LabeledControlProps()
+                                {
+                                    label = new TextProps() { value = Props.From("Password") },
+                                    labelWidth = Props.From(225f),
+                                    control = InputField(new InputFieldProps()
+                                    {
+                                        value = App.state.password.AsObservable(),
+                                        contentType = Props.From(TMP_InputField.ContentType.Password),
+                                        onValueChanged = x => App.state.password.ExecuteSetOrDelay(x)
+                                    })
+                                }),
+                                HorizontalLayout(new LayoutProps()
+                                {
+                                    childControlWidth = Props.From(true),
+                                    childControlHeight = Props.From(true),
+                                    childAlignment = Props.From(TextAnchor.UpperRight)
+                                }).Children(
+                                        LabeledButton(new LabeledButtonProps()
+                                        {
+                                            label = Props.From("Log In"),
+                                            onClick = () => App.state.loginRequested.ExecuteSetOrDelay(true)
+                                        })
+                                    ),
+                                Text(new TextProps()
+                                {
+                                    value = App.state.authError.AsObservable(),
+                                    style = new TextStyleProps()
+                                    {
+                                        color = Props.From(Color.red),
+                                        horizontalAlignment = Props.From(HorizontalAlignmentOptions.Center)
+                                    }
+                                })
+                                .Active(App.state.authError.AsObservable().SelectDynamic(x => !string.IsNullOrEmpty(x)))
+                            )
+                    )
+            );
         }
     }
 }
