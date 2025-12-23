@@ -14,8 +14,8 @@ namespace PlerionClient.Client
         private static UnityEnv _instance;
         public string dotEnvPath;
         public string plerionApiUrl;
-        public string plerionAuthUrl;
-        public string plerionAuthClient;
+        public string plerionAuthTokenUrl;
+        public string plerionAuthAudience;
         public string username;
         public string password;
         public bool loginAutomatically;
@@ -85,8 +85,8 @@ namespace PlerionClient.Client
                     );
 
                     ApplyEnvironmentVariable("PUBLIC_URL", ref _instance.plerionApiUrl);
-                    ApplyEnvironmentVariable("AUTH_URL", ref _instance.plerionAuthUrl);
-                    ApplyEnvironmentVariable("AUTH_CLIENT", ref _instance.plerionAuthClient);
+                    ApplyEnvironmentVariable("AUTH_TOKEN_URL", ref _instance.plerionAuthTokenUrl);
+                    ApplyEnvironmentVariable("AUTH_AUDIENCE", ref _instance.plerionAuthAudience);
                 }
                 catch (Exception exception)
                 {

@@ -36,8 +36,8 @@ namespace Plerion.Core
         }
 
         public static bool Initialized { get; private set; } = false;
-        public static string URL { get; private set; }
-        public static string ClientId { get; private set; }
+        public static string AuthTokenURL { get; private set; }
+        public static string AuthAudience { get; private set; }
         public static string Username { get; private set; }
         public static string Password { get; private set; }
         public static TokenResponse tokenResponse;
@@ -65,15 +65,15 @@ namespace Plerion.Core
         }
 
         public static void Initialize(
-            string url,
-            string clientId,
+            string authTokenUrl,
+            string authAudience,
             Action<string> logInfo,
             Action<string> logWarning,
             Action<string> logError
         )
         {
-            URL = url;
-            ClientId = clientId;
+            AuthTokenURL = authTokenUrl;
+            AuthAudience = authAudience;
             LogInfo = logInfo;
             LogWarning = logWarning;
             LogError = logError;
@@ -92,18 +92,18 @@ namespace Plerion.Core
 
         private static async UniTask LoginInternal()
         {
-            Info($"[Auth] Logging in to {URL} as {Username}");
+            Info($"[Auth] Logging in to {AuthTokenURL} as {Username}");
 
             HttpResponseMessage response;
             try
             {
                 response = await _httpClient.PostAsync(
-                    URL,
+                    AuthTokenURL,
                     new FormUrlEncodedContent(
                         new Dictionary<string, string>
                         {
                             ["grant_type"] = "password",
-                            ["client_id"] = ClientId,
+                            ["client_id"] = AuthAudience,
                             ["username"] = Username,
                             ["password"] = Password,
                         }
@@ -157,12 +157,12 @@ namespace Plerion.Core
                 try
                 {
                     response = await _httpClient.PostAsync(
-                        URL,
+                        AuthTokenURL,
                         new FormUrlEncodedContent(
                             new Dictionary<string, string>
                             {
                                 ["grant_type"] = "refresh_token",
-                                ["client_id"] = ClientId,
+                                ["client_id"] = AuthAudience,
                                 ["refresh_token"] = tokenResponse.refresh_token,
                             }
                         )

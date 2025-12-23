@@ -18,8 +18,8 @@ namespace PlerionClient.Client
             VisualPositioningSystem.Initialize(
                 GetCameraProvider(),
                 App.state.plerionApiUrl.value,
-                App.state.plerionAuthUrl.value,
-                App.state.plerionAuthClient.value,
+                App.state.plerionAuthTokenUrl.value,
+                App.state.plerionAuthAudience.value,
                 message => Log.Info(LogGroup.Localizer, message),
                 message => Log.Warn(LogGroup.Localizer, message),
                 message => Log.Error(LogGroup.Localizer, message),

@@ -56,8 +56,8 @@ namespace Plerion.Core
         public static void Initialize(
             ICameraProvider cameraProvider,
             string apiUrl,
-            string authUrl,
-            string authClient,
+            string authTokenUrl,
+            string authAudience,
             Action<string> logCallback,
             Action<string> warnCallback,
             Action<string> errorCallback,
@@ -75,7 +75,7 @@ namespace Plerion.Core
 
             Prefabs = Resources.Load<Prefabs>("PrefabReferences");
 
-            Auth.Initialize(authUrl, authClient, logCallback, warnCallback, errorCallback);
+            Auth.Initialize(authTokenUrl, authAudience, logCallback, warnCallback, errorCallback);
 
             api = new DefaultApi(
                 new HttpClient(new AuthHttpHandler() { InnerHandler = new HttpClientHandler() })

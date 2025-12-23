@@ -73,7 +73,7 @@
       "dependencies": {}
     },
     "com.plerion.vps": {
-      "version": "file:C:/Users/Tyler/repos/plerion/apps/Plerion-VPS-Package/Assets/Package/Core",
+      "version": "file:../../../apps/Plerion-VPS-Package/Assets/Package/Core",
       "depth": 0,
       "source": "local",
       "dependencies": {
@@ -176,11 +176,11 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.ide.visualstudio": {
-      "version": "2.0.23",
+      "version": "2.0.26",
       "depth": 0,
       "source": "registry",
       "dependencies": {
-        "com.unity.test-framework": "1.1.9"
+        "com.unity.test-framework": "1.1.33"
       },
       "url": "https://packages.unity.com"
     },
