@@ -28,9 +28,6 @@ torch = [
 neural-networks = ["neural-networks"]
 
 [tool.uv.sources]
-core = { workspace = true }
-common = { workspace = true }
-neural-networks = { workspace = true }
 torch = { index = "pytorch-cu126" }
 torchvision = { index = "pytorch-cu126" }
 

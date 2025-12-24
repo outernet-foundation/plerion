@@ -45,6 +45,14 @@ include = [
     "test/**/src/**/*.pyi",
 ]
 
+[tool.uv.sources]
+common = { workspace = true }
+core = { workspace = true }
+neural-networks = { workspace = true }
+datamodels = { workspace = true }
+plerion-localizer-client = { workspace = true }
+plerion_api_client = { workspace = true }
+
 [tool.ruff]
 target-version = "py313"
 line-length = 120

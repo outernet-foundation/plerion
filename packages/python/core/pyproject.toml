@@ -15,9 +15,6 @@ dependencies = [
 [dependency-groups]
 dev = ["scipy-stubs>=1.16.3.0"]
 
-[tool.uv.sources]
-common = { workspace = true }
-
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"

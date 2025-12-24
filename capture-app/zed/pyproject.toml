@@ -18,10 +18,6 @@ dependencies = [
 [dependency-groups]
 dev = ["scipy-stubs"]
 
-[tool.uv.sources]
-core = { workspace = true }
-common = { workspace = true }
-
 [[tool.uv.sources.pyzed]]
 path = "./third-party/pyzed/pyzed-5.1-cp313-cp313-win_amd64.whl"
 marker = "sys_platform == 'win32' and platform_machine == 'AMD64'"

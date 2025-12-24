@@ -263,12 +263,17 @@ services:
         - type=local,src=${HOME}/.buildx-cache/reconstructor
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/reconstructor,mode=max
-
+    # Don't run this service, it's just for building the image
+    entrypoint: ["bash", "-lc", "echo 'built reconstructor image'; exit 0"]
+    restart: "no"
+    
   localizer:
-    profiles: ["ephemeral"]
     build:
       dockerfile: docker/localizer/Dockerfile
       cache_from:
         - type=local,src=${HOME}/.buildx-cache/localizer
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/localizer,mode=max
+    # Don't run this service, it's just for building the image
+    entrypoint: ["bash", "-lc", "echo 'built localizer image'; exit 0"]
+    restart: "no"
