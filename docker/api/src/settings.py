@@ -8,6 +8,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     backend: Literal["aws", "docker"] = Field()
+    torch_device: Literal["cpu", "cuda", "rocm"] = Field()
 
     auth_audience: str = Field()
     auth_issuer_url: AnyHttpUrl = Field()

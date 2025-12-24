@@ -10,7 +10,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     backend: Literal["aws", "docker"] = Field()
-    torch_device: Literal["cpu", "cuda"] = Field()
+    torch_device: Literal["cpu", "cuda", "rocm"] = Field()
 
     postgres_host: str = Field()
     database_name: str = Field()

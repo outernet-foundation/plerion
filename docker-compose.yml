@@ -197,14 +197,15 @@ services:
       - "8000:8000"
       - "5679:5678"
     volumes:
-      - ./docker/localizer:/app/docker/localizer
-      - ./docker/api:/app/docker/api
-      - ./docker/models:/app/docker/models
-      - ./common:/app/common
+      # - ./docker/localizer:/app/docker/localizer
+      # - ./docker/api:/app/docker/api
+      # - ./docker/models:/app/docker/models
+      # - ./common:/app/common
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
       BACKEND: docker
+      TORCH_DEVICE: ${TORCH_DEVICE}
       AUTH_AUDIENCE: ${AUTH_AUDIENCE}
       AUTH_ISSUER_URL: ${AUTH_ISSUER_URL}
       AUTH_URL: ${AUTH_URL}
@@ -220,7 +221,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
-      LOCALIZATION_SESSION_IMAGE: plerion-localizer
+      LOCALIZATION_SESSION_IMAGE: plerion-localizer-${TORCH_DEVICE}
       RELOAD: true
       DEBUG: ${DEBUG_API}
       DEBUG_WAIT: ${DEBUG_WAIT_API}
@@ -232,9 +233,9 @@ services:
       create-database:
         condition: service_completed_successfully
     volumes:
-      - ./docker/orchestrator:/app/docker/orchestrator
-      - ./docker/models:/app/docker/models
-      - ./common:/app/common
+      # - ./docker/orchestrator:/app/docker/orchestrator
+      # - ./docker/models:/app/docker/models
+      # - ./common:/app/common
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
@@ -262,9 +263,9 @@ services:
       args:
         TORCH_DEVICE: ${TORCH_DEVICE}
       cache_from:
-        - type=local,src=${HOME}/.buildx-cache/reconstructor
+        - type=local,src=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE}
       cache_to:
-        - type=local,dest=${HOME}/.buildx-cache/reconstructor,mode=max
+        - type=local,dest=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE},mode=max
     image: plerion-reconstructor-${TORCH_DEVICE}
     # Don't run this service, it's just for building the image
     entrypoint: ["bash", "-lc", "echo 'built reconstructor image'; exit 0"]
@@ -276,9 +277,9 @@ services:
       args:
         TORCH_DEVICE: ${TORCH_DEVICE}
       cache_from:
-        - type=local,src=${HOME}/.buildx-cache/localizer
+        - type=local,src=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE}
       cache_to:
-        - type=local,dest=${HOME}/.buildx-cache/localizer,mode=max
+        - type=local,dest=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE},mode=max
     image: plerion-localizer-${TORCH_DEVICE}
     # Don't run this service, it's just for building the image
     entrypoint: ["bash", "-lc", "echo 'built localizer image'; exit 0"]

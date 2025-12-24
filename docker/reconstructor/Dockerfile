@@ -10,13 +10,13 @@ ENV \
     # Enable bytecode compilation, to improve cold-start performance.
     UV_COMPILE_BYTECODE=1 \
     # Ensure layers are deterministic by not including installer metadata
-    # UV_NO_INSTALLER_METADATA=1 \
+    UV_NO_INSTALLER_METADATA=1 \
     # Enable copy mode to support bind mount caching.
     UV_LINK_MODE=copy \
     # Set torch cache directory
     TORCH_HOME=/opt/torch_cache \
-    # Set pip cache directory
-    PIP_CACHE_DIR=/root/.cache/pip \
+    # Enable experimental AOTriton fast attention kernels for ROCm (speeds up LightGlue on ROCm)
+    TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1 \
     # Set virtual environment location
     UV_PROJECT_ENVIRONMENT=/opt/uv/venv \
     VIRTUAL_ENV=/opt/uv/venv

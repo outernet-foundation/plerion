@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import gc
 import tarfile
 from io import BytesIO
 from pathlib import Path
@@ -123,6 +124,13 @@ def main():
         descriptors[image_name] = superpoint_output["descriptors"][0].cpu().numpy().astype(float32, copy=False)
         sizes[image_name] = (image.height, image.width)
 
+    # Unload DIR and SuperPoint models
+    del dir
+    del superpoint
+    gc.collect()
+    if cuda.is_available():
+        cuda.empty_cache()
+
     # Write global descriptors to storage
     file_name, file_bytes = write_global_descriptors(WORK_DIR, global_descriptors)
     _put_reconstruction_object(key=file_name, body=file_bytes)
@@ -164,6 +172,12 @@ def main():
 
     # Match features
     match_indices = lightglue_match(lightglue, pairs, keypoints, descriptors, sizes, batch_size=32, device=device)
+
+    # Unload LightGlue model
+    del lightglue
+    gc.collect()
+    if cuda.is_available():
+        cuda.empty_cache()
 
     # Run COLMAP reconstruction
     sfm_output_path = WORK_DIR / "sfm_output"

@@ -34,13 +34,13 @@ async def create_localization_session(session: AsyncSession = Depends(get_sessio
     container_id, container_url = DockerSessionClient().create_session(
         session_id=str(row.id),
         image=settings.localization_session_image,
+        torch_device=settings.torch_device,
         environment={
             "MINIO_ENDPOINT_URL": str(settings.minio_endpoint_url) or "",
             "MINIO_ACCESS_KEY": settings.minio_access_key or "",
             "MINIO_SECRET_KEY": settings.minio_secret_key or "",
             "RECONSTRUCTIONS_BUCKET": settings.reconstructions_bucket,
         },
-        gpus=True,
     )
 
     row.container_id = container_id
