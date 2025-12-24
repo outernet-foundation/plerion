@@ -120,11 +120,10 @@ namespace Plerion.Core.ARFoundation
             // Wait for any in-flight capture to complete before unsubscribing
             await UniTask.WaitUntil(() => Interlocked.CompareExchange(ref _captureInFlight, 0, 0) == 0);
 
+            _cameraManager.frameReceived -= OnCameraFrameReceived;
             _cameraManager = null;
             _cameraPoseProvider = null;
             _onFrameReceived = null;
-            _cameraManager.frameReceived -= OnCameraFrameReceived;
-
             _systemState = SystemState.Idle;
         }
 
