@@ -34,9 +34,10 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 RUN uv venv $UV_PROJECT_ENVIRONMENT
 
 # Install torch and cuda
-COPY docker/localizer/pylock.torch.toml ./pylock.torch.toml
+ARG TORCH_DEVICE
+COPY docker/localizer/pylock.torch-*.toml .
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
-    uv pip install -r pylock.torch.toml
+    uv pip install -r pylock.torch-${TORCH_DEVICE}.toml
 
 # Install neural-networks dependencies
 COPY docker/localizer/pylock.neural-networks.toml ./pylock.neural-networks.toml

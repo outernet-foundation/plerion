@@ -4,8 +4,9 @@ import threading
 import uuid
 from typing import Literal
 
-import docker
 from docker.types import DeviceRequest
+
+import docker
 
 Status = Literal["SUBMITTED", "RUNNING", "SUCCEEDED", "FAILED", "UNKNOWN"]
 
@@ -23,6 +24,7 @@ class DockerBatchClient:
         *,
         array_size: int | None = None,
         environment: dict[str, str] | None = None,
+        torch_device: str | None = None,
     ) -> str:
         if array_size is None:
             array_size = 1
@@ -37,6 +39,10 @@ class DockerBatchClient:
             environment["DOCKER_HOST"] = "unix:///var/run/docker.sock"
             environment["BATCH_JOB_ARRAY_INDEX"] = str(index)
 
+            device_requests = None
+            if torch_device == "cuda":
+                device_requests = [DeviceRequest(count=-1, capabilities=[["gpu"]])]
+
             container = self._docker.containers.run(
                 image=f"{job_definition_name}:latest",
                 environment=environment,
@@ -48,7 +54,7 @@ class DockerBatchClient:
                 labels={"service": job_definition_name, "job": job_id, "task": str(index)},
                 detach=True,
                 remove=False,
-                device_requests=[DeviceRequest(count=-1, capabilities=[["gpu"]])],
+                device_requests=device_requests,
             )
 
             container_id = container.id

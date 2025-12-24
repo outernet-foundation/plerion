@@ -13,6 +13,7 @@ class BatchClient(Protocol):
         *,
         array_size: int | None = None,
         environment: dict[str, str] | None = None,
+        torch_device: str | None = None,
     ) -> str: ...
 
     def get_job_status(self, job_id: str) -> str: ...

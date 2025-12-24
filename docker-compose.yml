@@ -237,8 +237,9 @@ services:
       - ./common:/app/common
       - /var/run/docker.sock:/var/run/docker.sock
     environment:
-      BACKEND: docker
       DOCKER_HOST: unix:///var/run/docker.sock
+      BACKEND: docker
+      TORCH_DEVICE: ${TORCH_DEVICE}
       POSTGRES_HOST: ${POSTGRES_HOST}
       DATABASE_NAME: ${DATABASE_NAME}
       DATABASE_USER: ${DATABASE_NAME}_orchestration_user
@@ -256,13 +257,15 @@ services:
       DEBUG_WAIT_RUN_RECONSTRUCTION: ${DEBUG_WAIT_RUN_RECONSTRUCTION}
 
   reconstructor:
-    profiles: ["ephemeral"]
     build:
       dockerfile: docker/reconstructor/Dockerfile
+      args:
+        TORCH_DEVICE: ${TORCH_DEVICE}
       cache_from:
         - type=local,src=${HOME}/.buildx-cache/reconstructor
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/reconstructor,mode=max
+    image: plerion-reconstructor-${TORCH_DEVICE}
     # Don't run this service, it's just for building the image
     entrypoint: ["bash", "-lc", "echo 'built reconstructor image'; exit 0"]
     restart: "no"
@@ -270,10 +273,13 @@ services:
   localizer:
     build:
       dockerfile: docker/localizer/Dockerfile
+      args:
+        TORCH_DEVICE: ${TORCH_DEVICE}
       cache_from:
         - type=local,src=${HOME}/.buildx-cache/localizer
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/localizer,mode=max
+    image: plerion-localizer-${TORCH_DEVICE}
     # Don't run this service, it's just for building the image
     entrypoint: ["bash", "-lc", "echo 'built localizer image'; exit 0"]
     restart: "no"

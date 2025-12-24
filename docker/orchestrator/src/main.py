@@ -58,7 +58,7 @@ def start_next_reconstruction() -> None:
         batch_client.submit_job(
             name=str(queued_reconstruction.id),
             queue_name=settings.batch_job_queue,
-            job_definition_name=settings.batch_job_definition,
+            job_definition_name=f"{settings.batch_job_definition}-{settings.torch_device}",
             environment={
                 "MINIO_ENDPOINT_URL": str(settings.minio_endpoint_url),
                 "MINIO_ACCESS_KEY": str(settings.minio_access_key),

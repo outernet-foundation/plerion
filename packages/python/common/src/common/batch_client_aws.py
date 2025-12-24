@@ -18,6 +18,7 @@ class AwsBatchClient:
         *,
         array_size: int | None = None,
         environment: dict[str, str] | None = None,
+        torch_device: str | None = None,
     ) -> str:
         job: SubmitJobRequestTypeDef = {"jobName": name, "jobQueue": queue_name, "jobDefinition": job_definition_name}
 
