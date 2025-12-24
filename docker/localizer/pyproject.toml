@@ -20,8 +20,9 @@ dependencies = [
 
 [dependency-groups]
 dev = ["h5py-stubs>=0.1.2", "scipy-stubs>=1.16.2.4"]
-torch-cpu = ["pytorch-runtime-cpu"]
-torch-cuda = ["pytorch-runtime-cuda"]
+torch-cpu = ["torch-meta[cpu]"]
+torch-cuda = ["torch-meta[cuda]"]
+torch-rocm = ["torch-meta[rocm]"]
 neural-networks = ["neural-networks"]
 
 [build-system]

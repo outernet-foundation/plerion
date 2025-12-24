@@ -33,18 +33,22 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
 # Create the virtual environment
 RUN uv venv $UV_PROJECT_ENVIRONMENT
 
-# Install torch and cuda
+# Install torch dependencies for selected device
 ARG TORCH_DEVICE
 COPY docker/localizer/pylock.torch-*.toml .
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.torch-${TORCH_DEVICE}.toml
+
+# Install torch meta-package
+COPY packages/python/torch-meta /app/packages/python/torch-meta
+RUN uv pip install --no-deps --no-sources /app/packages/python/torch-meta
 
 # Install neural-networks dependencies
 COPY docker/localizer/pylock.neural-networks.toml ./pylock.neural-networks.toml
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.neural-networks.toml
 
-# Install neural-networks
+# Install neural-networks package
 COPY packages/python/neural-networks /app/packages/python/neural-networks
 RUN uv pip install --no-deps --no-sources /app/packages/python/neural-networks/third-party/deep-image-retrieval
 RUN uv pip install --no-deps --no-sources /app/packages/python/neural-networks
@@ -57,7 +61,7 @@ COPY docker/localizer/pylock.toml ./pylock.toml
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.toml
 
-# Install the project itself
+# Install remaining packages and the project itself
 COPY packages/python/core /app/packages/python/core
 COPY packages/python/common /app/packages/python/common
 COPY docker/localizer /app/docker/localizer

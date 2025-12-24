@@ -27,17 +27,17 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/7f/9c/36c5c37947ebfb8
 
 [[packages]]
 name = "boto3"
-version = "1.42.15"
+version = "1.42.16"
 index = "https://pypi.org/simple"
-sdist = { url = "https://files.pythonhosted.org/packages/a0/82/66f1cd7ce283ab717c96700899e9d128927abda236bd96019747f45ad53d/boto3-1.42.15.tar.gz", upload-time = 2025-12-22T20:34:10Z, size = 112774, hashes = { sha256 = "d673c9b6bb9e293e028e354de6701351f1881e3fbeb25d739dd33c4940a30929" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/c9/28/1cc2a2bade62ea6e3455e0572097758a3e4b38f017181ee7910023145ed8/boto3-1.42.15-py3-none-any.whl", upload-time = 2025-12-22T20:34:09Z, size = 140572, hashes = { sha256 = "94aabb83e3be3e2ea5ffa530cd5e221e8f4eb65f8d126d097e03d1ab80e5c5ce" } }]
+sdist = { url = "https://files.pythonhosted.org/packages/98/37/22c82e9d314d769a6eaf600ce5e08357927b5c6a614bfbeb1e7b7e7aa036/boto3-1.42.16.tar.gz", upload-time = 2025-12-23T20:44:21Z, size = 112834, hashes = { sha256 = "811391611db88c8a061f6e6fabbd7ca784ad9de04490a879f091cbaa9de7de74" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/f8/93/78d175e7d40941c4b608a6701a14215aeeb1db58499dbbc40467a6fd6116/boto3-1.42.16-py3-none-any.whl", upload-time = 2025-12-23T20:44:20Z, size = 140574, hashes = { sha256 = "37a43d42aebd06a8f93ee801ea1b7b5181ac42a30869ef403c9dadc160a748e5" } }]
 
 [[packages]]
 name = "botocore"
-version = "1.42.15"
+version = "1.42.16"
 index = "https://pypi.org/simple"
-sdist = { url = "https://files.pythonhosted.org/packages/be/ae/80c8689a846066156117ad76cdfca52003fb9d3f1f5de38535f4aba9bf6c/botocore-1.42.15.tar.gz", upload-time = 2025-12-22T20:34:01Z, size = 14911429, hashes = { sha256 = "504c548aa333728c99a692908d3e6acb718983585ad7a836d2fab9604518a636" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/8e/e9/0eb22fca88484f356f0af888b9655bd18db9173f8ab6b66600fd9e636473/botocore-1.42.15-py3-none-any.whl", upload-time = 2025-12-22T20:33:58Z, size = 14584154, hashes = { sha256 = "888ec4a817cbc56a93d5945b458621d8a6f580694373f8e93f68984f27523913" } }]
+sdist = { url = "https://files.pythonhosted.org/packages/cf/eb/d91fb1fb288ba896392d68f89881f5f26bc5b51f8da28697c77f05bc44e8/botocore-1.42.16.tar.gz", upload-time = 2025-12-23T20:44:11Z, size = 14914600, hashes = { sha256 = "29ee8555cd5d5023350405387cedcf3fe1c7f02fcb8060bf9e01602487482c25" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/a2/98/c7c26ff399994e2b1119cc36027aaae46b9d646a49b70a82c2622e44c94b/botocore-1.42.16-py3-none-any.whl", upload-time = 2025-12-23T20:44:08Z, size = 14585775, hashes = { sha256 = "b1f584a0f8645c12e07bf6ec9c18e05221a789f2a9b2d3c6291deb42f8c1c542" } }]
 
 [[packages]]
 name = "certifi"
@@ -130,10 +130,10 @@ wheels = [{ url = "https://files.pythonhosted.org/packages/b3/38/89ba8ad64ae25be
 
 [[packages]]
 name = "openapi-generator-cli"
-version = "7.17.0"
+version = "7.18.0"
 index = "https://pypi.org/simple"
-sdist = { url = "https://files.pythonhosted.org/packages/46/2c/f6f224c077d8783bd6ce37aeb07b727049838366bc93387a0504a1a299c3/openapi_generator_cli-7.17.0.tar.gz", upload-time = 2025-10-30T01:41:54Z, size = 27726081, hashes = { sha256 = "00678095abe01d61ddab24d83d5cb34c72ee3ec1e45045200f800c11c183ecba" } }
-wheels = [{ url = "https://files.pythonhosted.org/packages/f8/3e/9ef133eaf0c5f703a23f07fbf29b5bba15ffd148a4c007181af45bf61538/openapi_generator_cli-7.17.0-py3-none-any.whl", upload-time = 2025-10-30T01:41:51Z, size = 27739927, hashes = { sha256 = "0a6f11e43598ed34c6a20c85dc9f1d4a81fe503a8ebcb58f8661b6f973c24d7b" } }]
+sdist = { url = "https://files.pythonhosted.org/packages/fc/3d/f5579526a39d880537cec8aa1970de9b02ad33b2abf0ff693e6f1cb50f90/openapi_generator_cli-7.18.0.tar.gz", upload-time = 2025-12-23T01:47:38Z, size = 27807164, hashes = { sha256 = "f0661deb8d021a6de0d745b7c69b2d1052a7d1545580e8dd3937b3f671be961f" } }
+wheels = [{ url = "https://files.pythonhosted.org/packages/82/e2/997773e1b7a0566deb7fa5de78d2b41ac506b333fe8d8eb058e60f62ff14/openapi_generator_cli-7.18.0-py3-none-any.whl", upload-time = 2025-12-23T01:47:33Z, size = 27821158, hashes = { sha256 = "c2f820dac0bf01de957c64988b112608850c60dca65255afa2e94ccdb491dded" } }]
 
 [[packages]]
 name = "psycopg"
