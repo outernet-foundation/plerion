@@ -92,7 +92,7 @@ jobs:
           set -euo pipefail
 
           # Create image build plan
-          cd scripts
+          # cd scripts
           # uv run --locked src/build.py plan --all --output plan.json
           uv run --project script --no_workspace build plan --all --output plan.json
 
@@ -182,7 +182,7 @@ jobs:
           docker buildx create --use --driver docker-container
 
           # Lock image
-          cd scripts
+          # cd scripts
           # uv run --locked src/build.py lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
           uv run --project script --no_workspace build lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
           # Echo lock json for logging
