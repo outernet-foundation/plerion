@@ -10,7 +10,7 @@ from common.run_command import run_command
 from pydantic import TypeAdapter
 from typer import Option, Typer
 
-workspace_directory = Path("..").resolve()
+workspace_directory = Path(".").resolve()
 images_path = workspace_directory / "images.json"
 images_lock_path = workspace_directory / "images.lock"
 infrastructure_directory = workspace_directory / "infrastructure"
@@ -108,17 +108,11 @@ def create_plan(images: list[str]):
     )
 
     # Select images
-    # selected_images: dict[str, Image]
-    # if images:
-    #     selected_images = {name: all_images[name] for name in images}
-    # else:
-    #     assert stack is not None
-    #     if stack == "all":
-    #         selected_images = {name: image for name, image in all_images.items()}
-    #     else:
-    #         selected_images = {name: image for name, image in all_images.items() if image["stack"] == stack}
-
-    selected_images = {name: all_images[name] for name in images}
+    selected_images: dict[str, Image]
+    if images:
+        selected_images = {name: all_images[name] for name in images}
+    else:
+        selected_images = {name: image for name, image in all_images.items()}
 
     # Get Pulumi stack outputs for selected images
     # stacks: dict[str, dict[str, str]] = {}
