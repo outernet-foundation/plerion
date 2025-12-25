@@ -1,6 +1,6 @@
 from uuid import UUID, uuid4
 
-from common.session_client_docker import DockerSessionClient
+from common.docker_compose_client import create_service, destroy_service, get_service_status
 from core.axis_convention import AxisConvention
 from core.camera_config import CameraConfig
 from core.localization_metrics import LocalizationMetrics
@@ -26,25 +26,17 @@ router = APIRouter(prefix="/localization_sessions", tags=["localization_sessions
 
 settings = get_settings()
 
+SESSION_PORT = 8000  # internal port exposed by the session container
+
 
 @router.post("")
 async def create_localization_session(session: AsyncSession = Depends(get_session)) -> LocalizationSessionRead:
-    id = uuid4()
-    row = LocalizationSession(id=id)
-    container_id, container_url = DockerSessionClient().create_session(
-        session_id=str(row.id),
-        image=settings.localization_session_image,
-        torch_device=settings.torch_device,
-        environment={
-            "MINIO_ENDPOINT_URL": str(settings.minio_endpoint_url) or "",
-            "MINIO_ACCESS_KEY": settings.minio_access_key or "",
-            "MINIO_SECRET_KEY": settings.minio_secret_key or "",
-            "RECONSTRUCTIONS_BUCKET": settings.reconstructions_bucket,
-        },
+    row = LocalizationSession(id=uuid4())
+    container_name = f"localizer-{row.id}"
+    row.container_id = create_service(
+        settings.localizer_service, container_name, environment={"SESSION_ID": str(row.id)}
     )
-
-    row.container_id = container_id
-    row.container_url = str(container_url)
+    row.container_url = str(f"http://{container_name}:{SESSION_PORT}")
 
     session.add(row)
 
@@ -59,7 +51,7 @@ async def delete_localization_session(localization_session_id: UUID, session: As
     row = await session.get(LocalizationSession, localization_session_id)
 
     if row:
-        DockerSessionClient().stop_session(container_id=row.container_id)
+        destroy_service(row.container_id)
         await session.delete(row)
         await session.commit()
         return {"detail": f"Localization session with id {localization_session_id} deleted"}
@@ -91,7 +83,7 @@ async def set_localization_session_camera_intrinsics(
 async def get_localization_session_status(
     localization_session_id: UUID, session: AsyncSession = Depends(get_session)
 ) -> str:
-    return DockerSessionClient().get_session_status(f"vls-session-{localization_session_id}")
+    return get_service_status(f"localizer-{localization_session_id}", SESSION_PORT)
 
 
 @router.post("/{localization_session_id}/maps")
@@ -212,4 +204,4 @@ async def _session_base_url(db: AsyncSession, session_id: UUID) -> str:
     ).scalar_one_or_none()
     if not row:
         raise HTTPException(status_code=404, detail="Localization session not found")
-    return row.rstrip("/")  # e.g., "http://vls-session-<uuid>:8080"
+    return row.rstrip("/")  # e.g., "http://localizer-<uuid>:8080"
