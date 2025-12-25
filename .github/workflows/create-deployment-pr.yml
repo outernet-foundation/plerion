@@ -5,7 +5,7 @@ on:
     branches: [feature/ci]
     paths:
       - ".github/workflows/create-deployment-pr.yml"
-      - "scripts/src/build.py"
+      - "scripts/src/scripts/build.py"
       - "images.json"
       - "services/**"
       - "tasks/**"
