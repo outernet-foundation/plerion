@@ -182,8 +182,8 @@ jobs:
 
           # Lock image
           cd scripts
-          uv run --locked src/build.py lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
-
+          # uv run --locked src/build.py lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
+          uv run --project script --no_workspace build lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
           # Echo lock json for logging
           echo "Image lock for ${{ matrix.name }}:"
           jq . ${{ matrix.name }}-image-lock.json
