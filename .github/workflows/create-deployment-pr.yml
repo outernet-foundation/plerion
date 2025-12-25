@@ -2,7 +2,7 @@ name: Create Deployment PR
 
 on:
   push:
-    branches: [main]
+    branches: [feature/ci]
     paths:
       - ".github/workflows/create-deployment-pr.yml"
       - "scripts/src/build.py"
@@ -59,32 +59,32 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
-      - name: Setup Pulumi
-        uses: pulumi/setup-pulumi@v2
+      # - name: Setup Pulumi
+      #   uses: pulumi/setup-pulumi@v2
 
-      - name: Authenticate Pulumi
-        uses: pulumi/auth-actions@v1
-        with:
-          organization: tyler-s-hatch
-          requested-token-type: urn:pulumi:token-type:access_token:personal
-          scope: user:tyler-s-hatch
+      # - name: Authenticate Pulumi
+      #   uses: pulumi/auth-actions@v1
+      #   with:
+      #     organization: tyler-s-hatch
+      #     requested-token-type: urn:pulumi:token-type:access_token:personal
+      #     scope: user:tyler-s-hatch
 
-      - name: Get AWS role ARN from Pulumi
-        id: pulumi
-        working-directory: infrastructure
-        run: |
-          set -euo pipefail
-          ROLE_ARN=$(pulumi stack output --stack core main-prepare-deploy-role-arn)
-          echo "role_arn=$ROLE_ARN" >> $GITHUB_OUTPUT
+      # - name: Get AWS role ARN from Pulumi
+      #   id: pulumi
+      #   working-directory: infrastructure
+      #   run: |
+      #     set -euo pipefail
+      #     ROLE_ARN=$(pulumi stack output --stack core main-prepare-deploy-role-arn)
+      #     echo "role_arn=$ROLE_ARN" >> $GITHUB_OUTPUT
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ steps.pulumi.outputs.role_arn }}
-          aws-region: us-east-1
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ steps.pulumi.outputs.role_arn }}
+      #     aws-region: us-east-1
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      # - name: Login to Amazon ECR
+      #   uses: aws-actions/amazon-ecr-login@v2
 
       - name: Create plan
         id: plan
@@ -137,14 +137,21 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ needs.plan.outputs.role_arn }}
-          aws-region: us-east-1
+      # - name: Configure AWS credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     role-to-assume: ${{ needs.plan.outputs.role_arn }}
+      #     aws-region: us-east-1
 
-      - name: Login to Amazon ECR
-        uses: aws-actions/amazon-ecr-login@v2
+      # - name: Login to Amazon ECR
+      #   uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Download plan
         uses: actions/download-artifact@v4
