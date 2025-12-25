@@ -94,7 +94,7 @@ jobs:
           # Create image build plan
           # cd scripts
           # uv run --locked src/build.py plan --all --output plan.json
-          uv run --project script --no_workspace build plan --all --output plan.json
+          uv run --project script --no_workspace build 
 
           # Echo plan json for logging
           echo Plan:
