@@ -1,10 +1,4 @@
 {
-  "tailscale-beacon": {
-    "stack": "core",
-    "first_party": true,
-    "context": "services/tailscale-beacon",
-    "dockerfile": "Dockerfile"
-  },
   "oauth2-proxy": {
     "stack": "core",
     "first_party": false
@@ -26,29 +20,44 @@
     "stack": "core",
     "first_party": false
   },
-  "github-runner": {
-    "stack": "dev",
-    "first_party": false
-  },
   "api": {
     "stack": "dev",
     "first_party": true,
     "context": ".",
-    "dockerfile": "services/api/Dockerfile",
-    "hash_paths": ["services/api", "common"]
+    "dockerfile": "docker/api/Dockerfile",
+    "hash_paths": ["docker/api", "packages/common"]
   },
   "reconstructor": {
     "stack": "dev",
     "first_party": true,
     "context": ".",
-    "dockerfile": "tasks/reconstructor/Dockerfile",
-    "hash_paths": ["tasks/reconstructor", "common"]
+    "dockerfile": "docker/reconstructor/Dockerfile",
+    "hash_paths": [
+      "docker/reconstructor",
+      "packages/common",
+      "packages/core",
+      "packages/neural-networks",
+      "packages/torch-meta"
+    ]
+  },
+  "localizer": {
+    "stack": "dev",
+    "first_party": true,
+    "context": ".",
+    "dockerfile": "docker/localizer/Dockerfile",
+    "hash_paths": [
+      "docker/localizer",
+      "packages/common",
+      "packages/core",
+      "packages/neural-networks",
+      "packages/torch-meta"
+    ]
   },
   "database-manager": {
     "stack": "core",
     "first_party": true,
     "context": ".",
-    "dockerfile": "services/database-manager/Dockerfile",
-    "hash_paths": ["services/database-manager", "common"]
+    "dockerfile": "docker/database-manager/Dockerfile",
+    "hash_paths": ["docker/database-manager", "packages/common"]
   }
 }

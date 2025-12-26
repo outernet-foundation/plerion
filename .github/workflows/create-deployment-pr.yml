@@ -93,7 +93,6 @@ jobs:
           # Create image build plan
           # cd scripts
           # uv run --locked src/build.py plan --all --output plan.json
-          uv sync --all-packages
           uv run --project scripts --no_workspace build plan --output plan.json
 
           # Echo plan json for logging
