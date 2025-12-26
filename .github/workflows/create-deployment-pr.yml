@@ -94,7 +94,7 @@ jobs:
           # Create image build plan
           # cd scripts
           # uv run --locked src/build.py plan --all --output plan.json
-          uv run --project script --no_workspace build 
+          uv run --project scripts --no_workspace build plan --output plan.json
 
           # Echo plan json for logging
           echo Plan:
@@ -184,7 +184,7 @@ jobs:
           # Lock image
           # cd scripts
           # uv run --locked src/build.py lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
-          uv run --project script --no_workspace build lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
+          uv run --project scripts --no_workspace build lock --plan image-plan.json --cache-type gha --output ${{ matrix.name }}-image-lock.json
           # Echo lock json for logging
           echo "Image lock for ${{ matrix.name }}:"
           jq . ${{ matrix.name }}-image-lock.json
