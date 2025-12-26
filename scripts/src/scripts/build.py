@@ -16,6 +16,7 @@ images_lock_path = workspace_directory / "images.lock"
 infrastructure_directory = workspace_directory / "infrastructure"
 
 
+#
 class Image(TypedDict):
     stack: str
     first_party: bool
