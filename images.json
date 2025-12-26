@@ -1,48 +1,32 @@
 {
-  "oauth2-proxy": {
-    "stack": "core",
-    "first_party": false
-  },
-  "oauth2-reverse-proxy": {
-    "stack": "core",
-    "first_party": true,
-    "context": "services/oauth2-reverse-proxy",
-    "dockerfile": "Dockerfile"
-  },
-  "initialize-cloudbeaver": {
-    "stack": "core",
-    "first_party": true,
-    "context": "tasks/initialize-cloudbeaver",
-    "dockerfile": "Dockerfile",
-    "hash_paths": ["tasks/initialize-cloudbeaver", "common"]
-  },
-  "cloudbeaver": {
-    "stack": "core",
-    "first_party": false
-  },
   "api": {
-    "stack": "dev",
-    "first_party": true,
     "context": ".",
     "dockerfile": "docker/api/Dockerfile",
     "hash_paths": ["docker/api", "packages/common"]
   },
-  "reconstructor": {
-    "stack": "dev",
+  "cloudbeaver-initializer": {
+    "context": "docker/cloudbeaver-initializer",
+    "dockerfile": "Dockerfile",
+    "hash_paths": ["docker/cloudbeaver-initializer"]
+  },
+  "database-manager": {
+    "stack": "core",
     "first_party": true,
     "context": ".",
-    "dockerfile": "docker/reconstructor/Dockerfile",
-    "hash_paths": [
-      "docker/reconstructor",
-      "packages/common",
-      "packages/core",
-      "packages/neural-networks",
-      "packages/torch-meta"
-    ]
+    "dockerfile": "docker/database-manager/Dockerfile",
+    "hash_paths": ["docker/database-manager", "packages/common"]
+  },
+  "database-migrator": {
+    "context": ".",
+    "dockerfile": "docker/database-migrator/Dockerfile",
+    "hash_paths": ["docker/database-migrator"]
+  },
+  "gateway": {
+    "context": ".",
+    "dockerfile": "docker/gateway/Dockerfile",
+    "hash_paths": ["docker/gateway"]
   },
   "localizer": {
-    "stack": "dev",
-    "first_party": true,
     "context": ".",
     "dockerfile": "docker/localizer/Dockerfile",
     "hash_paths": [
@@ -53,11 +37,20 @@
       "packages/torch-meta"
     ]
   },
-  "database-manager": {
-    "stack": "core",
-    "first_party": true,
+  "orchestrator": {
     "context": ".",
-    "dockerfile": "docker/database-manager/Dockerfile",
-    "hash_paths": ["docker/database-manager", "packages/common"]
+    "dockerfile": "docker/orchestrator/Dockerfile",
+    "hash_paths": ["docker/orchestrator", "packages/common"]
+  },
+  "reconstructor": {
+    "context": ".",
+    "dockerfile": "docker/reconstructor/Dockerfile",
+    "hash_paths": [
+      "docker/reconstructor",
+      "packages/common",
+      "packages/core",
+      "packages/neural-networks",
+      "packages/torch-meta"
+    ]
   }
 }
