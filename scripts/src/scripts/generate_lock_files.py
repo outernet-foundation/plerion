@@ -29,7 +29,7 @@ def main():
             f"--output-file {pylock} "
             f"--no-default-groups "
             f"--no-emit-workspace "
-            f"--frozen"
+            f"--locked"
         )
         _normalize_line_endings(pylock)
 
@@ -46,7 +46,7 @@ def main():
                 f"--group {group} "
                 f"--no-default-groups "
                 f"--no-emit-workspace "
-                f"--frozen"
+                f"--locked"
             )
             _normalize_line_endings(dependency_group_lock)
 
