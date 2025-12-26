@@ -253,11 +253,16 @@ def lock_image(
         else:
             raise ValueError(f"Unknown cache type: {cache_type}")
 
+        build_args = ""
+        if "build_args" in image_plan:
+            build_args = " " + " ".join(f"--build-arg {quote(f'{k}={v}')}" for k, v in image_plan["build_args"].items())
+
         run_command(
             "docker buildx build --push --platform linux/amd64 --provenance=false"
             + f" --cache-from type={cache_type}"
             + f" --cache-to type={cache_type},mode=max"
             + f" -t {git_sha_tag} -t {tree_sha_tag}"
+            + build_args
             + f' -f "{workspace_directory / image_plan["context"] / image_plan["dockerfile"]}"'
             + f' "{workspace_directory / image_plan["context"]}"',
             stream_log=True,
