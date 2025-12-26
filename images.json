@@ -13,8 +13,8 @@
   "cloudbeaver-initializer": {
     "stack": "core",
     "first_party": true,
-    "context": "docker/cloudbeaver-initializer",
-    "dockerfile": "Dockerfile",
+    "context": ".",
+    "dockerfile": "docker/cloudbeaver-initializer/Dockerfile",
     "hash_paths": ["docker/cloudbeaver-initializer"]
   },
   "database-manager": {
