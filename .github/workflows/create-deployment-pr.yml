@@ -163,11 +163,11 @@ jobs:
           set -euo pipefail
 
           # Extract plan for this image
-          jq -c --arg name '${{ matrix.name }}' '{($name): .[$name]}' plan.json > scripts/image-plan.json
+          jq -c --arg name '${{ matrix.name }}' '{($name): .[$name]}' plan.json > image-plan.json
 
           # Echo plan json for logging
           echo "Image plan for ${{ matrix.name }}:"
-          jq . scripts/image-plan.json
+          jq . image-plan.json
 
       # Require for layer caching
       - name: Setup GitHub Runtime
@@ -192,7 +192,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.name }}-image-lock.json
-          path: scripts/${{ matrix.name }}-image-lock.json
+          path: ${{ matrix.name }}-image-lock.json
 
   generate-migrations-and-create-deploy-pr:
     runs-on: ubuntu-latest
