@@ -46,9 +46,9 @@ COPY packages/python/torch-meta /app/packages/python/torch-meta
 RUN uv pip install --no-deps --no-sources /app/packages/python/torch-meta
 
 # Install neural-networks dependencies
-COPY docker/reconstructor/pylock.neural-networks.toml ./pylock.neural-networks.toml
+COPY docker/reconstructor/pylock.neural-networks-*.toml ./pylock.neural-networks.toml
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
-    uv pip install -r pylock.neural-networks.toml
+    uv pip install -r pylock.neural-networks-${TORCH_DEVICE}.toml
 
 # Install neural-networks package
 COPY packages/python/neural-networks /app/packages/python/neural-networks
