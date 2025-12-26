@@ -111,7 +111,7 @@
 
 #   create-database:
 #     build:
-#       dockerfile: docker/database-manager/Dockerfile.compose
+#       dockerfile: docker/database-manager/Dockerfile
 #     restart: "no"
 #     depends_on:
 #       postgres:
