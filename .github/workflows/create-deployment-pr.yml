@@ -59,6 +59,19 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
+      - name: Free disk space (runner)
+        uses: jlumbroso/free-disk-space@v1
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
+      - name: Show disk after cleanup
+        run: df -h
+
       # - name: Setup Pulumi
       #   uses: pulumi/setup-pulumi@v2
 
