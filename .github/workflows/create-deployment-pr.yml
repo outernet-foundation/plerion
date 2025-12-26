@@ -91,9 +91,9 @@ jobs:
           set -euo pipefail
 
           # Create image build plan
-          cd scripts
+          # cd scripts
           # uv run --locked src/build.py plan --all --output plan.json
-          uv run --locked build plan --output plan.json
+          uv run --project scripts build plan --output plan.json
 
           # Echo plan json for logging
           echo Plan:
