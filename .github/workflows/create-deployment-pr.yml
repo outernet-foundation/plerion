@@ -59,16 +59,6 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
-      - name: Free disk space (runner)
-        uses: jlumbroso/free-disk-space@v1.3.1
-        with:
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
-
       - name: Show disk after cleanup
         run: df -h
 
@@ -150,6 +140,16 @@ jobs:
           cache-dependency-glob: |
             **/pyproject.toml
             **/uv.lock
+
+      - name: Free disk space (runner)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
       # - name: Configure AWS credentials
       #   uses: aws-actions/configure-aws-credentials@v4
@@ -238,6 +238,16 @@ jobs:
           cache-dependency-glob: |
             **/pyproject.toml
             **/uv.lock
+
+      - name: Free disk space (runner)
+        uses: jlumbroso/free-disk-space@v1.3.1
+        with:
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
 
       - name: Generate migration
         working-directory: services/api
