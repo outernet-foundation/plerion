@@ -7,10 +7,8 @@ on:
       - ".github/workflows/create-deployment-pr.yml"
       - "scripts/src/scripts/build.py"
       - "images.json"
-      - "services/**"
-      - "tasks/**"
-      - "common/**"
-      - "!services/api/src/db/migrations/**"
+      - "docker/**"
+      - "packages/**"
 
 concurrency:
   group: create-deploy-pr
