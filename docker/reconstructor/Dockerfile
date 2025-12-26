@@ -37,6 +37,8 @@ RUN uv venv $UV_PROJECT_ENVIRONMENT
 ARG TORCH_DEVICE
 COPY docker/localizer/pylock.torch-*.toml .
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
+    # These wheels are large and can timeout in CI environments, so increase timeout and retries
+    UV_HTTP_TIMEOUT=600 UV_HTTP_RETRIES=10 \
     uv pip install -r pylock.torch-${TORCH_DEVICE}.toml
 
 # Install torch meta-package

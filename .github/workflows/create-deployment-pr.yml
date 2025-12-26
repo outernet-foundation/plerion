@@ -59,9 +59,6 @@ jobs:
             **/pyproject.toml
             **/uv.lock
 
-      - name: Show disk after cleanup
-        run: df -h
-
       # - name: Setup Pulumi
       #   uses: pulumi/setup-pulumi@v2
 
@@ -145,8 +142,8 @@ jobs:
         uses: jlumbroso/free-disk-space@v1.3.1
         with:
           android: true
-          dotnet: true
-          haskell: true
+          dotnet: false
+          haskell: false
           large-packages: true
           docker-images: true
           swap-storage: true
@@ -238,16 +235,6 @@ jobs:
           cache-dependency-glob: |
             **/pyproject.toml
             **/uv.lock
-
-      - name: Free disk space (runner)
-        uses: jlumbroso/free-disk-space@v1.3.1
-        with:
-          android: true
-          dotnet: true
-          haskell: true
-          large-packages: true
-          docker-images: true
-          swap-storage: true
 
       - name: Generate migration
         working-directory: services/api
