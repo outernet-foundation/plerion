@@ -135,7 +135,8 @@ def create_plan(images: list[str]):
     # GHCR namespace (e.g. "owner/repo"). In GitHub Actions, GITHUB_REPOSITORY is always set.
     ghcr_namespace = environ.get("GHCR_NAMESPACE") or environ.get("GITHUB_REPOSITORY")
     if not ghcr_namespace:
-        raise RuntimeError("Set GHCR_NAMESPACE (e.g. 'owner/repo') or run in GitHub Actions (GITHUB_REPOSITORY).")
+        ghcr_namespace = "temp"
+        # raise RuntimeError("Set GHCR_NAMESPACE (e.g. 'owner/repo') or run in GitHub Actions (GITHUB_REPOSITORY).")
 
     # Create plan
     plan: dict[str, FirstPartyPlan | ThirdPartyPlan] = {}

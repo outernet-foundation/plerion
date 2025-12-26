@@ -1,10 +1,18 @@
 {
   "api": {
+    "stack": "core",
+    "first_party": true,
     "context": ".",
     "dockerfile": "docker/api/Dockerfile",
-    "hash_paths": ["docker/api", "packages/common"]
+    "hash_paths": [
+      "docker/api",
+      "packages/python/common",
+      "packages/generated/python/datamodels"
+    ]
   },
   "cloudbeaver-initializer": {
+    "stack": "core",
+    "first_party": true,
     "context": "docker/cloudbeaver-initializer",
     "dockerfile": "Dockerfile",
     "hash_paths": ["docker/cloudbeaver-initializer"]
@@ -14,43 +22,57 @@
     "first_party": true,
     "context": ".",
     "dockerfile": "docker/database-manager/Dockerfile",
-    "hash_paths": ["docker/database-manager", "packages/common"]
+    "hash_paths": ["docker/database-manager", "packages/python/common"]
   },
   "database-migrator": {
+    "stack": "core",
+    "first_party": true,
     "context": ".",
     "dockerfile": "docker/database-migrator/Dockerfile",
     "hash_paths": ["docker/database-migrator"]
   },
   "gateway": {
+    "stack": "core",
+    "first_party": true,
     "context": ".",
     "dockerfile": "docker/gateway/Dockerfile",
     "hash_paths": ["docker/gateway"]
   },
   "localizer": {
+    "stack": "core",
+    "first_party": true,
     "context": ".",
     "dockerfile": "docker/localizer/Dockerfile",
     "hash_paths": [
       "docker/localizer",
-      "packages/common",
-      "packages/core",
-      "packages/neural-networks",
-      "packages/torch-meta"
+      "packages/python/common",
+      "packages/python/core",
+      "packages/python/neural-networks",
+      "packages/python/torch-meta"
     ]
   },
   "orchestrator": {
+    "stack": "core",
+    "first_party": true,
     "context": ".",
     "dockerfile": "docker/orchestrator/Dockerfile",
-    "hash_paths": ["docker/orchestrator", "packages/common"]
+    "hash_paths": [
+      "docker/orchestrator",
+      "packages/python/common",
+      "packages/generated/python/datamodels"
+    ]
   },
   "reconstructor": {
+    "stack": "core",
+    "first_party": true,
     "context": ".",
     "dockerfile": "docker/reconstructor/Dockerfile",
     "hash_paths": [
       "docker/reconstructor",
-      "packages/common",
-      "packages/core",
-      "packages/neural-networks",
-      "packages/torch-meta"
+      "packages/python/common",
+      "packages/python/core",
+      "packages/python/neural-networks",
+      "packages/python/torch-meta"
     ]
   }
 }
