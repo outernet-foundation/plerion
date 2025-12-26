@@ -1308,13 +1308,28 @@ dependencies = [
     { name = "pillow" },
 ]
 
+[package.optional-dependencies]
+cpu = [
+    { name = "torch-meta", extra = ["cpu"], marker = "extra == 'extra-10-torch-meta-cpu' or (extra == 'extra-10-torch-meta-cuda' and extra == 'extra-10-torch-meta-rocm')" },
+]
+cuda = [
+    { name = "torch-meta", extra = ["cuda"], marker = "extra == 'extra-10-torch-meta-cuda' or (extra == 'extra-10-torch-meta-cpu' and extra == 'extra-10-torch-meta-rocm')" },
+]
+rocm = [
+    { name = "torch-meta", extra = ["rocm"], marker = "(extra == 'extra-10-torch-meta-cpu' and extra == 'extra-10-torch-meta-cuda') or (extra != 'extra-10-torch-meta-cuda' and extra == 'extra-10-torch-meta-rocm') or (extra != 'extra-10-torch-meta-cpu' and extra == 'extra-10-torch-meta-rocm')" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "dirtorch", editable = "packages/python/neural-networks/third-party/deep-image-retrieval" },
     { name = "gdown", specifier = ">=5.2.0" },
     { name = "lightglue", git = "https://github.com/cvg/LightGlue.git" },
     { name = "pillow", specifier = ">=12.0.0" },
+    { name = "torch-meta", extras = ["cpu"], marker = "extra == 'cpu'", editable = "packages/python/torch-meta" },
+    { name = "torch-meta", extras = ["cuda"], marker = "extra == 'cuda'", editable = "packages/python/torch-meta" },
+    { name = "torch-meta", extras = ["rocm"], marker = "extra == 'rocm'", editable = "packages/python/torch-meta" },
 ]
+provides-extras = ["cpu", "cuda", "rocm"]
 
 [[package]]
 name = "numpy"
@@ -2060,8 +2075,14 @@ dev = [
     { name = "h5py-stubs" },
     { name = "scipy-stubs" },
 ]
-neural-networks = [
-    { name = "neural-networks" },
+neural-networks-cpu = [
+    { name = "neural-networks", extra = ["cpu"] },
+]
+neural-networks-cuda = [
+    { name = "neural-networks", extra = ["cuda"] },
+]
+neural-networks-rocm = [
+    { name = "neural-networks", extra = ["rocm"] },
 ]
 torch-cpu = [
     { name = "torch-meta" },
@@ -2096,7 +2117,9 @@ dev = [
     { name = "h5py-stubs", specifier = ">=0.1.2" },
     { name = "scipy-stubs", specifier = ">=1.16.2.4" },
 ]
-neural-networks = [{ name = "neural-networks", editable = "packages/python/neural-networks" }]
+neural-networks-cpu = [{ name = "neural-networks", extras = ["cpu"], editable = "packages/python/neural-networks" }]
+neural-networks-cuda = [{ name = "neural-networks", extras = ["cuda"], editable = "packages/python/neural-networks" }]
+neural-networks-rocm = [{ name = "neural-networks", extras = ["rocm"], editable = "packages/python/neural-networks" }]
 torch-cpu = [{ name = "torch-meta", extras = ["cpu"], editable = "packages/python/torch-meta" }]
 torch-cuda = [{ name = "torch-meta", extras = ["cuda"], editable = "packages/python/torch-meta" }]
 torch-rocm = [{ name = "torch-meta", extras = ["rocm"], editable = "packages/python/torch-meta" }]
@@ -2671,8 +2694,14 @@ dev = [
     { name = "pybind11-stubgen" },
     { name = "scipy-stubs" },
 ]
-neural-networks = [
-    { name = "neural-networks" },
+neural-networks-cpu = [
+    { name = "neural-networks", extra = ["cpu"] },
+]
+neural-networks-cuda = [
+    { name = "neural-networks", extra = ["cuda"] },
+]
+neural-networks-rocm = [
+    { name = "neural-networks", extra = ["rocm"] },
 ]
 torch-cpu = [
     { name = "torch-meta" },
@@ -2706,7 +2735,9 @@ dev = [
     { name = "pybind11-stubgen", git = "https://github.com/sarlinpe/pybind11-stubgen?rev=sarlinpe%2Ffix-2024-08" },
     { name = "scipy-stubs", specifier = ">=1.15.3" },
 ]
-neural-networks = [{ name = "neural-networks", editable = "packages/python/neural-networks" }]
+neural-networks-cpu = [{ name = "neural-networks", extras = ["cpu"], editable = "packages/python/neural-networks" }]
+neural-networks-cuda = [{ name = "neural-networks", extras = ["cuda"], editable = "packages/python/neural-networks" }]
+neural-networks-rocm = [{ name = "neural-networks", extras = ["rocm"], editable = "packages/python/neural-networks" }]
 torch-cpu = [{ name = "torch-meta", extras = ["cpu"], editable = "packages/python/torch-meta" }]
 torch-cuda = [{ name = "torch-meta", extras = ["cuda"], editable = "packages/python/torch-meta" }]
 torch-rocm = [{ name = "torch-meta", extras = ["rocm"], editable = "packages/python/torch-meta" }]
