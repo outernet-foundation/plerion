@@ -35,7 +35,7 @@ RUN uv venv $UV_PROJECT_ENVIRONMENT
 
 # Install torch dependencies for selected device
 ARG TORCH_DEVICE
-COPY docker/localizer/pylock.torch-${TORCH_DEVICE}.toml .
+COPY docker/localizer/pylock.torch-*.toml .
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     # These wheels are large and can timeout in CI environments, so increase timeout and retries
     UV_HTTP_TIMEOUT=600 UV_HTTP_RETRIES=10 \
@@ -46,7 +46,7 @@ COPY packages/python/torch-meta /app/packages/python/torch-meta
 RUN uv pip install --no-deps --no-sources /app/packages/python/torch-meta
 
 # Install neural-networks dependencies
-COPY docker/reconstructor/pylock.neural-networks-${TORCH_DEVICE}.toml .
+COPY docker/reconstructor/pylock.neural-networks-*.toml .
 RUN --mount=type=cache,id=uvcache,sharing=locked,target=/root/.cache/uv \
     uv pip install -r pylock.neural-networks-${TORCH_DEVICE}.toml
 
