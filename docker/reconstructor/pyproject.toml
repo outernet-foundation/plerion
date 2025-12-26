@@ -25,9 +25,7 @@ dev = [
 torch-cpu = ["torch-meta[cpu]"]
 torch-cuda = ["torch-meta[cuda]"]
 torch-rocm = ["torch-meta[rocm]"]
-neural-networks-cpu = ["neural-networks[cpu]"]
-neural-networks-cuda = ["neural-networks[cuda]"]
-neural-networks-rocm = ["neural-networks[rocm]"]
+neural-networks = ["neural-networks"]
 
 [build-system]
 requires = ["hatchling"]
