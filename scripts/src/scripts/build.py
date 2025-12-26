@@ -23,6 +23,7 @@ class Image(TypedDict):
     context: NotRequired[str]
     dockerfile: NotRequired[str]
     hash_paths: NotRequired[list[str]]
+    build_args: NotRequired[dict[str, str]]
 
 
 class ImageLock(TypedDict):
@@ -197,6 +198,7 @@ def create_image_plan(
         "context": context,
         "dockerfile": image["dockerfile"],
         "tree_sha": tree_sha,
+        "build_args": image.get("build_args", {}),
     }
 
 
