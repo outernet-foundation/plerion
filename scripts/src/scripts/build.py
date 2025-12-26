@@ -37,6 +37,7 @@ class FirstPartyPlan(TypedDict):
     context: str
     dockerfile: str
     tree_sha: str
+    build_args: NotRequired[dict[str, str]]
 
 
 class ThirdPartyPlan(TypedDict):

@@ -38,7 +38,7 @@
     "dockerfile": "docker/gateway/Dockerfile",
     "hash_paths": ["docker/gateway"]
   },
-  "localizer": {
+  "localizer-cpu": {
     "stack": "core",
     "first_party": true,
     "context": ".",
@@ -49,7 +49,42 @@
       "packages/python/core",
       "packages/python/neural-networks",
       "packages/python/torch-meta"
-    ]
+    ],
+    "build_args": {
+      "TORCH_DEVICE": "cpu"
+    }
+  },
+  "localizer-cuda": {
+    "stack": "core",
+    "first_party": true,
+    "context": ".",
+    "dockerfile": "docker/localizer/Dockerfile",
+    "hash_paths": [
+      "docker/localizer",
+      "packages/python/common",
+      "packages/python/core",
+      "packages/python/neural-networks",
+      "packages/python/torch-meta"
+    ],
+    "build_args": {
+      "TORCH_DEVICE": "cuda"
+    }
+  },
+  "localizer-rocm": {
+    "stack": "core",
+    "first_party": true,
+    "context": ".",
+    "dockerfile": "docker/localizer/Dockerfile",
+    "hash_paths": [
+      "docker/localizer",
+      "packages/python/common",
+      "packages/python/core",
+      "packages/python/neural-networks",
+      "packages/python/torch-meta"
+    ],
+    "build_args": {
+      "TORCH_DEVICE": "rocm"
+    }
   },
   "orchestrator": {
     "stack": "core",
@@ -62,7 +97,7 @@
       "packages/generated/python/datamodels"
     ]
   },
-  "reconstructor": {
+  "reconstructor-cpu": {
     "stack": "core",
     "first_party": true,
     "context": ".",
@@ -73,6 +108,41 @@
       "packages/python/core",
       "packages/python/neural-networks",
       "packages/python/torch-meta"
-    ]
+    ],
+    "build_args": {
+      "TORCH_DEVICE": "cpu"
+    }
+  },
+  "reconstructor-cuda": {
+    "stack": "core",
+    "first_party": true,
+    "context": ".",
+    "dockerfile": "docker/reconstructor/Dockerfile",
+    "hash_paths": [
+      "docker/reconstructor",
+      "packages/python/common",
+      "packages/python/core",
+      "packages/python/neural-networks",
+      "packages/python/torch-meta"
+    ],
+    "build_args": {
+      "TORCH_DEVICE": "cuda"
+    }
+  },
+  "reconstructor-rocm": {
+    "stack": "core",
+    "first_party": true,
+    "context": ".",
+    "dockerfile": "docker/reconstructor/Dockerfile",
+    "hash_paths": [
+      "docker/reconstructor",
+      "packages/python/common",
+      "packages/python/core",
+      "packages/python/neural-networks",
+      "packages/python/torch-meta"
+    ],
+    "build_args": {
+      "TORCH_DEVICE": "rocm"
+    }
   }
 }
