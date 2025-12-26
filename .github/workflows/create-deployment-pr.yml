@@ -45,7 +45,6 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     outputs:
-      role_arn: ${{ steps.pulumi.outputs.role_arn }}
       names: ${{ steps.plan.outputs.names }}
       needs_lock: ${{ steps.plan.outputs.needs_lock }}
     steps:
