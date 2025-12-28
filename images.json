@@ -38,22 +38,6 @@
     "dockerfile": "docker/gateway/Dockerfile",
     "hash_paths": ["docker/gateway"]
   },
-  "localizer-cpu": {
-    "stack": "core",
-    "first_party": true,
-    "context": ".",
-    "dockerfile": "docker/localizer/Dockerfile",
-    "hash_paths": [
-      "docker/localizer",
-      "packages/python/common",
-      "packages/python/core",
-      "packages/python/neural-networks",
-      "packages/python/torch-meta"
-    ],
-    "build_args": {
-      "TORCH_DEVICE": "cpu"
-    }
-  },
   "localizer-cuda": {
     "stack": "core",
     "first_party": true,
@@ -96,22 +80,6 @@
       "packages/python/common",
       "packages/generated/python/datamodels"
     ]
-  },
-  "reconstructor-cpu": {
-    "stack": "core",
-    "first_party": true,
-    "context": ".",
-    "dockerfile": "docker/reconstructor/Dockerfile",
-    "hash_paths": [
-      "docker/reconstructor",
-      "packages/python/common",
-      "packages/python/core",
-      "packages/python/neural-networks",
-      "packages/python/torch-meta"
-    ],
-    "build_args": {
-      "TORCH_DEVICE": "cpu"
-    }
   },
   "reconstructor-cuda": {
     "stack": "core",
