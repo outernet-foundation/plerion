@@ -185,11 +185,11 @@ def create_image_plan(
         print(f"Computed tree SHA for image {image_name}: {tree_sha}")
 
     # If the image is already locked to this tree SHA, skip it
-    if image_lock is not None and tree_sha == next(
-        (tag[5:] for tag in image_lock["tags"] if tag.startswith("tree-")), None
-    ):
-        print(f"Image {image_name} is already locked to tree SHA {tree_sha}")
-        return
+    # if image_lock is not None and tree_sha == next(
+    #     (tag[5:] for tag in image_lock["tags"] if tag.startswith("tree-")), None
+    # ):
+    #     print(f"Image {image_name} is already locked to tree SHA {tree_sha}")
+    #     return
 
     return image_name, {
         "kind": "first_party",
