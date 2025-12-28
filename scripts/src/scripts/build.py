@@ -59,11 +59,6 @@ app = Typer()
 
 @app.command()
 def plan(images: list[str] = ImageOption, plan_path: str = PlanOutputPathOption):
-    # if images is None and not stack:
-    #     raise ValueError("Either '--images' or '--stack' must be provided")
-    # if stack and images is not None:
-    #     raise ValueError("Cannot provide both '--images' and '--stack'")
-
     if not images_path.is_file():
         raise FileNotFoundError(f"{images_path} not found")
 
@@ -82,7 +77,6 @@ def lock(
 ):
     if images is None and plan_path is None:
         raise ValueError("Either '--images' or '--plan' must be provided")
-    # if sum([bool(stack), images is not None, plan_path is not None]) > 1:
     if images is not None and plan_path is not None:
         raise ValueError("Only one of '--images' or '--plan' may be provided")
 
@@ -116,24 +110,6 @@ def create_plan(images: list[str]):
         selected_images = {name: all_images[name] for name in images}
     else:
         selected_images = {name: image for name, image in all_images.items()}
-
-    # Get Pulumi stack outputs for selected images
-    # stacks: dict[str, dict[str, str]] = {}
-    # for stack in {img["stack"] for img in selected_images.values()}:
-    #     print(f"Getting Pulumi stack outputs for stack: {stack}")
-    #     stacks[stack] = json.loads(
-    #         run_command(f"pulumi stack output --stack {quote(stack)} --json", cwd=infrastructure_directory)
-    #     )
-
-    # # Create plan
-    # plan: dict[str, FirstPartyPlan | ThirdPartyPlan] = {}
-    # for image_name, image in selected_images.items():
-    #     result = create_image_plan(
-    #         image_name, image, images_lock.get(image_name), stacks[image["stack"]][f"{image_name}-image-repo-url"]
-    #     )
-    #     if result is not None:
-    #         image_name, image_plan = result
-    #         plan[image_name] = image_plan
 
     # GHCR namespace (e.g. "owner/repo"). In GitHub Actions, GITHUB_REPOSITORY is always set.
     ghcr_namespace = environ.get("GHCR_NAMESPACE") or environ.get("GITHUB_REPOSITORY")
@@ -185,11 +161,11 @@ def create_image_plan(
         print(f"Computed tree SHA for image {image_name}: {tree_sha}")
 
     # If the image is already locked to this tree SHA, skip it
-    # if image_lock is not None and tree_sha == next(
-    #     (tag[5:] for tag in image_lock["tags"] if tag.startswith("tree-")), None
-    # ):
-    #     print(f"Image {image_name} is already locked to tree SHA {tree_sha}")
-    #     return
+    if image_lock is not None and tree_sha == next(
+        (tag[5:] for tag in image_lock["tags"] if tag.startswith("tree-")), None
+    ):
+        print(f"Image {image_name} is already locked to tree SHA {tree_sha}")
+        return
 
     return image_name, {
         "kind": "first_party",
