@@ -171,7 +171,7 @@ def main():
     lightglue = load_lightglue(device)
 
     # Match features
-    match_indices = lightglue_match(lightglue, pairs, keypoints, descriptors, sizes, batch_size=16, device=device)
+    match_indices = lightglue_match(lightglue, pairs, keypoints, descriptors, sizes, batch_size=32, device=device)
 
     # Unload LightGlue model
     del lightglue
