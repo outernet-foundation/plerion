@@ -1,5 +1,7 @@
+import re
 from uuid import UUID, uuid4
 
+from common.run_command import run_command
 from common.session_client_docker import DockerSessionClient
 from core.axis_convention import AxisConvention
 from core.camera_config import CameraConfig
@@ -26,25 +28,60 @@ router = APIRouter(prefix="/localization_sessions", tags=["localization_sessions
 
 settings = get_settings()
 
+_CONTAINER_ID_RE = re.compile(r"\b[0-9a-f]{12,64}\b")
+
+SESSION_PORT = 8000  # internal port exposed by the session container
+
+
+def _parse_container_id(stdout: str) -> str:
+    # docker compose run -d prints the container id (often the only line)
+    m = _CONTAINER_ID_RE.search(stdout.strip().splitlines()[-1] if stdout.strip() else "")
+    if not m:
+        # fall back to searching all output
+        m = _CONTAINER_ID_RE.search(stdout)
+    if not m:
+        raise RuntimeError(f"Failed to parse container id from output:\n{stdout}")
+    return m.group(0)
+
 
 @router.post("")
 async def create_localization_session(session: AsyncSession = Depends(get_session)) -> LocalizationSessionRead:
     id = uuid4()
     row = LocalizationSession(id=id)
-    container_id, container_url = DockerSessionClient().create_session(
-        session_id=str(row.id),
-        image=settings.localization_session_image,
-        torch_device=settings.torch_device,
-        environment={
-            "MINIO_ENDPOINT_URL": str(settings.minio_endpoint_url) or "",
-            "MINIO_ACCESS_KEY": settings.minio_access_key or "",
-            "MINIO_SECRET_KEY": settings.minio_secret_key or "",
-            "RECONSTRUCTIONS_BUCKET": settings.reconstructions_bucket,
-        },
+    # container_id, container_url = DockerSessionClient().create_session(
+    #     session_id=str(row.id),
+    #     image=settings.localization_session_image,
+    #     torch_device=settings.torch_device,
+    #     environment={
+    #         "MINIO_ENDPOINT_URL": str(settings.minio_endpoint_url) or "",
+    #         "MINIO_ACCESS_KEY": settings.minio_access_key or "",
+    #         "MINIO_SECRET_KEY": settings.minio_secret_key or "",
+    #         "RECONSTRUCTIONS_BUCKET": settings.reconstructions_bucket,
+    #     },
+    # )
+
+    environment = {
+        "SESSION_ID": str(row.id),
+        "MINIO_ENDPOINT_URL": str(settings.minio_endpoint_url) or "",
+        "MINIO_ACCESS_KEY": settings.minio_access_key or "",
+        "MINIO_SECRET_KEY": settings.minio_secret_key or "",
+        "RECONSTRUCTIONS_BUCKET": settings.reconstructions_bucket,
+    }
+
+    environment_string = " ".join(f"-e {key}='{value}'" for key, value in environment.items())
+
+    stdout = run_command(
+        f"docker compose -f compose.yml run "
+        f"-d --no-deps "
+        f"--name {settings.localizer_service} "
+        f"--label job=localizer-{row.id} "
+        f"{environment_string}"
     )
 
+    container_id = _parse_container_id(stdout)
+
     row.container_id = container_id
-    row.container_url = str(container_url)
+    row.container_url = str(f"http://{settings.localizer_service}:{SESSION_PORT}")
 
     session.add(row)
 
