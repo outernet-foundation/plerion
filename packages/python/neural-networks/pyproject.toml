@@ -12,8 +12,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# lightglue declares torch as a dependency, and in order for the correct index to be used for that transitive dependency, lightglue itself 
-# must be declared as an extra dependency so that an extra will actually apply and the sources block below will be used for selecting an index.
+# lightglue declares torch as a dependency, and in order for the correct index to be used for 
+# that transitive dependency, lightglue itself must be declared as an extra dependency so that 
+# an extra will actually apply and the sources block below will be used for selecting an index.
 # 
 # This will be true for any future dependencies that declare torch as a dependency as well.
 cpu = ["lightglue", "torch>=2.9.1", "torchvision>=0.24.1"]

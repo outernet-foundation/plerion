@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     minio_access_key: str | None = None
     minio_secret_key: str | None = None
 
-    localization_session_image: str = Field()
+    localization_service: str = Field()
     reconstructions_bucket: str = Field(...)
 
     @model_validator(mode="after")

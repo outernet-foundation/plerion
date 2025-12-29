@@ -197,8 +197,11 @@ services:
       - "8000:8000"
       - "5679:5678"
     volumes:
+      # - ./docker/localizer:/app/docker/localizer
+      # - ./docker/api:/app/docker/api
+      # - ./docker/models:/app/docker/models
+      # - ./common:/app/common
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./compose.yml:/compose.yml:ro
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
       BACKEND: docker
@@ -218,7 +221,7 @@ services:
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
-      LOCALIZATER_SERVICE: localizer-${TORCH_DEVICE}
+      LOCALIZATION_SESSION_IMAGE: plerion-localizer-${TORCH_DEVICE}
       RELOAD: true
       DEBUG: ${DEBUG_API}
       DEBUG_WAIT: ${DEBUG_WAIT_API}
@@ -230,8 +233,10 @@ services:
       create-database:
         condition: service_completed_successfully
     volumes:
+      # - ./docker/orchestrator:/app/docker/orchestrator
+      # - ./docker/models:/app/docker/models
+      # - ./common:/app/common
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./compose.yml:/compose.yml:ro
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
       BACKEND: docker
@@ -246,82 +251,36 @@ services:
       CAPTURES_BUCKET: dev-captures
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
       BATCH_JOB_QUEUE: dummy
-      RECONSTRUCTOR_SERVICE: reconstructor-${TORCH_DEVICE}
+      BATCH_JOB_DEFINITION: plerion-reconstructor
       DEBUG: ${DEBUG_RECONSTRUCTION_ORCHESTRATOR}
       DEBUG_WAIT: ${DEBUG_WAIT_RECONSTRUCTION_ORCHESTRATOR}
       DEBUG_RUN_RECONSTRUCTION: ${DEBUG_RUN_RECONSTRUCTION}
       DEBUG_WAIT_RUN_RECONSTRUCTION: ${DEBUG_WAIT_RUN_RECONSTRUCTION}
 
-  reconstructor-cuda:
-    profiles: ["ephemeral"]
+  reconstructor:
     build:
       dockerfile: docker/reconstructor/Dockerfile
-      args: { TORCH_DEVICE: "cuda" }
+      args:
+        TORCH_DEVICE: ${TORCH_DEVICE}
       cache_from:
         - type=local,src=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE}
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE},mode=max
-    image: plerion-reconstructor-cuda
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      DOCKER_HOST: unix:///var/run/docker.sock
-    gpus: all
-    expose:
-      - "5678"
-
-  reconstructor-rocm:
-    profiles: ["ephemeral"]
-    build:
-      dockerfile: docker/reconstructor/Dockerfile
-      args: { TORCH_DEVICE: "rocm" }
-      cache_from:
-        - type=local,src=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE}
-      cache_to:
-        - type=local,dest=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE},mode=max
-    image: plerion-reconstructor-rocm
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      DOCKER_HOST: unix:///var/run/docker.sock
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    group_add:
-      - video
-      - render
-    expose:
-      - "5678"
-
-  localizer-cuda:
-    profiles: ["ephemeral"]
+    image: plerion-reconstructor-${TORCH_DEVICE}
+    # Don't run this service, it's just for building the image
+    entrypoint: ["bash", "-lc", "echo 'built reconstructor image'; exit 0"]
+    restart: "no"
+    
+  localizer:
     build:
       dockerfile: docker/localizer/Dockerfile
-      args: { TORCH_DEVICE: "cuda" }
+      args:
+        TORCH_DEVICE: ${TORCH_DEVICE}
       cache_from:
         - type=local,src=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE}
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE},mode=max
-    image: plerion-localizer-cuda
-    gpus: all
-    expose:
-      - "8000"
-
-  localizer-rocm:
-    profiles: ["ephemeral"]
-    build:
-      dockerfile: docker/localizer/Dockerfile
-      args: { TORCH_DEVICE: "rocm" }
-      cache_from:
-        - type=local,src=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE}
-      cache_to:
-        - type=local,dest=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE},mode=max
-    image: plerion-localizer-rocm
-    devices:
-      - /dev/kfd:/dev/kfd
-      - /dev/dri:/dev/dri
-    group_add:
-      - video
-      - render
-    expose:
-      - "8000"
+    image: plerion-localizer-${TORCH_DEVICE}
+    # Don't run this service, it's just for building the image
+    entrypoint: ["bash", "-lc", "echo 'built localizer image'; exit 0"]
+    restart: "no"

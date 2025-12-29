@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     database_user_password: str = Field()
 
     batch_job_queue: str = Field()
-    batch_job_definition: str = Field()
+    reconstructor_service: str = Field()
 
     minio_endpoint_url: AnyHttpUrl | None = None
     minio_access_key: str | None = None
