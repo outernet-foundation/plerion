@@ -65,12 +65,12 @@ def _generate_templates():
     run_command(
         f"uv run --no_workspace openapi-generator-cli author template -g csharp --library httpclient -o {str(TEMPLATES_PATH / 'csharp')}",
         log=True,
+        cwd=REPO_ROOT,
     )
 
     # git apply directory is always relative to the repo root
-    templates_path_relative = TEMPLATES_PATH.resolve().relative_to(REPO_ROOT.resolve())
     for patch_file in (TEMPLATE_PATCHES_PATH / "csharp").iterdir():
-        run_command(f"git apply {str(patch_file)} --directory {str(templates_path_relative)}", log=True)
+        run_command(f"git apply {str(patch_file)}", log=True)
 
 
 def _generate_client(openapi_spec: str, project: str, client: str):
@@ -125,6 +125,7 @@ def _generate_client(openapi_spec: str, project: str, client: str):
         run_command(command, log=True)
 
         print(f"Generated {client} client at {client_path}")
+
     if client == "csharp":
         (client_path / "src" / client_package_name_camel / "package.json").write_text(
             json.dumps(
@@ -159,26 +160,6 @@ def _generate_client(openapi_spec: str, project: str, client: str):
 
     elif client == "python":
         run_command(f"uv pip install {client_path.resolve().as_posix()}", log=True)
-
-    # This is a workaround for a bug in one of the openapi jinja templates for C# that results in stray commas in generated code
-    # print("Checking for stray commas")
-
-    # pat_next: Pattern[str] = re.compile(
-    #     r"(?m)^(\s*(?:public|internal)(?:\s+(?:abstract|sealed))?(?:\s+partial)?\s+class\s+\w+\s*:[^{\r\n]+),\s*\r?\n(\s*)\{"
-    # )
-
-    # pat_same: Pattern[str] = re.compile(
-    #     r"(?m)^(\s*(?:public|internal)(?:\s+(?:abstract|sealed))?(?:\s+partial)?\s+class\s+\w+\s*:[^{\r\n]+),\s*\{"
-    # )
-
-    # for cs_file in client_path.rglob("*.cs"):
-    #     text: str = cs_file.read_text(encoding="utf-8")
-    #     fixed: str = pat_next.sub(r"\1\n\2{", text)
-    #     fixed = pat_same.sub(r"\1 {", fixed)
-
-    #     if fixed != text:
-    #         cs_file.write_text(fixed, encoding="utf-8")
-    #         print(f"Patched stray comma in {cs_file}")
 
 
 def main():

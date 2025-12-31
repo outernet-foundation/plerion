@@ -1,8 +1,8 @@
 # Generate constructors with only required params, allowing optional params to be set via property setters
-diff --git diff --git a/csharp/modelGeneric.mustache b/csharp/modelGeneric.mustache
+diff --git diff --git a/scripts/openapi-generator/templates-generated/csharp/modelGeneric.mustache b/scripts/openapi-generator/templates-generated/csharp/modelGeneric.mustache
 index 5a95ada..f0f6ba4 100644
---- a/csharp/modelGeneric.mustache
-+++ b/csharp/modelGeneric.mustache
+--- a/scripts/openapi-generator/templates-generated/csharp/modelGeneric.mustache
++++ b/scripts/openapi-generator/templates-generated/csharp/modelGeneric.mustache
 @@ -140,38 +141,20 @@
      {{#hasOnlyReadOnly}}
          [JsonConstructorAttribute]
