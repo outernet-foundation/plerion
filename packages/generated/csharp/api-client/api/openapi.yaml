@@ -1592,7 +1592,7 @@ components:
     CaptureSessionBatchUpdate:
       example:
         name: name
-        device_type: ARFoundation
+        device_type: ""
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         id:
@@ -1600,7 +1600,9 @@ components:
           title: Id
           type: string
         device_type:
-          $ref: "#/components/schemas/DeviceType"
+          allOf:
+          - $ref: "#/components/schemas/DeviceType"
+          nullable: true
         name:
           nullable: true
           type: string
@@ -1760,10 +1762,12 @@ components:
     CaptureSessionUpdate:
       example:
         name: name
-        device_type: ARFoundation
+        device_type: ""
       properties:
         device_type:
-          $ref: "#/components/schemas/DeviceType"
+          allOf:
+          - $ref: "#/components/schemas/DeviceType"
+          nullable: true
         name:
           nullable: true
           type: string
@@ -2071,9 +2075,10 @@ components:
           nullable: true
           type: string
         additional_properties:
-          additionalProperties: {}
+          additionalProperties: true
           default: {}
           title: Additional Properties
+          type: object
       required:
       - status
       title: LoadStateResponse
@@ -2844,7 +2849,7 @@ components:
     ReconstructionCreate:
       example:
         capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-        orchestration_status: queued
+        orchestration_status: ""
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         capture_session_id:
@@ -2856,43 +2861,26 @@ components:
           nullable: true
           type: string
         orchestration_status:
-          $ref: "#/components/schemas/OrchestrationStatus"
+          allOf:
+          - $ref: "#/components/schemas/OrchestrationStatus"
+          nullable: true
       required:
       - capture_session_id
       title: ReconstructionCreate
     ReconstructionCreateWithOptions:
       example:
-        options:
-          random_seed: 0
-          ransac_max_error: 5.637376656633329
-          triangulation_merge_max_reprojection_error: 3.616076749251911
-          ransac_min_inlier_ratio: 2.3021358869347655
-          bundle_adjustment_refine_sensor_from_rig: true
-          bundle_adjustment_refine_principal_point: true
-          compression_opq_number_of_subvectors: 4
-          rotation_threshold: 1.4658129805029452
-          compression_opq_number_of_bits_per_subvector: 7
-          use_prior_position: true
-          pose_prior_position_sigma_m: 1.0246457001441578
-          max_keypoints_per_image: 5
-          compression_opq_number_of_training_iterations: 1
-          neighbors_count: 6
-          triangulation_complete_max_reprojection_error: 9.301444243932576
-          mapper_filter_max_reprojection_error: 2.027123023002322
-          triangulation_minimum_angle: 7.061401241503109
-          bundle_adjustment_refine_additional_params: true
-          bundle_adjustment_refine_focal_length: true
-          single_threaded: true
-          rig_verification: true
+        options: ""
         create:
           capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
-          orchestration_status: queued
+          orchestration_status: ""
           id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         create:
           $ref: "#/components/schemas/ReconstructionCreate"
         options:
-          $ref: "#/components/schemas/ReconstructionOptions"
+          allOf:
+          - $ref: "#/components/schemas/ReconstructionOptions"
+          nullable: true
       required:
       - create
       title: ReconstructionCreateWithOptions
@@ -2921,31 +2909,31 @@ components:
           single_threaded: true
           rig_verification: true
         metrics:
-          all_verified_match_inliers_median: 1.2315135367772556
-          cross_sensor_verified_matches: 9
-          reprojection_pixel_error_50th_percentile: 2.3021358869347655
-          stereo_verified_match_rate: 1.4894159098541704
-          same_sensor_verified_match_inliers_median: 9.965781217890562
-          num_3d_points: 5
-          same_sensor_verified_match_rate: 4.965218492984954
-          all_verified_match_inliers_mean: 7.386281948385884
-          cross_sensor_verified_match_inliers_mean: 8.762042012749001
-          stereo_verified_match_inliers_median: 7.457744773683766
-          all_verified_matches: 2
-          average_keypoints_per_image: 5.637376656633329
-          cross_sensor_verified_match_rate: 6.683562403749608
-          registration_rate: 1.4658129805029452
-          same_sensor_verified_match_inliers_mean: 5.025004791520295
+          all_verified_match_inliers_median: 3.5571952270680973
+          cross_sensor_verified_matches: 3
+          reprojection_pixel_error_50th_percentile: 5.025004791520295
+          stereo_verified_match_rate: 1.284659006116532
+          same_sensor_verified_match_inliers_median: 3.353193347011243
+          num_3d_points: 1
+          same_sensor_verified_match_rate: 5.944895607614016
+          all_verified_match_inliers_mean: 6.438423552598547
+          cross_sensor_verified_match_inliers_mean: 0.8851374739011653
+          stereo_verified_match_inliers_median: 6.778324963048013
+          all_verified_matches: 8
+          average_keypoints_per_image: 4.965218492984954
+          cross_sensor_verified_match_rate: 7.143538047012306
+          registration_rate: 7.457744773683766
+          same_sensor_verified_match_inliers_mean: 6.704019297950036
           registered_images: 6
-          percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
-          same_sensor_verified_matches: 1
-          track_length_50th_percentile: 9.301444243932576
-          cross_sensor_verified_match_inliers_median: 9.018348186070783
-          all_verified_match_rate: 4.145608029883936
-          total_images: 0
-          reprojection_pixel_error_90th_percentile: 7.061401241503109
-          stereo_verified_matches: 1
-          stereo_verified_match_inliers_mean: 6.84685269835264
+          percent_tracks_with_length_greater_than_or_equal_to_3: 6.683562403749608
+          same_sensor_verified_matches: 6
+          track_length_50th_percentile: 9.369310271410669
+          cross_sensor_verified_match_inliers_median: 7.058770351582356
+          all_verified_match_rate: 9.018348186070783
+          total_images: 1
+          reprojection_pixel_error_90th_percentile: 9.965781217890562
+          stereo_verified_matches: 6
+          stereo_verified_match_inliers_mean: 2.8841621266687802
         capture_id: capture_id
         error: error
         status: queued
@@ -2983,31 +2971,31 @@ components:
       title: ReconstructionManifest
     ReconstructionMetrics:
       example:
-        all_verified_match_inliers_median: 1.2315135367772556
-        cross_sensor_verified_matches: 9
-        reprojection_pixel_error_50th_percentile: 2.3021358869347655
-        stereo_verified_match_rate: 1.4894159098541704
-        same_sensor_verified_match_inliers_median: 9.965781217890562
-        num_3d_points: 5
-        same_sensor_verified_match_rate: 4.965218492984954
-        all_verified_match_inliers_mean: 7.386281948385884
-        cross_sensor_verified_match_inliers_mean: 8.762042012749001
-        stereo_verified_match_inliers_median: 7.457744773683766
-        all_verified_matches: 2
-        average_keypoints_per_image: 5.637376656633329
-        cross_sensor_verified_match_rate: 6.683562403749608
-        registration_rate: 1.4658129805029452
-        same_sensor_verified_match_inliers_mean: 5.025004791520295
+        all_verified_match_inliers_median: 3.5571952270680973
+        cross_sensor_verified_matches: 3
+        reprojection_pixel_error_50th_percentile: 5.025004791520295
+        stereo_verified_match_rate: 1.284659006116532
+        same_sensor_verified_match_inliers_median: 3.353193347011243
+        num_3d_points: 1
+        same_sensor_verified_match_rate: 5.944895607614016
+        all_verified_match_inliers_mean: 6.438423552598547
+        cross_sensor_verified_match_inliers_mean: 0.8851374739011653
+        stereo_verified_match_inliers_median: 6.778324963048013
+        all_verified_matches: 8
+        average_keypoints_per_image: 4.965218492984954
+        cross_sensor_verified_match_rate: 7.143538047012306
+        registration_rate: 7.457744773683766
+        same_sensor_verified_match_inliers_mean: 6.704019297950036
         registered_images: 6
-        percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
-        same_sensor_verified_matches: 1
-        track_length_50th_percentile: 9.301444243932576
-        cross_sensor_verified_match_inliers_median: 9.018348186070783
-        all_verified_match_rate: 4.145608029883936
-        total_images: 0
-        reprojection_pixel_error_90th_percentile: 7.061401241503109
-        stereo_verified_matches: 1
-        stereo_verified_match_inliers_mean: 6.84685269835264
+        percent_tracks_with_length_greater_than_or_equal_to_3: 6.683562403749608
+        same_sensor_verified_matches: 6
+        track_length_50th_percentile: 9.369310271410669
+        cross_sensor_verified_match_inliers_median: 7.058770351582356
+        all_verified_match_rate: 9.018348186070783
+        total_images: 1
+        reprojection_pixel_error_90th_percentile: 9.965781217890562
+        stereo_verified_matches: 6
+        stereo_verified_match_inliers_mean: 2.8841621266687802
       properties:
         total_images:
           nullable: true

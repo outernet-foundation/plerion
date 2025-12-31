@@ -2257,7 +2257,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2324,7 +2324,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2391,7 +2391,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2517,7 +2517,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2584,7 +2584,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2651,7 +2651,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2780,7 +2780,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2847,7 +2847,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2914,7 +2914,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3043,7 +3043,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3110,7 +3110,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3177,7 +3177,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3303,7 +3303,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3370,7 +3370,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3437,7 +3437,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3566,7 +3566,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3633,7 +3633,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3700,7 +3700,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3826,7 +3826,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3893,7 +3893,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3960,7 +3960,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4089,7 +4089,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4156,7 +4156,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4223,7 +4223,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4349,7 +4349,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4416,7 +4416,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4483,7 +4483,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4610,7 +4610,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4677,7 +4677,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4744,7 +4744,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4865,12 +4865,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[str]:
+    ) -> List[UUID]:
         """Get Capture Session Reconstructions
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4902,7 +4902,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[str]",
+            '200': "List[UUID]",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -4932,12 +4932,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[str]]:
+    ) -> ApiResponse[List[UUID]]:
         """Get Capture Session Reconstructions
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4969,7 +4969,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[str]",
+            '200': "List[UUID]",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -5004,7 +5004,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5036,7 +5036,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[str]",
+            '200': "List[UUID]",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -5130,7 +5130,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5197,7 +5197,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5264,7 +5264,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5390,7 +5390,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5457,7 +5457,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5524,7 +5524,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5653,7 +5653,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5720,7 +5720,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5787,7 +5787,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5916,7 +5916,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5983,7 +5983,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6050,7 +6050,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6179,7 +6179,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6246,7 +6246,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6313,7 +6313,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6440,9 +6440,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param reconstruction_ids: Optional list of Reconstruction Ids to filter by
-        :type reconstruction_ids: List[str]
+        :type reconstruction_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6511,9 +6511,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param reconstruction_ids: Optional list of Reconstruction Ids to filter by
-        :type reconstruction_ids: List[str]
+        :type reconstruction_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6582,9 +6582,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param reconstruction_ids: Optional list of Reconstruction Ids to filter by
-        :type reconstruction_ids: List[str]
+        :type reconstruction_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6720,7 +6720,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6787,7 +6787,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6854,7 +6854,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6981,9 +6981,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param map_id: (required)
-        :type map_id: str
+        :type map_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7052,9 +7052,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param map_id: (required)
-        :type map_id: str
+        :type map_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7123,9 +7123,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param map_id: (required)
-        :type map_id: str
+        :type map_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7255,7 +7255,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7322,7 +7322,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7389,7 +7389,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7518,7 +7518,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7585,7 +7585,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7652,7 +7652,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7779,7 +7779,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -7850,7 +7850,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -7921,7 +7921,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8051,12 +8051,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> UUID:
         """Get Reconstruction Localization Map
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8088,7 +8088,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "UUID",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -8118,12 +8118,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[UUID]:
         """Get Reconstruction Localization Map
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8155,7 +8155,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "UUID",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -8190,7 +8190,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8222,7 +8222,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "UUID",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -8316,7 +8316,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8383,7 +8383,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8450,7 +8450,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8577,7 +8577,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8648,7 +8648,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8719,7 +8719,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8854,7 +8854,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8921,7 +8921,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8988,7 +8988,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9116,9 +9116,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param capture_session_id: Optional capture session Id to filter by
-        :type capture_session_id: str
+        :type capture_session_id: UUID
         :param capture_session_name: Optional capture session name to filter by
         :type capture_session_name: str
         :param _request_timeout: timeout setting for this request. If one
@@ -9191,9 +9191,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param capture_session_id: Optional capture session Id to filter by
-        :type capture_session_id: str
+        :type capture_session_id: UUID
         :param capture_session_name: Optional capture session name to filter by
         :type capture_session_name: str
         :param _request_timeout: timeout setting for this request. If one
@@ -9266,9 +9266,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param capture_session_id: Optional capture session Id to filter by
-        :type capture_session_id: str
+        :type capture_session_id: UUID
         :param capture_session_name: Optional capture session name to filter by
         :type capture_session_name: str
         :param _request_timeout: timeout setting for this request. If one
@@ -9412,9 +9412,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param request_body: (required)
-        :type request_body: List[str]
+        :type request_body: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9483,9 +9483,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param request_body: (required)
-        :type request_body: List[str]
+        :type request_body: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9554,9 +9554,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param request_body: (required)
-        :type request_body: List[str]
+        :type request_body: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9702,7 +9702,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param image: (required)
@@ -9777,7 +9777,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param image: (required)
@@ -9852,7 +9852,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param image: (required)
@@ -10006,7 +10006,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param camera: (required)
         :type camera: Camera
         :param _request_timeout: timeout setting for this request. If one
@@ -10077,7 +10077,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param camera: (required)
         :type camera: Camera
         :param _request_timeout: timeout setting for this request. If one
@@ -10148,7 +10148,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param camera: (required)
         :type camera: Camera
         :param _request_timeout: timeout setting for this request. If one
@@ -10294,9 +10294,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param map_id: (required)
-        :type map_id: str
+        :type map_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10365,9 +10365,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param map_id: (required)
-        :type map_id: str
+        :type map_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10436,9 +10436,9 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param map_id: (required)
-        :type map_id: str
+        :type map_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10569,7 +10569,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param capture_session_update: (required)
         :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -10640,7 +10640,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param capture_session_update: (required)
         :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -10711,7 +10711,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param capture_session_update: (required)
         :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -11730,7 +11730,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param localization_map_update: (required)
         :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -11801,7 +11801,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param localization_map_update: (required)
         :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -11872,7 +11872,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param localization_map_update: (required)
         :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -12600,7 +12600,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param tar: (required)
         :type tar: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -12671,7 +12671,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param tar: (required)
         :type tar: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -12742,7 +12742,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param tar: (required)
         :type tar: bytearray
         :param _request_timeout: timeout setting for this request. If one
