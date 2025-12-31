@@ -11,8 +11,8 @@ from typer import Option, run
 REPO_ROOT = Path(__file__).parents[3]
 OPENAPI_GENERATOR_PATH = Path(__file__).parents[2] / "openapi-generator"
 CONFIGS_PATH = OPENAPI_GENERATOR_PATH / "configs"
-TEMPLATES_PATH = OPENAPI_GENERATOR_PATH / "templates"
-TEMPLATE_PATCHES_PATH = OPENAPI_GENERATOR_PATH / "template-patches"
+TEMPLATES_PATH = OPENAPI_GENERATOR_PATH / "templates-generated"
+TEMPLATE_PATCHES_PATH = OPENAPI_GENERATOR_PATH / "templates-patches"
 
 
 def cli(
@@ -62,10 +62,10 @@ def _dump_openapi_spec(project: Path, no_cache: bool) -> str | None:
 
 
 def _generate_templates():
-    (OPENAPI_GENERATOR_PATH / "templates" / "csharp").mkdir(parents=True, exist_ok=True)
+    (TEMPLATES_PATH).mkdir(parents=True, exist_ok=True)
 
     run_command(
-        f"uv run --no_workspace openapi-generator-cli author template -g csharp --library httpclient -o {str(OPENAPI_GENERATOR_PATH / 'templates' / 'csharp')}",
+        f"uv run --no_workspace openapi-generator-cli author template -g csharp --library httpclient -o {str(TEMPLATES_PATH / 'csharp')}",
         log=True,
     )
 
@@ -112,16 +112,19 @@ def _generate_client(openapi_spec: str, project: str, client: str):
         json.dump(client_config_json, temp_config_file)
         temp_config_file.flush()
 
-        run_command(
+        command = (
             f"uv run --no_workspace openapi-generator-cli generate "
             f"-g {client} "
             f"-i {Path(temp_spec_file.name).resolve().as_posix()} "
             f"-o {client_path.resolve().as_posix()} "
             f"-c {str(Path(temp_config_file.name).resolve())} "
-            f"-t {str(TEMPLATES_PATH / client)} "
-            f"--ignore-file-override {str(OPENAPI_GENERATOR_PATH / '.openapi-generator-ignore')}",
-            log=True,
+            f"--ignore-file-override {str(OPENAPI_GENERATOR_PATH / '.openapi-generator-ignore')}"
         )
+
+        if client == "csharp":
+            command += f" -t {str(TEMPLATES_PATH / 'csharp')}"
+
+        run_command(command, log=True)
 
         print(f"Generated {client} client at {client_path}")
     if client == "csharp":
