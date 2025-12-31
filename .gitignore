@@ -9,4 +9,3 @@ __pycache__/
 .env
 **/bin/
 **/obj/
-scripts/openapi-generator/templates-generated

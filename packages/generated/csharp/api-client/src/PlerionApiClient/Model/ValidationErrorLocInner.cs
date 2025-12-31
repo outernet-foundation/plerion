@@ -31,7 +31,7 @@ namespace PlerionApiClient.Model
     /// </summary>
     [JsonConverter(typeof(ValidationErrorLocInnerJsonConverter))]
     [DataContract(Name = "ValidationError_loc_inner")]
-    public partial class ValidationErrorLocInner : AbstractOpenAPISchema
+    public partial class ValidationErrorLocInner : AbstractOpenAPISchema, 
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ValidationErrorLocInner" /> class

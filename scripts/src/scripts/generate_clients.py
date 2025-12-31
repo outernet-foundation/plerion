@@ -1,7 +1,5 @@
 import json
-import re
 from pathlib import Path
-from re import Pattern
 from shutil import rmtree
 from tempfile import NamedTemporaryFile
 
@@ -163,24 +161,24 @@ def _generate_client(openapi_spec: str, project: str, client: str):
         run_command(f"uv pip install {client_path.resolve().as_posix()}", log=True)
 
     # This is a workaround for a bug in one of the openapi jinja templates for C# that results in stray commas in generated code
-    print("Checking for stray commas")
+    # print("Checking for stray commas")
 
-    pat_next: Pattern[str] = re.compile(
-        r"(?m)^(\s*(?:public|internal)(?:\s+(?:abstract|sealed))?(?:\s+partial)?\s+class\s+\w+\s*:[^{\r\n]+),\s*\r?\n(\s*)\{"
-    )
+    # pat_next: Pattern[str] = re.compile(
+    #     r"(?m)^(\s*(?:public|internal)(?:\s+(?:abstract|sealed))?(?:\s+partial)?\s+class\s+\w+\s*:[^{\r\n]+),\s*\r?\n(\s*)\{"
+    # )
 
-    pat_same: Pattern[str] = re.compile(
-        r"(?m)^(\s*(?:public|internal)(?:\s+(?:abstract|sealed))?(?:\s+partial)?\s+class\s+\w+\s*:[^{\r\n]+),\s*\{"
-    )
+    # pat_same: Pattern[str] = re.compile(
+    #     r"(?m)^(\s*(?:public|internal)(?:\s+(?:abstract|sealed))?(?:\s+partial)?\s+class\s+\w+\s*:[^{\r\n]+),\s*\{"
+    # )
 
-    for cs_file in client_path.rglob("*.cs"):
-        text: str = cs_file.read_text(encoding="utf-8")
-        fixed: str = pat_next.sub(r"\1\n\2{", text)
-        fixed = pat_same.sub(r"\1 {", fixed)
+    # for cs_file in client_path.rglob("*.cs"):
+    #     text: str = cs_file.read_text(encoding="utf-8")
+    #     fixed: str = pat_next.sub(r"\1\n\2{", text)
+    #     fixed = pat_same.sub(r"\1 {", fixed)
 
-        if fixed != text:
-            cs_file.write_text(fixed, encoding="utf-8")
-            print(f"Patched stray comma in {cs_file}")
+    #     if fixed != text:
+    #         cs_file.write_text(fixed, encoding="utf-8")
+    #         print(f"Patched stray comma in {cs_file}")
 
 
 def main():
