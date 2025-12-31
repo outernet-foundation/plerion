@@ -10,6 +10,7 @@ from typer import Option, run
 
 REPO_ROOT = Path(__file__).parents[3]
 OPENAPI_GENERATOR_PATH = Path(__file__).parents[2] / "openapi-generator"
+CONFIGS_PATH = OPENAPI_GENERATOR_PATH / "configs"
 TEMPLATES_PATH = OPENAPI_GENERATOR_PATH / "templates"
 TEMPLATE_PATCHES_PATH = OPENAPI_GENERATOR_PATH / "template-patches"
 
@@ -25,19 +26,19 @@ def cli(
 
     _generate_templates()
 
-    # for project_name, clients in config_json.items():
-    #     if project is not None and project.name != project_name:
-    #         continue
+    for project_name, clients in config_json.items():
+        if project is not None and project.name != project_name:
+            continue
 
-    #     openapi_spec = _dump_openapi_spec(Path(project_name), no_cache)
-    #     if openapi_spec is None:
-    #         continue
+        openapi_spec = _dump_openapi_spec(Path(project_name), no_cache)
+        if openapi_spec is None:
+            continue
 
-    #     for client_name in clients:
-    #         if client is not None and client_name != client:
-    #             continue
+        for client_name in clients:
+            if client is not None and client_name != client:
+                continue
 
-    #         _generate_client(openapi_spec, project_name, client_name)
+            _generate_client(openapi_spec, project_name, client_name)
 
 
 def _dump_openapi_spec(project: Path, no_cache: bool) -> str | None:
@@ -117,8 +118,8 @@ def _generate_client(openapi_spec: str, project: str, client: str):
             f"-i {Path(temp_spec_file.name).resolve().as_posix()} "
             f"-o {client_path.resolve().as_posix()} "
             f"-c {str(Path(temp_config_file.name).resolve())} "
-            f"-t {str(MUSTACHE_TEMPLATES_PATH.resolve())} "
-            f"--ignore-file-override {str(OPENAPI_GENERATOR_IGNORE_PATH.resolve())}",
+            f"-t {str(TEMPLATES_PATH / client)} "
+            f"--ignore-file-override {str(OPENAPI_GENERATOR_PATH / '.openapi-generator-ignore')}",
             log=True,
         )
 
