@@ -3,8 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import AnyHttpUrl, Field
-from pydantic.functional_validators import model_validator
+from pydantic import AnyHttpUrl, Field, model_validator
 from pydantic_settings import BaseSettings
 
 
@@ -23,7 +22,7 @@ class Settings(BaseSettings):
     minio_endpoint_url: AnyHttpUrl | None = None
     minio_access_key: str | None = None
     minio_secret_key: str | None = None
-    captures_bucket: str = Field()
+    # captures_bucket: str = Field()
     reconstructions_bucket: str = Field()
 
     debug_run_reconstruction: bool = Field()

@@ -199,6 +199,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./compose.yml:/compose.yml:ro
+      - ./.env:/.env:ro
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
       BACKEND: docker
@@ -232,6 +233,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./compose.yml:/compose.yml:ro
+      - ./.env:/.env:ro
     environment:
       DOCKER_HOST: unix:///var/run/docker.sock
       BACKEND: docker
@@ -262,13 +264,15 @@ services:
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE},mode=max
     image: plerion-reconstructor-cuda
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      DOCKER_HOST: unix:///var/run/docker.sock
     gpus: all
     expose:
       - "5678"
+    environment:
+      MINIO_ENDPOINT_URL: "http://minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
+      RECONSTRUCTIONS_BUCKET: dev-reconstructions
+      CAPTURES_BUCKET: dev-captures
 
   reconstructor-rocm:
     profiles: ["ephemeral"]
@@ -280,32 +284,39 @@ services:
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE},mode=max
     image: plerion-reconstructor-rocm
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    environment:
-      DOCKER_HOST: unix:///var/run/docker.sock
     devices:
       - /dev/kfd:/dev/kfd
       - /dev/dri:/dev/dri
     group_add:
-      - video
-      - render
+      - 44
+      - 110
     expose:
       - "5678"
-
+    environment:
+      MINIO_ENDPOINT_URL: "http://minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
+      RECONSTRUCTIONS_BUCKET: dev-reconstructions
+      CAPTURES_BUCKET: dev-captures
+      
   localizer-cuda:
     profiles: ["ephemeral"]
     build:
       dockerfile: docker/localizer/Dockerfile
       args: { TORCH_DEVICE: "cuda" }
       cache_from:
-        - type=local,src=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE}
+        - type=local,src=${HOME}/.buildx-cache/localizer-cuda
       cache_to:
-        - type=local,dest=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE},mode=max
+        - type=local,dest=${HOME}/.buildx-cache/localizer-cuda,mode=max
     image: plerion-localizer-cuda
     gpus: all
     expose:
       - "8000"
+    environment:
+      MINIO_ENDPOINT_URL: "http://minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
+      RECONSTRUCTIONS_BUCKET: dev-reconstructions
 
   localizer-rocm:
     profiles: ["ephemeral"]
@@ -313,15 +324,20 @@ services:
       dockerfile: docker/localizer/Dockerfile
       args: { TORCH_DEVICE: "rocm" }
       cache_from:
-        - type=local,src=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE}
+        - type=local,src=${HOME}/.buildx-cache/localizer-rocm
       cache_to:
-        - type=local,dest=${HOME}/.buildx-cache/localizer-${TORCH_DEVICE},mode=max
+        - type=local,dest=${HOME}/.buildx-cache/localizer-rocm,mode=max
     image: plerion-localizer-rocm
     devices:
       - /dev/kfd:/dev/kfd
       - /dev/dri:/dev/dri
     group_add:
-      - video
-      - render
+      - 44
+      - 110
     expose:
       - "8000"
+    environment:
+      MINIO_ENDPOINT_URL: "http://minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
+      RECONSTRUCTIONS_BUCKET: dev-reconstructions
