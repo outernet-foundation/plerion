@@ -8,9 +8,9 @@ from tempfile import NamedTemporaryFile
 from common.run_command import run_command
 from typer import Option, run
 
-MUSTACHE_TEMPLATES_PATH = Path(__file__).parents[2] / "mustache-templates"
-OPENAPI_GENERATOR_IGNORE_PATH = Path(__file__).parents[2] / ".openapi-generator-ignore"
-OPENAPI_GENERATOR_CONFIGS_PATH = Path(__file__).parents[2] / "openapi-generator-configs"
+OPENAPI_GENERATOR_PATH = Path(__file__).parents[2] / "openapi-generator"
+TEMPLATES_PATH = OPENAPI_GENERATOR_PATH / "templates"
+TEMPLATE_PATCHES_PATH = OPENAPI_GENERATOR_PATH / "template_patches"
 
 
 def cli(
@@ -22,19 +22,21 @@ def cli(
     with Path(config).open("r", encoding="utf-8") as file:
         config_json: dict[str, list[str]] = json.load(file)
 
-    for project_name, clients in config_json.items():
-        if project is not None and project.name != project_name:
-            continue
+    _generate_templates()
 
-        openapi_spec = _dump_openapi_spec(Path(project_name), no_cache)
-        if openapi_spec is None:
-            continue
+    # for project_name, clients in config_json.items():
+    #     if project is not None and project.name != project_name:
+    #         continue
 
-        for client_name in clients:
-            if client is not None and client_name != client:
-                continue
+    #     openapi_spec = _dump_openapi_spec(Path(project_name), no_cache)
+    #     if openapi_spec is None:
+    #         continue
 
-            _generate_client(openapi_spec, project_name, client_name)
+    #     for client_name in clients:
+    #         if client is not None and client_name != client:
+    #             continue
+
+    #         _generate_client(openapi_spec, project_name, client_name)
 
 
 def _dump_openapi_spec(project: Path, no_cache: bool) -> str | None:
@@ -57,8 +59,20 @@ def _dump_openapi_spec(project: Path, no_cache: bool) -> str | None:
     return openapi_spec
 
 
+def _generate_templates():
+    (OPENAPI_GENERATOR_PATH / "templates" / "csharp").mkdir(parents=True, exist_ok=True)
+
+    run_command(
+        f"uv run --no_workspace openapi-generator-cli author template -g csharp --library httpclient -o {str(OPENAPI_GENERATOR_PATH / 'templates' / 'csharp')}",
+        log=True,
+    )
+
+    for patch_file in TEMPLATE_PATCHES_PATH.rglob("*"):
+        run_command(f"git apply {str(patch_file)} --directory {str(TEMPLATES_PATH)}", log=True)
+
+
 def _generate_client(openapi_spec: str, project: str, client: str):
-    client_config_json = json.loads((OPENAPI_GENERATOR_CONFIGS_PATH / f"{client}.json").read_text(encoding="utf-8"))
+    client_config_json = json.loads((CONFIGS_PATH / f"{client}.json").read_text(encoding="utf-8"))
     client_package_base_name = f"{project.split('/')[-1]}-client"
     client_path = Path("packages/generated") / client / f"{client_package_base_name}"
 
