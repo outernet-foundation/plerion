@@ -67,8 +67,8 @@ def _generate_templates():
         log=True,
     )
 
-    for patch_file in TEMPLATE_PATCHES_PATH.rglob("*"):
-        run_command(f"git apply {str(patch_file)} --directory {str(TEMPLATES_PATH)}", log=True)
+    # for patch_file in TEMPLATE_PATCHES_PATH.rglob("*"):
+    #     run_command(f"git apply {str(patch_file)} --directory {str(TEMPLATES_PATH)}", log=True)
 
 
 def _generate_client(openapi_spec: str, project: str, client: str):
