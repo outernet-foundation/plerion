@@ -19,8 +19,6 @@ from plerion_localizer_client.models.float3 import Float3
 from plerion_localizer_client.models.float4 import Float4
 from plerion_localizer_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig
 from plerion_localizer_client.models.http_validation_error import HTTPValidationError
-from plerion_localizer_client.models.load_state import LoadState
-from plerion_localizer_client.models.load_state_response import LoadStateResponse
 from plerion_localizer_client.models.localization import Localization
 from plerion_localizer_client.models.localization_metrics import LocalizationMetrics
 from plerion_localizer_client.models.open_cv_camera_config import OpenCVCameraConfig

@@ -81,53 +81,8 @@ public static class LocalCaptureController
 
         var cameraConfig = await VisualPositioningSystem.CameraProvider.Start(
             requestedCaptureIntervalSeconds,
-            () =>
-            {
-                // Don't capture if we lost tracking
-                if (
-                    ARSession.state != ARSessionState.SessionTracking
-                    || captureAnchor.trackingState == TrackingState.None
-                )
-                {
-                    Debug.LogWarning("Tracking lost, skipping frame capture");
-                    return null;
-                }
-
-                var cameraTransform = UnityEngine.Camera.main.transform;
-                return (
-                    captureAnchor.transform.InverseTransformPoint(cameraTransform.position),
-                    Quaternion.Inverse(captureAnchor.transform.rotation) * cameraTransform.rotation
-                );
-            },
-            async (bytes, cameraPosition, cameraRotation) =>
-            {
-                long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-
-                var absoluteImagePath = Path.Combine(
-                    sessionDirectory,
-                    "rig0",
-                    "camera0",
-                    $"{timestampMilliseconds}.jpg"
-                );
-                Directory.CreateDirectory(Path.GetDirectoryName(absoluteImagePath)!);
-                await File.WriteAllBytesAsync(absoluteImagePath, bytes);
-
-                // Write out pose
-                poseWriter.WriteLine(
-                    string.Format(
-                        CultureInfo.InvariantCulture,
-                        "{0},{1},{2},{3},{4},{5},{6},{7}",
-                        timestampMilliseconds,
-                        cameraPosition.x,
-                        cameraPosition.y,
-                        cameraPosition.z,
-                        cameraRotation.x,
-                        cameraRotation.y,
-                        cameraRotation.z,
-                        cameraRotation.w
-                    )
-                );
-            }
+            GetCameraPose,
+            OnFrameReceived
         );
 
         // Write out capture session manifest
@@ -176,5 +131,50 @@ public static class LocalCaptureController
 
         if (Directory.Exists(SessionDir(id.ToString())))
             Directory.Delete(SessionDir(id.ToString()), recursive: true);
+    }
+
+    private static (Vector3 position, Quaternion rotation)? GetCameraPose()
+    {
+        if (ARSession.state != ARSessionState.SessionTracking || captureAnchor.trackingState == TrackingState.None)
+        {
+            Debug.LogWarning("Tracking lost, cannot provide camera pose");
+            return null;
+        }
+
+        var cameraTransform = UnityEngine.Camera.main.transform;
+        return (
+            captureAnchor.transform.InverseTransformPoint(cameraTransform.position),
+            Quaternion.Inverse(captureAnchor.transform.rotation) * cameraTransform.rotation
+        );
+    }
+
+    private static async UniTask OnFrameReceived(
+        byte[] image,
+        PinholeCameraConfig cameraConfig,
+        Vector3 cameraTranslationUnityWorldFromCamera,
+        Quaternion cameraRotationUnityWorldFromCamera
+    )
+    {
+        long timestampMilliseconds = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+
+        var absoluteImagePath = Path.Combine(sessionDirectory, "rig0", "camera0", $"{timestampMilliseconds}.jpg");
+        Directory.CreateDirectory(Path.GetDirectoryName(absoluteImagePath)!);
+        await File.WriteAllBytesAsync(absoluteImagePath, image);
+
+        // Write out pose
+        poseWriter.WriteLine(
+            string.Format(
+                CultureInfo.InvariantCulture,
+                "{0},{1},{2},{3},{4},{5},{6},{7}",
+                timestampMilliseconds,
+                cameraTranslationUnityWorldFromCamera.x,
+                cameraTranslationUnityWorldFromCamera.y,
+                cameraTranslationUnityWorldFromCamera.z,
+                cameraRotationUnityWorldFromCamera.x,
+                cameraRotationUnityWorldFromCamera.y,
+                cameraRotationUnityWorldFromCamera.z,
+                cameraRotationUnityWorldFromCamera.w
+            )
+        );
     }
 }

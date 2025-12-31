@@ -34,8 +34,6 @@ __all__ = [
     "Float4",
     "FullOpenCVCameraConfig",
     "HTTPValidationError",
-    "LoadState",
-    "LoadStateResponse",
     "Localization",
     "LocalizationMetrics",
     "OpenCVCameraConfig",
@@ -66,8 +64,6 @@ from plerion_localizer_client.models.float3 import Float3 as Float3
 from plerion_localizer_client.models.float4 import Float4 as Float4
 from plerion_localizer_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig as FullOpenCVCameraConfig
 from plerion_localizer_client.models.http_validation_error import HTTPValidationError as HTTPValidationError
-from plerion_localizer_client.models.load_state import LoadState as LoadState
-from plerion_localizer_client.models.load_state_response import LoadStateResponse as LoadStateResponse
 from plerion_localizer_client.models.localization import Localization as Localization
 from plerion_localizer_client.models.localization_metrics import LocalizationMetrics as LocalizationMetrics
 from plerion_localizer_client.models.open_cv_camera_config import OpenCVCameraConfig as OpenCVCameraConfig

@@ -13,41 +13,39 @@
 
 
 from __future__ import annotations
-from inspect import getfullargspec
 import json
 import pprint
-import re  # noqa: F401
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, ValidationError, field_validator
-from typing import Optional
+from typing import Any, List, Optional
 from plerion_api_client.models.full_open_cv_camera_config import FullOpenCVCameraConfig
 from plerion_api_client.models.open_cv_camera_config import OpenCVCameraConfig
 from plerion_api_client.models.pinhole_camera_config import PinholeCameraConfig
-from typing import Union, Any, List, Set, TYPE_CHECKING, Optional, Dict
+from pydantic import StrictStr, Field
+from typing import Union, List, Set, Optional, Dict
 from typing_extensions import Literal, Self
-from pydantic import Field
 
-CAMERA_ANY_OF_SCHEMAS = ["FullOpenCVCameraConfig", "OpenCVCameraConfig", "PinholeCameraConfig"]
+CAMERA_ONE_OF_SCHEMAS = ["FullOpenCVCameraConfig", "OpenCVCameraConfig", "PinholeCameraConfig"]
 
 class Camera(BaseModel):
     """
     Camera
     """
-
     # data type: PinholeCameraConfig
-    anyof_schema_1_validator: Optional[PinholeCameraConfig] = None
+    oneof_schema_1_validator: Optional[PinholeCameraConfig] = None
     # data type: OpenCVCameraConfig
-    anyof_schema_2_validator: Optional[OpenCVCameraConfig] = None
+    oneof_schema_2_validator: Optional[OpenCVCameraConfig] = None
     # data type: FullOpenCVCameraConfig
-    anyof_schema_3_validator: Optional[FullOpenCVCameraConfig] = None
-    if TYPE_CHECKING:
-        actual_instance: Optional[Union[FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig]] = None
-    else:
-        actual_instance: Any = None
-    any_of_schemas: Set[str] = { "FullOpenCVCameraConfig", "OpenCVCameraConfig", "PinholeCameraConfig" }
+    oneof_schema_3_validator: Optional[FullOpenCVCameraConfig] = None
+    actual_instance: Optional[Union[FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig]] = None
+    one_of_schemas: Set[str] = { "FullOpenCVCameraConfig", "OpenCVCameraConfig", "PinholeCameraConfig" }
 
-    model_config = {
-        "validate_assignment": True,
-        "protected_namespaces": (),
+    model_config = ConfigDict(
+        validate_assignment=True,
+        protected_namespaces=(),
+    )
+
+
+    discriminator_value_class_map: Dict[str, str] = {
     }
 
     def __init__(self, *args, **kwargs) -> None:
@@ -61,35 +59,36 @@ class Camera(BaseModel):
             super().__init__(**kwargs)
 
     @field_validator('actual_instance')
-    def actual_instance_must_validate_anyof(cls, v):
+    def actual_instance_must_validate_oneof(cls, v):
         instance = Camera.model_construct()
         error_messages = []
+        match = 0
         # validate data type: PinholeCameraConfig
         if not isinstance(v, PinholeCameraConfig):
             error_messages.append(f"Error! Input type `{type(v)}` is not `PinholeCameraConfig`")
         else:
-            return v
-
+            match += 1
         # validate data type: OpenCVCameraConfig
         if not isinstance(v, OpenCVCameraConfig):
             error_messages.append(f"Error! Input type `{type(v)}` is not `OpenCVCameraConfig`")
         else:
-            return v
-
+            match += 1
         # validate data type: FullOpenCVCameraConfig
         if not isinstance(v, FullOpenCVCameraConfig):
             error_messages.append(f"Error! Input type `{type(v)}` is not `FullOpenCVCameraConfig`")
         else:
-            return v
-
-        if error_messages:
+            match += 1
+        if match > 1:
+            # more than 1 match
+            raise ValueError("Multiple matches found when setting `actual_instance` in Camera with oneOf schemas: FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig. Details: " + ", ".join(error_messages))
+        elif match == 0:
             # no match
-            raise ValueError("No match found when setting the actual_instance in Camera with anyOf schemas: FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when setting `actual_instance` in Camera with oneOf schemas: FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig. Details: " + ", ".join(error_messages))
         else:
             return v
 
     @classmethod
-    def from_dict(cls, obj: Dict[str, Any]) -> Self:
+    def from_dict(cls, obj: Union[str, Dict[str, Any]]) -> Self:
         return cls.from_json(json.dumps(obj))
 
     @classmethod
@@ -97,28 +96,33 @@ class Camera(BaseModel):
         """Returns the object represented by the json string"""
         instance = cls.model_construct()
         error_messages = []
-        # anyof_schema_1_validator: Optional[PinholeCameraConfig] = None
+        match = 0
+
+        # deserialize data into PinholeCameraConfig
         try:
             instance.actual_instance = PinholeCameraConfig.from_json(json_str)
-            return instance
+            match += 1
         except (ValidationError, ValueError) as e:
-             error_messages.append(str(e))
-        # anyof_schema_2_validator: Optional[OpenCVCameraConfig] = None
+            error_messages.append(str(e))
+        # deserialize data into OpenCVCameraConfig
         try:
             instance.actual_instance = OpenCVCameraConfig.from_json(json_str)
-            return instance
+            match += 1
         except (ValidationError, ValueError) as e:
-             error_messages.append(str(e))
-        # anyof_schema_3_validator: Optional[FullOpenCVCameraConfig] = None
+            error_messages.append(str(e))
+        # deserialize data into FullOpenCVCameraConfig
         try:
             instance.actual_instance = FullOpenCVCameraConfig.from_json(json_str)
-            return instance
+            match += 1
         except (ValidationError, ValueError) as e:
-             error_messages.append(str(e))
+            error_messages.append(str(e))
 
-        if error_messages:
+        if match > 1:
+            # more than 1 match
+            raise ValueError("Multiple matches found when deserializing the JSON string into Camera with oneOf schemas: FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig. Details: " + ", ".join(error_messages))
+        elif match == 0:
             # no match
-            raise ValueError("No match found when deserializing the JSON string into Camera with anyOf schemas: FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig. Details: " + ", ".join(error_messages))
+            raise ValueError("No match found when deserializing the JSON string into Camera with oneOf schemas: FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig. Details: " + ", ".join(error_messages))
         else:
             return instance
 
@@ -140,6 +144,7 @@ class Camera(BaseModel):
         if hasattr(self.actual_instance, "to_dict") and callable(self.actual_instance.to_dict):
             return self.actual_instance.to_dict()
         else:
+            # primitive type
             return self.actual_instance
 
     def to_str(self) -> str:

@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from concurrent.futures import Future, ThreadPoolExecutor
-from enum import Enum
 from pathlib import Path
-from shutil import rmtree
-from threading import Lock
 from typing import Any, Mapping, cast
 from uuid import UUID
 
@@ -29,28 +25,6 @@ RETRIEVAL_TOP_K = 12  # how many similar database images to keep
 RANSAC_THRESHOLD = 12.0  # reprojection error in pixels
 
 
-class LoadState(str, Enum):
-    PENDING = "pending"
-    LOADING = "loading"
-    READY = "ready"
-    FAILED = "failed"
-
-
-class LoadStateResponse(BaseModel):
-    status: LoadState
-    error: str | None = None
-
-
-class Localization(BaseModel):
-    id: UUID
-    transform: Transform
-    metrics: LocalizationMetrics
-
-
-_executor = ThreadPoolExecutor(max_workers=2)
-_load_lock = Lock()
-_load_state: dict[UUID, LoadState] = {}
-_load_error: dict[UUID, str] = {}
 _maps: dict[UUID, Map] = {}
 
 settings = get_settings()
@@ -61,48 +35,23 @@ s3_client = create_s3_client(
 )
 
 
-def start_load(id: UUID):
-    with _load_lock:
-        state = _load_state.get(id)
-        if state is not None:
-            return state
-        _load_state[id] = LoadState.LOADING
-
-        def _on_done(future: Future[None]) -> None:
-            try:
-                future.result()
-            except Exception as e:
-                print(f"Failed to load reconstruction {id}: {e}")
-                with _load_lock:
-                    _load_state[id] = LoadState.FAILED
-                    _load_error[id] = str(e)
-            else:
-                with _load_lock:
-                    _load_state[id] = LoadState.READY
-
-        future = _executor.submit(_load, id)
-        future.add_done_callback(_on_done)
-        return LoadState.LOADING
+class Localization(BaseModel):
+    id: UUID
+    transform: Transform
+    metrics: LocalizationMetrics
 
 
-def unload(id: UUID) -> Map | None:
-    with _load_lock:
-        _load_state.pop(id, None)
-        _load_error.pop(id, None)
-    _maps.pop(id, None)
-    rmtree(RECONSTRUCTIONS_DIR / str(id))
+def localize(
+    map_ids: list[UUID], prior: Transform, camera: PinholeCameraConfig, axis_convention: AxisConvention, image: bytes
+):
+    for id in map_ids:
+        if id not in _maps:
+            _load(id)
 
-
-def get_load_state(id: UUID):
-    with _load_lock:
-        return LoadStateResponse(status=_load_state.get(id, LoadState.PENDING), error=_load_error.get(id))
-
-
-def localize(camera: PinholeCameraConfig, axis_convention: AxisConvention, image: bytes):
     return [
         Localization(id=id, transform=result[0], metrics=result[1])
         for id, result in zip(
-            _maps.keys(),
+            map_ids,
             [
                 localize_image_against_reconstruction(
                     map=_maps[id],
@@ -112,7 +61,7 @@ def localize(camera: PinholeCameraConfig, axis_convention: AxisConvention, image
                     retrieval_top_k=RETRIEVAL_TOP_K,
                     ransac_threshold=RANSAC_THRESHOLD,
                 )
-                for id in _maps.keys()
+                for id in map_ids
             ],
         )
     ]

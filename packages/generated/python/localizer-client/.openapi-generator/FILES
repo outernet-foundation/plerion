@@ -18,8 +18,6 @@ plerion_localizer_client/models/float3.py
 plerion_localizer_client/models/float4.py
 plerion_localizer_client/models/full_open_cv_camera_config.py
 plerion_localizer_client/models/http_validation_error.py
-plerion_localizer_client/models/load_state.py
-plerion_localizer_client/models/load_state_response.py
 plerion_localizer_client/models/localization.py
 plerion_localizer_client/models/localization_metrics.py
 plerion_localizer_client/models/open_cv_camera_config.py

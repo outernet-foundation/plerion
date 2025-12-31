@@ -27,175 +27,6 @@
         }
       }
     },
-    "/reconstructions/{id}": {
-      "post": {
-        "summary": "Load Reconstruction",
-        "operationId": "load_reconstruction",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete": {
-        "summary": "Unload Reconstruction",
-        "operationId": "unload_reconstruction",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/reconstructions/{id}/status": {
-      "get": {
-        "summary": "Get Reconstruction Load Status",
-        "operationId": "get_reconstruction_load_status",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoadStateResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/camera": {
-      "put": {
-        "summary": "Set Camera Intrinsics",
-        "operationId": "set_camera_intrinsics",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "$ref": "#/components/schemas/PinholeCameraConfig"
-                  },
-                  {
-                    "$ref": "#/components/schemas/OpenCVCameraConfig"
-                  },
-                  {
-                    "$ref": "#/components/schemas/FullOpenCVCameraConfig"
-                  }
-                ],
-                "title": "Camera",
-                "discriminator": {
-                  "propertyName": "model",
-                  "mapping": {
-                    "PINHOLE": "#/components/schemas/PinholeCameraConfig",
-                    "OPENCV": "#/components/schemas/OpenCVCameraConfig",
-                    "FULL_OPENCV": "#/components/schemas/FullOpenCVCameraConfig"
-                  }
-                }
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/localization": {
       "post": {
         "summary": "Localize Image",
@@ -261,6 +92,39 @@
       },
       "Body_localize_image": {
         "properties": {
+          "map_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Map Ids"
+          },
+          "prior": {
+            "$ref": "#/components/schemas/Transform"
+          },
+          "camera": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PinholeCameraConfig"
+              },
+              {
+                "$ref": "#/components/schemas/OpenCVCameraConfig"
+              },
+              {
+                "$ref": "#/components/schemas/FullOpenCVCameraConfig"
+              }
+            ],
+            "title": "Camera",
+            "discriminator": {
+              "propertyName": "model",
+              "mapping": {
+                "FULL_OPENCV": "#/components/schemas/FullOpenCVCameraConfig",
+                "OPENCV": "#/components/schemas/OpenCVCameraConfig",
+                "PINHOLE": "#/components/schemas/PinholeCameraConfig"
+              }
+            }
+          },
           "image": {
             "type": "string",
             "format": "binary",
@@ -269,6 +133,9 @@
         },
         "type": "object",
         "required": [
+          "map_ids",
+          "prior",
+          "camera",
           "image"
         ],
         "title": "Body_localize_image"
@@ -435,39 +302,6 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
-      },
-      "LoadState": {
-        "type": "string",
-        "enum": [
-          "pending",
-          "loading",
-          "ready",
-          "failed"
-        ],
-        "title": "LoadState"
-      },
-      "LoadStateResponse": {
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/LoadState"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          }
-        },
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "title": "LoadStateResponse"
       },
       "Localization": {
         "properties": {

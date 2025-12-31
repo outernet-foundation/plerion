@@ -7,10 +7,11 @@ from uuid import UUID
 from common.fastapi import create_fastapi_app
 from core.axis_convention import AxisConvention
 from core.camera_config import CameraConfig, PinholeCameraConfig
-from fastapi import File, HTTPException, UploadFile
+from core.transform import Transform
+from fastapi import File, UploadFile
 
 from .localize import load_models
-from .map_manager import LoadStateResponse, Localization, get_load_state, localize, start_load, unload
+from .map_manager import Localization, localize
 
 RECONSTRUCTIONS_DIR = Path("/tmp/reconstructions")
 MAX_KEYPOINTS = 2500
@@ -21,47 +22,23 @@ if not environ.get("CODEGEN"):
 
 app = create_fastapi_app(title="Localize")
 
-_camera: PinholeCameraConfig | None = None
-
 
 @app.get("/health")
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.post("/reconstructions/{id}")
-async def load_reconstruction(id: UUID):
-    status = start_load(id)
-
-    return {"status": status.value}
-
-
-@app.delete("/reconstructions/{id}")
-async def unload_reconstruction(id: UUID):
-    unload(id)
-    return {"ok": True}
-
-
-@app.get("/reconstructions/{id}/status")
-async def get_reconstruction_load_status(id: UUID) -> LoadStateResponse:
-    return get_load_state(id)
-
-
-@app.put("/camera")
-async def set_camera_intrinsics(camera: CameraConfig):
-    # only pinhole supported for now
-    if camera.model != "PINHOLE":
-        raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
-
-    global _camera
-    _camera = camera
-
-    return {"ok": True}
-
-
 @app.post("/localization")
-async def localize_image(axis_convention: AxisConvention, image: UploadFile = File(...)) -> list[Localization]:
-    if _camera is None:
-        raise HTTPException(status_code=400, detail="Camera intrinsics not set")
+async def localize_image(
+    map_ids: list[UUID],
+    prior: Transform,
+    camera: CameraConfig,
+    axis_convention: AxisConvention,
+    image: UploadFile = File(...),
+) -> list[Localization]:
+    if not isinstance(camera, PinholeCameraConfig):
+        raise ValueError("Only Pinhole camera config is supported")
 
-    return localize(camera=_camera, axis_convention=axis_convention, image=await image.read())
+    return localize(
+        map_ids=map_ids, prior=prior, camera=camera, axis_convention=axis_convention, image=await image.read()
+    )

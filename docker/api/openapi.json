@@ -1400,68 +1400,6 @@
         }
       }
     },
-    "/localization_sessions/{localization_session_id}/camera": {
-      "put": {
-        "tags": [
-          "localization_sessions"
-        ],
-        "summary": "Set Localization Session Camera Intrinsics",
-        "operationId": "set_localization_session_camera_intrinsics",
-        "parameters": [
-          {
-            "name": "localization_session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Localization Session Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "anyOf": [
-                  {
-                    "$ref": "#/components/schemas/PinholeCameraConfig"
-                  },
-                  {
-                    "$ref": "#/components/schemas/OpenCVCameraConfig"
-                  },
-                  {
-                    "$ref": "#/components/schemas/FullOpenCVCameraConfig"
-                  }
-                ],
-                "title": "Camera"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/localization_sessions/{localization_session_id}/status": {
       "get": {
         "tags": [
@@ -1489,168 +1427,6 @@
                 "schema": {
                   "type": "string",
                   "title": "Response Get Localization Session Status"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_sessions/{localization_session_id}/maps": {
-      "post": {
-        "tags": [
-          "localization_sessions"
-        ],
-        "summary": "Load Localization Maps",
-        "operationId": "load_localization_maps",
-        "parameters": [
-          {
-            "name": "localization_session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Localization Session Id"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "array",
-                "items": {
-                  "type": "string",
-                  "format": "uuid",
-                  "x-schema-name": "load_localization_maps_body_application_json_item",
-                  "nullable": false
-                },
-                "description": "IDs of localization maps to load"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_sessions/{localization_session_id}/maps/{map_id}": {
-      "delete": {
-        "tags": [
-          "localization_sessions"
-        ],
-        "summary": "Unload Map",
-        "operationId": "unload_map",
-        "parameters": [
-          {
-            "name": "localization_session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Localization Session Id"
-            }
-          },
-          {
-            "name": "map_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Map Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/localization_sessions/{localization_session_id}/maps/{map_id}/status": {
-      "get": {
-        "tags": [
-          "localization_sessions"
-        ],
-        "summary": "Get Map Load Status",
-        "operationId": "get_map_load_status",
-        "parameters": [
-          {
-            "name": "localization_session_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Localization Session Id"
-            }
-          },
-          {
-            "name": "map_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Map Id"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LoadStateResponse"
                 }
               }
             }
@@ -2344,6 +2120,39 @@
       },
       "Body_localize_image": {
         "properties": {
+          "map_ids": {
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "type": "array",
+            "title": "Map Ids"
+          },
+          "prior": {
+            "$ref": "#/components/schemas/Transform"
+          },
+          "camera": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PinholeCameraConfig"
+              },
+              {
+                "$ref": "#/components/schemas/OpenCVCameraConfig"
+              },
+              {
+                "$ref": "#/components/schemas/FullOpenCVCameraConfig"
+              }
+            ],
+            "title": "Camera",
+            "discriminator": {
+              "propertyName": "model",
+              "mapping": {
+                "FULL_OPENCV": "#/components/schemas/FullOpenCVCameraConfig",
+                "OPENCV": "#/components/schemas/OpenCVCameraConfig",
+                "PINHOLE": "#/components/schemas/PinholeCameraConfig"
+              }
+            }
+          },
           "image": {
             "type": "string",
             "format": "binary",
@@ -2352,6 +2161,9 @@
         },
         "type": "object",
         "required": [
+          "map_ids",
+          "prior",
+          "camera",
           "image"
         ],
         "title": "Body_localize_image"
@@ -2884,47 +2696,6 @@
           "name"
         ],
         "title": "LayerRead"
-      },
-      "LoadState": {
-        "type": "string",
-        "enum": [
-          "pending",
-          "loading",
-          "ready",
-          "failed"
-        ],
-        "title": "LoadState",
-        "description": "LoadState"
-      },
-      "LoadStateResponse": {
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/LoadState"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
-          },
-          "additional_properties": {
-            "additionalProperties": true,
-            "type": "object",
-            "title": "Additional Properties",
-            "default": {}
-          }
-        },
-        "type": "object",
-        "required": [
-          "status"
-        ],
-        "title": "LoadStateResponse",
-        "description": "LoadStateResponse"
       },
       "LocalizationMapBatchUpdate": {
         "properties": {

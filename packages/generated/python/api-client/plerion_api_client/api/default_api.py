@@ -33,7 +33,6 @@ from plerion_api_client.models.group_read import GroupRead
 from plerion_api_client.models.layer_batch_update import LayerBatchUpdate
 from plerion_api_client.models.layer_create import LayerCreate
 from plerion_api_client.models.layer_read import LayerRead
-from plerion_api_client.models.load_state_response import LoadStateResponse
 from plerion_api_client.models.localization_map_batch_update import LocalizationMapBatchUpdate
 from plerion_api_client.models.localization_map_create import LocalizationMapCreate
 from plerion_api_client.models.localization_map_read import LocalizationMapRead
@@ -46,6 +45,7 @@ from plerion_api_client.models.node_read import NodeRead
 from plerion_api_client.models.reconstruction_create_with_options import ReconstructionCreateWithOptions
 from plerion_api_client.models.reconstruction_manifest import ReconstructionManifest
 from plerion_api_client.models.reconstruction_read import ReconstructionRead
+from plerion_api_client.models.transform import Transform
 
 from plerion_api_client.api_client import ApiClient, RequestSerialized
 from plerion_api_client.api_response import ApiResponse
@@ -2257,7 +2257,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2324,7 +2324,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2391,7 +2391,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2517,7 +2517,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2584,7 +2584,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2651,7 +2651,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2780,7 +2780,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2847,7 +2847,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2914,7 +2914,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3043,7 +3043,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3110,7 +3110,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3177,7 +3177,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3303,7 +3303,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3370,7 +3370,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3437,7 +3437,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3566,7 +3566,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3633,7 +3633,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3700,7 +3700,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3826,7 +3826,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3893,7 +3893,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -3960,7 +3960,7 @@ class DefaultApi:
 
 
         :param ids: List of Ids to delete (required)
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4089,7 +4089,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4156,7 +4156,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4223,7 +4223,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4349,7 +4349,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4416,7 +4416,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4483,7 +4483,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4610,7 +4610,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4677,7 +4677,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4744,7 +4744,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4865,12 +4865,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> List[str]:
+    ) -> List[UUID]:
         """Get Capture Session Reconstructions
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4902,7 +4902,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[str]",
+            '200': "List[UUID]",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -4932,12 +4932,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[List[str]]:
+    ) -> ApiResponse[List[UUID]]:
         """Get Capture Session Reconstructions
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -4969,7 +4969,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[str]",
+            '200': "List[UUID]",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -5004,7 +5004,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5036,7 +5036,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[str]",
+            '200': "List[UUID]",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -5130,7 +5130,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5197,7 +5197,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5264,7 +5264,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5390,7 +5390,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5457,7 +5457,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5524,7 +5524,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5653,7 +5653,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5720,7 +5720,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5787,7 +5787,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5916,7 +5916,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -5983,7 +5983,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6050,7 +6050,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6179,7 +6179,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6246,7 +6246,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6313,7 +6313,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6440,9 +6440,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param reconstruction_ids: Optional list of Reconstruction Ids to filter by
-        :type reconstruction_ids: List[str]
+        :type reconstruction_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6511,9 +6511,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param reconstruction_ids: Optional list of Reconstruction Ids to filter by
-        :type reconstruction_ids: List[str]
+        :type reconstruction_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6582,9 +6582,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param reconstruction_ids: Optional list of Reconstruction Ids to filter by
-        :type reconstruction_ids: List[str]
+        :type reconstruction_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6720,7 +6720,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6787,7 +6787,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6854,7 +6854,7 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -6960,281 +6960,6 @@ class DefaultApi:
 
 
     @validate_call
-    async def get_map_load_status(
-        self,
-        localization_session_id: UUID,
-        map_id: UUID,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> LoadStateResponse:
-        """Get Map Load Status
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param map_id: (required)
-        :type map_id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._get_map_load_status_serialize(
-            localization_session_id=localization_session_id,
-            map_id=map_id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LoadStateResponse",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-
-    @validate_call
-    async def get_map_load_status_with_http_info(
-        self,
-        localization_session_id: UUID,
-        map_id: UUID,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[LoadStateResponse]:
-        """Get Map Load Status
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param map_id: (required)
-        :type map_id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._get_map_load_status_serialize(
-            localization_session_id=localization_session_id,
-            map_id=map_id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LoadStateResponse",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-
-    @validate_call
-    async def get_map_load_status_without_preload_content(
-        self,
-        localization_session_id: UUID,
-        map_id: UUID,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Get Map Load Status
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param map_id: (required)
-        :type map_id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._get_map_load_status_serialize(
-            localization_session_id=localization_session_id,
-            map_id=map_id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LoadStateResponse",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        return response_data.response
-
-
-    def _get_map_load_status_serialize(
-        self,
-        localization_session_id,
-        map_id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: Dict[str, str] = {
-        }
-
-        _path_params: Dict[str, str] = {}
-        _query_params: List[Tuple[str, str]] = []
-        _header_params: Dict[str, Optional[str]] = _headers or {}
-        _form_params: List[Tuple[str, str]] = []
-        _files: Dict[
-            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
-        ] = {}
-        _body_params: Optional[bytes] = None
-
-        # process the path parameters
-        if localization_session_id is not None:
-            _path_params['localization_session_id'] = localization_session_id
-        if map_id is not None:
-            _path_params['map_id'] = map_id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-
-        # set the HTTP header `Accept`
-        if 'Accept' not in _header_params:
-            _header_params['Accept'] = self.api_client.select_header_accept(
-                [
-                    'application/json'
-                ]
-            )
-
-
-        # authentication setting
-        _auth_settings: List[str] = [
-        ]
-
-        return self.api_client.param_serialize(
-            method='GET',
-            resource_path='/localization_sessions/{localization_session_id}/maps/{map_id}/status',
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth
-        )
-
-
-
-
-    @validate_call
     async def get_nodes(
         self,
         ids: Annotated[Optional[List[UUID]], Field(description="Optional list of Ids to filter by")] = None,
@@ -7255,7 +6980,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7322,7 +7047,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7389,7 +7114,7 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7518,7 +7243,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7585,7 +7310,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7652,7 +7377,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -7779,7 +7504,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -7850,7 +7575,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -7921,7 +7646,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8051,12 +7776,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> UUID:
         """Get Reconstruction Localization Map
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8088,7 +7813,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "UUID",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -8118,12 +7843,12 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[UUID]:
         """Get Reconstruction Localization Map
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8155,7 +7880,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "UUID",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -8190,7 +7915,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8222,7 +7947,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "UUID",
             '422': "HTTPValidationError",
         }
         response_data = await self.api_client.call_api(
@@ -8316,7 +8041,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8383,7 +8108,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8450,7 +8175,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8577,7 +8302,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8648,7 +8373,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8719,7 +8444,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
@@ -8854,7 +8579,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8921,7 +8646,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -8988,7 +8713,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9116,9 +8841,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param capture_session_id: Optional capture session Id to filter by
-        :type capture_session_id: str
+        :type capture_session_id: UUID
         :param capture_session_name: Optional capture session name to filter by
         :type capture_session_name: str
         :param _request_timeout: timeout setting for this request. If one
@@ -9191,9 +8916,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param capture_session_id: Optional capture session Id to filter by
-        :type capture_session_id: str
+        :type capture_session_id: UUID
         :param capture_session_name: Optional capture session name to filter by
         :type capture_session_name: str
         :param _request_timeout: timeout setting for this request. If one
@@ -9266,9 +8991,9 @@ class DefaultApi:
 
 
         :param ids: Optional list of Ids to filter by
-        :type ids: List[str]
+        :type ids: List[UUID]
         :param capture_session_id: Optional capture session Id to filter by
-        :type capture_session_id: str
+        :type capture_session_id: UUID
         :param capture_session_name: Optional capture session name to filter by
         :type capture_session_name: str
         :param _request_timeout: timeout setting for this request. If one
@@ -9391,299 +9116,13 @@ class DefaultApi:
 
 
     @validate_call
-    async def load_localization_maps(
-        self,
-        localization_session_id: UUID,
-        request_body: List[UUID],
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Load Localization Maps
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param request_body: (required)
-        :type request_body: List[str]
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._load_localization_maps_serialize(
-            localization_session_id=localization_session_id,
-            request_body=request_body,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-
-    @validate_call
-    async def load_localization_maps_with_http_info(
-        self,
-        localization_session_id: UUID,
-        request_body: List[UUID],
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Load Localization Maps
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param request_body: (required)
-        :type request_body: List[str]
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._load_localization_maps_serialize(
-            localization_session_id=localization_session_id,
-            request_body=request_body,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-
-    @validate_call
-    async def load_localization_maps_without_preload_content(
-        self,
-        localization_session_id: UUID,
-        request_body: List[UUID],
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Load Localization Maps
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param request_body: (required)
-        :type request_body: List[str]
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._load_localization_maps_serialize(
-            localization_session_id=localization_session_id,
-            request_body=request_body,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        return response_data.response
-
-
-    def _load_localization_maps_serialize(
-        self,
-        localization_session_id,
-        request_body,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: Dict[str, str] = {
-            'request_body': '',
-        }
-
-        _path_params: Dict[str, str] = {}
-        _query_params: List[Tuple[str, str]] = []
-        _header_params: Dict[str, Optional[str]] = _headers or {}
-        _form_params: List[Tuple[str, str]] = []
-        _files: Dict[
-            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
-        ] = {}
-        _body_params: Optional[bytes] = None
-
-        # process the path parameters
-        if localization_session_id is not None:
-            _path_params['localization_session_id'] = localization_session_id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if request_body is not None:
-            _body_params = request_body
-
-
-        # set the HTTP header `Accept`
-        if 'Accept' not in _header_params:
-            _header_params['Accept'] = self.api_client.select_header_accept(
-                [
-                    'application/json'
-                ]
-            )
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
-
-        # authentication setting
-        _auth_settings: List[str] = [
-        ]
-
-        return self.api_client.param_serialize(
-            method='POST',
-            resource_path='/localization_sessions/{localization_session_id}/maps',
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth
-        )
-
-
-
-
-    @validate_call
     async def localize_image(
         self,
         localization_session_id: UUID,
         axis_convention: AxisConvention,
+        map_ids: List[UUID],
+        prior: Transform,
+        camera: Camera,
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9702,9 +9141,15 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
+        :param map_ids: (required)
+        :type map_ids: List[UUID]
+        :param prior: (required)
+        :type prior: Transform
+        :param camera: (required)
+        :type camera: Camera
         :param image: (required)
         :type image: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -9732,6 +9177,9 @@ class DefaultApi:
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
             axis_convention=axis_convention,
+            map_ids=map_ids,
+            prior=prior,
+            camera=camera,
             image=image,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -9759,6 +9207,9 @@ class DefaultApi:
         self,
         localization_session_id: UUID,
         axis_convention: AxisConvention,
+        map_ids: List[UUID],
+        prior: Transform,
+        camera: Camera,
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9777,9 +9228,15 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
+        :param map_ids: (required)
+        :type map_ids: List[UUID]
+        :param prior: (required)
+        :type prior: Transform
+        :param camera: (required)
+        :type camera: Camera
         :param image: (required)
         :type image: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -9807,6 +9264,9 @@ class DefaultApi:
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
             axis_convention=axis_convention,
+            map_ids=map_ids,
+            prior=prior,
+            camera=camera,
             image=image,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -9834,6 +9294,9 @@ class DefaultApi:
         self,
         localization_session_id: UUID,
         axis_convention: AxisConvention,
+        map_ids: List[UUID],
+        prior: Transform,
+        camera: Camera,
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9852,9 +9315,15 @@ class DefaultApi:
 
 
         :param localization_session_id: (required)
-        :type localization_session_id: str
+        :type localization_session_id: UUID
         :param axis_convention: (required)
         :type axis_convention: AxisConvention
+        :param map_ids: (required)
+        :type map_ids: List[UUID]
+        :param prior: (required)
+        :type prior: Transform
+        :param camera: (required)
+        :type camera: Camera
         :param image: (required)
         :type image: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -9882,6 +9351,9 @@ class DefaultApi:
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
             axis_convention=axis_convention,
+            map_ids=map_ids,
+            prior=prior,
+            camera=camera,
             image=image,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -9904,6 +9376,9 @@ class DefaultApi:
         self,
         localization_session_id,
         axis_convention,
+        map_ids,
+        prior,
+        camera,
         image,
         _request_auth,
         _content_type,
@@ -9914,6 +9389,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
+            'map_ids': 'csv',
         }
 
         _path_params: Dict[str, str] = {}
@@ -9935,6 +9411,12 @@ class DefaultApi:
             
         # process the header parameters
         # process the form parameters
+        if map_ids is not None:
+            _form_params.append(('map_ids', map_ids))
+        if prior is not None:
+            _form_params.append(('prior', prior))
+        if camera is not None:
+            _form_params.append(('camera', camera))
         if image is not None:
             _files['image'] = image
         # process the body parameter
@@ -9985,569 +9467,6 @@ class DefaultApi:
 
 
     @validate_call
-    async def set_localization_session_camera_intrinsics(
-        self,
-        localization_session_id: UUID,
-        camera: Camera,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Set Localization Session Camera Intrinsics
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param camera: (required)
-        :type camera: Camera
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._set_localization_session_camera_intrinsics_serialize(
-            localization_session_id=localization_session_id,
-            camera=camera,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-
-    @validate_call
-    async def set_localization_session_camera_intrinsics_with_http_info(
-        self,
-        localization_session_id: UUID,
-        camera: Camera,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Set Localization Session Camera Intrinsics
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param camera: (required)
-        :type camera: Camera
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._set_localization_session_camera_intrinsics_serialize(
-            localization_session_id=localization_session_id,
-            camera=camera,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-
-    @validate_call
-    async def set_localization_session_camera_intrinsics_without_preload_content(
-        self,
-        localization_session_id: UUID,
-        camera: Camera,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Set Localization Session Camera Intrinsics
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param camera: (required)
-        :type camera: Camera
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._set_localization_session_camera_intrinsics_serialize(
-            localization_session_id=localization_session_id,
-            camera=camera,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        return response_data.response
-
-
-    def _set_localization_session_camera_intrinsics_serialize(
-        self,
-        localization_session_id,
-        camera,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: Dict[str, str] = {
-        }
-
-        _path_params: Dict[str, str] = {}
-        _query_params: List[Tuple[str, str]] = []
-        _header_params: Dict[str, Optional[str]] = _headers or {}
-        _form_params: List[Tuple[str, str]] = []
-        _files: Dict[
-            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
-        ] = {}
-        _body_params: Optional[bytes] = None
-
-        # process the path parameters
-        if localization_session_id is not None:
-            _path_params['localization_session_id'] = localization_session_id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-        if camera is not None:
-            _body_params = camera
-
-
-        # set the HTTP header `Accept`
-        if 'Accept' not in _header_params:
-            _header_params['Accept'] = self.api_client.select_header_accept(
-                [
-                    'application/json'
-                ]
-            )
-
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
-
-        # authentication setting
-        _auth_settings: List[str] = [
-        ]
-
-        return self.api_client.param_serialize(
-            method='PUT',
-            resource_path='/localization_sessions/{localization_session_id}/camera',
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth
-        )
-
-
-
-
-    @validate_call
-    async def unload_map(
-        self,
-        localization_session_id: UUID,
-        map_id: UUID,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Unload Map
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param map_id: (required)
-        :type map_id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._unload_map_serialize(
-            localization_session_id=localization_session_id,
-            map_id=map_id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        ).data
-
-
-    @validate_call
-    async def unload_map_with_http_info(
-        self,
-        localization_session_id: UUID,
-        map_id: UUID,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Unload Map
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param map_id: (required)
-        :type map_id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._unload_map_serialize(
-            localization_session_id=localization_session_id,
-            map_id=map_id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        await response_data.read()
-        return self.api_client.response_deserialize(
-            response_data=response_data,
-            response_types_map=_response_types_map,
-        )
-
-
-    @validate_call
-    async def unload_map_without_preload_content(
-        self,
-        localization_session_id: UUID,
-        map_id: UUID,
-        _request_timeout: Union[
-            None,
-            Annotated[StrictFloat, Field(gt=0)],
-            Tuple[
-                Annotated[StrictFloat, Field(gt=0)],
-                Annotated[StrictFloat, Field(gt=0)]
-            ]
-        ] = None,
-        _request_auth: Optional[Dict[StrictStr, Any]] = None,
-        _content_type: Optional[StrictStr] = None,
-        _headers: Optional[Dict[StrictStr, Any]] = None,
-        _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> RESTResponseType:
-        """Unload Map
-
-
-        :param localization_session_id: (required)
-        :type localization_session_id: str
-        :param map_id: (required)
-        :type map_id: str
-        :param _request_timeout: timeout setting for this request. If one
-                                 number provided, it will be total request
-                                 timeout. It can also be a pair (tuple) of
-                                 (connection, read) timeouts.
-        :type _request_timeout: int, tuple(int, int), optional
-        :param _request_auth: set to override the auth_settings for an a single
-                              request; this effectively ignores the
-                              authentication in the spec for a single request.
-        :type _request_auth: dict, optional
-        :param _content_type: force content-type for the request.
-        :type _content_type: str, Optional
-        :param _headers: set to override the headers for a single
-                         request; this effectively ignores the headers
-                         in the spec for a single request.
-        :type _headers: dict, optional
-        :param _host_index: set to override the host_index for a single
-                            request; this effectively ignores the host_index
-                            in the spec for a single request.
-        :type _host_index: int, optional
-        :return: Returns the result object.
-        """ # noqa: E501
-
-        _param = self._unload_map_serialize(
-            localization_session_id=localization_session_id,
-            map_id=map_id,
-            _request_auth=_request_auth,
-            _content_type=_content_type,
-            _headers=_headers,
-            _host_index=_host_index
-        )
-
-        _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
-        }
-        response_data = await self.api_client.call_api(
-            *_param,
-            _request_timeout=_request_timeout
-        )
-        return response_data.response
-
-
-    def _unload_map_serialize(
-        self,
-        localization_session_id,
-        map_id,
-        _request_auth,
-        _content_type,
-        _headers,
-        _host_index,
-    ) -> RequestSerialized:
-
-        _host = None
-
-        _collection_formats: Dict[str, str] = {
-        }
-
-        _path_params: Dict[str, str] = {}
-        _query_params: List[Tuple[str, str]] = []
-        _header_params: Dict[str, Optional[str]] = _headers or {}
-        _form_params: List[Tuple[str, str]] = []
-        _files: Dict[
-            str, Union[str, bytes, List[str], List[bytes], List[Tuple[str, bytes]]]
-        ] = {}
-        _body_params: Optional[bytes] = None
-
-        # process the path parameters
-        if localization_session_id is not None:
-            _path_params['localization_session_id'] = localization_session_id
-        if map_id is not None:
-            _path_params['map_id'] = map_id
-        # process the query parameters
-        # process the header parameters
-        # process the form parameters
-        # process the body parameter
-
-
-        # set the HTTP header `Accept`
-        if 'Accept' not in _header_params:
-            _header_params['Accept'] = self.api_client.select_header_accept(
-                [
-                    'application/json'
-                ]
-            )
-
-
-        # authentication setting
-        _auth_settings: List[str] = [
-        ]
-
-        return self.api_client.param_serialize(
-            method='DELETE',
-            resource_path='/localization_sessions/{localization_session_id}/maps/{map_id}',
-            path_params=_path_params,
-            query_params=_query_params,
-            header_params=_header_params,
-            body=_body_params,
-            post_params=_form_params,
-            files=_files,
-            auth_settings=_auth_settings,
-            collection_formats=_collection_formats,
-            _host=_host,
-            _request_auth=_request_auth
-        )
-
-
-
-
-    @validate_call
     async def update_capture_session(
         self,
         id: UUID,
@@ -10569,7 +9488,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param capture_session_update: (required)
         :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -10640,7 +9559,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param capture_session_update: (required)
         :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -10711,7 +9630,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param capture_session_update: (required)
         :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -11730,7 +10649,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param localization_map_update: (required)
         :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -11801,7 +10720,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param localization_map_update: (required)
         :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -11872,7 +10791,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param localization_map_update: (required)
         :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
@@ -12600,7 +11519,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param tar: (required)
         :type tar: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -12671,7 +11590,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param tar: (required)
         :type tar: bytearray
         :param _request_timeout: timeout setting for this request. If one
@@ -12742,7 +11661,7 @@ class DefaultApi:
 
 
         :param id: (required)
-        :type id: str
+        :type id: UUID
         :param tar: (required)
         :type tar: bytearray
         :param _request_timeout: timeout setting for this request. If one
