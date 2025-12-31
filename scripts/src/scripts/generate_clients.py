@@ -8,6 +8,7 @@ from tempfile import NamedTemporaryFile
 from common.run_command import run_command
 from typer import Option, run
 
+REPO_ROOT = Path(__file__).parents[3]
 OPENAPI_GENERATOR_PATH = Path(__file__).parents[2] / "openapi-generator"
 TEMPLATES_PATH = OPENAPI_GENERATOR_PATH / "templates"
 TEMPLATE_PATCHES_PATH = OPENAPI_GENERATOR_PATH / "template-patches"
@@ -62,18 +63,15 @@ def _dump_openapi_spec(project: Path, no_cache: bool) -> str | None:
 def _generate_templates():
     (OPENAPI_GENERATOR_PATH / "templates" / "csharp").mkdir(parents=True, exist_ok=True)
 
-    # run_command(
-    #     f"uv run --no_workspace openapi-generator-cli author template -g csharp --library httpclient -o {str(OPENAPI_GENERATOR_PATH / 'templates' / 'csharp')}",
-    #     log=True,
-    # )
+    run_command(
+        f"uv run --no_workspace openapi-generator-cli author template -g csharp --library httpclient -o {str(OPENAPI_GENERATOR_PATH / 'templates' / 'csharp')}",
+        log=True,
+    )
 
-    print(TEMPLATE_PATCHES_PATH)
-
+    # git apply directory is always relative to the repo root
+    templates_path_relative = TEMPLATES_PATH.resolve().relative_to(REPO_ROOT.resolve())
     for patch_file in (TEMPLATE_PATCHES_PATH / "csharp").iterdir():
-        print(f"Applying C# template patch: {patch_file.name}")
-        run_command(
-            f"git apply {str(patch_file)} --directory {str(TEMPLATES_PATH)}", log=True, cwd=OPENAPI_GENERATOR_PATH
-        )
+        run_command(f"git apply {str(patch_file)} --directory {str(templates_path_relative)}", log=True)
 
 
 def _generate_client(openapi_spec: str, project: str, client: str):

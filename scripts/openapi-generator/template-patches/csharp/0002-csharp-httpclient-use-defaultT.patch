@@ -1,8 +1,8 @@
 # Fix issue with target-typed `default` in generic error paths by using `default(T)` for broader C# language version compatibility.
-diff --git a/templates/csharp/libraries/httpclient/ApiClient.mustache b/../mustache-templates/libraries/httpclient/ApiClient.mustache
+diff --git a/csharp/libraries/httpclient/ApiClient.mustache b/csharp/libraries/httpclient/ApiClient.mustache
 index fb521d0..9db72d9 100644
---- a/templates/csharp/libraries/httpclient/ApiClient.mustache
-+++ b/../mustache-templates/libraries/httpclient/ApiClient.mustache
+--- a/csharp/libraries/httpclient/ApiClient.mustache
++++ b/csharp/libraries/httpclient/ApiClient.mustache
 @@ -555,7 +555,7 @@ namespace {{packageName}}.Client
  
                  if (!response.IsSuccessStatusCode)

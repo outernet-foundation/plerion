@@ -555,7 +555,7 @@ namespace {{packageName}}.Client
 
                 if (!response.IsSuccessStatusCode)
                 {
-                    return await ToApiResponse<T>(response, default, req.RequestUri).ConfigureAwait(false);
+                    return await ToApiResponse<T>(response, default(T), req.RequestUri).ConfigureAwait(false);
                 }
 
                 object responseData = await deserializer.Deserialize<T>(response).ConfigureAwait(false);
