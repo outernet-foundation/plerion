@@ -9,10 +9,18 @@ Handles the following 3.1.0 -> 3.0.3 conversions:
 5. Removes `examples` (3.1.0) and converts to `example` (3.0.3) if needed
 """
 
-from typing import Any
+from __future__ import annotations
+
+from typing import TypeAlias
+
+# JSON-compatible types for OpenAPI schema
+JsonPrimitive: TypeAlias = str | int | float | bool | None
+JsonValue: TypeAlias = "JsonPrimitive | JsonDict | JsonList"
+JsonDict: TypeAlias = dict[str, "JsonValue"]
+JsonList: TypeAlias = list["JsonValue"]
 
 
-def convert_openapi_3_1_to_3_0(schema: Any) -> Any:
+def convert_openapi_3_1_to_3_0(schema: JsonDict) -> JsonDict:
     """
     Convert an OpenAPI 3.1.0 schema to 3.0.3 compatible format.
     Modifies the schema in-place and returns it.
@@ -24,7 +32,7 @@ def convert_openapi_3_1_to_3_0(schema: Any) -> Any:
         The modified schema (same object, modified in place)
     """
     # Update version
-    if isinstance(schema, dict) and schema.get("openapi") == "3.1.0":
+    if schema.get("openapi") == "3.1.0":
         schema["openapi"] = "3.0.3"
 
     # Recursively process the schema
@@ -33,7 +41,7 @@ def convert_openapi_3_1_to_3_0(schema: Any) -> Any:
     return schema
 
 
-def _process_node(node: Any) -> None:
+def _process_node(node: JsonValue) -> None:
     """Recursively process a node in the schema."""
     if isinstance(node, dict):
         _convert_dict_node(node)
@@ -45,12 +53,13 @@ def _process_node(node: Any) -> None:
             _process_node(item)
 
 
-def _convert_dict_node(node: dict) -> None:
+def _convert_dict_node(node: JsonDict) -> None:
     """Convert a single dict node from 3.1.0 to 3.0.3 format."""
 
     # Handle type arrays: `type: ["null", "string"]` -> `type: "string", nullable: true`
-    if "type" in node and isinstance(node["type"], list):
-        types = node["type"]
+    type_value = node.get("type")
+    if isinstance(type_value, list):
+        types: list[str] = [t for t in type_value if isinstance(t, str)]
         has_null = "null" in types
         non_null_types = [t for t in types if t != "null"]
 
@@ -61,9 +70,9 @@ def _convert_dict_node(node: dict) -> None:
                 node["nullable"] = True
         elif len(non_null_types) > 1:
             # Multiple non-null types - convert to anyOf
-            any_of_items = []
+            any_of_items: JsonList = []
             for t in non_null_types:
-                item = {"type": t}
+                item: JsonDict = {"type": t}
                 # Array types require items in 3.0.3
                 if t == "array":
                     item["items"] = {}
@@ -83,10 +92,15 @@ def _convert_dict_node(node: dict) -> None:
 
     # Handle oneOf/anyOf with {"type": "null"}
     for key in ["oneOf", "anyOf"]:
-        if key in node and isinstance(node[key], list):
-            items = node[key]
-            null_items = [item for item in items if isinstance(item, dict) and item.get("type") == "null"]
-            non_null_items = [item for item in items if not (isinstance(item, dict) and item.get("type") == "null")]
+        key_value = node.get(key)
+        if isinstance(key_value, list):
+            items = key_value
+            null_items: list[JsonDict] = [
+                item for item in items if isinstance(item, dict) and item.get("type") == "null"
+            ]
+            non_null_items: list[JsonDict] = [
+                item for item in items if isinstance(item, dict) and item.get("type") != "null"
+            ]
 
             if null_items:
                 # Has null option - set nullable and remove null from oneOf/anyOf
@@ -106,20 +120,17 @@ def _convert_dict_node(node: dict) -> None:
                             node[k] = v
                 else:
                     # Multiple non-null items - keep oneOf/anyOf without null
-                    node[key] = non_null_items
+                    node[key] = list(non_null_items)
 
     # Convert `examples` (3.1.0) to `example` (3.0.3)
-    if "examples" in node and isinstance(node["examples"], list) and len(node["examples"]) > 0:
+    examples_value = node.get("examples")
+    if isinstance(examples_value, list) and len(examples_value) > 0:
         # In schema context, examples array should become a single example
         # But only if we're in a schema context (not in response/requestBody examples)
         # We can detect schema context by checking if there's no "value" key in examples items
-        examples = node["examples"]
-        if (
-            examples
-            and not isinstance(examples[0], dict)
-            or (isinstance(examples[0], dict) and "value" not in examples[0])
-        ):
-            node["example"] = examples[0]
+        first_example = examples_value[0]
+        if not isinstance(first_example, dict) or "value" not in first_example:
+            node["example"] = first_example
             del node["examples"]
 
     # Handle const (3.1.0) -> enum with single value (3.0.3)
@@ -129,12 +140,14 @@ def _convert_dict_node(node: dict) -> None:
 
     # Handle exclusiveMinimum/exclusiveMaximum changes
     # In 3.1.0 these are numbers, in 3.0.3 they are booleans with separate minimum/maximum
-    if "exclusiveMinimum" in node and isinstance(node["exclusiveMinimum"], (int, float)):
-        node["minimum"] = node["exclusiveMinimum"]
+    exclusive_min = node.get("exclusiveMinimum")
+    if isinstance(exclusive_min, (int, float)):
+        node["minimum"] = exclusive_min
         node["exclusiveMinimum"] = True
 
-    if "exclusiveMaximum" in node and isinstance(node["exclusiveMaximum"], (int, float)):
-        node["maximum"] = node["exclusiveMaximum"]
+    exclusive_max = node.get("exclusiveMaximum")
+    if isinstance(exclusive_max, (int, float)):
+        node["maximum"] = exclusive_max
         node["exclusiveMaximum"] = True
 
     # Remove 3.1.0-only properties that aren't supported in 3.0.3
@@ -147,16 +160,17 @@ def _convert_dict_node(node: dict) -> None:
 if __name__ == "__main__":
     import json
     import sys
+    from typing import cast
 
     if len(sys.argv) < 2:
-        print("Usage: python convert_openapi_3_1_to_3_0.py <input.json> [output.json]")
-        sys.exit(1)
+        print("Usage: python fix_openapi_schema.py <input.json> [output.json]")
+        raise SystemExit(1)
 
     input_file = sys.argv[1]
     output_file = sys.argv[2] if len(sys.argv) > 2 else None
 
     with open(input_file, "r") as f:
-        schema = json.load(f)
+        schema = cast(JsonDict, json.load(f))
 
     converted = convert_openapi_3_1_to_3_0(schema)
 
@@ -164,7 +178,7 @@ if __name__ == "__main__":
 
     if output_file:
         with open(output_file, "w") as f:
-            f.write(output)
+            _ = f.write(output)
         print(f"Converted schema written to {output_file}")
     else:
         print(output)
