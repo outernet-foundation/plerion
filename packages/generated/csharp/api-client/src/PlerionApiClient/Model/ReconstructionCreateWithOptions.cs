@@ -78,7 +78,7 @@ namespace PlerionApiClient.Model
         /// <summary>
         /// Gets or Sets Options
         /// </summary>
-        [DataMember(Name = "options", EmitDefaultValue = true)]
+        [DataMember(Name = "options", EmitDefaultValue = false)]
         public ReconstructionOptions Options
         {
             get{ return _Options;}

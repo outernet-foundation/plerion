@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from io import BytesIO
 from struct import pack
-from typing import Annotated, Optional
+from typing import Annotated, Optional, cast
 from uuid import UUID
 
 from common.boto_clients import create_s3_client
@@ -24,7 +24,7 @@ from datamodels.public_tables import CaptureSession, LocalizationMap, Reconstruc
 from litestar import Router, delete, get, post
 from litestar.di import Provide
 from litestar.exceptions import HTTPException, NotFoundException
-from litestar.params import Parameter
+from litestar.params import KwargDefinition, Parameter
 from litestar.response import Stream
 from numpy import ascontiguousarray, float32, load, uint8
 from pydantic import BaseModel, Field
@@ -203,12 +203,12 @@ async def get_reconstruction_status(session: AsyncSession, id: UUID) -> Reconstr
     return await fetch_reconstruction_status(id, session)
 
 
-@get("/{id:uuid}/points")
+@get("/{id:uuid}/points", media_type="application/octet-stream")
 async def get_reconstruction_points(
     session: AsyncSession,
     id: UUID,
     axis_convention: Annotated[AxisConvention, Parameter(description="List of Ids to delete")],
-) -> Stream:
+) -> Annotated[bytes, KwargDefinition(format="binary")]:
     row = await session.get(Reconstruction, id)
     if not row:
         raise NotFoundException(f"Reconstruction with id {id} not found")
@@ -228,24 +228,27 @@ async def get_reconstruction_points(
         point_cloud_positions = change_basis_unity_from_opencv_points(point_cloud_positions)
 
     # Serialize and return point cloud as binary stream
-    return Stream(
-        BytesIO(
-            (
-                pack("<I", int(point_cloud_positions.shape[0]))
-                + ascontiguousarray(point_cloud_positions, dtype=float32).astype("<f4", copy=False).tobytes()
-                + ascontiguousarray(point_cloud_colors, dtype=uint8).tobytes()
-            )
+    return cast(
+        bytes,
+        Stream(
+            BytesIO(
+                (
+                    pack("<I", int(point_cloud_positions.shape[0]))
+                    + ascontiguousarray(point_cloud_positions, dtype=float32).astype("<f4", copy=False).tobytes()
+                    + ascontiguousarray(point_cloud_colors, dtype=uint8).tobytes()
+                )
+            ),
+            media_type="application/octet-stream",
         ),
-        media_type="application/octet-stream",
     )
 
 
-@get("/{id:uuid}/frame_poses")
+@get("/{id:uuid}/frame_poses", media_type="application/octet-stream")
 async def get_reconstruction_frame_poses(
     session: AsyncSession,
     id: UUID,
     axis_convention: Annotated[AxisConvention, Parameter(description="Axis convention for returned poses")],
-) -> Stream:
+) -> Annotated[bytes, KwargDefinition(format="binary")]:
     row = await session.get(Reconstruction, id)
     if not row:
         raise NotFoundException(f"Reconstruction with id {id} not found")
@@ -265,13 +268,16 @@ async def get_reconstruction_frame_poses(
         frame_positions, frame_orientations = change_basis_unity_from_opencv_poses(frame_positions, frame_orientations)
 
     # Serialize and return frame poses as binary stream
-    return Stream(
-        BytesIO(
-            pack("<I", int(frame_positions.shape[0]))
-            + ascontiguousarray(frame_positions, dtype=float32).astype("<f4", copy=False).tobytes()
-            + ascontiguousarray(frame_orientations, dtype=float32).astype("<f4", copy=False).tobytes()
+    return cast(
+        bytes,
+        Stream(
+            BytesIO(
+                pack("<I", int(frame_positions.shape[0]))
+                + ascontiguousarray(frame_positions, dtype=float32).astype("<f4", copy=False).tobytes()
+                + ascontiguousarray(frame_orientations, dtype=float32).astype("<f4", copy=False).tobytes()
+            ),
+            media_type="application/octet-stream",
         ),
-        media_type="application/octet-stream",
     )
 
 

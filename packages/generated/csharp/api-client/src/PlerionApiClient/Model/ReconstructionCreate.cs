@@ -36,7 +36,7 @@ namespace PlerionApiClient.Model
         /// Gets or Sets OrchestrationStatus
         /// </summary>
 
-        [DataMember(Name = "orchestration_status", EmitDefaultValue = true)]
+        [DataMember(Name = "orchestration_status", EmitDefaultValue = false)]
         public OrchestrationStatus? OrchestrationStatus
         {
             get{ return _OrchestrationStatus;}

@@ -3,9 +3,9 @@ from pathlib import Path
 from shutil import rmtree
 from tempfile import NamedTemporaryFile
 
-from common.fix_openapi_schema import fix_inline_schemas, rewrite_nullable_to_union
+from common.fix_openapi_schema import convert_openapi_3_1_to_3_0
 from common.run_command import run_command
-from typer import Option, run
+from typer import Option, Typer
 
 REPO_ROOT = Path(__file__).parents[3]
 OPENAPI_GENERATOR_PATH = Path(__file__).parents[2] / "openapi-generator"
@@ -46,8 +46,7 @@ def _dump_openapi_spec(project: Path, no_cache: bool) -> str | None:
 
     openapi_spec = run_command("uv run --project . --no_workspace python -m src.dump_openapi", cwd=project)
     openapi_json = json.loads(openapi_spec)
-    fix_inline_schemas(openapi_json)
-    rewrite_nullable_to_union(openapi_json)
+    convert_openapi_3_1_to_3_0(openapi_json)
     openapi_spec = json.dumps(openapi_json, indent=2)
 
     spec_path = project / "openapi.json"
@@ -168,8 +167,12 @@ def _generate_client(openapi_spec: str, project: str, client: str):
         run_command(f"uv pip install {client_path.resolve().as_posix()}", log=True)
 
 
+app = Typer(pretty_exceptions_show_locals=False)
+app.command()(cli)
+
+
 def main():
-    run(cli)
+    app()
 
 
 if __name__ == "__main__":

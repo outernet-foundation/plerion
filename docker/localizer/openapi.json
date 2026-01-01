@@ -1,5 +1,5 @@
 {
-  "openapi": "3.1.0",
+  "openapi": "3.0.3",
   "info": {
     "title": "Localize",
     "version": "0.1.0"
@@ -350,8 +350,10 @@
           },
           "model": {
             "type": "string",
-            "const": "FULL_OPENCV",
-            "title": "Model"
+            "title": "Model",
+            "enum": [
+              "FULL_OPENCV"
+            ]
           },
           "fx": {
             "type": "number",
@@ -452,15 +454,9 @@
             "$ref": "#/components/schemas/LoadState"
           },
           "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Error"
+            "title": "Error",
+            "nullable": true,
+            "type": "string"
           }
         },
         "type": "object",
@@ -535,8 +531,10 @@
           },
           "model": {
             "type": "string",
-            "const": "OPENCV",
-            "title": "Model"
+            "title": "Model",
+            "enum": [
+              "OPENCV"
+            ]
           },
           "fx": {
             "type": "number",
@@ -619,8 +617,10 @@
           },
           "model": {
             "type": "string",
-            "const": "PINHOLE",
-            "title": "Model"
+            "title": "Model",
+            "enum": [
+              "PINHOLE"
+            ]
           },
           "fx": {
             "type": "number",

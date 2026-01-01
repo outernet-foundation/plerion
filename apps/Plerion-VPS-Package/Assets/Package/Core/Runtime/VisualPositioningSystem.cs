@@ -9,7 +9,8 @@ using PlerionApiClient.Client;
 using PlerionApiClient.Model;
 using Unity.Mathematics;
 using UnityEngine;
-using Camera = PlerionApiClient.Model.Camera;
+
+// using Camera = PlerionApiClient.Model.Camera;
 
 namespace Plerion.Core
 {
@@ -281,7 +282,10 @@ namespace Plerion.Core
                 }
             );
 
-            await api.SetLocalizationSessionCameraIntrinsicsAsync(localizationSessionId, new Camera(cameraConfig));
+            await api.SetLocalizationSessionCameraIntrinsicsAsync(
+                localizationSessionId,
+                new SetLocalizationSessionCameraIntrinsicsCameraParameter(cameraConfig)
+            );
 
             _localizingState = SystemState.Running;
         }

@@ -1,187 +1,170 @@
-# Vibe coded using gpt5
-
 """
-Purpose: work around an OpenAPI codegen gotcha. FastAPI/Pydantic emits implicit
-schema titles and `anyOf[*, null]`. Many generators (incl. OpenAPI Generator C#)
-reuse inline schemas by (title-derived) name and singularize array titles
-(e.g., "Ids" → "Id"). Depending on traversal order, this can collide with other
-"Id" schemas (some nullable) and leak into array element types—producing
-`List<Guid?>` where `List<Guid>` is expected.
+Convert OpenAPI 3.1.0 schema to OpenAPI 3.0.3 compatible format.
 
-Fix (conceptual): make inline array items uniquely named and non-nullable, and
-eliminate fragile titles/nullable unions so codegen can’t alias them.
-
-This pass:
-- assigns a stable `x-schema-name` to every inline array item
-  (`{operationId}_{where}_item`);
-- strips `title` from arrays/items;
-- rewrites `anyOf[*, null]` to `nullable: true` on the non-null branch;
-- defaults array **item** `nullable` to `False`.
-
-It runs over parameters, request bodies, and responses, and uses small TypeGuard
-helpers so strict type checkers don’t flag “Unknown” while walking the JSON.
+Handles the following 3.1.0 -> 3.0.3 conversions:
+1. Type arrays like `type: ["null", "string"]` -> `type: "string", nullable: true`
+2. `oneOf` with `{"type": "null"}` -> removes null option and adds `nullable: true`
+3. `anyOf` with `{"type": "null"}` -> same treatment
+4. Changes version from 3.1.0 to 3.0.3
+5. Removes `examples` (3.1.0) and converts to `example` (3.0.3) if needed
 """
 
-from typing import Any, Dict, List, MutableMapping, TypeAlias, TypeGuard, cast
-
-JSON: TypeAlias = Dict[str, Any]
-
-# ---------- Type guards & accessors ----------
+from typing import Any
 
 
-def is_json_dict(v: object) -> TypeGuard[JSON]:
-    return isinstance(v, dict)
+def convert_openapi_3_1_to_3_0(schema: Any) -> Any:
+    """
+    Convert an OpenAPI 3.1.0 schema to 3.0.3 compatible format.
+    Modifies the schema in-place and returns it.
+
+    Args:
+        schema: The parsed OpenAPI JSON schema (as a dict)
+
+    Returns:
+        The modified schema (same object, modified in place)
+    """
+    # Update version
+    if isinstance(schema, dict) and schema.get("openapi") == "3.1.0":
+        schema["openapi"] = "3.0.3"
+
+    # Recursively process the schema
+    _process_node(schema)
+
+    return schema
 
 
-def is_json_dict_list(v: object) -> TypeGuard[List[JSON]]:
-    if not isinstance(v, list):
-        return False
-    xs = cast(List[object], v)  # <— anchor element type; avoids list[Unknown]
-    for e in xs:
-        if not isinstance(e, dict):
-            return False
-    return True
-
-
-def get_json(d: JSON, key: str) -> JSON | None:
-    v = d.get(key)
-    return v if is_json_dict(v) else None
-
-
-def get_json_list(d: JSON, key: str) -> List[JSON] | None:
-    v = d.get(key)
-    return v if is_json_dict_list(v) else None
-
-
-# ---------- Schema helpers ----------
-
-
-def _collapse_anyof_null(s: JSON) -> None:
-    anyof_obj = s.get("anyOf")
-    if not isinstance(anyof_obj, list):
-        return
-    anyof_list = cast(List[object], anyof_obj)  # <— anchor element type
-
-    if len(anyof_list) != 2:
-        return
-
-    has_null = False
-    non_null_dict: JSON | None = None
-    for b_obj in anyof_list:
-        if is_json_dict(b_obj):
-            if b_obj.get("type") == "null":
-                has_null = True
-            else:
-                non_null_dict = b_obj
-
-    if not has_null or not is_json_dict(non_null_dict):
-        return
-
-    s.clear()
-    s.update(non_null_dict)
-    s["nullable"] = True
-
-
-def _name_array_items(op_id: str, where: str, s: JSON) -> None:
-    _collapse_anyof_null(s)
-    if s.get("type") != "array":
-        return
-
-    s.pop("title", None)
-
-    items_obj = s.get("items")
-    if is_json_dict(items_obj):
-        items: JSON = items_obj
-        items.pop("title", None)
-    else:
-        items = {}
-
-    _collapse_anyof_null(items)
-    items.setdefault("x-schema-name", f"{op_id}_{where}_item")
-    items.setdefault("nullable", False)
-
-    s["items"] = items
-
-
-def _fix_media_schema(op_id: str, where: str, media: JSON) -> None:
-    sch = get_json(media, "schema")
-    if not sch:
-        return
-    _name_array_items(op_id, where, sch)
-    media["schema"] = sch
-
-
-def fix_inline_schemas(spec: JSON) -> None:
-    paths = get_json(spec, "paths")
-    if not paths:
-        return
-
-    for path, ops in paths.items():
-        if not is_json_dict(ops):
-            continue
-
-        for method, op in ops.items():
-            if not is_json_dict(op):
-                continue
-
-            op_id = str(op.get("operationId") or f"{method}_{str(path).replace('/', '_')}")
-
-            params = get_json_list(op, "parameters")
-            if params:
-                for p in params:
-                    sch = get_json(p, "schema")
-                    if not sch:
-                        continue
-                    where = f"param_{str(p.get('name', '_'))}"
-                    _name_array_items(op_id, where, sch)
-                    p["schema"] = sch
-
-            rb = get_json(op, "requestBody")
-            if rb:
-                content = get_json(rb, "content")
-                if content:
-                    for ctype, media in content.items():
-                        if is_json_dict(media):
-                            where = f"body_{str(ctype).replace('/', '_')}"
-                            _fix_media_schema(op_id, where, media)
-
-            resps = get_json(op, "responses")
-            if not resps:
-                continue
-            for code, resp in resps.items():
-                if not is_json_dict(resp):
-                    continue
-                content = get_json(resp, "content")
-                if not content:
-                    continue
-                for ctype, media in content.items():
-                    if is_json_dict(media):
-                        where = f"resp_{code}_{str(ctype).replace('/', '_')}"
-                        _fix_media_schema(op_id, where, media)
-
-
-# Normalize FastAPI’s OpenAPI 3.1 output for nullable UUIDs.
-# FastAPI may emit a 3.1 document that still uses the 3.0.x-style `"nullable": true`
-# on top-level primitive responses (e.g., {"type":"string","format":"uuid","nullable":true}).
-# Some C# generators ignore that flag under 3.1 and generate non-nullable Guid.
-# This helper recursively rewrites only those string+uuid nodes to the 3.1/JSON-Schema form:
-# {"type": ["string", "null"], "format": "uuid"}.
-# Call from custom_openapi() after get_openapi(...). It mutates the schema in place.
-def rewrite_nullable_to_union(node: Any) -> None:
+def _process_node(node: Any) -> None:
+    """Recursively process a node in the schema."""
     if isinstance(node, dict):
-        m: MutableMapping[str, Any] = cast(MutableMapping[str, Any], node)
-        t: Any = m.get("type")
-        fmt: Any = m.get("format")
-        nullable: Any = m.get("nullable")
-
-        if fmt == "uuid" and t == "string" and nullable is True:
-            m.pop("nullable", None)
-            m["type"] = ["string", "null"]
-
-        for v in list(m.values()):
-            rewrite_nullable_to_union(v)
-
+        _convert_dict_node(node)
+        # Recurse into all values
+        for value in node.values():
+            _process_node(value)
     elif isinstance(node, list):
-        arr: List[Any] = cast(List[Any], node)
-        for v in arr:
-            rewrite_nullable_to_union(v)
+        for item in node:
+            _process_node(item)
+
+
+def _convert_dict_node(node: dict) -> None:
+    """Convert a single dict node from 3.1.0 to 3.0.3 format."""
+
+    # Handle type arrays: `type: ["null", "string"]` -> `type: "string", nullable: true`
+    if "type" in node and isinstance(node["type"], list):
+        types = node["type"]
+        has_null = "null" in types
+        non_null_types = [t for t in types if t != "null"]
+
+        if len(non_null_types) == 1:
+            # Single non-null type
+            node["type"] = non_null_types[0]
+            if has_null:
+                node["nullable"] = True
+        elif len(non_null_types) > 1:
+            # Multiple non-null types - convert to anyOf
+            any_of_items = []
+            for t in non_null_types:
+                item = {"type": t}
+                # Array types require items in 3.0.3
+                if t == "array":
+                    item["items"] = {}
+                any_of_items.append(item)
+            del node["type"]
+            node["anyOf"] = any_of_items
+            if has_null:
+                node["nullable"] = True
+        elif has_null and len(non_null_types) == 0:
+            # Only null type - use object as fallback
+            node["type"] = "object"
+            node["nullable"] = True
+
+    # Ensure array types have items (required in 3.0.3)
+    if node.get("type") == "array" and "items" not in node:
+        node["items"] = {}
+
+    # Handle oneOf/anyOf with {"type": "null"}
+    for key in ["oneOf", "anyOf"]:
+        if key in node and isinstance(node[key], list):
+            items = node[key]
+            null_items = [item for item in items if isinstance(item, dict) and item.get("type") == "null"]
+            non_null_items = [item for item in items if not (isinstance(item, dict) and item.get("type") == "null")]
+
+            if null_items:
+                # Has null option - set nullable and remove null from oneOf/anyOf
+                node["nullable"] = True
+
+                if len(non_null_items) == 0:
+                    # Only had null - remove oneOf/anyOf entirely, set as nullable object
+                    del node[key]
+                    if "type" not in node:
+                        node["type"] = "object"
+                elif len(non_null_items) == 1:
+                    # Single non-null item - inline it and remove oneOf/anyOf
+                    del node[key]
+                    single_item = non_null_items[0]
+                    for k, v in single_item.items():
+                        if k not in node:  # Don't overwrite nullable we just set
+                            node[k] = v
+                else:
+                    # Multiple non-null items - keep oneOf/anyOf without null
+                    node[key] = non_null_items
+
+    # Convert `examples` (3.1.0) to `example` (3.0.3)
+    if "examples" in node and isinstance(node["examples"], list) and len(node["examples"]) > 0:
+        # In schema context, examples array should become a single example
+        # But only if we're in a schema context (not in response/requestBody examples)
+        # We can detect schema context by checking if there's no "value" key in examples items
+        examples = node["examples"]
+        if (
+            examples
+            and not isinstance(examples[0], dict)
+            or (isinstance(examples[0], dict) and "value" not in examples[0])
+        ):
+            node["example"] = examples[0]
+            del node["examples"]
+
+    # Handle const (3.1.0) -> enum with single value (3.0.3)
+    if "const" in node:
+        node["enum"] = [node["const"]]
+        del node["const"]
+
+    # Handle exclusiveMinimum/exclusiveMaximum changes
+    # In 3.1.0 these are numbers, in 3.0.3 they are booleans with separate minimum/maximum
+    if "exclusiveMinimum" in node and isinstance(node["exclusiveMinimum"], (int, float)):
+        node["minimum"] = node["exclusiveMinimum"]
+        node["exclusiveMinimum"] = True
+
+    if "exclusiveMaximum" in node and isinstance(node["exclusiveMaximum"], (int, float)):
+        node["maximum"] = node["exclusiveMaximum"]
+        node["exclusiveMaximum"] = True
+
+    # Remove 3.1.0-only properties that aren't supported in 3.0.3
+    unsupported_keys = ["contentMediaType", "contentEncoding", "$comment"]
+    for key in unsupported_keys:
+        if key in node:
+            del node[key]
+
+
+if __name__ == "__main__":
+    import json
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Usage: python convert_openapi_3_1_to_3_0.py <input.json> [output.json]")
+        sys.exit(1)
+
+    input_file = sys.argv[1]
+    output_file = sys.argv[2] if len(sys.argv) > 2 else None
+
+    with open(input_file, "r") as f:
+        schema = json.load(f)
+
+    converted = convert_openapi_3_1_to_3_0(schema)
+
+    output = json.dumps(converted, indent=2)
+
+    if output_file:
+        with open(output_file, "w") as f:
+            f.write(output)
+        print(f"Converted schema written to {output_file}")
+    else:
+        print(output)

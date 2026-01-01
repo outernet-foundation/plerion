@@ -27,46 +27,43 @@ using System.Reflection;
 namespace PlerionApiClient.Model
 {
     /// <summary>
-    /// Camera
+    /// GetCaptureSessions400ResponseExtra
     /// </summary>
-    [JsonConverter(typeof(CameraJsonConverter))]
-    [DataContract(Name = "Camera")]
-    public partial class Camera : AbstractOpenAPISchema
+    [JsonConverter(typeof(GetCaptureSessions400ResponseExtraJsonConverter))]
+    [DataContract(Name = "get_capture_sessions_400_response_extra")]
+    public partial class GetCaptureSessions400ResponseExtra : AbstractOpenAPISchema
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="Camera" /> class
-        /// with the <see cref="PinholeCameraConfig" /> class
+        /// Initializes a new instance of the <see cref="GetCaptureSessions400ResponseExtra" /> class.
         /// </summary>
-        /// <param name="actualInstance">An instance of PinholeCameraConfig.</param>
-        public Camera(PinholeCameraConfig actualInstance)
+        public GetCaptureSessions400ResponseExtra()
         {
-            IsNullable = false;
+            IsNullable = true;
             SchemaType= "anyOf";
-            ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Camera" /> class
-        /// with the <see cref="OpenCVCameraConfig" /> class
+        /// Initializes a new instance of the <see cref="GetCaptureSessions400ResponseExtra" /> class
+        /// with the <see cref="Object" /> class
         /// </summary>
-        /// <param name="actualInstance">An instance of OpenCVCameraConfig.</param>
-        public Camera(OpenCVCameraConfig actualInstance)
+        /// <param name="actualInstance">An instance of Object.</param>
+        public GetCaptureSessions400ResponseExtra(Object actualInstance)
         {
-            IsNullable = false;
+            IsNullable = true;
             SchemaType= "anyOf";
-            ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
+            ActualInstance = actualInstance;
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="Camera" /> class
-        /// with the <see cref="FullOpenCVCameraConfig" /> class
+        /// Initializes a new instance of the <see cref="GetCaptureSessions400ResponseExtra" /> class
+        /// with the <see cref="List{Object}" /> class
         /// </summary>
-        /// <param name="actualInstance">An instance of FullOpenCVCameraConfig.</param>
-        public Camera(FullOpenCVCameraConfig actualInstance)
+        /// <param name="actualInstance">An instance of List&lt;Object&gt;.</param>
+        public GetCaptureSessions400ResponseExtra(List<Object> actualInstance)
         {
-            IsNullable = false;
+            IsNullable = true;
             SchemaType= "anyOf";
-            ActualInstance = actualInstance ?? throw new ArgumentException("Invalid instance found. Must not be null.");
+            ActualInstance = actualInstance;
         }
 
 
@@ -83,53 +80,39 @@ namespace PlerionApiClient.Model
             }
             set
             {
-                if (value.GetType() == typeof(FullOpenCVCameraConfig))
+                if (value.GetType() == typeof(List<Object>))
                 {
                     _actualInstance = value;
                 }
-                else if (value.GetType() == typeof(OpenCVCameraConfig))
-                {
-                    _actualInstance = value;
-                }
-                else if (value.GetType() == typeof(PinholeCameraConfig))
+                else if (value.GetType() == typeof(Object))
                 {
                     _actualInstance = value;
                 }
                 else
                 {
-                    throw new ArgumentException("Invalid instance found. Must be the following types: FullOpenCVCameraConfig, OpenCVCameraConfig, PinholeCameraConfig");
+                    throw new ArgumentException("Invalid instance found. Must be the following types: List<Object>, Object");
                 }
             }
         }
 
         /// <summary>
-        /// Get the actual instance of `PinholeCameraConfig`. If the actual instance is not `PinholeCameraConfig`,
+        /// Get the actual instance of `Object`. If the actual instance is not `Object`,
         /// the InvalidClassException will be thrown
         /// </summary>
-        /// <returns>An instance of PinholeCameraConfig</returns>
-        public PinholeCameraConfig GetPinholeCameraConfig()
+        /// <returns>An instance of Object</returns>
+        public Object GetObject()
         {
-            return (PinholeCameraConfig)ActualInstance;
+            return (Object)ActualInstance;
         }
 
         /// <summary>
-        /// Get the actual instance of `OpenCVCameraConfig`. If the actual instance is not `OpenCVCameraConfig`,
+        /// Get the actual instance of `List&lt;Object&gt;`. If the actual instance is not `List&lt;Object&gt;`,
         /// the InvalidClassException will be thrown
         /// </summary>
-        /// <returns>An instance of OpenCVCameraConfig</returns>
-        public OpenCVCameraConfig GetOpenCVCameraConfig()
+        /// <returns>An instance of List&lt;Object&gt;</returns>
+        public List<Object> GetList()
         {
-            return (OpenCVCameraConfig)ActualInstance;
-        }
-
-        /// <summary>
-        /// Get the actual instance of `FullOpenCVCameraConfig`. If the actual instance is not `FullOpenCVCameraConfig`,
-        /// the InvalidClassException will be thrown
-        /// </summary>
-        /// <returns>An instance of FullOpenCVCameraConfig</returns>
-        public FullOpenCVCameraConfig GetFullOpenCVCameraConfig()
-        {
-            return (FullOpenCVCameraConfig)ActualInstance;
+            return (List<Object>)ActualInstance;
         }
 
         /// <summary>
@@ -139,7 +122,7 @@ namespace PlerionApiClient.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class Camera {\n");
+            sb.Append("class GetCaptureSessions400ResponseExtra {\n");
             sb.Append("  ActualInstance: ").Append(ActualInstance).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -151,57 +134,45 @@ namespace PlerionApiClient.Model
         /// <returns>JSON string presentation of the object</returns>
         public override string ToJson()
         {
-            return JsonConvert.SerializeObject(ActualInstance, Camera.SerializerSettings);
+            return JsonConvert.SerializeObject(ActualInstance, GetCaptureSessions400ResponseExtra.SerializerSettings);
         }
 
         /// <summary>
-        /// Converts the JSON string into an instance of Camera
+        /// Converts the JSON string into an instance of GetCaptureSessions400ResponseExtra
         /// </summary>
         /// <param name="jsonString">JSON string</param>
-        /// <returns>An instance of Camera</returns>
-        public static Camera FromJson(string jsonString)
+        /// <returns>An instance of GetCaptureSessions400ResponseExtra</returns>
+        public static GetCaptureSessions400ResponseExtra FromJson(string jsonString)
         {
-            Camera newCamera = null;
+            GetCaptureSessions400ResponseExtra newGetCaptureSessions400ResponseExtra = null;
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return newCamera;
+                return newGetCaptureSessions400ResponseExtra;
             }
 
             try
             {
-                newCamera = new Camera(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, Camera.SerializerSettings));
+                newGetCaptureSessions400ResponseExtra = new GetCaptureSessions400ResponseExtra(JsonConvert.DeserializeObject<List<Object>>(jsonString, GetCaptureSessions400ResponseExtra.SerializerSettings));
                 // deserialization is considered successful at this point if no exception has been thrown.
-                return newCamera;
+                return newGetCaptureSessions400ResponseExtra;
             }
             catch (Exception exception)
             {
                 // deserialization failed, try the next one
-                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into FullOpenCVCameraConfig: {1}", jsonString, exception.ToString()));
+                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into List<Object>: {1}", jsonString, exception.ToString()));
             }
 
             try
             {
-                newCamera = new Camera(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, Camera.SerializerSettings));
+                newGetCaptureSessions400ResponseExtra = new GetCaptureSessions400ResponseExtra(JsonConvert.DeserializeObject<Object>(jsonString, GetCaptureSessions400ResponseExtra.SerializerSettings));
                 // deserialization is considered successful at this point if no exception has been thrown.
-                return newCamera;
+                return newGetCaptureSessions400ResponseExtra;
             }
             catch (Exception exception)
             {
                 // deserialization failed, try the next one
-                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into OpenCVCameraConfig: {1}", jsonString, exception.ToString()));
-            }
-
-            try
-            {
-                newCamera = new Camera(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, Camera.SerializerSettings));
-                // deserialization is considered successful at this point if no exception has been thrown.
-                return newCamera;
-            }
-            catch (Exception exception)
-            {
-                // deserialization failed, try the next one
-                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into PinholeCameraConfig: {1}", jsonString, exception.ToString()));
+                System.Diagnostics.Debug.WriteLine(string.Format("Failed to deserialize `{0}` into Object: {1}", jsonString, exception.ToString()));
             }
 
             // no match found, throw an exception
@@ -211,9 +182,9 @@ namespace PlerionApiClient.Model
     }
 
     /// <summary>
-    /// Custom JSON converter for Camera
+    /// Custom JSON converter for GetCaptureSessions400ResponseExtra
     /// </summary>
-    public class CameraJsonConverter : JsonConverter
+    public class GetCaptureSessions400ResponseExtraJsonConverter : JsonConverter
     {
         /// <summary>
         /// To write the JSON string
@@ -223,7 +194,7 @@ namespace PlerionApiClient.Model
         /// <param name="serializer">JSON Serializer</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            writer.WriteRawValue((string)(typeof(Camera).GetMethod("ToJson").Invoke(value, null)));
+            writer.WriteRawValue((string)(typeof(GetCaptureSessions400ResponseExtra).GetMethod("ToJson").Invoke(value, null)));
         }
 
         /// <summary>
@@ -239,9 +210,9 @@ namespace PlerionApiClient.Model
             switch(reader.TokenType) 
             {
                 case JsonToken.StartObject:
-                    return Camera.FromJson(JObject.Load(reader).ToString(Formatting.None));
+                    return GetCaptureSessions400ResponseExtra.FromJson(JObject.Load(reader).ToString(Formatting.None));
                 case JsonToken.StartArray:
-                    return Camera.FromJson(JArray.Load(reader).ToString(Formatting.None));
+                    return GetCaptureSessions400ResponseExtra.FromJson(JArray.Load(reader).ToString(Formatting.None));
                 default:
                     return null;
             }
