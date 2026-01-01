@@ -284,7 +284,7 @@ namespace Plerion.Core
 
             await api.SetLocalizationSessionCameraIntrinsicsAsync(
                 localizationSessionId,
-                new SetLocalizationSessionCameraIntrinsicsCameraParameter(cameraConfig)
+                new CameraConfig(cameraConfig)
             );
 
             _localizingState = SystemState.Running;

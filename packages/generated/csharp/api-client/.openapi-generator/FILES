@@ -24,6 +24,7 @@ src/PlerionApiClient/Client/RetryConfiguration.cs
 src/PlerionApiClient/Client/WebRequestPathBuilder.cs
 src/PlerionApiClient/Model/AbstractOpenAPISchema.cs
 src/PlerionApiClient/Model/AxisConvention.cs
+src/PlerionApiClient/Model/CameraConfig.cs
 src/PlerionApiClient/Model/CaptureSessionBatchUpdate.cs
 src/PlerionApiClient/Model/CaptureSessionCreate.cs
 src/PlerionApiClient/Model/CaptureSessionManifest.cs
@@ -65,6 +66,5 @@ src/PlerionApiClient/Model/ReconstructionRead.cs
 src/PlerionApiClient/Model/RigCameraConfig.cs
 src/PlerionApiClient/Model/RigCameraConfigCameraConfig.cs
 src/PlerionApiClient/Model/RigConfig.cs
-src/PlerionApiClient/Model/SetLocalizationSessionCameraIntrinsicsCameraParameter.cs
 src/PlerionApiClient/Model/Transform.cs
 src/PlerionApiClient/PlerionApiClient.csproj

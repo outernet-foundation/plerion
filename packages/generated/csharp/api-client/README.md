@@ -178,6 +178,7 @@ Class | Method | HTTP request | Description
 ## Documentation for Models
 
  - [Model.AxisConvention](docs/AxisConvention.md)
+ - [Model.CameraConfig](docs/CameraConfig.md)
  - [Model.CaptureSessionBatchUpdate](docs/CaptureSessionBatchUpdate.md)
  - [Model.CaptureSessionCreate](docs/CaptureSessionCreate.md)
  - [Model.CaptureSessionManifest](docs/CaptureSessionManifest.md)
@@ -219,7 +220,6 @@ Class | Method | HTTP request | Description
  - [Model.RigCameraConfig](docs/RigCameraConfig.md)
  - [Model.RigCameraConfigCameraConfig](docs/RigCameraConfigCameraConfig.md)
  - [Model.RigConfig](docs/RigConfig.md)
- - [Model.SetLocalizationSessionCameraIntrinsicsCameraParameter](docs/SetLocalizationSessionCameraIntrinsicsCameraParameter.md)
  - [Model.Transform](docs/Transform.md)
 
 

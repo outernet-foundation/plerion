@@ -13,7 +13,7 @@ from litestar import Router, delete, get, post, put
 from litestar.datastructures import UploadFile
 from litestar.di import Provide
 from litestar.exceptions import NotFoundException
-from litestar.params import Parameter
+from litestar.params import Body, Parameter
 from plerion_localizer_client import ApiClient, Configuration
 from plerion_localizer_client.api.default_api import DefaultApi
 from plerion_localizer_client.models.axis_convention import AxisConvention as LocalizerAxisConvention
@@ -64,9 +64,7 @@ async def delete_localization_session(session: AsyncSession, localization_sessio
 
 @put("/{localization_session_id:uuid}/camera")
 async def set_localization_session_camera_intrinsics(
-    session: AsyncSession,
-    localization_session_id: UUID,
-    camera: Annotated[CameraConfig, Parameter(description="Camera configuration")],
+    session: AsyncSession, localization_session_id: UUID, camera: Annotated[CameraConfig, Body(title="CameraConfig")]
 ) -> None:
     if camera.model != "PINHOLE":
         raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")

@@ -27,18 +27,18 @@ using System.Reflection;
 namespace PlerionApiClient.Model
 {
     /// <summary>
-    /// Camera configuration
+    /// CameraConfig
     /// </summary>
-    [JsonConverter(typeof(SetLocalizationSessionCameraIntrinsicsCameraParameterJsonConverter))]
-    [DataContract(Name = "set_localization_session_camera_intrinsics_camera_parameter")]
-    public partial class SetLocalizationSessionCameraIntrinsicsCameraParameter : AbstractOpenAPISchema
+    [JsonConverter(typeof(CameraConfigJsonConverter))]
+    [DataContract(Name = "CameraConfig")]
+    public partial class CameraConfig : AbstractOpenAPISchema
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="SetLocalizationSessionCameraIntrinsicsCameraParameter" /> class
+        /// Initializes a new instance of the <see cref="CameraConfig" /> class
         /// with the <see cref="PinholeCameraConfig" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of PinholeCameraConfig.</param>
-        public SetLocalizationSessionCameraIntrinsicsCameraParameter(PinholeCameraConfig actualInstance)
+        public CameraConfig(PinholeCameraConfig actualInstance)
         {
             this.IsNullable = false;
             this.SchemaType= "oneOf";
@@ -46,11 +46,11 @@ namespace PlerionApiClient.Model
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SetLocalizationSessionCameraIntrinsicsCameraParameter" /> class
+        /// Initializes a new instance of the <see cref="CameraConfig" /> class
         /// with the <see cref="OpenCVCameraConfig" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of OpenCVCameraConfig.</param>
-        public SetLocalizationSessionCameraIntrinsicsCameraParameter(OpenCVCameraConfig actualInstance)
+        public CameraConfig(OpenCVCameraConfig actualInstance)
         {
             this.IsNullable = false;
             this.SchemaType= "oneOf";
@@ -58,11 +58,11 @@ namespace PlerionApiClient.Model
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SetLocalizationSessionCameraIntrinsicsCameraParameter" /> class
+        /// Initializes a new instance of the <see cref="CameraConfig" /> class
         /// with the <see cref="FullOpenCVCameraConfig" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of FullOpenCVCameraConfig.</param>
-        public SetLocalizationSessionCameraIntrinsicsCameraParameter(FullOpenCVCameraConfig actualInstance)
+        public CameraConfig(FullOpenCVCameraConfig actualInstance)
         {
             this.IsNullable = false;
             this.SchemaType= "oneOf";
@@ -139,7 +139,7 @@ namespace PlerionApiClient.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class SetLocalizationSessionCameraIntrinsicsCameraParameter {\n");
+            sb.Append("class CameraConfig {\n");
             sb.Append("  ActualInstance: ").Append(this.ActualInstance).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -151,21 +151,21 @@ namespace PlerionApiClient.Model
         /// <returns>JSON string presentation of the object</returns>
         public override string ToJson()
         {
-            return JsonConvert.SerializeObject(this.ActualInstance, SetLocalizationSessionCameraIntrinsicsCameraParameter.SerializerSettings);
+            return JsonConvert.SerializeObject(this.ActualInstance, CameraConfig.SerializerSettings);
         }
 
         /// <summary>
-        /// Converts the JSON string into an instance of SetLocalizationSessionCameraIntrinsicsCameraParameter
+        /// Converts the JSON string into an instance of CameraConfig
         /// </summary>
         /// <param name="jsonString">JSON string</param>
-        /// <returns>An instance of SetLocalizationSessionCameraIntrinsicsCameraParameter</returns>
-        public static SetLocalizationSessionCameraIntrinsicsCameraParameter FromJson(string jsonString)
+        /// <returns>An instance of CameraConfig</returns>
+        public static CameraConfig FromJson(string jsonString)
         {
-            SetLocalizationSessionCameraIntrinsicsCameraParameter newSetLocalizationSessionCameraIntrinsicsCameraParameter = null;
+            CameraConfig newCameraConfig = null;
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return newSetLocalizationSessionCameraIntrinsicsCameraParameter;
+                return newCameraConfig;
             }
             int match = 0;
             List<string> matchedTypes = new List<string>();
@@ -175,11 +175,11 @@ namespace PlerionApiClient.Model
                 // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
                 if (typeof(FullOpenCVCameraConfig).GetProperty("AdditionalProperties") == null)
                 {
-                    newSetLocalizationSessionCameraIntrinsicsCameraParameter = new SetLocalizationSessionCameraIntrinsicsCameraParameter(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, SetLocalizationSessionCameraIntrinsicsCameraParameter.SerializerSettings));
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, CameraConfig.SerializerSettings));
                 }
                 else
                 {
-                    newSetLocalizationSessionCameraIntrinsicsCameraParameter = new SetLocalizationSessionCameraIntrinsicsCameraParameter(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, SetLocalizationSessionCameraIntrinsicsCameraParameter.AdditionalPropertiesSerializerSettings));
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<FullOpenCVCameraConfig>(jsonString, CameraConfig.AdditionalPropertiesSerializerSettings));
                 }
                 matchedTypes.Add("FullOpenCVCameraConfig");
                 match++;
@@ -195,11 +195,11 @@ namespace PlerionApiClient.Model
                 // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
                 if (typeof(OpenCVCameraConfig).GetProperty("AdditionalProperties") == null)
                 {
-                    newSetLocalizationSessionCameraIntrinsicsCameraParameter = new SetLocalizationSessionCameraIntrinsicsCameraParameter(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, SetLocalizationSessionCameraIntrinsicsCameraParameter.SerializerSettings));
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, CameraConfig.SerializerSettings));
                 }
                 else
                 {
-                    newSetLocalizationSessionCameraIntrinsicsCameraParameter = new SetLocalizationSessionCameraIntrinsicsCameraParameter(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, SetLocalizationSessionCameraIntrinsicsCameraParameter.AdditionalPropertiesSerializerSettings));
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<OpenCVCameraConfig>(jsonString, CameraConfig.AdditionalPropertiesSerializerSettings));
                 }
                 matchedTypes.Add("OpenCVCameraConfig");
                 match++;
@@ -215,11 +215,11 @@ namespace PlerionApiClient.Model
                 // if it does not contains "AdditionalProperties", use SerializerSettings to deserialize
                 if (typeof(PinholeCameraConfig).GetProperty("AdditionalProperties") == null)
                 {
-                    newSetLocalizationSessionCameraIntrinsicsCameraParameter = new SetLocalizationSessionCameraIntrinsicsCameraParameter(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, SetLocalizationSessionCameraIntrinsicsCameraParameter.SerializerSettings));
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, CameraConfig.SerializerSettings));
                 }
                 else
                 {
-                    newSetLocalizationSessionCameraIntrinsicsCameraParameter = new SetLocalizationSessionCameraIntrinsicsCameraParameter(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, SetLocalizationSessionCameraIntrinsicsCameraParameter.AdditionalPropertiesSerializerSettings));
+                    newCameraConfig = new CameraConfig(JsonConvert.DeserializeObject<PinholeCameraConfig>(jsonString, CameraConfig.AdditionalPropertiesSerializerSettings));
                 }
                 matchedTypes.Add("PinholeCameraConfig");
                 match++;
@@ -240,15 +240,15 @@ namespace PlerionApiClient.Model
             }
 
             // deserialization is considered successful at this point if no exception has been thrown.
-            return newSetLocalizationSessionCameraIntrinsicsCameraParameter;
+            return newCameraConfig;
         }
 
     }
 
     /// <summary>
-    /// Custom JSON converter for SetLocalizationSessionCameraIntrinsicsCameraParameter
+    /// Custom JSON converter for CameraConfig
     /// </summary>
-    public class SetLocalizationSessionCameraIntrinsicsCameraParameterJsonConverter : JsonConverter
+    public class CameraConfigJsonConverter : JsonConverter
     {
         /// <summary>
         /// To write the JSON string
@@ -258,7 +258,7 @@ namespace PlerionApiClient.Model
         /// <param name="serializer">JSON Serializer</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            writer.WriteRawValue((string)(typeof(SetLocalizationSessionCameraIntrinsicsCameraParameter).GetMethod("ToJson").Invoke(value, null)));
+            writer.WriteRawValue((string)(typeof(CameraConfig).GetMethod("ToJson").Invoke(value, null)));
         }
 
         /// <summary>
@@ -274,9 +274,9 @@ namespace PlerionApiClient.Model
             switch(reader.TokenType) 
             {
                 case JsonToken.StartObject:
-                    return SetLocalizationSessionCameraIntrinsicsCameraParameter.FromJson(JObject.Load(reader).ToString(Formatting.None));
+                    return CameraConfig.FromJson(JObject.Load(reader).ToString(Formatting.None));
                 case JsonToken.StartArray:
-                    return SetLocalizationSessionCameraIntrinsicsCameraParameter.FromJson(JArray.Load(reader).ToString(Formatting.None));
+                    return CameraConfig.FromJson(JArray.Load(reader).ToString(Formatting.None));
                 default:
                     return null;
             }

@@ -2348,9 +2348,8 @@
                   "$ref": "#/components/schemas/FullOpenCVCameraConfig"
                 }
               ],
-              "description": "Camera configuration"
+              "title": "CameraConfig"
             },
-            "description": "Camera configuration",
             "required": true,
             "deprecated": false,
             "allowEmptyValue": false,

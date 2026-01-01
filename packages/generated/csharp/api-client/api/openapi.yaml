@@ -1035,13 +1035,12 @@ paths:
       - allowEmptyValue: false
         allowReserved: false
         deprecated: false
-        description: Camera configuration
         explode: true
         in: query
         name: camera
         required: true
         schema:
-          $ref: "#/components/schemas/set_localization_session_camera_intrinsics_camera_parameter"
+          $ref: "#/components/schemas/CameraConfig"
         style: form
       responses:
         "200":
@@ -3477,12 +3476,12 @@ components:
       - detail
       - status_code
       type: object
-    set_localization_session_camera_intrinsics_camera_parameter:
-      description: Camera configuration
+    CameraConfig:
       oneOf:
       - $ref: "#/components/schemas/PinholeCameraConfig"
       - $ref: "#/components/schemas/OpenCVCameraConfig"
       - $ref: "#/components/schemas/FullOpenCVCameraConfig"
+      title: CameraConfig
     RigCameraConfig_camera_config:
       oneOf:
       - $ref: "#/components/schemas/PinholeCameraConfig"
