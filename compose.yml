@@ -144,7 +144,7 @@ services:
       - --import-realm
       - --health-enabled=true
     environment:
-      API_HOSTNAME: ${PUBLIC_URL}
+      PUBLIC_URL: ${PUBLIC_URL}
       KEYCLOAK_ACCESS_TOKEN_LIFESPAN: ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN}
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -204,6 +204,7 @@ services:
       DOCKER_HOST: unix:///var/run/docker.sock
       BACKEND: docker
       TORCH_DEVICE: ${TORCH_DEVICE}
+      PUBLIC_URL: ${PUBLIC_URL}
       AUTH_AUDIENCE: ${AUTH_AUDIENCE}
       AUTH_ISSUER_URL: ${AUTH_ISSUER_URL}
       AUTH_URL: ${AUTH_URL}

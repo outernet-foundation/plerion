@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     backend: Literal["aws", "docker"] = Field()
     torch_device: Literal["cpu", "cuda", "rocm"] = Field()
 
+    public_url: AnyHttpUrl = Field()
     auth_audience: str = Field()
     auth_issuer_url: AnyHttpUrl = Field()
     auth_url: AnyHttpUrl = Field()

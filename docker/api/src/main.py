@@ -7,8 +7,8 @@ from litestar import Litestar, Request, Response, get
 from litestar.exceptions import HTTPException
 from litestar.handlers import HTTPRouteHandler
 from litestar.openapi.config import OpenAPIConfig
-from litestar.openapi.plugins import ScalarRenderPlugin, SwaggerRenderPlugin
-from litestar.openapi.spec import Components, OAuthFlow, OAuthFlows, SecurityScheme
+from litestar.openapi.plugins import ScalarRenderPlugin
+from litestar.openapi.spec import Components, OAuthFlow, OAuthFlows, SecurityScheme, Server
 from litestar.response import Redirect
 from litestar.types import Method
 from litestar.types.internal_types import PathParameterDefinition
@@ -44,9 +44,6 @@ def log_unhandled_exception(request: Request[Any, Any, Any], exc: Exception) -> 
     return Response(content={"detail": "Internal Server Error"}, status_code=500)
 
 
-scalar_plugin = ScalarRenderPlugin(options={"hideRequestButton": False})
-swagger_plugin = SwaggerRenderPlugin()
-
 if environ.get("CODEGEN"):
     openapi_config = OpenAPIConfig("Plerion", "0.1.0", operation_id_creator=use_handler_name)
 else:
@@ -54,7 +51,28 @@ else:
         "Plerion",
         "0.1.0",
         operation_id_creator=use_handler_name,
-        render_plugins=[swagger_plugin],
+        servers=[Server(url=str(settings.public_url))],
+        security=[{"oauth2": ["openid"]}, {"bearerAuth": []}],
+        render_plugins=[
+            ScalarRenderPlugin(
+                options={
+                    "authentication": {
+                        "preferredSecurityScheme": "oauth2",
+                        "securitySchemes": {
+                            "oauth2": {
+                                "flows": {
+                                    "authorizationCode": {
+                                        "x-scalar-client-id": settings.auth_audience,
+                                        "x-usePkce": "SHA-256",
+                                        "selectedScopes": ["openid", "email", "profile"],
+                                    }
+                                }
+                            }
+                        },
+                    }
+                }
+            )
+        ],
         components=Components(
             security_schemes={
                 "oauth2": SecurityScheme(
@@ -75,13 +93,12 @@ else:
                 ),
             }
         ),
-        security=[{"oauth2": ["openid"]}, {"bearerAuth": []}],
     )
 
 
 middleware: list[partial[AuthMiddleware]] = []
 if not environ.get("CODEGEN"):
-    middleware.append(partial(AuthMiddleware, exclude=["/", "/schema/oauth2-redirect", "/schema", "/health"]))
+    middleware.append(partial(AuthMiddleware, exclude=["/", "/schema", "/health"]))
 
 
 @get("/", include_in_schema=False)
