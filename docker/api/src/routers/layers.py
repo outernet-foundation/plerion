@@ -79,7 +79,7 @@ async def update_layers(
 
 
 router = Router(
-    path="/layers",
+    "/layers",
     tags=["Layers"],
     dependencies={"session": Provide(get_session)},
     route_handlers=[create_layer, delete_layers, get_layers, update_layers],

@@ -219,7 +219,7 @@ async def _create_capture(capture: CaptureSessionCreate, overwrite: bool, sessio
 
 
 router = Router(
-    path="/capture_sessions",
+    "/capture_sessions",
     tags=["Capture Sessions"],
     dependencies={"session": Provide(get_session)},
     route_handlers=[

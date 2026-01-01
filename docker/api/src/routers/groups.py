@@ -79,7 +79,7 @@ async def update_groups(
 
 
 router = Router(
-    path="/groups",
+    "/groups",
     tags=["Groups"],
     dependencies={"session": Provide(get_session)},
     route_handlers=[create_group, delete_groups, get_groups, update_groups],

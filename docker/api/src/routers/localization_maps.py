@@ -12,14 +12,16 @@ from datamodels.public_dtos import (
     localization_map_to_dto,
 )
 from datamodels.public_tables import LocalizationMap
-from litestar import delete, get, patch, post
+from litestar import Router, delete, get, patch, post
+from litestar.di import Provide
 from litestar.exceptions import HTTPException, NotFoundException
 from litestar.params import Parameter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..database import get_session
 from ..settings import get_settings
-from .reconstructions import get_reconstruction_status
+from .reconstructions import fetch_reconstruction_status
 
 settings = get_settings()
 
@@ -28,7 +30,7 @@ settings = get_settings()
 async def create_localization_map(
     session: AsyncSession, localization_map: LocalizationMapCreate
 ) -> LocalizationMapRead:
-    reconstruction_status = await get_reconstruction_status(localization_map.reconstruction_id, session)
+    reconstruction_status = await fetch_reconstruction_status(localization_map.reconstruction_id, session)
 
     if reconstruction_status != "succeeded":
         raise HTTPException(
@@ -149,3 +151,19 @@ async def update_localization_maps(
     for row in rows:
         await session.refresh(row)
     return [localization_map_to_dto(r) for r in rows]
+
+
+router = Router(
+    "/localization-maps",
+    tags=["Localization Maps"],
+    dependencies={"session": Provide(get_session)},
+    route_handlers=[
+        create_localization_map,
+        delete_localization_map,
+        delete_localization_maps,
+        get_localization_maps,
+        get_localization_map,
+        update_localization_map,
+        update_localization_maps,
+    ],
+)

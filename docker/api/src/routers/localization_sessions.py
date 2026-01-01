@@ -9,8 +9,9 @@ from core.transform import Float3, Float4, Transform
 from datamodels.public_dtos import LocalizationSessionRead, localization_session_to_dto
 from datamodels.public_tables import LocalizationMap, LocalizationSession
 from fastapi.exceptions import HTTPException
-from litestar import delete, get, post, put
+from litestar import Router, delete, get, post, put
 from litestar.datastructures import UploadFile
+from litestar.di import Provide
 from litestar.exceptions import NotFoundException
 from litestar.params import Parameter
 from plerion_localizer_client import ApiClient, Configuration
@@ -23,6 +24,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..database import get_session
 from ..settings import get_settings
 from .localization_maps import fetch_localization_maps
 
@@ -49,14 +51,13 @@ async def create_localization_session(session: AsyncSession) -> LocalizationSess
 
 
 @delete("/{localization_session_id:uuid}")
-async def delete_localization_session(session: AsyncSession, localization_session_id: UUID):
+async def delete_localization_session(session: AsyncSession, localization_session_id: UUID) -> None:
     row = await session.get(LocalizationSession, localization_session_id)
 
     if row:
         destroy_service(row.container_id)
         await session.delete(row)
         await session.commit()
-        return {"detail": f"Localization session with id {localization_session_id} deleted"}
     else:
         raise NotFoundException(f"Localization session with id {localization_session_id} not found")
 
@@ -66,7 +67,7 @@ async def set_localization_session_camera_intrinsics(
     session: AsyncSession,
     localization_session_id: UUID,
     camera: Annotated[CameraConfig, Parameter(description="Camera configuration")],
-):
+) -> None:
     if camera.model != "PINHOLE":
         raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
 
@@ -90,7 +91,7 @@ async def load_localization_maps(
     session: AsyncSession,
     localization_session_id: UUID,
     map_ids: Annotated[list[UUID], Parameter(description="IDs of localization maps to load")],
-):
+) -> None:
     if map_ids == []:
         raise HTTPException(status_code=400, detail="No map_ids provided")
 
@@ -109,11 +110,9 @@ async def load_localization_maps(
             except Exception as e:
                 raise HTTPException(502, f"session backend unreachable: {e}") from e
 
-    return {"ok": True}
-
 
 @delete("/{localization_session_id:uuid}/maps/{map_id:uuid}")
-async def unload_map(session: AsyncSession, localization_session_id: UUID, map_id: UUID):
+async def unload_map(session: AsyncSession, localization_session_id: UUID, map_id: UUID) -> None:
     map_row = await session.get(LocalizationMap, map_id)
     if not map_row:
         raise HTTPException(status_code=404, detail="Localization map not found")
@@ -125,10 +124,8 @@ async def unload_map(session: AsyncSession, localization_session_id: UUID, map_i
         except Exception as e:
             raise HTTPException(502, f"session backend unreachable: {e}") from e
 
-    return {"ok": True}
 
-
-@get("/{localization_session_id:uuid}/maps/{map_id}/status")
+@get("/{localization_session_id:uuid}/maps/{map_id:uuid}/status")
 async def get_map_load_status(session: AsyncSession, localization_session_id: UUID, map_id: UUID) -> LoadStateResponse:
     map_row = await session.get(LocalizationMap, map_id)
     if not map_row:
@@ -199,3 +196,20 @@ async def _session_base_url(db: AsyncSession, session_id: UUID) -> str:
     if not row:
         raise HTTPException(status_code=404, detail="Localization session not found")
     return row.rstrip("/")  # e.g., "http://localizer-<uuid>:8080"
+
+
+router = Router(
+    "/localization_sessions",
+    tags=["Localization Sessions"],
+    dependencies={"session": Provide(get_session)},
+    route_handlers=[
+        create_localization_session,
+        delete_localization_session,
+        set_localization_session_camera_intrinsics,
+        get_localization_session_status,
+        load_localization_maps,
+        unload_map,
+        get_map_load_status,
+        localize_image,
+    ],
+)

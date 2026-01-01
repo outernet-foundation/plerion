@@ -10,11 +10,14 @@ from datamodels.public_dtos import (
     node_to_dto,
 )
 from datamodels.public_tables import Node
-from litestar import delete, get, patch, post
+from litestar import Router, delete, get, patch, post
+from litestar.di import Provide
 from litestar.exceptions import NotFoundException
 from litestar.params import Parameter
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..database import get_session
 
 
 @post("")
@@ -73,3 +76,11 @@ async def update_nodes(
     for row in rows:
         await session.refresh(row)
     return [node_to_dto(r) for r in rows]
+
+
+router = Router(
+    "/nodes",
+    tags=["Nodes"],
+    dependencies={"session": Provide(get_session)},
+    route_handlers=[create_node, delete_nodes, get_nodes, update_nodes],
+)

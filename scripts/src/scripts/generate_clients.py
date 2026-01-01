@@ -3,6 +3,7 @@ from pathlib import Path
 from shutil import rmtree
 from tempfile import NamedTemporaryFile
 
+from common.fix_openapi_schema import fix_inline_schemas, rewrite_nullable_to_union
 from common.run_command import run_command
 from typer import Option, run
 
@@ -29,6 +30,7 @@ def cli(
             continue
 
         openapi_spec = _dump_openapi_spec(Path(project_name), no_cache)
+
         if openapi_spec is None:
             continue
 
@@ -43,6 +45,10 @@ def _dump_openapi_spec(project: Path, no_cache: bool) -> str | None:
     print(f"Dumping OpenAPI spec for project: {project}")
 
     openapi_spec = run_command("uv run --project . --no_workspace python -m src.dump_openapi", cwd=project)
+    openapi_json = json.loads(openapi_spec)
+    fix_inline_schemas(openapi_json)
+    rewrite_nullable_to_union(openapi_json)
+    openapi_spec = json.dumps(openapi_json, indent=2)
 
     spec_path = project / "openapi.json"
 

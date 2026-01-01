@@ -21,7 +21,8 @@ from datamodels.public_dtos import (
     reconstruction_to_dto,
 )
 from datamodels.public_tables import CaptureSession, LocalizationMap, Reconstruction
-from litestar import delete, get, post
+from litestar import Router, delete, get, post
+from litestar.di import Provide
 from litestar.exceptions import HTTPException, NotFoundException
 from litestar.params import Parameter
 from litestar.response import Stream
@@ -30,6 +31,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..database import get_session
 from ..settings import get_settings
 
 settings = get_settings()
@@ -153,8 +155,7 @@ async def get_reconstruction(session: AsyncSession, id: UUID) -> ReconstructionR
     return reconstruction_to_dto(row)
 
 
-@get("/{id:uuid}/manifest")
-async def get_reconstruction_manifest(session: AsyncSession, id: UUID) -> ReconstructionManifest:
+async def fetch_reconstruction_manifest(session: AsyncSession, id: UUID) -> ReconstructionManifest:
     row = await session.get(Reconstruction, id)
 
     if not row:
@@ -168,6 +169,11 @@ async def get_reconstruction_manifest(session: AsyncSession, id: UUID) -> Recons
         raise HTTPException(500, f"Error retrieving manifest for reconstruction with id {id}: {e}")
 
     return manifest
+
+
+@get("/{id:uuid}/manifest")
+async def get_reconstruction_manifest(session: AsyncSession, id: UUID) -> ReconstructionManifest:
+    return await fetch_reconstruction_manifest(session, id)
 
 
 @get("/{id:uuid}/localization_map")
@@ -187,11 +193,14 @@ async def get_reconstruction_localization_map(session: AsyncSession, id: UUID) -
     return localization_map
 
 
+async def fetch_reconstruction_status(id: UUID, session: AsyncSession) -> ReconstructionStatus:
+    manifest = await fetch_reconstruction_manifest(session, id)
+    return manifest.status
+
+
 @get("/{id:uuid}/status")
 async def get_reconstruction_status(session: AsyncSession, id: UUID) -> ReconstructionStatus:
-    manifest = await get_reconstruction_manifest(id, session)
-
-    return manifest.status
+    return await fetch_reconstruction_status(id, session)
 
 
 @get("/{id:uuid}/points")
@@ -264,3 +273,21 @@ async def get_reconstruction_frame_poses(
         ),
         media_type="application/octet-stream",
     )
+
+
+router = Router(
+    "/reconstructions",
+    tags=["Reconstructions"],
+    dependencies={"session": Provide(get_session)},
+    route_handlers=[
+        create_reconstruction,
+        delete_reconstruction,
+        get_reconstructions,
+        get_reconstruction,
+        get_reconstruction_manifest,
+        get_reconstruction_localization_map,
+        get_reconstruction_status,
+        get_reconstruction_points,
+        get_reconstruction_frame_poses,
+    ],
+)
