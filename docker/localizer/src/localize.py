@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from os import environ
 from typing import Any, cast
 
 from core.axis_convention import AxisConvention, change_basis_unity_from_opencv_pose
@@ -28,6 +29,9 @@ lightglue: Any = None
 
 
 def load_models(max_keypoints: int):
+    if not environ.get("CODEGEN"):
+        return
+
     from neural_networks.models import load_DIR, load_lightglue, load_superpoint
 
     print(f"Using device: {DEVICE}")

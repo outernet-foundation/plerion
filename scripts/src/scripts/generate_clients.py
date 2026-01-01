@@ -111,7 +111,7 @@ def _generate_client(openapi_spec: str, project: str, client: str):
         temp_config_file.flush()
 
         command = (
-            f"uv run --no_workspace openapi-generator-cli generate "
+            f"uv run --frozen --no_workspace openapi-generator-cli generate "
             f"-g {client} "
             f"-i {Path(temp_spec_file.name).resolve().as_posix()} "
             f"-o {client_path.resolve().as_posix()} "
