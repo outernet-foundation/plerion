@@ -1040,7 +1040,7 @@ paths:
         name: camera
         required: true
         schema:
-          $ref: "#/components/schemas/CameraConfig"
+          $ref: "#/components/schemas/PinholeCameraConfig"
         style: form
       responses:
         "200":
@@ -1741,7 +1741,6 @@ components:
               cx: 7.386281948385884
               cy: 1.2315135367772556
               width: 9
-              model: PINHOLE
               height: 3
             rotation:
               w: 5.962133916683182
@@ -1761,7 +1760,6 @@ components:
               cx: 7.386281948385884
               cy: 1.2315135367772556
               width: 9
-              model: PINHOLE
               height: 3
             rotation:
               w: 5.962133916683182
@@ -1783,7 +1781,6 @@ components:
               cx: 7.386281948385884
               cy: 1.2315135367772556
               width: 9
-              model: PINHOLE
               height: 3
             rotation:
               w: 5.962133916683182
@@ -1803,7 +1800,6 @@ components:
               cx: 7.386281948385884
               cy: 1.2315135367772556
               width: 9
-              model: PINHOLE
               height: 3
             rotation:
               w: 5.962133916683182
@@ -1922,70 +1918,6 @@ components:
       - "y"
       - z
       title: Float4
-      type: object
-    FullOpenCVCameraConfig:
-      properties:
-        width:
-          type: integer
-        height:
-          type: integer
-        orientation:
-          enum:
-          - TOP_LEFT
-          - TOP_RIGHT
-          - BOTTOM_RIGHT
-          - BOTTOM_LEFT
-          - LEFT_TOP
-          - RIGHT_TOP
-          - RIGHT_BOTTOM
-          - LEFT_BOTTOM
-          type: string
-        model:
-          enum:
-          - FULL_OPENCV
-          type: string
-        fx:
-          type: number
-        fy:
-          type: number
-        cx:
-          type: number
-        cy:
-          type: number
-        k1:
-          type: number
-        k2:
-          type: number
-        p1:
-          type: number
-        p2:
-          type: number
-        k3:
-          type: number
-        k4:
-          type: number
-        k5:
-          type: number
-        k6:
-          type: number
-      required:
-      - cx
-      - cy
-      - fx
-      - fy
-      - height
-      - k1
-      - k2
-      - k3
-      - k4
-      - k5
-      - k6
-      - model
-      - orientation
-      - p1
-      - p2
-      - width
-      title: FullOpenCVCameraConfig
       type: object
     GroupBatchUpdate:
       properties:
@@ -2791,61 +2723,6 @@ components:
       - updated_at
       title: NodeRead
       type: object
-    OpenCVCameraConfig:
-      properties:
-        width:
-          type: integer
-        height:
-          type: integer
-        orientation:
-          enum:
-          - TOP_LEFT
-          - TOP_RIGHT
-          - BOTTOM_RIGHT
-          - BOTTOM_LEFT
-          - LEFT_TOP
-          - RIGHT_TOP
-          - RIGHT_BOTTOM
-          - LEFT_BOTTOM
-          type: string
-        model:
-          enum:
-          - OPENCV
-          type: string
-        fx:
-          type: number
-        fy:
-          type: number
-        cx:
-          type: number
-        cy:
-          type: number
-        k1:
-          type: number
-        k2:
-          type: number
-        p1:
-          type: number
-        p2:
-          type: number
-        k3:
-          type: number
-      required:
-      - cx
-      - cy
-      - fx
-      - fy
-      - height
-      - k1
-      - k2
-      - k3
-      - model
-      - orientation
-      - p1
-      - p2
-      - width
-      title: OpenCVCameraConfig
-      type: object
     OrchestrationStatus:
       enum:
       - queued
@@ -2864,7 +2741,6 @@ components:
         cx: 7.386281948385884
         cy: 1.2315135367772556
         width: 9
-        model: PINHOLE
         height: 3
       properties:
         width:
@@ -2882,10 +2758,6 @@ components:
           - RIGHT_BOTTOM
           - LEFT_BOTTOM
           type: string
-        model:
-          enum:
-          - PINHOLE
-          type: string
         fx:
           type: number
         fy:
@@ -2900,7 +2772,6 @@ components:
       - fx
       - fy
       - height
-      - model
       - orientation
       - width
       title: PinholeCameraConfig
@@ -3343,7 +3214,6 @@ components:
           cx: 7.386281948385884
           cy: 1.2315135367772556
           width: 9
-          model: PINHOLE
           height: 3
         rotation:
           w: 5.962133916683182
@@ -3360,17 +3230,17 @@ components:
         id:
           type: string
         ref_sensor:
-          nullable: true
           type: boolean
         rotation:
           $ref: "#/components/schemas/Float4"
         translation:
           $ref: "#/components/schemas/Float3"
         camera_config:
-          $ref: "#/components/schemas/RigCameraConfig_camera_config"
+          $ref: "#/components/schemas/PinholeCameraConfig"
       required:
       - camera_config
       - id
+      - ref_sensor
       - rotation
       - translation
       title: RigCameraConfig
@@ -3385,7 +3255,6 @@ components:
             cx: 7.386281948385884
             cy: 1.2315135367772556
             width: 9
-            model: PINHOLE
             height: 3
           rotation:
             w: 5.962133916683182
@@ -3405,7 +3274,6 @@ components:
             cx: 7.386281948385884
             cy: 1.2315135367772556
             width: 9
-            model: PINHOLE
             height: 3
           rotation:
             w: 5.962133916683182
@@ -3476,15 +3344,4 @@ components:
       - detail
       - status_code
       type: object
-    CameraConfig:
-      oneOf:
-      - $ref: "#/components/schemas/PinholeCameraConfig"
-      - $ref: "#/components/schemas/OpenCVCameraConfig"
-      - $ref: "#/components/schemas/FullOpenCVCameraConfig"
-      title: CameraConfig
-    RigCameraConfig_camera_config:
-      oneOf:
-      - $ref: "#/components/schemas/PinholeCameraConfig"
-      - $ref: "#/components/schemas/OpenCVCameraConfig"
-      - $ref: "#/components/schemas/FullOpenCVCameraConfig"
 

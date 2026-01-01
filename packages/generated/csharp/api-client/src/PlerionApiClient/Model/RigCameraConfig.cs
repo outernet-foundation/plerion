@@ -40,11 +40,11 @@ namespace PlerionApiClient.Model
         /// Initializes a new instance of the <see cref="RigCameraConfig" /> class.
         /// </summary>
         /// <param name="id">id (required).</param>
-        /// <param name="refSensor">refSensor.</param>
+        /// <param name="refSensor">refSensor (required).</param>
         /// <param name="rotation">rotation (required).</param>
         /// <param name="translation">translation (required).</param>
         /// <param name="cameraConfig">cameraConfig (required).</param>
-        public RigCameraConfig(string id, Float4 rotation, Float3 translation, RigCameraConfigCameraConfig cameraConfig)
+        public RigCameraConfig(string id, bool refSensor, Float4 rotation, Float3 translation, PinholeCameraConfig cameraConfig)
         {
             // to ensure "id" is required (not null)
             if (id == null)
@@ -52,6 +52,7 @@ namespace PlerionApiClient.Model
                 throw new ArgumentNullException("id is a required property for RigCameraConfig and cannot be null");
             }
             this.Id = id;
+            this.RefSensor = refSensor;
             // to ensure "rotation" is required (not null)
             if (rotation == null)
             {
@@ -95,6 +96,30 @@ namespace PlerionApiClient.Model
         public bool ShouldSerializeId()
         {
             return _flagId;
+        }
+        /// <summary>
+        /// Gets or Sets RefSensor
+        /// </summary>
+        [DataMember(Name = "ref_sensor", IsRequired = true, EmitDefaultValue = true)]
+        public bool RefSensor
+        {
+            get{ return _RefSensor;}
+            set
+            {
+                _RefSensor = value;
+                _flagRefSensor = true;
+            }
+        }
+        private bool _RefSensor;
+        private bool _flagRefSensor;
+
+        /// <summary>
+        /// Returns false as RefSensor should not be serialized given that it's read-only.
+        /// </summary>
+        /// <returns>false (boolean)</returns>
+        public bool ShouldSerializeRefSensor()
+        {
+            return _flagRefSensor;
         }
         /// <summary>
         /// Gets or Sets Rotation
@@ -148,7 +173,7 @@ namespace PlerionApiClient.Model
         /// Gets or Sets CameraConfig
         /// </summary>
         [DataMember(Name = "camera_config", IsRequired = true, EmitDefaultValue = true)]
-        public RigCameraConfigCameraConfig CameraConfig
+        public PinholeCameraConfig CameraConfig
         {
             get{ return _CameraConfig;}
             set
@@ -157,7 +182,7 @@ namespace PlerionApiClient.Model
                 _flagCameraConfig = true;
             }
         }
-        private RigCameraConfigCameraConfig _CameraConfig;
+        private PinholeCameraConfig _CameraConfig;
         private bool _flagCameraConfig;
 
         /// <summary>
@@ -169,30 +194,6 @@ namespace PlerionApiClient.Model
             return _flagCameraConfig;
         }
         /// <summary>
-        /// Gets or Sets RefSensor
-        /// </summary>
-        [DataMember(Name = "ref_sensor", EmitDefaultValue = true)]
-        public bool? RefSensor
-        {
-            get{ return _RefSensor;}
-            set
-            {
-                _RefSensor = value;
-                _flagRefSensor = true;
-            }
-        }
-        private bool? _RefSensor;
-        private bool _flagRefSensor;
-
-        /// <summary>
-        /// Returns false as RefSensor should not be serialized given that it's read-only.
-        /// </summary>
-        /// <returns>false (boolean)</returns>
-        public bool ShouldSerializeRefSensor()
-        {
-            return _flagRefSensor;
-        }
-        /// <summary>
         /// Returns the string presentation of the object
         /// </summary>
         /// <returns>String presentation of the object</returns>
@@ -201,10 +202,10 @@ namespace PlerionApiClient.Model
             StringBuilder sb = new StringBuilder();
             sb.Append("class RigCameraConfig {\n");
             sb.Append("  Id: ").Append(Id).Append("\n");
+            sb.Append("  RefSensor: ").Append(RefSensor).Append("\n");
             sb.Append("  Rotation: ").Append(Rotation).Append("\n");
             sb.Append("  Translation: ").Append(Translation).Append("\n");
             sb.Append("  CameraConfig: ").Append(CameraConfig).Append("\n");
-            sb.Append("  RefSensor: ").Append(RefSensor).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
         }

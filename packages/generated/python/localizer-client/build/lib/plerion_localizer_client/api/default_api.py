@@ -20,9 +20,9 @@ from pydantic import StrictBytes, StrictStr
 from typing import Any, Dict, List, Tuple, Union
 from uuid import UUID
 from plerion_localizer_client.models.axis_convention import AxisConvention
-from plerion_localizer_client.models.camera import Camera
 from plerion_localizer_client.models.load_state_response import LoadStateResponse
 from plerion_localizer_client.models.localization import Localization
+from plerion_localizer_client.models.pinhole_camera_config import PinholeCameraConfig
 
 from plerion_localizer_client.api_client import ApiClient, RequestSerialized
 from plerion_localizer_client.api_response import ApiResponse
@@ -1097,7 +1097,7 @@ class DefaultApi:
     @validate_call
     async def set_camera_intrinsics(
         self,
-        camera: Camera,
+        pinhole_camera_config: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1114,8 +1114,8 @@ class DefaultApi:
         """Set Camera Intrinsics
 
 
-        :param camera: (required)
-        :type camera: Camera
+        :param pinhole_camera_config: (required)
+        :type pinhole_camera_config: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1139,7 +1139,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._set_camera_intrinsics_serialize(
-            camera=camera,
+            pinhole_camera_config=pinhole_camera_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1164,7 +1164,7 @@ class DefaultApi:
     @validate_call
     async def set_camera_intrinsics_with_http_info(
         self,
-        camera: Camera,
+        pinhole_camera_config: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1181,8 +1181,8 @@ class DefaultApi:
         """Set Camera Intrinsics
 
 
-        :param camera: (required)
-        :type camera: Camera
+        :param pinhole_camera_config: (required)
+        :type pinhole_camera_config: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1206,7 +1206,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._set_camera_intrinsics_serialize(
-            camera=camera,
+            pinhole_camera_config=pinhole_camera_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1231,7 +1231,7 @@ class DefaultApi:
     @validate_call
     async def set_camera_intrinsics_without_preload_content(
         self,
-        camera: Camera,
+        pinhole_camera_config: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1248,8 +1248,8 @@ class DefaultApi:
         """Set Camera Intrinsics
 
 
-        :param camera: (required)
-        :type camera: Camera
+        :param pinhole_camera_config: (required)
+        :type pinhole_camera_config: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1273,7 +1273,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._set_camera_intrinsics_serialize(
-            camera=camera,
+            pinhole_camera_config=pinhole_camera_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1293,7 +1293,7 @@ class DefaultApi:
 
     def _set_camera_intrinsics_serialize(
         self,
-        camera,
+        pinhole_camera_config,
         _request_auth,
         _content_type,
         _headers,
@@ -1319,8 +1319,8 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if camera is not None:
-            _body_params = camera
+        if pinhole_camera_config is not None:
+            _body_params = pinhole_camera_config
 
 
         # set the HTTP header `Accept`

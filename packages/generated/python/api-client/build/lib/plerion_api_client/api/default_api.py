@@ -21,7 +21,6 @@ from typing import Any, List, Optional, Tuple, Union
 from typing_extensions import Annotated
 from uuid import UUID
 from plerion_api_client.models.axis_convention import AxisConvention
-from plerion_api_client.models.camera import Camera
 from plerion_api_client.models.capture_session_batch_update import CaptureSessionBatchUpdate
 from plerion_api_client.models.capture_session_create import CaptureSessionCreate
 from plerion_api_client.models.capture_session_manifest import CaptureSessionManifest
@@ -43,6 +42,7 @@ from plerion_api_client.models.map_localization import MapLocalization
 from plerion_api_client.models.node_batch_update import NodeBatchUpdate
 from plerion_api_client.models.node_create import NodeCreate
 from plerion_api_client.models.node_read import NodeRead
+from plerion_api_client.models.pinhole_camera_config import PinholeCameraConfig
 from plerion_api_client.models.reconstruction_create_with_options import ReconstructionCreateWithOptions
 from plerion_api_client.models.reconstruction_manifest import ReconstructionManifest
 from plerion_api_client.models.reconstruction_read import ReconstructionRead
@@ -68,7 +68,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_session(
         self,
-        capture_session_create: CaptureSessionCreate,
+        capture: CaptureSessionCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -82,11 +82,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> CaptureSessionRead:
-        """Create Capture Session
+        """CreateCaptureSession
 
 
-        :param capture_session_create: (required)
-        :type capture_session_create: CaptureSessionCreate
+        :param capture: (required)
+        :type capture: CaptureSessionCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -110,7 +110,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_session_serialize(
-            capture_session_create=capture_session_create,
+            capture=capture,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -118,8 +118,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '201': "CaptureSessionRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -135,7 +135,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_session_with_http_info(
         self,
-        capture_session_create: CaptureSessionCreate,
+        capture: CaptureSessionCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -149,11 +149,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[CaptureSessionRead]:
-        """Create Capture Session
+        """CreateCaptureSession
 
 
-        :param capture_session_create: (required)
-        :type capture_session_create: CaptureSessionCreate
+        :param capture: (required)
+        :type capture: CaptureSessionCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -177,7 +177,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_session_serialize(
-            capture_session_create=capture_session_create,
+            capture=capture,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -185,8 +185,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '201': "CaptureSessionRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -202,7 +202,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_session_without_preload_content(
         self,
-        capture_session_create: CaptureSessionCreate,
+        capture: CaptureSessionCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -216,11 +216,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Capture Session
+        """CreateCaptureSession
 
 
-        :param capture_session_create: (required)
-        :type capture_session_create: CaptureSessionCreate
+        :param capture: (required)
+        :type capture: CaptureSessionCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -244,7 +244,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_session_serialize(
-            capture_session_create=capture_session_create,
+            capture=capture,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -252,8 +252,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '201': "CaptureSessionRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -264,7 +264,7 @@ class DefaultApi:
 
     def _create_capture_session_serialize(
         self,
-        capture_session_create,
+        capture,
         _request_auth,
         _content_type,
         _headers,
@@ -287,11 +287,13 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if capture is not None:
+            
+            _query_params.append(('capture', capture))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if capture_session_create is not None:
-            _body_params = capture_session_create
 
 
         # set the HTTP header `Accept`
@@ -302,19 +304,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -341,7 +330,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_sessions(
         self,
-        capture_session_create: List[CaptureSessionCreate],
+        captures: List[CaptureSessionCreate],
         overwrite: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -356,11 +345,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[CaptureSessionRead]:
-        """Create Capture Sessions
+        """CreateCaptureSessions
 
 
-        :param capture_session_create: (required)
-        :type capture_session_create: List[CaptureSessionCreate]
+        :param captures: (required)
+        :type captures: List[CaptureSessionCreate]
         :param overwrite:
         :type overwrite: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -386,7 +375,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_sessions_serialize(
-            capture_session_create=capture_session_create,
+            captures=captures,
             overwrite=overwrite,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -395,8 +384,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '201': "List[CaptureSessionRead]",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -412,7 +401,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_sessions_with_http_info(
         self,
-        capture_session_create: List[CaptureSessionCreate],
+        captures: List[CaptureSessionCreate],
         overwrite: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -427,11 +416,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[CaptureSessionRead]]:
-        """Create Capture Sessions
+        """CreateCaptureSessions
 
 
-        :param capture_session_create: (required)
-        :type capture_session_create: List[CaptureSessionCreate]
+        :param captures: (required)
+        :type captures: List[CaptureSessionCreate]
         :param overwrite:
         :type overwrite: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -457,7 +446,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_sessions_serialize(
-            capture_session_create=capture_session_create,
+            captures=captures,
             overwrite=overwrite,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -466,8 +455,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '201': "List[CaptureSessionRead]",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -483,7 +472,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_sessions_without_preload_content(
         self,
-        capture_session_create: List[CaptureSessionCreate],
+        captures: List[CaptureSessionCreate],
         overwrite: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -498,11 +487,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Capture Sessions
+        """CreateCaptureSessions
 
 
-        :param capture_session_create: (required)
-        :type capture_session_create: List[CaptureSessionCreate]
+        :param captures: (required)
+        :type captures: List[CaptureSessionCreate]
         :param overwrite:
         :type overwrite: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -528,7 +517,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_sessions_serialize(
-            capture_session_create=capture_session_create,
+            captures=captures,
             overwrite=overwrite,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -537,8 +526,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '201': "List[CaptureSessionRead]",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -549,7 +538,7 @@ class DefaultApi:
 
     def _create_capture_sessions_serialize(
         self,
-        capture_session_create,
+        captures,
         overwrite,
         _request_auth,
         _content_type,
@@ -560,7 +549,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'CaptureSessionCreate': '',
+            'captures': 'multi',
         }
 
         _path_params: Dict[str, str] = {}
@@ -574,6 +563,10 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if captures is not None:
+            
+            _query_params.append(('captures', captures))
+            
         if overwrite is not None:
             
             _query_params.append(('overwrite', overwrite))
@@ -581,8 +574,6 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if capture_session_create is not None:
-            _body_params = capture_session_create
 
 
         # set the HTTP header `Accept`
@@ -593,19 +584,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -632,7 +610,7 @@ class DefaultApi:
     @validate_call
     async def create_group(
         self,
-        group_create: GroupCreate,
+        group: GroupCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -646,11 +624,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> GroupRead:
-        """Create Group
+        """CreateGroup
 
 
-        :param group_create: (required)
-        :type group_create: GroupCreate
+        :param group: (required)
+        :type group: GroupCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -674,7 +652,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_group_serialize(
-            group_create=group_create,
+            group=group,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -682,8 +660,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GroupRead",
-            '422': "HTTPValidationError",
+            '201': "GroupRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -699,7 +677,7 @@ class DefaultApi:
     @validate_call
     async def create_group_with_http_info(
         self,
-        group_create: GroupCreate,
+        group: GroupCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -713,11 +691,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[GroupRead]:
-        """Create Group
+        """CreateGroup
 
 
-        :param group_create: (required)
-        :type group_create: GroupCreate
+        :param group: (required)
+        :type group: GroupCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -741,7 +719,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_group_serialize(
-            group_create=group_create,
+            group=group,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -749,8 +727,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GroupRead",
-            '422': "HTTPValidationError",
+            '201': "GroupRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -766,7 +744,7 @@ class DefaultApi:
     @validate_call
     async def create_group_without_preload_content(
         self,
-        group_create: GroupCreate,
+        group: GroupCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -780,11 +758,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Group
+        """CreateGroup
 
 
-        :param group_create: (required)
-        :type group_create: GroupCreate
+        :param group: (required)
+        :type group: GroupCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -808,7 +786,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_group_serialize(
-            group_create=group_create,
+            group=group,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -816,8 +794,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "GroupRead",
-            '422': "HTTPValidationError",
+            '201': "GroupRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -828,7 +806,7 @@ class DefaultApi:
 
     def _create_group_serialize(
         self,
-        group_create,
+        group,
         _request_auth,
         _content_type,
         _headers,
@@ -851,11 +829,13 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if group is not None:
+            
+            _query_params.append(('group', group))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if group_create is not None:
-            _body_params = group_create
 
 
         # set the HTTP header `Accept`
@@ -866,19 +846,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -905,7 +872,7 @@ class DefaultApi:
     @validate_call
     async def create_layer(
         self,
-        layer_create: LayerCreate,
+        layer: LayerCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -919,11 +886,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> LayerRead:
-        """Create Layer
+        """CreateLayer
 
 
-        :param layer_create: (required)
-        :type layer_create: LayerCreate
+        :param layer: (required)
+        :type layer: LayerCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -947,7 +914,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_layer_serialize(
-            layer_create=layer_create,
+            layer=layer,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -955,8 +922,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LayerRead",
-            '422': "HTTPValidationError",
+            '201': "LayerRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -972,7 +939,7 @@ class DefaultApi:
     @validate_call
     async def create_layer_with_http_info(
         self,
-        layer_create: LayerCreate,
+        layer: LayerCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -986,11 +953,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[LayerRead]:
-        """Create Layer
+        """CreateLayer
 
 
-        :param layer_create: (required)
-        :type layer_create: LayerCreate
+        :param layer: (required)
+        :type layer: LayerCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1014,7 +981,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_layer_serialize(
-            layer_create=layer_create,
+            layer=layer,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1022,8 +989,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LayerRead",
-            '422': "HTTPValidationError",
+            '201': "LayerRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1039,7 +1006,7 @@ class DefaultApi:
     @validate_call
     async def create_layer_without_preload_content(
         self,
-        layer_create: LayerCreate,
+        layer: LayerCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1053,11 +1020,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Layer
+        """CreateLayer
 
 
-        :param layer_create: (required)
-        :type layer_create: LayerCreate
+        :param layer: (required)
+        :type layer: LayerCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1081,7 +1048,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_layer_serialize(
-            layer_create=layer_create,
+            layer=layer,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1089,8 +1056,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LayerRead",
-            '422': "HTTPValidationError",
+            '201': "LayerRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1101,7 +1068,7 @@ class DefaultApi:
 
     def _create_layer_serialize(
         self,
-        layer_create,
+        layer,
         _request_auth,
         _content_type,
         _headers,
@@ -1124,11 +1091,13 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if layer is not None:
+            
+            _query_params.append(('layer', layer))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if layer_create is not None:
-            _body_params = layer_create
 
 
         # set the HTTP header `Accept`
@@ -1139,19 +1108,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -1178,7 +1134,7 @@ class DefaultApi:
     @validate_call
     async def create_localization_map(
         self,
-        localization_map_create: LocalizationMapCreate,
+        localization_map: LocalizationMapCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1192,11 +1148,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> LocalizationMapRead:
-        """Create Localization Map
+        """CreateLocalizationMap
 
 
-        :param localization_map_create: (required)
-        :type localization_map_create: LocalizationMapCreate
+        :param localization_map: (required)
+        :type localization_map: LocalizationMapCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1220,7 +1176,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_localization_map_serialize(
-            localization_map_create=localization_map_create,
+            localization_map=localization_map,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1228,8 +1184,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '201': "LocalizationMapRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1245,7 +1201,7 @@ class DefaultApi:
     @validate_call
     async def create_localization_map_with_http_info(
         self,
-        localization_map_create: LocalizationMapCreate,
+        localization_map: LocalizationMapCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1259,11 +1215,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[LocalizationMapRead]:
-        """Create Localization Map
+        """CreateLocalizationMap
 
 
-        :param localization_map_create: (required)
-        :type localization_map_create: LocalizationMapCreate
+        :param localization_map: (required)
+        :type localization_map: LocalizationMapCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1287,7 +1243,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_localization_map_serialize(
-            localization_map_create=localization_map_create,
+            localization_map=localization_map,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1295,8 +1251,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '201': "LocalizationMapRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1312,7 +1268,7 @@ class DefaultApi:
     @validate_call
     async def create_localization_map_without_preload_content(
         self,
-        localization_map_create: LocalizationMapCreate,
+        localization_map: LocalizationMapCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1326,11 +1282,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Localization Map
+        """CreateLocalizationMap
 
 
-        :param localization_map_create: (required)
-        :type localization_map_create: LocalizationMapCreate
+        :param localization_map: (required)
+        :type localization_map: LocalizationMapCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1354,7 +1310,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_localization_map_serialize(
-            localization_map_create=localization_map_create,
+            localization_map=localization_map,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1362,8 +1318,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '201': "LocalizationMapRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1374,7 +1330,7 @@ class DefaultApi:
 
     def _create_localization_map_serialize(
         self,
-        localization_map_create,
+        localization_map,
         _request_auth,
         _content_type,
         _headers,
@@ -1397,11 +1353,13 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if localization_map is not None:
+            
+            _query_params.append(('localization_map', localization_map))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if localization_map_create is not None:
-            _body_params = localization_map_create
 
 
         # set the HTTP header `Accept`
@@ -1412,19 +1370,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -1432,7 +1377,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='POST',
-            resource_path='/localization_maps',
+            resource_path='/localization-maps',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -1464,7 +1409,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> LocalizationSessionRead:
-        """Create Localization Session
+        """CreateLocalizationSession
 
 
         :param _request_timeout: timeout setting for this request. If one
@@ -1497,7 +1442,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LocalizationSessionRead",
+            '201': "LocalizationSessionRead",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1526,7 +1471,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[LocalizationSessionRead]:
-        """Create Localization Session
+        """CreateLocalizationSession
 
 
         :param _request_timeout: timeout setting for this request. If one
@@ -1559,7 +1504,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LocalizationSessionRead",
+            '201': "LocalizationSessionRead",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1588,7 +1533,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Localization Session
+        """CreateLocalizationSession
 
 
         :param _request_timeout: timeout setting for this request. If one
@@ -1621,7 +1566,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "LocalizationSessionRead",
+            '201': "LocalizationSessionRead",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1693,7 +1638,7 @@ class DefaultApi:
     @validate_call
     async def create_node(
         self,
-        node_create: NodeCreate,
+        node: NodeCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1707,11 +1652,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> NodeRead:
-        """Create Node
+        """CreateNode
 
 
-        :param node_create: (required)
-        :type node_create: NodeCreate
+        :param node: (required)
+        :type node: NodeCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1735,7 +1680,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_node_serialize(
-            node_create=node_create,
+            node=node,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1743,8 +1688,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "NodeRead",
-            '422': "HTTPValidationError",
+            '201': "NodeRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1760,7 +1705,7 @@ class DefaultApi:
     @validate_call
     async def create_node_with_http_info(
         self,
-        node_create: NodeCreate,
+        node: NodeCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1774,11 +1719,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[NodeRead]:
-        """Create Node
+        """CreateNode
 
 
-        :param node_create: (required)
-        :type node_create: NodeCreate
+        :param node: (required)
+        :type node: NodeCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1802,7 +1747,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_node_serialize(
-            node_create=node_create,
+            node=node,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1810,8 +1755,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "NodeRead",
-            '422': "HTTPValidationError",
+            '201': "NodeRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1827,7 +1772,7 @@ class DefaultApi:
     @validate_call
     async def create_node_without_preload_content(
         self,
-        node_create: NodeCreate,
+        node: NodeCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1841,11 +1786,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Node
+        """CreateNode
 
 
-        :param node_create: (required)
-        :type node_create: NodeCreate
+        :param node: (required)
+        :type node: NodeCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1869,7 +1814,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_node_serialize(
-            node_create=node_create,
+            node=node,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1877,8 +1822,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "NodeRead",
-            '422': "HTTPValidationError",
+            '201': "NodeRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -1889,7 +1834,7 @@ class DefaultApi:
 
     def _create_node_serialize(
         self,
-        node_create,
+        node,
         _request_auth,
         _content_type,
         _headers,
@@ -1912,11 +1857,13 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if node is not None:
+            
+            _query_params.append(('node', node))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if node_create is not None:
-            _body_params = node_create
 
 
         # set the HTTP header `Accept`
@@ -1927,19 +1874,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -1966,7 +1900,7 @@ class DefaultApi:
     @validate_call
     async def create_reconstruction(
         self,
-        reconstruction_create_with_options: ReconstructionCreateWithOptions,
+        reconstruction: ReconstructionCreateWithOptions,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1980,11 +1914,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ReconstructionRead:
-        """Create Reconstruction
+        """CreateReconstruction
 
 
-        :param reconstruction_create_with_options: (required)
-        :type reconstruction_create_with_options: ReconstructionCreateWithOptions
+        :param reconstruction: (required)
+        :type reconstruction: ReconstructionCreateWithOptions
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2008,7 +1942,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_reconstruction_serialize(
-            reconstruction_create_with_options=reconstruction_create_with_options,
+            reconstruction=reconstruction,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2016,8 +1950,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ReconstructionRead",
-            '422': "HTTPValidationError",
+            '201': "ReconstructionRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2033,7 +1967,7 @@ class DefaultApi:
     @validate_call
     async def create_reconstruction_with_http_info(
         self,
-        reconstruction_create_with_options: ReconstructionCreateWithOptions,
+        reconstruction: ReconstructionCreateWithOptions,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -2047,11 +1981,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[ReconstructionRead]:
-        """Create Reconstruction
+        """CreateReconstruction
 
 
-        :param reconstruction_create_with_options: (required)
-        :type reconstruction_create_with_options: ReconstructionCreateWithOptions
+        :param reconstruction: (required)
+        :type reconstruction: ReconstructionCreateWithOptions
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2075,7 +2009,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_reconstruction_serialize(
-            reconstruction_create_with_options=reconstruction_create_with_options,
+            reconstruction=reconstruction,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2083,8 +2017,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ReconstructionRead",
-            '422': "HTTPValidationError",
+            '201': "ReconstructionRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2100,7 +2034,7 @@ class DefaultApi:
     @validate_call
     async def create_reconstruction_without_preload_content(
         self,
-        reconstruction_create_with_options: ReconstructionCreateWithOptions,
+        reconstruction: ReconstructionCreateWithOptions,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -2114,11 +2048,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Create Reconstruction
+        """CreateReconstruction
 
 
-        :param reconstruction_create_with_options: (required)
-        :type reconstruction_create_with_options: ReconstructionCreateWithOptions
+        :param reconstruction: (required)
+        :type reconstruction: ReconstructionCreateWithOptions
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2142,7 +2076,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_reconstruction_serialize(
-            reconstruction_create_with_options=reconstruction_create_with_options,
+            reconstruction=reconstruction,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2150,8 +2084,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ReconstructionRead",
-            '422': "HTTPValidationError",
+            '201': "ReconstructionRead",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2162,7 +2096,7 @@ class DefaultApi:
 
     def _create_reconstruction_serialize(
         self,
-        reconstruction_create_with_options,
+        reconstruction,
         _request_auth,
         _content_type,
         _headers,
@@ -2185,11 +2119,13 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if reconstruction is not None:
+            
+            _query_params.append(('reconstruction', reconstruction))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if reconstruction_create_with_options is not None:
-            _body_params = reconstruction_create_with_options
 
 
         # set the HTTP header `Accept`
@@ -2200,19 +2136,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -2252,8 +2175,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Capture Session
+    ) -> None:
+        """DeleteCaptureSession
 
 
         :param id: (required)
@@ -2289,8 +2212,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2319,8 +2242,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Capture Session
+    ) -> ApiResponse[None]:
+        """DeleteCaptureSession
 
 
         :param id: (required)
@@ -2356,8 +2279,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2387,7 +2310,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Capture Session
+        """DeleteCaptureSession
 
 
         :param id: (required)
@@ -2423,8 +2346,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2512,8 +2435,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Groups
+    ) -> None:
+        """DeleteGroups
 
 
         :param ids: List of Ids to delete (required)
@@ -2549,8 +2472,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2579,8 +2502,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Groups
+    ) -> ApiResponse[None]:
+        """DeleteGroups
 
 
         :param ids: List of Ids to delete (required)
@@ -2616,8 +2539,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2647,7 +2570,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Groups
+        """DeleteGroups
 
 
         :param ids: List of Ids to delete (required)
@@ -2683,8 +2606,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2775,8 +2698,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Layers
+    ) -> None:
+        """DeleteLayers
 
 
         :param ids: List of Ids to delete (required)
@@ -2812,8 +2735,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2842,8 +2765,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Layers
+    ) -> ApiResponse[None]:
+        """DeleteLayers
 
 
         :param ids: List of Ids to delete (required)
@@ -2879,8 +2802,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -2910,7 +2833,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Layers
+        """DeleteLayers
 
 
         :param ids: List of Ids to delete (required)
@@ -2946,8 +2869,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3038,8 +2961,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Localization Map
+    ) -> None:
+        """DeleteLocalizationMap
 
 
         :param id: (required)
@@ -3075,8 +2998,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3105,8 +3028,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Localization Map
+    ) -> ApiResponse[None]:
+        """DeleteLocalizationMap
 
 
         :param id: (required)
@@ -3142,8 +3065,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3173,7 +3096,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Localization Map
+        """DeleteLocalizationMap
 
 
         :param id: (required)
@@ -3209,8 +3132,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3266,7 +3189,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='DELETE',
-            resource_path='/localization_maps/{id}',
+            resource_path='/localization-maps/{id}',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -3298,8 +3221,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Localization Maps
+    ) -> None:
+        """DeleteLocalizationMaps
 
 
         :param ids: List of Ids to delete (required)
@@ -3335,8 +3258,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3365,8 +3288,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Localization Maps
+    ) -> ApiResponse[None]:
+        """DeleteLocalizationMaps
 
 
         :param ids: List of Ids to delete (required)
@@ -3402,8 +3325,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3433,7 +3356,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Localization Maps
+        """DeleteLocalizationMaps
 
 
         :param ids: List of Ids to delete (required)
@@ -3469,8 +3392,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3529,7 +3452,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='DELETE',
-            resource_path='/localization_maps',
+            resource_path='/localization-maps',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -3561,8 +3484,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Localization Session
+    ) -> None:
+        """DeleteLocalizationSession
 
 
         :param localization_session_id: (required)
@@ -3598,8 +3521,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3628,8 +3551,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Localization Session
+    ) -> ApiResponse[None]:
+        """DeleteLocalizationSession
 
 
         :param localization_session_id: (required)
@@ -3665,8 +3588,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3696,7 +3619,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Localization Session
+        """DeleteLocalizationSession
 
 
         :param localization_session_id: (required)
@@ -3732,8 +3655,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3821,8 +3744,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Nodes
+    ) -> None:
+        """DeleteNodes
 
 
         :param ids: List of Ids to delete (required)
@@ -3858,8 +3781,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3888,8 +3811,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Nodes
+    ) -> ApiResponse[None]:
+        """DeleteNodes
 
 
         :param ids: List of Ids to delete (required)
@@ -3925,8 +3848,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -3956,7 +3879,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Nodes
+        """DeleteNodes
 
 
         :param ids: List of Ids to delete (required)
@@ -3992,8 +3915,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4084,8 +4007,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Delete Reconstruction
+    ) -> None:
+        """DeleteReconstruction
 
 
         :param id: (required)
@@ -4121,8 +4044,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4151,8 +4074,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Delete Reconstruction
+    ) -> ApiResponse[None]:
+        """DeleteReconstruction
 
 
         :param id: (required)
@@ -4188,8 +4111,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4219,7 +4142,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Delete Reconstruction
+        """DeleteReconstruction
 
 
         :param id: (required)
@@ -4255,8 +4178,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4345,7 +4268,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> object:
-        """Download Capture Session Tar
+        """DownloadCaptureSessionTar
 
 
         :param id: (required)
@@ -4382,7 +4305,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "object",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4412,7 +4335,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[object]:
-        """Download Capture Session Tar
+        """DownloadCaptureSessionTar
 
 
         :param id: (required)
@@ -4449,7 +4372,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "object",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4479,7 +4402,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Download Capture Session Tar
+        """DownloadCaptureSessionTar
 
 
         :param id: (required)
@@ -4516,7 +4439,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "object",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4561,8 +4484,7 @@ class DefaultApi:
         if 'Accept' not in _header_params:
             _header_params['Accept'] = self.api_client.select_header_accept(
                 [
-                    'application/json', 
-                    'application/x-tar'
+                    'application/json'
                 ]
             )
 
@@ -4606,7 +4528,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> CaptureSessionRead:
-        """Get Capture Session
+        """GetCaptureSession
 
 
         :param id: (required)
@@ -4643,7 +4565,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4673,7 +4595,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[CaptureSessionRead]:
-        """Get Capture Session
+        """GetCaptureSession
 
 
         :param id: (required)
@@ -4710,7 +4632,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4740,7 +4662,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Capture Session
+        """GetCaptureSession
 
 
         :param id: (required)
@@ -4777,7 +4699,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4866,7 +4788,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[UUID]:
-        """Get Capture Session Reconstructions
+        """GetCaptureSessionReconstructions
 
 
         :param id: (required)
@@ -4903,7 +4825,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[UUID]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -4933,7 +4855,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[UUID]]:
-        """Get Capture Session Reconstructions
+        """GetCaptureSessionReconstructions
 
 
         :param id: (required)
@@ -4970,7 +4892,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[UUID]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5000,7 +4922,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Capture Session Reconstructions
+        """GetCaptureSessionReconstructions
 
 
         :param id: (required)
@@ -5037,7 +4959,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[UUID]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5126,7 +5048,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> CaptureSessionManifest:
-        """Get Capture Session Rig Config
+        """GetCaptureSessionRigConfig
 
 
         :param id: (required)
@@ -5163,7 +5085,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionManifest",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5193,7 +5115,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[CaptureSessionManifest]:
-        """Get Capture Session Rig Config
+        """GetCaptureSessionRigConfig
 
 
         :param id: (required)
@@ -5230,7 +5152,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionManifest",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5260,7 +5182,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Capture Session Rig Config
+        """GetCaptureSessionRigConfig
 
 
         :param id: (required)
@@ -5297,7 +5219,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionManifest",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5386,7 +5308,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[CaptureSessionRead]:
-        """Get Capture Sessions
+        """GetCaptureSessions
 
 
         :param ids: Optional list of Ids to filter by
@@ -5423,7 +5345,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5453,7 +5375,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[CaptureSessionRead]]:
-        """Get Capture Sessions
+        """GetCaptureSessions
 
 
         :param ids: Optional list of Ids to filter by
@@ -5490,7 +5412,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5520,7 +5442,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Capture Sessions
+        """GetCaptureSessions
 
 
         :param ids: Optional list of Ids to filter by
@@ -5557,7 +5479,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5649,7 +5571,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[GroupRead]:
-        """Get Groups
+        """GetGroups
 
 
         :param ids: Optional list of Ids to filter by
@@ -5686,7 +5608,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[GroupRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5716,7 +5638,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[GroupRead]]:
-        """Get Groups
+        """GetGroups
 
 
         :param ids: Optional list of Ids to filter by
@@ -5753,7 +5675,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[GroupRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5783,7 +5705,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Groups
+        """GetGroups
 
 
         :param ids: Optional list of Ids to filter by
@@ -5820,7 +5742,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[GroupRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5912,7 +5834,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[LayerRead]:
-        """Get Layers
+        """GetLayers
 
 
         :param ids: Optional list of Ids to filter by
@@ -5949,7 +5871,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LayerRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -5979,7 +5901,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[LayerRead]]:
-        """Get Layers
+        """GetLayers
 
 
         :param ids: Optional list of Ids to filter by
@@ -6016,7 +5938,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LayerRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6046,7 +5968,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Layers
+        """GetLayers
 
 
         :param ids: Optional list of Ids to filter by
@@ -6083,7 +6005,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LayerRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6175,7 +6097,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> LocalizationMapRead:
-        """Get Localization Map
+        """GetLocalizationMap
 
 
         :param id: (required)
@@ -6212,7 +6134,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6242,7 +6164,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[LocalizationMapRead]:
-        """Get Localization Map
+        """GetLocalizationMap
 
 
         :param id: (required)
@@ -6279,7 +6201,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6309,7 +6231,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Localization Map
+        """GetLocalizationMap
 
 
         :param id: (required)
@@ -6346,7 +6268,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6402,7 +6324,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='GET',
-            resource_path='/localization_maps/{id}',
+            resource_path='/localization-maps/{id}',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -6436,7 +6358,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[LocalizationMapRead]:
-        """Get Localization Maps
+        """GetLocalizationMaps
 
 
         :param ids: Optional list of Ids to filter by
@@ -6476,7 +6398,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LocalizationMapRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6507,7 +6429,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[LocalizationMapRead]]:
-        """Get Localization Maps
+        """GetLocalizationMaps
 
 
         :param ids: Optional list of Ids to filter by
@@ -6547,7 +6469,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LocalizationMapRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6578,7 +6500,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Localization Maps
+        """GetLocalizationMaps
 
 
         :param ids: Optional list of Ids to filter by
@@ -6618,7 +6540,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LocalizationMapRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6683,7 +6605,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='GET',
-            resource_path='/localization_maps',
+            resource_path='/localization-maps',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -6716,7 +6638,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> str:
-        """Get Localization Session Status
+        """GetLocalizationSessionStatus
 
 
         :param localization_session_id: (required)
@@ -6753,7 +6675,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "str",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6783,7 +6705,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[str]:
-        """Get Localization Session Status
+        """GetLocalizationSessionStatus
 
 
         :param localization_session_id: (required)
@@ -6820,7 +6742,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "str",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6850,7 +6772,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Localization Session Status
+        """GetLocalizationSessionStatus
 
 
         :param localization_session_id: (required)
@@ -6887,7 +6809,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "str",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -6932,6 +6854,7 @@ class DefaultApi:
         if 'Accept' not in _header_params:
             _header_params['Accept'] = self.api_client.select_header_accept(
                 [
+                    'text/plain', 
                     'application/json'
                 ]
             )
@@ -6977,7 +6900,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> LoadStateResponse:
-        """Get Map Load Status
+        """GetMapLoadStatus
 
 
         :param localization_session_id: (required)
@@ -7017,7 +6940,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LoadStateResponse",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7048,7 +6971,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[LoadStateResponse]:
-        """Get Map Load Status
+        """GetMapLoadStatus
 
 
         :param localization_session_id: (required)
@@ -7088,7 +7011,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LoadStateResponse",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7119,7 +7042,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Map Load Status
+        """GetMapLoadStatus
 
 
         :param localization_session_id: (required)
@@ -7159,7 +7082,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LoadStateResponse",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7251,7 +7174,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[NodeRead]:
-        """Get Nodes
+        """GetNodes
 
 
         :param ids: Optional list of Ids to filter by
@@ -7288,7 +7211,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[NodeRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7318,7 +7241,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[NodeRead]]:
-        """Get Nodes
+        """GetNodes
 
 
         :param ids: Optional list of Ids to filter by
@@ -7355,7 +7278,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[NodeRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7385,7 +7308,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Nodes
+        """GetNodes
 
 
         :param ids: Optional list of Ids to filter by
@@ -7422,7 +7345,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[NodeRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7514,7 +7437,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ReconstructionRead:
-        """Get Reconstruction
+        """GetReconstruction
 
 
         :param id: (required)
@@ -7551,7 +7474,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ReconstructionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7581,7 +7504,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[ReconstructionRead]:
-        """Get Reconstruction
+        """GetReconstruction
 
 
         :param id: (required)
@@ -7618,7 +7541,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ReconstructionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7648,7 +7571,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstruction
+        """GetReconstruction
 
 
         :param id: (required)
@@ -7685,7 +7608,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ReconstructionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7761,7 +7684,7 @@ class DefaultApi:
     async def get_reconstruction_frame_poses(
         self,
         id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -7775,12 +7698,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> bytearray:
-        """Get Reconstruction Frame Poses
+        """GetReconstructionFramePoses
 
 
         :param id: (required)
         :type id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -7815,7 +7738,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "bytearray",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7832,7 +7755,7 @@ class DefaultApi:
     async def get_reconstruction_frame_poses_with_http_info(
         self,
         id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -7846,12 +7769,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[bytearray]:
-        """Get Reconstruction Frame Poses
+        """GetReconstructionFramePoses
 
 
         :param id: (required)
         :type id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -7886,7 +7809,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "bytearray",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -7903,7 +7826,7 @@ class DefaultApi:
     async def get_reconstruction_frame_poses_without_preload_content(
         self,
         id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -7917,12 +7840,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstruction Frame Poses
+        """GetReconstructionFramePoses
 
 
         :param id: (required)
         :type id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -7957,7 +7880,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "bytearray",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8052,7 +7975,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> UUID:
-        """Get Reconstruction Localization Map
+        """GetReconstructionLocalizationMap
 
 
         :param id: (required)
@@ -8089,7 +8012,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "UUID",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8119,7 +8042,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[UUID]:
-        """Get Reconstruction Localization Map
+        """GetReconstructionLocalizationMap
 
 
         :param id: (required)
@@ -8156,7 +8079,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "UUID",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8186,7 +8109,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstruction Localization Map
+        """GetReconstructionLocalizationMap
 
 
         :param id: (required)
@@ -8223,7 +8146,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "UUID",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8312,7 +8235,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ReconstructionManifest:
-        """Get Reconstruction Manifest
+        """GetReconstructionManifest
 
 
         :param id: (required)
@@ -8349,7 +8272,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ReconstructionManifest",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8379,7 +8302,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[ReconstructionManifest]:
-        """Get Reconstruction Manifest
+        """GetReconstructionManifest
 
 
         :param id: (required)
@@ -8416,7 +8339,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ReconstructionManifest",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8446,7 +8369,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstruction Manifest
+        """GetReconstructionManifest
 
 
         :param id: (required)
@@ -8483,7 +8406,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "ReconstructionManifest",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8559,7 +8482,7 @@ class DefaultApi:
     async def get_reconstruction_points(
         self,
         id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -8573,12 +8496,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> bytearray:
-        """Get Reconstruction Points
+        """GetReconstructionPoints
 
 
         :param id: (required)
         :type id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -8613,7 +8536,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "bytearray",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8630,7 +8553,7 @@ class DefaultApi:
     async def get_reconstruction_points_with_http_info(
         self,
         id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -8644,12 +8567,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[bytearray]:
-        """Get Reconstruction Points
+        """GetReconstructionPoints
 
 
         :param id: (required)
         :type id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -8684,7 +8607,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "bytearray",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8701,7 +8624,7 @@ class DefaultApi:
     async def get_reconstruction_points_without_preload_content(
         self,
         id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -8715,12 +8638,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstruction Points
+        """GetReconstructionPoints
 
 
         :param id: (required)
         :type id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
@@ -8755,7 +8678,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "bytearray",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8850,7 +8773,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> str:
-        """Get Reconstruction Status
+        """GetReconstructionStatus
 
 
         :param id: (required)
@@ -8887,7 +8810,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "str",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8917,7 +8840,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[str]:
-        """Get Reconstruction Status
+        """GetReconstructionStatus
 
 
         :param id: (required)
@@ -8954,7 +8877,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "str",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -8984,7 +8907,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstruction Status
+        """GetReconstructionStatus
 
 
         :param id: (required)
@@ -9021,7 +8944,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "str",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9112,7 +9035,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[ReconstructionRead]:
-        """Get Reconstructions
+        """GetReconstructions
 
 
         :param ids: Optional list of Ids to filter by
@@ -9155,7 +9078,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[ReconstructionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9187,7 +9110,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[ReconstructionRead]]:
-        """Get Reconstructions
+        """GetReconstructions
 
 
         :param ids: Optional list of Ids to filter by
@@ -9230,7 +9153,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[ReconstructionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9262,7 +9185,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Get Reconstructions
+        """GetReconstructions
 
 
         :param ids: Optional list of Ids to filter by
@@ -9305,7 +9228,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[ReconstructionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9394,7 +9317,7 @@ class DefaultApi:
     async def load_localization_maps(
         self,
         localization_session_id: UUID,
-        request_body: List[UUID],
+        map_ids: Annotated[List[UUID], Field(description="IDs of localization maps to load")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9407,14 +9330,14 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Load Localization Maps
+    ) -> None:
+        """LoadLocalizationMaps
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param request_body: (required)
-        :type request_body: List[UUID]
+        :param map_ids: IDs of localization maps to load (required)
+        :type map_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9439,7 +9362,7 @@ class DefaultApi:
 
         _param = self._load_localization_maps_serialize(
             localization_session_id=localization_session_id,
-            request_body=request_body,
+            map_ids=map_ids,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -9447,8 +9370,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '201': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9465,7 +9388,7 @@ class DefaultApi:
     async def load_localization_maps_with_http_info(
         self,
         localization_session_id: UUID,
-        request_body: List[UUID],
+        map_ids: Annotated[List[UUID], Field(description="IDs of localization maps to load")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9478,14 +9401,14 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Load Localization Maps
+    ) -> ApiResponse[None]:
+        """LoadLocalizationMaps
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param request_body: (required)
-        :type request_body: List[UUID]
+        :param map_ids: IDs of localization maps to load (required)
+        :type map_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9510,7 +9433,7 @@ class DefaultApi:
 
         _param = self._load_localization_maps_serialize(
             localization_session_id=localization_session_id,
-            request_body=request_body,
+            map_ids=map_ids,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -9518,8 +9441,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '201': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9536,7 +9459,7 @@ class DefaultApi:
     async def load_localization_maps_without_preload_content(
         self,
         localization_session_id: UUID,
-        request_body: List[UUID],
+        map_ids: Annotated[List[UUID], Field(description="IDs of localization maps to load")],
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9550,13 +9473,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Load Localization Maps
+        """LoadLocalizationMaps
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param request_body: (required)
-        :type request_body: List[UUID]
+        :param map_ids: IDs of localization maps to load (required)
+        :type map_ids: List[UUID]
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9581,7 +9504,7 @@ class DefaultApi:
 
         _param = self._load_localization_maps_serialize(
             localization_session_id=localization_session_id,
-            request_body=request_body,
+            map_ids=map_ids,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -9589,8 +9512,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '201': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9602,7 +9525,7 @@ class DefaultApi:
     def _load_localization_maps_serialize(
         self,
         localization_session_id,
-        request_body,
+        map_ids,
         _request_auth,
         _content_type,
         _headers,
@@ -9612,7 +9535,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'request_body': '',
+            'map_ids': 'multi',
         }
 
         _path_params: Dict[str, str] = {}
@@ -9628,11 +9551,13 @@ class DefaultApi:
         if localization_session_id is not None:
             _path_params['localization_session_id'] = localization_session_id
         # process the query parameters
+        if map_ids is not None:
+            
+            _query_params.append(('map_ids', map_ids))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if request_body is not None:
-            _body_params = request_body
 
 
         # set the HTTP header `Accept`
@@ -9643,19 +9568,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -9683,7 +9595,7 @@ class DefaultApi:
     async def localize_image(
         self,
         localization_session_id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9698,12 +9610,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[MapLocalization]:
-        """Localize Image
+        """LocalizeImage
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param image: (required)
         :type image: bytearray
@@ -9740,8 +9652,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[MapLocalization]",
-            '422': "HTTPValidationError",
+            '201': "List[MapLocalization]",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9758,7 +9670,7 @@ class DefaultApi:
     async def localize_image_with_http_info(
         self,
         localization_session_id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9773,12 +9685,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[MapLocalization]]:
-        """Localize Image
+        """LocalizeImage
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param image: (required)
         :type image: bytearray
@@ -9815,8 +9727,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[MapLocalization]",
-            '422': "HTTPValidationError",
+            '201': "List[MapLocalization]",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9833,7 +9745,7 @@ class DefaultApi:
     async def localize_image_without_preload_content(
         self,
         localization_session_id: UUID,
-        axis_convention: AxisConvention,
+        axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
         image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
         _request_timeout: Union[
             None,
@@ -9848,12 +9760,12 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Localize Image
+        """LocalizeImage
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param axis_convention: (required)
+        :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
         :param image: (required)
         :type image: bytearray
@@ -9890,8 +9802,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "List[MapLocalization]",
-            '422': "HTTPValidationError",
+            '201': "List[MapLocalization]",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -9933,10 +9845,12 @@ class DefaultApi:
             
             _query_params.append(('axis_convention', axis_convention.value))
             
+        if image is not None:
+            
+            _query_params.append(('image', image))
+            
         # process the header parameters
         # process the form parameters
-        if image is not None:
-            _files['image'] = image
         # process the body parameter
 
 
@@ -9948,19 +9862,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'multipart/form-data'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -9988,7 +9889,7 @@ class DefaultApi:
     async def set_localization_session_camera_intrinsics(
         self,
         localization_session_id: UUID,
-        camera: Camera,
+        camera: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10001,14 +9902,14 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Set Localization Session Camera Intrinsics
+    ) -> None:
+        """SetLocalizationSessionCameraIntrinsics
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
         :param camera: (required)
-        :type camera: Camera
+        :type camera: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10041,8 +9942,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '200': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10059,7 +9960,7 @@ class DefaultApi:
     async def set_localization_session_camera_intrinsics_with_http_info(
         self,
         localization_session_id: UUID,
-        camera: Camera,
+        camera: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10072,14 +9973,14 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Set Localization Session Camera Intrinsics
+    ) -> ApiResponse[None]:
+        """SetLocalizationSessionCameraIntrinsics
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
         :param camera: (required)
-        :type camera: Camera
+        :type camera: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10112,8 +10013,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '200': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10130,7 +10031,7 @@ class DefaultApi:
     async def set_localization_session_camera_intrinsics_without_preload_content(
         self,
         localization_session_id: UUID,
-        camera: Camera,
+        camera: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10144,13 +10045,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Set Localization Session Camera Intrinsics
+        """SetLocalizationSessionCameraIntrinsics
 
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
         :param camera: (required)
-        :type camera: Camera
+        :type camera: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10183,8 +10084,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '200': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10221,11 +10122,13 @@ class DefaultApi:
         if localization_session_id is not None:
             _path_params['localization_session_id'] = localization_session_id
         # process the query parameters
+        if camera is not None:
+            
+            _query_params.append(('camera', camera))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if camera is not None:
-            _body_params = camera
 
 
         # set the HTTP header `Accept`
@@ -10236,19 +10139,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -10289,8 +10179,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Unload Map
+    ) -> None:
+        """UnloadMap
 
 
         :param localization_session_id: (required)
@@ -10329,8 +10219,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10360,8 +10250,8 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Unload Map
+    ) -> ApiResponse[None]:
+        """UnloadMap
 
 
         :param localization_session_id: (required)
@@ -10400,8 +10290,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10432,7 +10322,7 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Unload Map
+        """UnloadMap
 
 
         :param localization_session_id: (required)
@@ -10471,8 +10361,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '204': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10551,7 +10441,7 @@ class DefaultApi:
     async def update_capture_session(
         self,
         id: UUID,
-        capture_session_update: CaptureSessionUpdate,
+        capture: CaptureSessionUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10565,13 +10455,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> CaptureSessionRead:
-        """Update Capture Session
+        """UpdateCaptureSession
 
 
         :param id: (required)
         :type id: UUID
-        :param capture_session_update: (required)
-        :type capture_session_update: CaptureSessionUpdate
+        :param capture: (required)
+        :type capture: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10596,7 +10486,7 @@ class DefaultApi:
 
         _param = self._update_capture_session_serialize(
             id=id,
-            capture_session_update=capture_session_update,
+            capture=capture,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10605,7 +10495,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10622,7 +10512,7 @@ class DefaultApi:
     async def update_capture_session_with_http_info(
         self,
         id: UUID,
-        capture_session_update: CaptureSessionUpdate,
+        capture: CaptureSessionUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10636,13 +10526,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[CaptureSessionRead]:
-        """Update Capture Session
+        """UpdateCaptureSession
 
 
         :param id: (required)
         :type id: UUID
-        :param capture_session_update: (required)
-        :type capture_session_update: CaptureSessionUpdate
+        :param capture: (required)
+        :type capture: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10667,7 +10557,7 @@ class DefaultApi:
 
         _param = self._update_capture_session_serialize(
             id=id,
-            capture_session_update=capture_session_update,
+            capture=capture,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10676,7 +10566,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10693,7 +10583,7 @@ class DefaultApi:
     async def update_capture_session_without_preload_content(
         self,
         id: UUID,
-        capture_session_update: CaptureSessionUpdate,
+        capture: CaptureSessionUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10707,13 +10597,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Update Capture Session
+        """UpdateCaptureSession
 
 
         :param id: (required)
         :type id: UUID
-        :param capture_session_update: (required)
-        :type capture_session_update: CaptureSessionUpdate
+        :param capture: (required)
+        :type capture: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10738,7 +10628,7 @@ class DefaultApi:
 
         _param = self._update_capture_session_serialize(
             id=id,
-            capture_session_update=capture_session_update,
+            capture=capture,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10747,7 +10637,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "CaptureSessionRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10759,7 +10649,7 @@ class DefaultApi:
     def _update_capture_session_serialize(
         self,
         id,
-        capture_session_update,
+        capture,
         _request_auth,
         _content_type,
         _headers,
@@ -10784,11 +10674,13 @@ class DefaultApi:
         if id is not None:
             _path_params['id'] = id
         # process the query parameters
+        if capture is not None:
+            
+            _query_params.append(('capture', capture))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if capture_session_update is not None:
-            _body_params = capture_session_update
 
 
         # set the HTTP header `Accept`
@@ -10799,19 +10691,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -10838,7 +10717,7 @@ class DefaultApi:
     @validate_call
     async def update_capture_sessions(
         self,
-        capture_session_batch_update: List[CaptureSessionBatchUpdate],
+        captures: List[CaptureSessionBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -10853,11 +10732,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[CaptureSessionRead]:
-        """Update Capture Sessions
+        """UpdateCaptureSessions
 
 
-        :param capture_session_batch_update: (required)
-        :type capture_session_batch_update: List[CaptureSessionBatchUpdate]
+        :param captures: (required)
+        :type captures: List[CaptureSessionBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -10883,7 +10762,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_capture_sessions_serialize(
-            capture_session_batch_update=capture_session_batch_update,
+            captures=captures,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -10893,7 +10772,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10909,7 +10788,7 @@ class DefaultApi:
     @validate_call
     async def update_capture_sessions_with_http_info(
         self,
-        capture_session_batch_update: List[CaptureSessionBatchUpdate],
+        captures: List[CaptureSessionBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -10924,11 +10803,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[CaptureSessionRead]]:
-        """Update Capture Sessions
+        """UpdateCaptureSessions
 
 
-        :param capture_session_batch_update: (required)
-        :type capture_session_batch_update: List[CaptureSessionBatchUpdate]
+        :param captures: (required)
+        :type captures: List[CaptureSessionBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -10954,7 +10833,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_capture_sessions_serialize(
-            capture_session_batch_update=capture_session_batch_update,
+            captures=captures,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -10964,7 +10843,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -10980,7 +10859,7 @@ class DefaultApi:
     @validate_call
     async def update_capture_sessions_without_preload_content(
         self,
-        capture_session_batch_update: List[CaptureSessionBatchUpdate],
+        captures: List[CaptureSessionBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -10995,11 +10874,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Update Capture Sessions
+        """UpdateCaptureSessions
 
 
-        :param capture_session_batch_update: (required)
-        :type capture_session_batch_update: List[CaptureSessionBatchUpdate]
+        :param captures: (required)
+        :type captures: List[CaptureSessionBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11025,7 +10904,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_capture_sessions_serialize(
-            capture_session_batch_update=capture_session_batch_update,
+            captures=captures,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11035,7 +10914,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[CaptureSessionRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11046,7 +10925,7 @@ class DefaultApi:
 
     def _update_capture_sessions_serialize(
         self,
-        capture_session_batch_update,
+        captures,
         allow_missing,
         _request_auth,
         _content_type,
@@ -11057,7 +10936,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'CaptureSessionBatchUpdate': '',
+            'captures': 'multi',
         }
 
         _path_params: Dict[str, str] = {}
@@ -11071,6 +10950,10 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if captures is not None:
+            
+            _query_params.append(('captures', captures))
+            
         if allow_missing is not None:
             
             _query_params.append(('allow_missing', allow_missing))
@@ -11078,8 +10961,6 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if capture_session_batch_update is not None:
-            _body_params = capture_session_batch_update
 
 
         # set the HTTP header `Accept`
@@ -11090,19 +10971,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -11129,7 +10997,7 @@ class DefaultApi:
     @validate_call
     async def update_groups(
         self,
-        group_batch_update: List[GroupBatchUpdate],
+        groups: List[GroupBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11144,11 +11012,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[GroupRead]:
-        """Update Groups
+        """UpdateGroups
 
 
-        :param group_batch_update: (required)
-        :type group_batch_update: List[GroupBatchUpdate]
+        :param groups: (required)
+        :type groups: List[GroupBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11174,7 +11042,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_groups_serialize(
-            group_batch_update=group_batch_update,
+            groups=groups,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11184,7 +11052,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[GroupRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11200,7 +11068,7 @@ class DefaultApi:
     @validate_call
     async def update_groups_with_http_info(
         self,
-        group_batch_update: List[GroupBatchUpdate],
+        groups: List[GroupBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11215,11 +11083,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[GroupRead]]:
-        """Update Groups
+        """UpdateGroups
 
 
-        :param group_batch_update: (required)
-        :type group_batch_update: List[GroupBatchUpdate]
+        :param groups: (required)
+        :type groups: List[GroupBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11245,7 +11113,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_groups_serialize(
-            group_batch_update=group_batch_update,
+            groups=groups,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11255,7 +11123,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[GroupRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11271,7 +11139,7 @@ class DefaultApi:
     @validate_call
     async def update_groups_without_preload_content(
         self,
-        group_batch_update: List[GroupBatchUpdate],
+        groups: List[GroupBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11286,11 +11154,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Update Groups
+        """UpdateGroups
 
 
-        :param group_batch_update: (required)
-        :type group_batch_update: List[GroupBatchUpdate]
+        :param groups: (required)
+        :type groups: List[GroupBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11316,7 +11184,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_groups_serialize(
-            group_batch_update=group_batch_update,
+            groups=groups,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11326,7 +11194,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[GroupRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11337,7 +11205,7 @@ class DefaultApi:
 
     def _update_groups_serialize(
         self,
-        group_batch_update,
+        groups,
         allow_missing,
         _request_auth,
         _content_type,
@@ -11348,7 +11216,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'GroupBatchUpdate': '',
+            'groups': 'multi',
         }
 
         _path_params: Dict[str, str] = {}
@@ -11362,6 +11230,10 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if groups is not None:
+            
+            _query_params.append(('groups', groups))
+            
         if allow_missing is not None:
             
             _query_params.append(('allow_missing', allow_missing))
@@ -11369,8 +11241,6 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if group_batch_update is not None:
-            _body_params = group_batch_update
 
 
         # set the HTTP header `Accept`
@@ -11381,19 +11251,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -11420,7 +11277,7 @@ class DefaultApi:
     @validate_call
     async def update_layers(
         self,
-        layer_batch_update: List[LayerBatchUpdate],
+        layers: List[LayerBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11435,11 +11292,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[LayerRead]:
-        """Update Layers
+        """UpdateLayers
 
 
-        :param layer_batch_update: (required)
-        :type layer_batch_update: List[LayerBatchUpdate]
+        :param layers: (required)
+        :type layers: List[LayerBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11465,7 +11322,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_layers_serialize(
-            layer_batch_update=layer_batch_update,
+            layers=layers,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11475,7 +11332,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LayerRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11491,7 +11348,7 @@ class DefaultApi:
     @validate_call
     async def update_layers_with_http_info(
         self,
-        layer_batch_update: List[LayerBatchUpdate],
+        layers: List[LayerBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11506,11 +11363,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[LayerRead]]:
-        """Update Layers
+        """UpdateLayers
 
 
-        :param layer_batch_update: (required)
-        :type layer_batch_update: List[LayerBatchUpdate]
+        :param layers: (required)
+        :type layers: List[LayerBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11536,7 +11393,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_layers_serialize(
-            layer_batch_update=layer_batch_update,
+            layers=layers,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11546,7 +11403,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LayerRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11562,7 +11419,7 @@ class DefaultApi:
     @validate_call
     async def update_layers_without_preload_content(
         self,
-        layer_batch_update: List[LayerBatchUpdate],
+        layers: List[LayerBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11577,11 +11434,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Update Layers
+        """UpdateLayers
 
 
-        :param layer_batch_update: (required)
-        :type layer_batch_update: List[LayerBatchUpdate]
+        :param layers: (required)
+        :type layers: List[LayerBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11607,7 +11464,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_layers_serialize(
-            layer_batch_update=layer_batch_update,
+            layers=layers,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11617,7 +11474,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LayerRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11628,7 +11485,7 @@ class DefaultApi:
 
     def _update_layers_serialize(
         self,
-        layer_batch_update,
+        layers,
         allow_missing,
         _request_auth,
         _content_type,
@@ -11639,7 +11496,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'LayerBatchUpdate': '',
+            'layers': 'multi',
         }
 
         _path_params: Dict[str, str] = {}
@@ -11653,6 +11510,10 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if layers is not None:
+            
+            _query_params.append(('layers', layers))
+            
         if allow_missing is not None:
             
             _query_params.append(('allow_missing', allow_missing))
@@ -11660,8 +11521,6 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if layer_batch_update is not None:
-            _body_params = layer_batch_update
 
 
         # set the HTTP header `Accept`
@@ -11672,19 +11531,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -11712,7 +11558,7 @@ class DefaultApi:
     async def update_localization_map(
         self,
         id: UUID,
-        localization_map_update: LocalizationMapUpdate,
+        localization_map: LocalizationMapUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -11726,13 +11572,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> LocalizationMapRead:
-        """Update Localization Map
+        """UpdateLocalizationMap
 
 
         :param id: (required)
         :type id: UUID
-        :param localization_map_update: (required)
-        :type localization_map_update: LocalizationMapUpdate
+        :param localization_map: (required)
+        :type localization_map: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -11757,7 +11603,7 @@ class DefaultApi:
 
         _param = self._update_localization_map_serialize(
             id=id,
-            localization_map_update=localization_map_update,
+            localization_map=localization_map,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -11766,7 +11612,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11783,7 +11629,7 @@ class DefaultApi:
     async def update_localization_map_with_http_info(
         self,
         id: UUID,
-        localization_map_update: LocalizationMapUpdate,
+        localization_map: LocalizationMapUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -11797,13 +11643,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[LocalizationMapRead]:
-        """Update Localization Map
+        """UpdateLocalizationMap
 
 
         :param id: (required)
         :type id: UUID
-        :param localization_map_update: (required)
-        :type localization_map_update: LocalizationMapUpdate
+        :param localization_map: (required)
+        :type localization_map: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -11828,7 +11674,7 @@ class DefaultApi:
 
         _param = self._update_localization_map_serialize(
             id=id,
-            localization_map_update=localization_map_update,
+            localization_map=localization_map,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -11837,7 +11683,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11854,7 +11700,7 @@ class DefaultApi:
     async def update_localization_map_without_preload_content(
         self,
         id: UUID,
-        localization_map_update: LocalizationMapUpdate,
+        localization_map: LocalizationMapUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -11868,13 +11714,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Update Localization Map
+        """UpdateLocalizationMap
 
 
         :param id: (required)
         :type id: UUID
-        :param localization_map_update: (required)
-        :type localization_map_update: LocalizationMapUpdate
+        :param localization_map: (required)
+        :type localization_map: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -11899,7 +11745,7 @@ class DefaultApi:
 
         _param = self._update_localization_map_serialize(
             id=id,
-            localization_map_update=localization_map_update,
+            localization_map=localization_map,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -11908,7 +11754,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "LocalizationMapRead",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -11920,7 +11766,7 @@ class DefaultApi:
     def _update_localization_map_serialize(
         self,
         id,
-        localization_map_update,
+        localization_map,
         _request_auth,
         _content_type,
         _headers,
@@ -11945,11 +11791,13 @@ class DefaultApi:
         if id is not None:
             _path_params['id'] = id
         # process the query parameters
+        if localization_map is not None:
+            
+            _query_params.append(('localization_map', localization_map))
+            
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if localization_map_update is not None:
-            _body_params = localization_map_update
 
 
         # set the HTTP header `Accept`
@@ -11960,19 +11808,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -11980,7 +11815,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='PATCH',
-            resource_path='/localization_maps/{id}',
+            resource_path='/localization-maps/{id}',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -11999,7 +11834,7 @@ class DefaultApi:
     @validate_call
     async def update_localization_maps(
         self,
-        localization_map_batch_update: List[LocalizationMapBatchUpdate],
+        localization_maps: List[LocalizationMapBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -12014,11 +11849,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[LocalizationMapRead]:
-        """Update Localization Maps
+        """UpdateLocalizationMaps
 
 
-        :param localization_map_batch_update: (required)
-        :type localization_map_batch_update: List[LocalizationMapBatchUpdate]
+        :param localization_maps: (required)
+        :type localization_maps: List[LocalizationMapBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -12044,7 +11879,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_localization_maps_serialize(
-            localization_map_batch_update=localization_map_batch_update,
+            localization_maps=localization_maps,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -12054,7 +11889,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LocalizationMapRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12070,7 +11905,7 @@ class DefaultApi:
     @validate_call
     async def update_localization_maps_with_http_info(
         self,
-        localization_map_batch_update: List[LocalizationMapBatchUpdate],
+        localization_maps: List[LocalizationMapBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -12085,11 +11920,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[LocalizationMapRead]]:
-        """Update Localization Maps
+        """UpdateLocalizationMaps
 
 
-        :param localization_map_batch_update: (required)
-        :type localization_map_batch_update: List[LocalizationMapBatchUpdate]
+        :param localization_maps: (required)
+        :type localization_maps: List[LocalizationMapBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -12115,7 +11950,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_localization_maps_serialize(
-            localization_map_batch_update=localization_map_batch_update,
+            localization_maps=localization_maps,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -12125,7 +11960,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LocalizationMapRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12141,7 +11976,7 @@ class DefaultApi:
     @validate_call
     async def update_localization_maps_without_preload_content(
         self,
-        localization_map_batch_update: List[LocalizationMapBatchUpdate],
+        localization_maps: List[LocalizationMapBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -12156,11 +11991,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Update Localization Maps
+        """UpdateLocalizationMaps
 
 
-        :param localization_map_batch_update: (required)
-        :type localization_map_batch_update: List[LocalizationMapBatchUpdate]
+        :param localization_maps: (required)
+        :type localization_maps: List[LocalizationMapBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -12186,7 +12021,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_localization_maps_serialize(
-            localization_map_batch_update=localization_map_batch_update,
+            localization_maps=localization_maps,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -12196,7 +12031,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[LocalizationMapRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12207,7 +12042,7 @@ class DefaultApi:
 
     def _update_localization_maps_serialize(
         self,
-        localization_map_batch_update,
+        localization_maps,
         allow_missing,
         _request_auth,
         _content_type,
@@ -12218,7 +12053,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'LocalizationMapBatchUpdate': '',
+            'localization_maps': 'multi',
         }
 
         _path_params: Dict[str, str] = {}
@@ -12232,6 +12067,10 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if localization_maps is not None:
+            
+            _query_params.append(('localization_maps', localization_maps))
+            
         if allow_missing is not None:
             
             _query_params.append(('allow_missing', allow_missing))
@@ -12239,8 +12078,6 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if localization_map_batch_update is not None:
-            _body_params = localization_map_batch_update
 
 
         # set the HTTP header `Accept`
@@ -12251,19 +12088,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -12271,7 +12095,7 @@ class DefaultApi:
 
         return self.api_client.param_serialize(
             method='PATCH',
-            resource_path='/localization_maps',
+            resource_path='/localization-maps',
             path_params=_path_params,
             query_params=_query_params,
             header_params=_header_params,
@@ -12290,7 +12114,7 @@ class DefaultApi:
     @validate_call
     async def update_nodes(
         self,
-        node_batch_update: List[NodeBatchUpdate],
+        nodes: List[NodeBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -12305,11 +12129,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> List[NodeRead]:
-        """Update Nodes
+        """UpdateNodes
 
 
-        :param node_batch_update: (required)
-        :type node_batch_update: List[NodeBatchUpdate]
+        :param nodes: (required)
+        :type nodes: List[NodeBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -12335,7 +12159,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_nodes_serialize(
-            node_batch_update=node_batch_update,
+            nodes=nodes,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -12345,7 +12169,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[NodeRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12361,7 +12185,7 @@ class DefaultApi:
     @validate_call
     async def update_nodes_with_http_info(
         self,
-        node_batch_update: List[NodeBatchUpdate],
+        nodes: List[NodeBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -12376,11 +12200,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> ApiResponse[List[NodeRead]]:
-        """Update Nodes
+        """UpdateNodes
 
 
-        :param node_batch_update: (required)
-        :type node_batch_update: List[NodeBatchUpdate]
+        :param nodes: (required)
+        :type nodes: List[NodeBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -12406,7 +12230,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_nodes_serialize(
-            node_batch_update=node_batch_update,
+            nodes=nodes,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -12416,7 +12240,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[NodeRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12432,7 +12256,7 @@ class DefaultApi:
     @validate_call
     async def update_nodes_without_preload_content(
         self,
-        node_batch_update: List[NodeBatchUpdate],
+        nodes: List[NodeBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -12447,11 +12271,11 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Update Nodes
+        """UpdateNodes
 
 
-        :param node_batch_update: (required)
-        :type node_batch_update: List[NodeBatchUpdate]
+        :param nodes: (required)
+        :type nodes: List[NodeBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -12477,7 +12301,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_nodes_serialize(
-            node_batch_update=node_batch_update,
+            nodes=nodes,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -12487,7 +12311,7 @@ class DefaultApi:
 
         _response_types_map: Dict[str, Optional[str]] = {
             '200': "List[NodeRead]",
-            '422': "HTTPValidationError",
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12498,7 +12322,7 @@ class DefaultApi:
 
     def _update_nodes_serialize(
         self,
-        node_batch_update,
+        nodes,
         allow_missing,
         _request_auth,
         _content_type,
@@ -12509,7 +12333,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'NodeBatchUpdate': '',
+            'nodes': 'multi',
         }
 
         _path_params: Dict[str, str] = {}
@@ -12523,6 +12347,10 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
+        if nodes is not None:
+            
+            _query_params.append(('nodes', nodes))
+            
         if allow_missing is not None:
             
             _query_params.append(('allow_missing', allow_missing))
@@ -12530,8 +12358,6 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
-        if node_batch_update is not None:
-            _body_params = node_batch_update
 
 
         # set the HTTP header `Accept`
@@ -12542,19 +12368,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'application/json'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -12582,7 +12395,7 @@ class DefaultApi:
     async def upload_capture_session_tar(
         self,
         id: UUID,
-        tar: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
+        tar: Any,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -12595,14 +12408,14 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> object:
-        """Upload Capture Session Tar
+    ) -> None:
+        """UploadCaptureSessionTar
 
 
         :param id: (required)
         :type id: UUID
         :param tar: (required)
-        :type tar: bytearray
+        :type tar: object
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -12635,8 +12448,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '200': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12653,7 +12466,7 @@ class DefaultApi:
     async def upload_capture_session_tar_with_http_info(
         self,
         id: UUID,
-        tar: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
+        tar: Any,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -12666,14 +12479,14 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[object]:
-        """Upload Capture Session Tar
+    ) -> ApiResponse[None]:
+        """UploadCaptureSessionTar
 
 
         :param id: (required)
         :type id: UUID
         :param tar: (required)
-        :type tar: bytearray
+        :type tar: object
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -12706,8 +12519,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '200': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12724,7 +12537,7 @@ class DefaultApi:
     async def upload_capture_session_tar_without_preload_content(
         self,
         id: UUID,
-        tar: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
+        tar: Any,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -12738,13 +12551,13 @@ class DefaultApi:
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
     ) -> RESTResponseType:
-        """Upload Capture Session Tar
+        """UploadCaptureSessionTar
 
 
         :param id: (required)
         :type id: UUID
         :param tar: (required)
-        :type tar: bytearray
+        :type tar: object
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -12777,8 +12590,8 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "object",
-            '422': "HTTPValidationError",
+            '200': None,
+            '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
             *_param,
@@ -12815,10 +12628,12 @@ class DefaultApi:
         if id is not None:
             _path_params['id'] = id
         # process the query parameters
+        if tar is not None:
+            
+            _query_params.append(('tar', tar))
+            
         # process the header parameters
         # process the form parameters
-        if tar is not None:
-            _files['tar'] = tar
         # process the body parameter
 
 
@@ -12830,19 +12645,6 @@ class DefaultApi:
                 ]
             )
 
-        # set the HTTP header `Content-Type`
-        if _content_type:
-            _header_params['Content-Type'] = _content_type
-        else:
-            _default_content_type = (
-                self.api_client.select_header_content_type(
-                    [
-                        'multipart/form-data'
-                    ]
-                )
-            )
-            if _default_content_type is not None:
-                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [

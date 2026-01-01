@@ -178,7 +178,6 @@ Class | Method | HTTP request | Description
 ## Documentation for Models
 
  - [Model.AxisConvention](docs/AxisConvention.md)
- - [Model.CameraConfig](docs/CameraConfig.md)
  - [Model.CaptureSessionBatchUpdate](docs/CaptureSessionBatchUpdate.md)
  - [Model.CaptureSessionCreate](docs/CaptureSessionCreate.md)
  - [Model.CaptureSessionManifest](docs/CaptureSessionManifest.md)
@@ -187,7 +186,6 @@ Class | Method | HTTP request | Description
  - [Model.DeviceType](docs/DeviceType.md)
  - [Model.Float3](docs/Float3.md)
  - [Model.Float4](docs/Float4.md)
- - [Model.FullOpenCVCameraConfig](docs/FullOpenCVCameraConfig.md)
  - [Model.GetCaptureSessions400Response](docs/GetCaptureSessions400Response.md)
  - [Model.GetCaptureSessions400ResponseExtra](docs/GetCaptureSessions400ResponseExtra.md)
  - [Model.GroupBatchUpdate](docs/GroupBatchUpdate.md)
@@ -208,7 +206,6 @@ Class | Method | HTTP request | Description
  - [Model.NodeBatchUpdate](docs/NodeBatchUpdate.md)
  - [Model.NodeCreate](docs/NodeCreate.md)
  - [Model.NodeRead](docs/NodeRead.md)
- - [Model.OpenCVCameraConfig](docs/OpenCVCameraConfig.md)
  - [Model.OrchestrationStatus](docs/OrchestrationStatus.md)
  - [Model.PinholeCameraConfig](docs/PinholeCameraConfig.md)
  - [Model.ReconstructionCreate](docs/ReconstructionCreate.md)
@@ -218,7 +215,6 @@ Class | Method | HTTP request | Description
  - [Model.ReconstructionOptions](docs/ReconstructionOptions.md)
  - [Model.ReconstructionRead](docs/ReconstructionRead.md)
  - [Model.RigCameraConfig](docs/RigCameraConfig.md)
- - [Model.RigCameraConfigCameraConfig](docs/RigCameraConfigCameraConfig.md)
  - [Model.RigConfig](docs/RigConfig.md)
  - [Model.Transform](docs/Transform.md)
 

@@ -718,7 +718,7 @@ namespace PlerionApiClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="camera"></param>
         /// <returns></returns>
-        void SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, CameraConfig camera);
+        void SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, PinholeCameraConfig camera);
 
         /// <summary>
         /// SetLocalizationSessionCameraIntrinsics
@@ -730,7 +730,7 @@ namespace PlerionApiClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="camera"></param>
         /// <returns>ApiResponse of Object(void)</returns>
-        ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, CameraConfig camera);
+        ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, PinholeCameraConfig camera);
         /// <summary>
         /// UnloadMap
         /// </summary>
@@ -1800,7 +1800,7 @@ namespace PlerionApiClient.Api
         /// <param name="camera"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of void</returns>
-        System.Threading.Tasks.Task SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, CameraConfig camera, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, PinholeCameraConfig camera, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// SetLocalizationSessionCameraIntrinsics
@@ -1813,7 +1813,7 @@ namespace PlerionApiClient.Api
         /// <param name="camera"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, CameraConfig camera, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, PinholeCameraConfig camera, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// UnloadMap
         /// </summary>
@@ -6424,7 +6424,7 @@ namespace PlerionApiClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="camera"></param>
         /// <returns></returns>
-        public void SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, CameraConfig camera)
+        public void SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, PinholeCameraConfig camera)
         {
             SetLocalizationSessionCameraIntrinsicsWithHttpInfo(localizationSessionId, camera);
         }
@@ -6436,7 +6436,7 @@ namespace PlerionApiClient.Api
         /// <param name="localizationSessionId"></param>
         /// <param name="camera"></param>
         /// <returns>ApiResponse of Object(void)</returns>
-        public PlerionApiClient.Client.ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, CameraConfig camera)
+        public PlerionApiClient.Client.ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, PinholeCameraConfig camera)
         {
             // verify the required parameter 'camera' is set
             if (camera == null)
@@ -6482,7 +6482,7 @@ namespace PlerionApiClient.Api
         /// <param name="camera"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of void</returns>
-        public async System.Threading.Tasks.Task SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, CameraConfig camera, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, PinholeCameraConfig camera, System.Threading.CancellationToken cancellationToken = default)
         {
             await SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(localizationSessionId, camera, cancellationToken).ConfigureAwait(false);
         }
@@ -6495,7 +6495,7 @@ namespace PlerionApiClient.Api
         /// <param name="camera"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, CameraConfig camera, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, PinholeCameraConfig camera, System.Threading.CancellationToken cancellationToken = default)
         {
             // verify the required parameter 'camera' is set
             if (camera == null)

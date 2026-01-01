@@ -6,7 +6,7 @@ from uuid import UUID
 
 from common.fastapi import create_fastapi_app
 from core.axis_convention import AxisConvention
-from core.camera_config import CameraConfig, PinholeCameraConfig
+from core.camera_config import PinholeCameraConfig
 from fastapi import File, HTTPException, UploadFile
 
 # from .localize import load_models
@@ -65,11 +65,7 @@ async def get_reconstruction_load_status(id: UUID) -> LoadStateResponse:
 
 
 @app.put("/camera")
-async def set_camera_intrinsics(camera: CameraConfig):
-    # only pinhole supported for now
-    if camera.model != "PINHOLE":
-        raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
-
+async def set_camera_intrinsics(camera: PinholeCameraConfig):
     global _camera
     _camera = camera
 

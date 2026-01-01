@@ -282,10 +282,7 @@ namespace Plerion.Core
                 }
             );
 
-            await api.SetLocalizationSessionCameraIntrinsicsAsync(
-                localizationSessionId,
-                new CameraConfig(cameraConfig)
-            );
+            await api.SetLocalizationSessionCameraIntrinsicsAsync(localizationSessionId, cameraConfig);
 
             _localizingState = SystemState.Running;
         }

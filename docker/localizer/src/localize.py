@@ -4,8 +4,7 @@ from os import environ
 from typing import Any, cast
 
 from core.axis_convention import AxisConvention, change_basis_unity_from_opencv_pose
-from core.camera_config import PinholeCameraConfig
-from core.image_orientation import transform_image, transform_intrinsics
+from core.camera_config import PinholeCameraConfig, transform_image, transform_intrinsics
 from core.lightglue import lightglue_match_tensors
 from core.localization_metrics import LocalizationMetrics
 from core.opq import decode_descriptors

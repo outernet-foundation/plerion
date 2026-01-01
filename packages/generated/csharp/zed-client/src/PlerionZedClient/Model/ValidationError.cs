@@ -42,7 +42,7 @@ namespace PlerionZedClient.Model
         /// <param name="loc">loc (required).</param>
         /// <param name="msg">msg (required).</param>
         /// <param name="type">type (required).</param>
-        public ValidationError(List<ValidationErrorLocInner> loc, string msg, string type)
+        public ValidationError(List<LocationInner> loc, string msg, string type)
         {
             // to ensure "loc" is required (not null)
             if (loc == null)
@@ -68,7 +68,7 @@ namespace PlerionZedClient.Model
         /// Gets or Sets Loc
         /// </summary>
         [DataMember(Name = "loc", IsRequired = true, EmitDefaultValue = true)]
-        public List<ValidationErrorLocInner> Loc
+        public List<LocationInner> Loc
         {
             get{ return _Loc;}
             set
@@ -77,7 +77,7 @@ namespace PlerionZedClient.Model
                 _flagLoc = true;
             }
         }
-        private List<ValidationErrorLocInner> _Loc;
+        private List<LocationInner> _Loc;
         private bool _flagLoc;
 
         /// <summary>

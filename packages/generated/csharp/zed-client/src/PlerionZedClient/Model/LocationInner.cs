@@ -27,18 +27,18 @@ using System.Reflection;
 namespace PlerionZedClient.Model
 {
     /// <summary>
-    /// ValidationErrorLocInner
+    /// LocationInner
     /// </summary>
-    [JsonConverter(typeof(ValidationErrorLocInnerJsonConverter))]
-    [DataContract(Name = "ValidationError_loc_inner")]
-    public partial class ValidationErrorLocInner : AbstractOpenAPISchema
+    [JsonConverter(typeof(LocationInnerJsonConverter))]
+    [DataContract(Name = "Location_inner")]
+    public partial class LocationInner : AbstractOpenAPISchema
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="ValidationErrorLocInner" /> class
+        /// Initializes a new instance of the <see cref="LocationInner" /> class
         /// with the <see cref="string" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of string.</param>
-        public ValidationErrorLocInner(string actualInstance)
+        public LocationInner(string actualInstance)
         {
             IsNullable = false;
             SchemaType= "anyOf";
@@ -46,11 +46,11 @@ namespace PlerionZedClient.Model
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ValidationErrorLocInner" /> class
+        /// Initializes a new instance of the <see cref="LocationInner" /> class
         /// with the <see cref="int" /> class
         /// </summary>
         /// <param name="actualInstance">An instance of int.</param>
-        public ValidationErrorLocInner(int actualInstance)
+        public LocationInner(int actualInstance)
         {
             IsNullable = false;
             SchemaType= "anyOf";
@@ -113,7 +113,7 @@ namespace PlerionZedClient.Model
         public override string ToString()
         {
             var sb = new StringBuilder();
-            sb.Append("class ValidationErrorLocInner {\n");
+            sb.Append("class LocationInner {\n");
             sb.Append("  ActualInstance: ").Append(ActualInstance).Append("\n");
             sb.Append("}\n");
             return sb.ToString();
@@ -125,28 +125,28 @@ namespace PlerionZedClient.Model
         /// <returns>JSON string presentation of the object</returns>
         public override string ToJson()
         {
-            return JsonConvert.SerializeObject(ActualInstance, ValidationErrorLocInner.SerializerSettings);
+            return JsonConvert.SerializeObject(ActualInstance, LocationInner.SerializerSettings);
         }
 
         /// <summary>
-        /// Converts the JSON string into an instance of ValidationErrorLocInner
+        /// Converts the JSON string into an instance of LocationInner
         /// </summary>
         /// <param name="jsonString">JSON string</param>
-        /// <returns>An instance of ValidationErrorLocInner</returns>
-        public static ValidationErrorLocInner FromJson(string jsonString)
+        /// <returns>An instance of LocationInner</returns>
+        public static LocationInner FromJson(string jsonString)
         {
-            ValidationErrorLocInner newValidationErrorLocInner = null;
+            LocationInner newLocationInner = null;
 
             if (string.IsNullOrEmpty(jsonString))
             {
-                return newValidationErrorLocInner;
+                return newLocationInner;
             }
 
             try
             {
-                newValidationErrorLocInner = new ValidationErrorLocInner(JsonConvert.DeserializeObject<int>(jsonString, ValidationErrorLocInner.SerializerSettings));
+                newLocationInner = new LocationInner(JsonConvert.DeserializeObject<int>(jsonString, LocationInner.SerializerSettings));
                 // deserialization is considered successful at this point if no exception has been thrown.
-                return newValidationErrorLocInner;
+                return newLocationInner;
             }
             catch (Exception exception)
             {
@@ -156,9 +156,9 @@ namespace PlerionZedClient.Model
 
             try
             {
-                newValidationErrorLocInner = new ValidationErrorLocInner(JsonConvert.DeserializeObject<string>(jsonString, ValidationErrorLocInner.SerializerSettings));
+                newLocationInner = new LocationInner(JsonConvert.DeserializeObject<string>(jsonString, LocationInner.SerializerSettings));
                 // deserialization is considered successful at this point if no exception has been thrown.
-                return newValidationErrorLocInner;
+                return newLocationInner;
             }
             catch (Exception exception)
             {
@@ -173,9 +173,9 @@ namespace PlerionZedClient.Model
     }
 
     /// <summary>
-    /// Custom JSON converter for ValidationErrorLocInner
+    /// Custom JSON converter for LocationInner
     /// </summary>
-    public class ValidationErrorLocInnerJsonConverter : JsonConverter
+    public class LocationInnerJsonConverter : JsonConverter
     {
         /// <summary>
         /// To write the JSON string
@@ -185,7 +185,7 @@ namespace PlerionZedClient.Model
         /// <param name="serializer">JSON Serializer</param>
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
-            writer.WriteRawValue((string)(typeof(ValidationErrorLocInner).GetMethod("ToJson").Invoke(value, null)));
+            writer.WriteRawValue((string)(typeof(LocationInner).GetMethod("ToJson").Invoke(value, null)));
         }
 
         /// <summary>
@@ -201,13 +201,13 @@ namespace PlerionZedClient.Model
             switch(reader.TokenType) 
             {
                 case JsonToken.String: 
-                    return new ValidationErrorLocInner(Convert.ToString(reader.Value));
+                    return new LocationInner(Convert.ToString(reader.Value));
                 case JsonToken.Integer: 
-                    return new ValidationErrorLocInner(Convert.ToInt32(reader.Value));
+                    return new LocationInner(Convert.ToInt32(reader.Value));
                 case JsonToken.StartObject:
-                    return ValidationErrorLocInner.FromJson(JObject.Load(reader).ToString(Formatting.None));
+                    return LocationInner.FromJson(JObject.Load(reader).ToString(Formatting.None));
                 case JsonToken.StartArray:
-                    return ValidationErrorLocInner.FromJson(JArray.Load(reader).ToString(Formatting.None));
+                    return LocationInner.FromJson(JArray.Load(reader).ToString(Formatting.None));
                 default:
                     return null;
             }

@@ -3,7 +3,7 @@ from uuid import UUID, uuid4
 
 from common.docker_compose_client import create_service, destroy_service, get_service_status
 from core.axis_convention import AxisConvention
-from core.camera_config import CameraConfig
+from core.camera_config import PinholeCameraConfig
 from core.localization_metrics import LocalizationMetrics
 from core.transform import Float3, Float4, Transform
 from datamodels.public_dtos import LocalizationSessionRead, localization_session_to_dto
@@ -17,9 +17,10 @@ from litestar.params import Body, Parameter
 from plerion_localizer_client import ApiClient, Configuration
 from plerion_localizer_client.api.default_api import DefaultApi
 from plerion_localizer_client.models.axis_convention import AxisConvention as LocalizerAxisConvention
-from plerion_localizer_client.models.camera import Camera as LocalizeCamera
+
+# from plerion_localizer_client.models.camera import Camera as LocalizeCamera
 from plerion_localizer_client.models.load_state_response import LoadStateResponse
-from plerion_localizer_client.models.pinhole_camera_config import PinholeCameraConfig
+from plerion_localizer_client.models.pinhole_camera_config import PinholeCameraConfig as LocalizerPinholeCameraConfig
 from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,16 +65,13 @@ async def delete_localization_session(session: AsyncSession, localization_sessio
 
 @put("/{localization_session_id:uuid}/camera")
 async def set_localization_session_camera_intrinsics(
-    session: AsyncSession, localization_session_id: UUID, camera: Annotated[CameraConfig, Body(title="CameraConfig")]
+    session: AsyncSession, localization_session_id: UUID, camera: Annotated[PinholeCameraConfig, Body]
 ) -> None:
-    if camera.model != "PINHOLE":
-        raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
-
     url = await _session_base_url(session, localization_session_id)
     async with ApiClient(Configuration(host=url)) as api_client:
         try:
             await DefaultApi(api_client).set_camera_intrinsics(
-                LocalizeCamera(actual_instance=PinholeCameraConfig.model_validate(camera.model_dump()))
+                LocalizerPinholeCameraConfig.model_validate(camera.model_dump())
             )
         except Exception as e:
             raise HTTPException(502, f"session backend unreachable: {e}") from e

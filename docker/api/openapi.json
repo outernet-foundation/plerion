@@ -2337,18 +2337,7 @@
             "name": "camera",
             "in": "query",
             "schema": {
-              "oneOf": [
-                {
-                  "$ref": "#/components/schemas/PinholeCameraConfig"
-                },
-                {
-                  "$ref": "#/components/schemas/OpenCVCameraConfig"
-                },
-                {
-                  "$ref": "#/components/schemas/FullOpenCVCameraConfig"
-                }
-              ],
-              "title": "CameraConfig"
+              "$ref": "#/components/schemas/PinholeCameraConfig"
             },
             "required": true,
             "deprecated": false,
@@ -4005,91 +3994,6 @@
         ],
         "title": "Float4"
       },
-      "FullOpenCVCameraConfig": {
-        "properties": {
-          "width": {
-            "type": "integer"
-          },
-          "height": {
-            "type": "integer"
-          },
-          "orientation": {
-            "type": "string",
-            "enum": [
-              "TOP_LEFT",
-              "TOP_RIGHT",
-              "BOTTOM_RIGHT",
-              "BOTTOM_LEFT",
-              "LEFT_TOP",
-              "RIGHT_TOP",
-              "RIGHT_BOTTOM",
-              "LEFT_BOTTOM"
-            ]
-          },
-          "model": {
-            "type": "string",
-            "enum": [
-              "FULL_OPENCV"
-            ]
-          },
-          "fx": {
-            "type": "number"
-          },
-          "fy": {
-            "type": "number"
-          },
-          "cx": {
-            "type": "number"
-          },
-          "cy": {
-            "type": "number"
-          },
-          "k1": {
-            "type": "number"
-          },
-          "k2": {
-            "type": "number"
-          },
-          "p1": {
-            "type": "number"
-          },
-          "p2": {
-            "type": "number"
-          },
-          "k3": {
-            "type": "number"
-          },
-          "k4": {
-            "type": "number"
-          },
-          "k5": {
-            "type": "number"
-          },
-          "k6": {
-            "type": "number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "cx",
-          "cy",
-          "fx",
-          "fy",
-          "height",
-          "k1",
-          "k2",
-          "k3",
-          "k4",
-          "k5",
-          "k6",
-          "model",
-          "orientation",
-          "p1",
-          "p2",
-          "width"
-        ],
-        "title": "FullOpenCVCameraConfig"
-      },
       "GroupBatchUpdate": {
         "properties": {
           "id": {
@@ -4993,79 +4897,6 @@
         ],
         "title": "NodeRead"
       },
-      "OpenCVCameraConfig": {
-        "properties": {
-          "width": {
-            "type": "integer"
-          },
-          "height": {
-            "type": "integer"
-          },
-          "orientation": {
-            "type": "string",
-            "enum": [
-              "TOP_LEFT",
-              "TOP_RIGHT",
-              "BOTTOM_RIGHT",
-              "BOTTOM_LEFT",
-              "LEFT_TOP",
-              "RIGHT_TOP",
-              "RIGHT_BOTTOM",
-              "LEFT_BOTTOM"
-            ]
-          },
-          "model": {
-            "type": "string",
-            "enum": [
-              "OPENCV"
-            ]
-          },
-          "fx": {
-            "type": "number"
-          },
-          "fy": {
-            "type": "number"
-          },
-          "cx": {
-            "type": "number"
-          },
-          "cy": {
-            "type": "number"
-          },
-          "k1": {
-            "type": "number"
-          },
-          "k2": {
-            "type": "number"
-          },
-          "p1": {
-            "type": "number"
-          },
-          "p2": {
-            "type": "number"
-          },
-          "k3": {
-            "type": "number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "cx",
-          "cy",
-          "fx",
-          "fy",
-          "height",
-          "k1",
-          "k2",
-          "k3",
-          "model",
-          "orientation",
-          "p1",
-          "p2",
-          "width"
-        ],
-        "title": "OpenCVCameraConfig"
-      },
       "OrchestrationStatus": {
         "type": "string",
         "enum": [
@@ -5099,12 +4930,6 @@
               "LEFT_BOTTOM"
             ]
           },
-          "model": {
-            "type": "string",
-            "enum": [
-              "PINHOLE"
-            ]
-          },
           "fx": {
             "type": "number"
           },
@@ -5125,7 +4950,6 @@
           "fx",
           "fy",
           "height",
-          "model",
           "orientation",
           "width"
         ],
@@ -5501,7 +5325,6 @@
             "type": "string"
           },
           "ref_sensor": {
-            "nullable": true,
             "type": "boolean"
           },
           "rotation": {
@@ -5511,23 +5334,14 @@
             "$ref": "#/components/schemas/Float3"
           },
           "camera_config": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/PinholeCameraConfig"
-              },
-              {
-                "$ref": "#/components/schemas/OpenCVCameraConfig"
-              },
-              {
-                "$ref": "#/components/schemas/FullOpenCVCameraConfig"
-              }
-            ]
+            "$ref": "#/components/schemas/PinholeCameraConfig"
           }
         },
         "type": "object",
         "required": [
           "camera_config",
           "id",
+          "ref_sensor",
           "rotation",
           "translation"
         ],

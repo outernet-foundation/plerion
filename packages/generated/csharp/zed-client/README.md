@@ -136,8 +136,8 @@ Class | Method | HTTP request | Description
 ## Documentation for Models
 
  - [Model.HTTPValidationError](docs/HTTPValidationError.md)
+ - [Model.LocationInner](docs/LocationInner.md)
  - [Model.ValidationError](docs/ValidationError.md)
- - [Model.ValidationErrorLocInner](docs/ValidationErrorLocInner.md)
 
 
 <a id="documentation-for-authorization"></a>
