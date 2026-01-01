@@ -1,3 +1,4 @@
+from typing import Annotated
 from uuid import UUID, uuid4
 
 from common.docker_compose_client import create_service, destroy_service, get_service_status
@@ -7,7 +8,11 @@ from core.localization_metrics import LocalizationMetrics
 from core.transform import Float3, Float4, Transform
 from datamodels.public_dtos import LocalizationSessionRead, localization_session_to_dto
 from datamodels.public_tables import LocalizationMap, LocalizationSession
-from fastapi import APIRouter, Body, Depends, File, HTTPException, UploadFile, status
+from fastapi.exceptions import HTTPException
+from litestar import delete, get, post, put
+from litestar.datastructures import UploadFile
+from litestar.exceptions import NotFoundException
+from litestar.params import Parameter
 from plerion_localizer_client import ApiClient, Configuration
 from plerion_localizer_client.api.default_api import DefaultApi
 from plerion_localizer_client.models.axis_convention import AxisConvention as LocalizerAxisConvention
@@ -18,19 +23,16 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..database import get_session
 from ..settings import get_settings
-from .localization_maps import get_localization_maps
-
-router = APIRouter(prefix="/localization_sessions", tags=["localization_sessions"])
+from .localization_maps import fetch_localization_maps
 
 settings = get_settings()
 
 SESSION_PORT = 8000  # internal port exposed by the session container
 
 
-@router.post("")
-async def create_localization_session(session: AsyncSession = Depends(get_session)) -> LocalizationSessionRead:
+@post("")
+async def create_localization_session(session: AsyncSession) -> LocalizationSessionRead:
     row = LocalizationSession(id=uuid4())
     container_name = f"localizer-{row.id}"
     row.container_id = create_service(
@@ -46,8 +48,8 @@ async def create_localization_session(session: AsyncSession = Depends(get_sessio
     return localization_session_to_dto(row)
 
 
-@router.delete("/{localization_session_id}")
-async def delete_localization_session(localization_session_id: UUID, session: AsyncSession = Depends(get_session)):
+@delete("/{localization_session_id:uuid}")
+async def delete_localization_session(session: AsyncSession, localization_session_id: UUID):
     row = await session.get(LocalizationSession, localization_session_id)
 
     if row:
@@ -56,15 +58,14 @@ async def delete_localization_session(localization_session_id: UUID, session: As
         await session.commit()
         return {"detail": f"Localization session with id {localization_session_id} deleted"}
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Localization session with id {localization_session_id} not found",
-        )
+        raise NotFoundException(f"Localization session with id {localization_session_id} not found")
 
 
-@router.put("/{localization_session_id}/camera")
+@put("/{localization_session_id:uuid}/camera")
 async def set_localization_session_camera_intrinsics(
-    localization_session_id: UUID, camera: CameraConfig = Body(...), session: AsyncSession = Depends(get_session)
+    session: AsyncSession,
+    localization_session_id: UUID,
+    camera: Annotated[CameraConfig, Parameter(description="Camera configuration")],
 ):
     if camera.model != "PINHOLE":
         raise HTTPException(status_code=422, detail="Only PINHOLE camera model is supported")
@@ -79,18 +80,16 @@ async def set_localization_session_camera_intrinsics(
             raise HTTPException(502, f"session backend unreachable: {e}") from e
 
 
-@router.get("/{localization_session_id}/status")
-async def get_localization_session_status(
-    localization_session_id: UUID, session: AsyncSession = Depends(get_session)
-) -> str:
+@get("/{localization_session_id:uuid}/status")
+async def get_localization_session_status(session: AsyncSession, localization_session_id: UUID) -> str:
     return get_service_status(f"localizer-{localization_session_id}", SESSION_PORT)
 
 
-@router.post("/{localization_session_id}/maps")
+@post("/{localization_session_id:uuid}/maps")
 async def load_localization_maps(
+    session: AsyncSession,
     localization_session_id: UUID,
-    map_ids: list[UUID] = Body(..., description="IDs of localization maps to load"),
-    session: AsyncSession = Depends(get_session),
+    map_ids: Annotated[list[UUID], Parameter(description="IDs of localization maps to load")],
 ):
     if map_ids == []:
         raise HTTPException(status_code=400, detail="No map_ids provided")
@@ -113,8 +112,8 @@ async def load_localization_maps(
     return {"ok": True}
 
 
-@router.delete("/{localization_session_id}/maps/{map_id}")
-async def unload_map(localization_session_id: UUID, map_id: UUID, session: AsyncSession = Depends(get_session)):
+@delete("/{localization_session_id:uuid}/maps/{map_id:uuid}")
+async def unload_map(session: AsyncSession, localization_session_id: UUID, map_id: UUID):
     map_row = await session.get(LocalizationMap, map_id)
     if not map_row:
         raise HTTPException(status_code=404, detail="Localization map not found")
@@ -129,10 +128,8 @@ async def unload_map(localization_session_id: UUID, map_id: UUID, session: Async
     return {"ok": True}
 
 
-@router.get("/{localization_session_id}/maps/{map_id}/status")
-async def get_map_load_status(
-    localization_session_id: UUID, map_id: UUID, session: AsyncSession = Depends(get_session)
-) -> LoadStateResponse:
+@get("/{localization_session_id:uuid}/maps/{map_id}/status")
+async def get_map_load_status(session: AsyncSession, localization_session_id: UUID, map_id: UUID) -> LoadStateResponse:
     map_row = await session.get(LocalizationMap, map_id)
     if not map_row:
         raise HTTPException(status_code=404, detail="Localization map not found")
@@ -152,12 +149,9 @@ class MapLocalization(BaseModel):
     metrics: LocalizationMetrics
 
 
-@router.post("/{localization_session_id}/localization")
+@post("/{localization_session_id:uuid}/localization")
 async def localize_image(
-    localization_session_id: UUID,
-    axis_convention: AxisConvention,
-    image: UploadFile = File(...),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession, localization_session_id: UUID, axis_convention: AxisConvention, image: UploadFile
 ) -> list[MapLocalization]:
     url = await _session_base_url(session, localization_session_id)
     async with ApiClient(Configuration(host=url)) as api_client:
@@ -167,7 +161,7 @@ async def localize_image(
             )
             reconstruction_id_to_map = {
                 map.reconstruction_id: map
-                for map in await get_localization_maps(
+                for map in await fetch_localization_maps(
                     reconstruction_ids=[response.id for response in localizations], ids=None, session=session
                 )
             }

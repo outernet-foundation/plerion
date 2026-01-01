@@ -1,9 +1,8 @@
 import tarfile
 from io import BytesIO
-from typing import Optional
+from typing import Annotated
 from uuid import UUID
 
-from common.schemas import tar_schema
 from core.axis_convention import AxisConvention
 from core.capture_session_manifest import CaptureSessionManifest
 from datamodels.public_dtos import (
@@ -18,8 +17,12 @@ from datamodels.public_dtos import (
     capture_session_to_dto,
 )
 from datamodels.public_tables import CaptureSession, Reconstruction
-from fastapi import APIRouter, Body, Depends, File, HTTPException, Query, UploadFile, status
-from fastapi.responses import StreamingResponse
+from fastapi.datastructures import UploadFile
+from litestar import Router, delete, get, patch, post, put
+from litestar.di import Provide
+from litestar.exceptions import HTTPException, NotFoundException
+from litestar.params import Body, Parameter
+from litestar.response import Stream
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,13 +31,9 @@ from ..storage import get_storage
 
 BUCKET = "dev-captures"
 
-router = APIRouter(prefix="/capture_sessions", tags=["capture_sessions"])
 
-
-@router.post("")
-async def create_capture_session(
-    capture: CaptureSessionCreate, session: AsyncSession = Depends(get_session)
-) -> CaptureSessionRead:
+@post("")
+async def create_capture_session(session: AsyncSession, capture: CaptureSessionCreate) -> CaptureSessionRead:
     row = await _create_capture(capture, False, session)
 
     session.add(row)
@@ -44,11 +43,9 @@ async def create_capture_session(
     return capture_session_to_dto(row)
 
 
-@router.post("/bulk")
+@post("/bulk")
 async def create_capture_sessions(
-    captures: list[CaptureSessionCreate] = Body(...),
-    overwrite: bool = False,
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession, captures: Annotated[list[CaptureSessionCreate], Body()], overwrite: bool = False
 ) -> list[CaptureSessionRead]:
     rows: list[CaptureSession] = []
     for capture in captures:
@@ -63,10 +60,10 @@ async def create_capture_sessions(
     return [capture_session_to_dto(r) for r in rows]
 
 
-@router.get("")
+@get("")
 async def get_capture_sessions(
-    ids: Optional[list[UUID]] = Query(None, description="Optional list of Ids to filter by"),
-    session: AsyncSession = Depends(get_session),
+    session: AsyncSession,
+    ids: Annotated[list[UUID] | None, Parameter(description="Optional list of Ids to filter by")] = None,
 ) -> list[CaptureSessionRead]:
     query = select(CaptureSession)
 
@@ -79,33 +76,34 @@ async def get_capture_sessions(
     return results
 
 
-@router.get("/{id}")
-async def get_capture_session(id: UUID, session: AsyncSession = Depends(get_session)) -> CaptureSessionRead:
+@get("/{id:uuid}")
+async def get_capture_session(session: AsyncSession, id: UUID) -> CaptureSessionRead:
     row = await session.get(CaptureSession, id)
 
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
+        raise NotFoundException(f"Capture session with id {id} not found")
 
     return capture_session_to_dto(row)
 
 
-@router.get("/{id}/reconstructions")
-async def get_capture_session_reconstructions(id: UUID, session: AsyncSession = Depends(get_session)) -> list[UUID]:
+@get("/{id:uuid}/reconstructions")
+async def get_capture_session_reconstructions(session: AsyncSession, id: UUID) -> list[UUID]:
     row = await session.get(CaptureSession, id)
 
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
+        raise NotFoundException(f"Capture session with id {id} not found")
+
     result = await session.execute(select(Reconstruction.id).where(Reconstruction.capture_session_id == id))
 
     return [r[0] for r in result.all()]
 
 
-@router.delete("/{id}")
-async def delete_capture_session(id: UUID, session: AsyncSession = Depends(get_session)) -> None:
+@delete("/{id:uuid}")
+async def delete_capture_session(session: AsyncSession, id: UUID) -> None:
     row = await session.get(CaptureSession, id)
 
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
+        raise NotFoundException(f"Capture session with id {id} not found")
 
     await session.delete(row)
 
@@ -113,14 +111,12 @@ async def delete_capture_session(id: UUID, session: AsyncSession = Depends(get_s
     return None
 
 
-@router.patch("/{id}")
-async def update_capture_session(
-    id: UUID, capture: CaptureSessionUpdate, session: AsyncSession = Depends(get_session)
-) -> CaptureSessionRead:
+@patch("/{id:uuid}")
+async def update_capture_session(session: AsyncSession, id: UUID, capture: CaptureSessionUpdate) -> CaptureSessionRead:
     row = await session.get(CaptureSession, id)
 
     if not row:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {id} not found")
+        raise NotFoundException(f"Capture session with id {id} not found")
 
     capture_session_apply_dto(row, capture)
 
@@ -129,9 +125,9 @@ async def update_capture_session(
     return capture_session_to_dto(row)
 
 
-@router.patch("")
+@patch("")
 async def update_capture_sessions(
-    captures: list[CaptureSessionBatchUpdate], allow_missing: bool = False, session: AsyncSession = Depends(get_session)
+    session: AsyncSession, captures: list[CaptureSessionBatchUpdate], allow_missing: bool = False
 ) -> list[CaptureSessionRead]:
     rows: list[CaptureSession] = []
     for capture in captures:
@@ -139,9 +135,7 @@ async def update_capture_sessions(
 
         if not row:
             if not allow_missing:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND, detail=f"Capture session with id {capture.id} not found"
-                )
+                raise NotFoundException(f"Capture session with id {capture.id} not found")
             continue
 
         capture_session_apply_batch_update_dto(row, capture)
@@ -153,24 +147,22 @@ async def update_capture_sessions(
     return [capture_session_to_dto(r) for r in rows]
 
 
-@router.put("/{id}/tar")
-async def upload_capture_session_tar(
-    id: UUID, tar: UploadFile = File(..., media_type="application/x-tar"), session: AsyncSession = Depends(get_session)
-) -> None:
+@put("/{id:uuid}/tar")
+async def upload_capture_session_tar(session: AsyncSession, id: UUID, tar: UploadFile) -> None:
     # Validate capture session exists
     row = await session.get(CaptureSession, id)
     if row is None:
-        raise HTTPException(404, f"Capture session {id} not found")
+        raise NotFoundException(f"Capture session {id} not found")
 
     # Validate tar file
     with tarfile.open(fileobj=BytesIO(tar.file.read()), mode="r:*") as tar_file:
         capture_session_manifest = tar_file.extractfile("manifest.json")
         if capture_session_manifest is None:
-            raise HTTPException(400, "Capture session tar file is missing manifest.json")
+            raise NotFoundException("Capture session tar file is missing manifest.json")
         try:
             _ = CaptureSessionManifest.model_validate_json(capture_session_manifest.read().decode("utf-8"))
         except Exception as exception:
-            raise HTTPException(400, f"Capture session manifest.json is invalid: {exception}") from exception
+            raise NotFoundException(f"Capture session manifest.json is invalid: {exception}") from exception
 
     # Reset file pointer to beginning
     tar.file.seek(0)
@@ -184,19 +176,19 @@ async def upload_capture_session_tar(
     return None
 
 
-@router.get("/{id}/tar", responses={200: {"content": tar_schema}})
-async def download_capture_session_tar(id: UUID, session: AsyncSession = Depends(get_session)) -> StreamingResponse:
+@get("/{id:uuid}/tar")
+async def download_capture_session_tar(session: AsyncSession, id: UUID) -> Stream:
     row = await session.get(CaptureSession, id)
 
     if row is None:
-        raise HTTPException(404, f"Capture session {id} not found")
+        raise NotFoundException(f"Capture session {id} not found")
 
     try:
         body = get_storage().get_object(BUCKET, f"{id}.tar")["Body"]
     except Exception as exception:
         raise HTTPException(502, f"Download failed: {exception}") from exception
 
-    return StreamingResponse(
+    return Stream(
         body.iter_chunks(chunk_size=1024 * 1024),
         media_type="application/x-tar",
         headers={"Content-Disposition": f'attachment; filename="{id}.tar"'},
@@ -204,10 +196,8 @@ async def download_capture_session_tar(id: UUID, session: AsyncSession = Depends
 
 
 # dummy method, just to get RigConfig into the OpenAPI schema
-@router.get("/{id}/rig_config")
-async def get_capture_session_rig_config(
-    id: UUID, session: AsyncSession = Depends(get_session)
-) -> CaptureSessionManifest:
+@get("/{id:uuid}/rig_config")
+async def get_capture_session_rig_config(session: AsyncSession, id: UUID) -> CaptureSessionManifest:
     rig_config = CaptureSessionManifest(axis_convention=AxisConvention.OPENCV, rigs=[])
 
     return rig_config
@@ -226,3 +216,23 @@ async def _create_capture(capture: CaptureSessionCreate, overwrite: bool, sessio
             return existing_row
 
     return capture_session_from_dto(capture)
+
+
+router = Router(
+    path="/capture_sessions",
+    tags=["Capture Sessions"],
+    dependencies={"session": Provide(get_session)},
+    route_handlers=[
+        create_capture_session,
+        create_capture_sessions,
+        get_capture_sessions,
+        get_capture_session,
+        get_capture_session_reconstructions,
+        delete_capture_session,
+        update_capture_session,
+        update_capture_sessions,
+        upload_capture_session_tar,
+        download_capture_session_tar,
+        get_capture_session_rig_config,
+    ],
+)
