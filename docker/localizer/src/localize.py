@@ -28,7 +28,7 @@ lightglue: Any = None
 
 
 def load_models(max_keypoints: int):
-    if not environ.get("CODEGEN"):
+    if environ.get("CODEGEN"):
         return
 
     from neural_networks.models import load_DIR, load_lightglue, load_superpoint

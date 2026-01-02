@@ -62,6 +62,5 @@ src/PlerionApiClient/Model/ReconstructionOptions.cs
 src/PlerionApiClient/Model/ReconstructionRead.cs
 src/PlerionApiClient/Model/RigCameraConfig.cs
 src/PlerionApiClient/Model/RigConfig.cs
-src/PlerionApiClient/Model/ServiceStatus.cs
 src/PlerionApiClient/Model/Transform.cs
 src/PlerionApiClient/PlerionApiClient.csproj

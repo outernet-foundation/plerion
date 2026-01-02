@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from common.docker_compose_client import ServiceStatus, create_service, destroy_service, get_service_status
+from common.docker_compose_client import create_service, destroy_service, get_service_status
 from core.axis_convention import AxisConvention
 from core.camera_config import PinholeCameraConfig
 from core.localization_metrics import LocalizationMetrics
@@ -79,7 +79,7 @@ async def set_localization_session_camera_intrinsics(
 
 
 @get("/{localization_session_id:uuid}/status")
-async def get_localization_session_status(session: AsyncSession, localization_session_id: UUID) -> ServiceStatus:
+async def get_localization_session_status(session: AsyncSession, localization_session_id: UUID) -> str:
     return get_service_status(f"localizer-{localization_session_id}", SESSION_PORT)
 
 

@@ -175,7 +175,6 @@ Class | Method | HTTP request | Description
  - [ReconstructionRead](docs/ReconstructionRead.md)
  - [RigCameraConfig](docs/RigCameraConfig.md)
  - [RigConfig](docs/RigConfig.md)
- - [ServiceStatus](docs/ServiceStatus.md)
  - [Transform](docs/Transform.md)
 
 

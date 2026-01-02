@@ -1031,7 +1031,7 @@ paths:
           content:
             text/plain:
               schema:
-                $ref: "#/components/schemas/ServiceStatus"
+                type: string
           description: "Request fulfilled, document follows"
         "400":
           content:
@@ -3335,19 +3335,6 @@ components:
       - id
       title: RigConfig
       type: object
-    ServiceStatus:
-      enum:
-      - unknown
-      - created
-      - restarting
-      - running
-      - removing
-      - paused
-      - exited
-      - dead
-      - ready
-      title: ServiceStatus
-      type: string
     Transform:
       example:
         rotation:

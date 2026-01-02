@@ -2413,7 +2413,7 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/ServiceStatus"
+                  "type": "string"
                 }
               }
             }
@@ -5361,21 +5361,6 @@
           "id"
         ],
         "title": "RigConfig"
-      },
-      "ServiceStatus": {
-        "type": "string",
-        "enum": [
-          "unknown",
-          "created",
-          "restarting",
-          "running",
-          "removing",
-          "paused",
-          "exited",
-          "dead",
-          "ready"
-        ],
-        "title": "ServiceStatus"
       },
       "Transform": {
         "properties": {

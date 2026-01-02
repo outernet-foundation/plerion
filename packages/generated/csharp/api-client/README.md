@@ -216,7 +216,6 @@ Class | Method | HTTP request | Description
  - [Model.ReconstructionRead](docs/ReconstructionRead.md)
  - [Model.RigCameraConfig](docs/RigCameraConfig.md)
  - [Model.RigConfig](docs/RigConfig.md)
- - [Model.ServiceStatus](docs/ServiceStatus.md)
  - [Model.Transform](docs/Transform.md)
 
 

@@ -67,7 +67,6 @@ __all__ = [
     "ReconstructionRead",
     "RigCameraConfig",
     "RigConfig",
-    "ServiceStatus",
     "Transform",
 ]
 
@@ -125,6 +124,5 @@ from plerion_api_client.models.reconstruction_options import ReconstructionOptio
 from plerion_api_client.models.reconstruction_read import ReconstructionRead as ReconstructionRead
 from plerion_api_client.models.rig_camera_config import RigCameraConfig as RigCameraConfig
 from plerion_api_client.models.rig_config import RigConfig as RigConfig
-from plerion_api_client.models.service_status import ServiceStatus as ServiceStatus
 from plerion_api_client.models.transform import Transform as Transform
 

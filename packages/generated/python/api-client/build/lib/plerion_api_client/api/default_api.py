@@ -46,7 +46,6 @@ from plerion_api_client.models.pinhole_camera_config import PinholeCameraConfig
 from plerion_api_client.models.reconstruction_create_with_options import ReconstructionCreateWithOptions
 from plerion_api_client.models.reconstruction_manifest import ReconstructionManifest
 from plerion_api_client.models.reconstruction_read import ReconstructionRead
-from plerion_api_client.models.service_status import ServiceStatus
 
 from plerion_api_client.api_client import ApiClient, RequestSerialized
 from plerion_api_client.api_response import ApiResponse
@@ -6682,7 +6681,7 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ServiceStatus:
+    ) -> str:
         """GetLocalizationSessionStatus
 
 
@@ -6719,7 +6718,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ServiceStatus",
+            '200': "str",
             '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
@@ -6749,7 +6748,7 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[ServiceStatus]:
+    ) -> ApiResponse[str]:
         """GetLocalizationSessionStatus
 
 
@@ -6786,7 +6785,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ServiceStatus",
+            '200': "str",
             '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
@@ -6853,7 +6852,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "ServiceStatus",
+            '200': "str",
             '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(

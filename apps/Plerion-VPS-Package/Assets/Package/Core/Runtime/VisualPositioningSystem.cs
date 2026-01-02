@@ -102,10 +102,10 @@ namespace Plerion.Core
                 {
                     var status = await api.GetLocalizationSessionStatusAsync(session.Id);
 
-                    if (status == ServiceStatus.Dead || status == ServiceStatus.Exited)
+                    if (status == "dead" || status == "exited")
                         throw new Exception("Session failed to start.");
 
-                    if (status == ServiceStatus.Ready)
+                    if (status == "ready")
                         break;
 
                     await UniTask.WaitForSeconds(1);
