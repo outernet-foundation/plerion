@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID, uuid4
 
-from common.docker_compose_client import create_service, destroy_service, get_service_status
+from common.docker_compose_client import ServiceStatus, create_service, destroy_service, get_service_status
 from core.axis_convention import AxisConvention
 from core.camera_config import PinholeCameraConfig
 from core.localization_metrics import LocalizationMetrics
@@ -12,6 +12,7 @@ from fastapi.exceptions import HTTPException
 from litestar import Router, delete, get, post, put
 from litestar.datastructures import UploadFile
 from litestar.di import Provide
+from litestar.enums import RequestEncodingType
 from litestar.exceptions import NotFoundException
 from litestar.params import Body, Parameter
 from plerion_localizer_client import ApiClient, Configuration
@@ -65,20 +66,20 @@ async def delete_localization_session(session: AsyncSession, localization_sessio
 
 @put("/{localization_session_id:uuid}/camera")
 async def set_localization_session_camera_intrinsics(
-    session: AsyncSession, localization_session_id: UUID, camera: Annotated[PinholeCameraConfig, Body]
+    session: AsyncSession, localization_session_id: UUID, data: PinholeCameraConfig
 ) -> None:
     url = await _session_base_url(session, localization_session_id)
     async with ApiClient(Configuration(host=url)) as api_client:
         try:
             await DefaultApi(api_client).set_camera_intrinsics(
-                LocalizerPinholeCameraConfig.model_validate(camera.model_dump())
+                LocalizerPinholeCameraConfig.model_validate(data.model_dump())
             )
         except Exception as e:
             raise HTTPException(502, f"session backend unreachable: {e}") from e
 
 
 @get("/{localization_session_id:uuid}/status")
-async def get_localization_session_status(session: AsyncSession, localization_session_id: UUID) -> str:
+async def get_localization_session_status(session: AsyncSession, localization_session_id: UUID) -> ServiceStatus:
     return get_service_status(f"localizer-{localization_session_id}", SESSION_PORT)
 
 
@@ -144,13 +145,16 @@ class MapLocalization(BaseModel):
 
 @post("/{localization_session_id:uuid}/localization")
 async def localize_image(
-    session: AsyncSession, localization_session_id: UUID, axis_convention: AxisConvention, image: UploadFile
+    session: AsyncSession,
+    localization_session_id: UUID,
+    axis_convention: AxisConvention,
+    data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
 ) -> list[MapLocalization]:
     url = await _session_base_url(session, localization_session_id)
     async with ApiClient(Configuration(host=url)) as api_client:
         try:
             localizations = await DefaultApi(api_client).localize_image(
-                LocalizerAxisConvention(axis_convention.value), await image.read()
+                LocalizerAxisConvention(axis_convention.value), await data.read()
             )
             reconstruction_id_to_map = {
                 map.reconstruction_id: map

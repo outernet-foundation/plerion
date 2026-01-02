@@ -53,24 +53,20 @@ paths:
         deprecated: false
         explode: true
         in: query
-        name: captures
-        required: true
-        schema:
-          items:
-            $ref: "#/components/schemas/CaptureSessionBatchUpdate"
-          type: array
-        style: form
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
         name: allow_missing
         required: false
         schema:
           default: false
           type: boolean
         style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/CaptureSessionBatchUpdate"
+              type: array
+        required: true
       responses:
         "200":
           content:
@@ -92,17 +88,12 @@ paths:
     post:
       deprecated: false
       operationId: create_capture_session
-      parameters:
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: capture
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureSessionCreate"
         required: true
-        schema:
-          $ref: "#/components/schemas/CaptureSessionCreate"
-        style: form
       responses:
         "201":
           content:
@@ -129,24 +120,20 @@ paths:
         deprecated: false
         explode: true
         in: query
-        name: captures
-        required: true
-        schema:
-          items:
-            $ref: "#/components/schemas/CaptureSessionCreate"
-          type: array
-        style: form
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
         name: overwrite
         required: false
         schema:
           default: false
           type: boolean
         style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/CaptureSessionCreate"
+              type: array
+        required: true
       responses:
         "201":
           content:
@@ -233,16 +220,12 @@ paths:
           format: uuid
           type: string
         style: simple
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: capture
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CaptureSessionUpdate"
         required: true
-        schema:
-          $ref: "#/components/schemas/CaptureSessionUpdate"
-        style: form
       responses:
         "200":
           content:
@@ -334,15 +317,12 @@ paths:
           format: uuid
           type: string
         style: simple
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: tar
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/upload_capture_session_tar_request"
         required: true
-        schema: {}
-        style: form
       responses:
         "200":
           description: "Request fulfilled, document follows"
@@ -454,17 +434,12 @@ paths:
     post:
       deprecated: false
       operationId: create_reconstruction
-      parameters:
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: reconstruction
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconstructionCreateWithOptions"
         required: true
-        schema:
-          $ref: "#/components/schemas/ReconstructionCreateWithOptions"
-        style: form
       responses:
         "201":
           content:
@@ -818,24 +793,20 @@ paths:
         deprecated: false
         explode: true
         in: query
-        name: localization_maps
-        required: true
-        schema:
-          items:
-            $ref: "#/components/schemas/LocalizationMapBatchUpdate"
-          type: array
-        style: form
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
         name: allow_missing
         required: false
         schema:
           default: false
           type: boolean
         style: form
+      requestBody:
+        content:
+          application/json:
+            schema:
+              items:
+                $ref: "#/components/schemas/LocalizationMapBatchUpdate"
+              type: array
+        required: true
       responses:
         "200":
           content:
@@ -857,17 +828,12 @@ paths:
     post:
       deprecated: false
       operationId: create_localization_map
-      parameters:
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: localization_map
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalizationMapCreate"
         required: true
-        schema:
-          $ref: "#/components/schemas/LocalizationMapCreate"
-        style: form
       responses:
         "201":
           content:
@@ -952,16 +918,12 @@ paths:
           format: uuid
           type: string
         style: simple
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: localization_map
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocalizationMapUpdate"
         required: true
-        schema:
-          $ref: "#/components/schemas/LocalizationMapUpdate"
-        style: form
       responses:
         "200":
           content:
@@ -1032,16 +994,12 @@ paths:
           format: uuid
           type: string
         style: simple
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: camera
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PinholeCameraConfig"
         required: true
-        schema:
-          $ref: "#/components/schemas/PinholeCameraConfig"
-        style: form
       responses:
         "200":
           description: "Request fulfilled, document follows"
@@ -1073,7 +1031,7 @@ paths:
           content:
             text/plain:
               schema:
-                type: string
+                $ref: "#/components/schemas/ServiceStatus"
           description: "Request fulfilled, document follows"
         "400":
           content:
@@ -1224,17 +1182,12 @@ paths:
         schema:
           $ref: "#/components/schemas/AxisConvention"
         style: form
-      - allowEmptyValue: false
-        allowReserved: false
-        deprecated: false
-        explode: true
-        in: query
-        name: image
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/upload_capture_session_tar_request"
         required: true
-        schema:
-          format: binary
-          type: string
-        style: form
       responses:
         "201":
           content:
@@ -1698,6 +1651,10 @@ components:
       title: AxisConvention
       type: string
     CaptureSessionBatchUpdate:
+      example:
+        name: name
+        device_type: ARFoundation
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         id:
           format: uuid
@@ -1714,6 +1671,10 @@ components:
       title: CaptureSessionBatchUpdate
       type: object
     CaptureSessionCreate:
+      example:
+        name: name
+        device_type: ARFoundation
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         id:
           format: uuid
@@ -1864,6 +1825,9 @@ components:
       title: CaptureSessionRead
       type: object
     CaptureSessionUpdate:
+      example:
+        name: name
+        device_type: ARFoundation
       properties:
         device_type:
           $ref: "#/components/schemas/DeviceType"
@@ -2089,6 +2053,20 @@ components:
       title: LoadStateResponse
       type: object
     LocalizationMapBatchUpdate:
+      example:
+        rotation_x: 5.637376656633329
+        color: 9
+        rotation_w: 7.061401241503109
+        active: true
+        rotation_z: 2.3021358869347655
+        rotation_y: 0.8008281904610115
+        lighting: 3
+        position_x: 6.027456183070403
+        position_y: 1.4658129805029452
+        position_z: 5.962133916683182
+        name: name
+        reconstruction_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         reconstruction_id:
           format: uuid
@@ -2148,6 +2126,20 @@ components:
       title: LocalizationMapBatchUpdate
       type: object
     LocalizationMapCreate:
+      example:
+        rotation_x: 5.637376656633329
+        color: 9
+        rotation_w: 7.061401241503109
+        active: true
+        rotation_z: 2.3021358869347655
+        rotation_y: 0.8008281904610115
+        lighting: 3
+        position_x: 6.027456183070403
+        position_y: 1.4658129805029452
+        position_z: 5.962133916683182
+        name: name
+        reconstruction_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         reconstruction_id:
           format: uuid
@@ -2296,6 +2288,19 @@ components:
       title: LocalizationMapRead
       type: object
     LocalizationMapUpdate:
+      example:
+        position_x: 6.027456183070403
+        position_y: 1.4658129805029452
+        position_z: 5.962133916683182
+        rotation_x: 5.637376656633329
+        color: 9
+        rotation_w: 7.061401241503109
+        name: name
+        reconstruction_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        active: true
+        rotation_z: 2.3021358869347655
+        rotation_y: 0.8008281904610115
+        lighting: 3
       properties:
         reconstruction_id:
           format: uuid
@@ -2777,6 +2782,10 @@ components:
       title: PinholeCameraConfig
       type: object
     ReconstructionCreate:
+      example:
+        capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        orchestration_status: queued
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         capture_session_id:
           format: uuid
@@ -2794,6 +2803,33 @@ components:
       title: ReconstructionCreate
       type: object
     ReconstructionCreateWithOptions:
+      example:
+        options:
+          random_seed: 0
+          ransac_max_error: 5.637376656633329
+          triangulation_merge_max_reprojection_error: 3.616076749251911
+          ransac_min_inlier_ratio: 2.3021358869347655
+          bundle_adjustment_refine_sensor_from_rig: true
+          bundle_adjustment_refine_principal_point: true
+          compression_opq_number_of_subvectors: 4
+          rotation_threshold: 1.4658129805029452
+          compression_opq_number_of_bits_per_subvector: 7
+          use_prior_position: true
+          pose_prior_position_sigma_m: 1.0246457001441578
+          max_keypoints_per_image: 5
+          compression_opq_number_of_training_iterations: 1
+          neighbors_count: 6
+          triangulation_complete_max_reprojection_error: 9.301444243932576
+          mapper_filter_max_reprojection_error: 2.027123023002322
+          triangulation_minimum_angle: 7.061401241503109
+          bundle_adjustment_refine_additional_params: true
+          bundle_adjustment_refine_focal_length: true
+          single_threaded: true
+          rig_verification: true
+        create:
+          capture_session_id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          orchestration_status: queued
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
       properties:
         create:
           $ref: "#/components/schemas/ReconstructionCreate"
@@ -2828,31 +2864,31 @@ components:
           single_threaded: true
           rig_verification: true
         metrics:
-          all_verified_match_inliers_median: 3.5571952270680973
-          cross_sensor_verified_matches: 3
-          reprojection_pixel_error_50th_percentile: 5.025004791520295
-          stereo_verified_match_rate: 1.284659006116532
-          same_sensor_verified_match_inliers_median: 3.353193347011243
-          num_3d_points: 1
-          same_sensor_verified_match_rate: 5.944895607614016
-          all_verified_match_inliers_mean: 6.438423552598547
-          cross_sensor_verified_match_inliers_mean: 0.8851374739011653
-          stereo_verified_match_inliers_median: 6.778324963048013
-          all_verified_matches: 8
-          average_keypoints_per_image: 4.965218492984954
-          cross_sensor_verified_match_rate: 7.143538047012306
-          registration_rate: 7.457744773683766
-          same_sensor_verified_match_inliers_mean: 6.704019297950036
+          all_verified_match_inliers_median: 1.2315135367772556
+          cross_sensor_verified_matches: 9
+          reprojection_pixel_error_50th_percentile: 2.3021358869347655
+          stereo_verified_match_rate: 1.4894159098541704
+          same_sensor_verified_match_inliers_median: 9.965781217890562
+          num_3d_points: 5
+          same_sensor_verified_match_rate: 4.965218492984954
+          all_verified_match_inliers_mean: 7.386281948385884
+          cross_sensor_verified_match_inliers_mean: 8.762042012749001
+          stereo_verified_match_inliers_median: 7.457744773683766
+          all_verified_matches: 2
+          average_keypoints_per_image: 5.637376656633329
+          cross_sensor_verified_match_rate: 6.683562403749608
+          registration_rate: 1.4658129805029452
+          same_sensor_verified_match_inliers_mean: 5.025004791520295
           registered_images: 6
-          percent_tracks_with_length_greater_than_or_equal_to_3: 6.683562403749608
-          same_sensor_verified_matches: 6
-          track_length_50th_percentile: 9.369310271410669
-          cross_sensor_verified_match_inliers_median: 7.058770351582356
-          all_verified_match_rate: 9.018348186070783
-          total_images: 1
-          reprojection_pixel_error_90th_percentile: 9.965781217890562
-          stereo_verified_matches: 6
-          stereo_verified_match_inliers_mean: 2.8841621266687802
+          percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
+          same_sensor_verified_matches: 1
+          track_length_50th_percentile: 9.301444243932576
+          cross_sensor_verified_match_inliers_median: 9.018348186070783
+          all_verified_match_rate: 4.145608029883936
+          total_images: 0
+          reprojection_pixel_error_90th_percentile: 7.061401241503109
+          stereo_verified_matches: 1
+          stereo_verified_match_inliers_mean: 6.84685269835264
         capture_id: capture_id
         error: error
         status: queued
@@ -2889,31 +2925,31 @@ components:
       type: object
     ReconstructionMetrics:
       example:
-        all_verified_match_inliers_median: 3.5571952270680973
-        cross_sensor_verified_matches: 3
-        reprojection_pixel_error_50th_percentile: 5.025004791520295
-        stereo_verified_match_rate: 1.284659006116532
-        same_sensor_verified_match_inliers_median: 3.353193347011243
-        num_3d_points: 1
-        same_sensor_verified_match_rate: 5.944895607614016
-        all_verified_match_inliers_mean: 6.438423552598547
-        cross_sensor_verified_match_inliers_mean: 0.8851374739011653
-        stereo_verified_match_inliers_median: 6.778324963048013
-        all_verified_matches: 8
-        average_keypoints_per_image: 4.965218492984954
-        cross_sensor_verified_match_rate: 7.143538047012306
-        registration_rate: 7.457744773683766
-        same_sensor_verified_match_inliers_mean: 6.704019297950036
+        all_verified_match_inliers_median: 1.2315135367772556
+        cross_sensor_verified_matches: 9
+        reprojection_pixel_error_50th_percentile: 2.3021358869347655
+        stereo_verified_match_rate: 1.4894159098541704
+        same_sensor_verified_match_inliers_median: 9.965781217890562
+        num_3d_points: 5
+        same_sensor_verified_match_rate: 4.965218492984954
+        all_verified_match_inliers_mean: 7.386281948385884
+        cross_sensor_verified_match_inliers_mean: 8.762042012749001
+        stereo_verified_match_inliers_median: 7.457744773683766
+        all_verified_matches: 2
+        average_keypoints_per_image: 5.637376656633329
+        cross_sensor_verified_match_rate: 6.683562403749608
+        registration_rate: 1.4658129805029452
+        same_sensor_verified_match_inliers_mean: 5.025004791520295
         registered_images: 6
-        percent_tracks_with_length_greater_than_or_equal_to_3: 6.683562403749608
-        same_sensor_verified_matches: 6
-        track_length_50th_percentile: 9.369310271410669
-        cross_sensor_verified_match_inliers_median: 7.058770351582356
-        all_verified_match_rate: 9.018348186070783
-        total_images: 1
-        reprojection_pixel_error_90th_percentile: 9.965781217890562
-        stereo_verified_matches: 6
-        stereo_verified_match_inliers_mean: 2.8841621266687802
+        percent_tracks_with_length_greater_than_or_equal_to_3: 3.616076749251911
+        same_sensor_verified_matches: 1
+        track_length_50th_percentile: 9.301444243932576
+        cross_sensor_verified_match_inliers_median: 9.018348186070783
+        all_verified_match_rate: 4.145608029883936
+        total_images: 0
+        reprojection_pixel_error_90th_percentile: 7.061401241503109
+        stereo_verified_matches: 1
+        stereo_verified_match_inliers_mean: 6.84685269835264
       properties:
         total_images:
           description: Total number of input images considered for this reconstruction
@@ -3299,6 +3335,19 @@ components:
       - id
       title: RigConfig
       type: object
+    ServiceStatus:
+      enum:
+      - unknown
+      - created
+      - restarting
+      - running
+      - removing
+      - paused
+      - exited
+      - dead
+      - ready
+      title: ServiceStatus
+      type: string
     Transform:
       example:
         rotation:
@@ -3343,5 +3392,11 @@ components:
       required:
       - detail
       - status_code
+      type: object
+    upload_capture_session_tar_request:
+      properties:
+        file:
+          format: binary
+          type: string
       type: object
 

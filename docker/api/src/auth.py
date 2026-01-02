@@ -95,4 +95,4 @@ class AuthMiddleware(AbstractAuthenticationMiddleware):
         if "sub" not in claims:
             raise NotAuthorizedException(detail="forbidden: missing sub")
 
-        return AuthenticationResult(claims["sub"], token)
+        return AuthenticationResult(user=claims["sub"], auth=claims)

@@ -52,5 +52,6 @@ from plerion_api_client.models.reconstruction_options import ReconstructionOptio
 from plerion_api_client.models.reconstruction_read import ReconstructionRead
 from plerion_api_client.models.rig_camera_config import RigCameraConfig
 from plerion_api_client.models.rig_config import RigConfig
+from plerion_api_client.models.service_status import ServiceStatus
 from plerion_api_client.models.transform import Transform
 

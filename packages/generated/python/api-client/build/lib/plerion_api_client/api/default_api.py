@@ -46,6 +46,7 @@ from plerion_api_client.models.pinhole_camera_config import PinholeCameraConfig
 from plerion_api_client.models.reconstruction_create_with_options import ReconstructionCreateWithOptions
 from plerion_api_client.models.reconstruction_manifest import ReconstructionManifest
 from plerion_api_client.models.reconstruction_read import ReconstructionRead
+from plerion_api_client.models.service_status import ServiceStatus
 
 from plerion_api_client.api_client import ApiClient, RequestSerialized
 from plerion_api_client.api_response import ApiResponse
@@ -68,7 +69,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_session(
         self,
-        capture: CaptureSessionCreate,
+        capture_session_create: CaptureSessionCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -85,8 +86,8 @@ class DefaultApi:
         """CreateCaptureSession
 
 
-        :param capture: (required)
-        :type capture: CaptureSessionCreate
+        :param capture_session_create: (required)
+        :type capture_session_create: CaptureSessionCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -110,7 +111,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_session_serialize(
-            capture=capture,
+            capture_session_create=capture_session_create,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -135,7 +136,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_session_with_http_info(
         self,
-        capture: CaptureSessionCreate,
+        capture_session_create: CaptureSessionCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -152,8 +153,8 @@ class DefaultApi:
         """CreateCaptureSession
 
 
-        :param capture: (required)
-        :type capture: CaptureSessionCreate
+        :param capture_session_create: (required)
+        :type capture_session_create: CaptureSessionCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -177,7 +178,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_session_serialize(
-            capture=capture,
+            capture_session_create=capture_session_create,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -202,7 +203,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_session_without_preload_content(
         self,
-        capture: CaptureSessionCreate,
+        capture_session_create: CaptureSessionCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -219,8 +220,8 @@ class DefaultApi:
         """CreateCaptureSession
 
 
-        :param capture: (required)
-        :type capture: CaptureSessionCreate
+        :param capture_session_create: (required)
+        :type capture_session_create: CaptureSessionCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -244,7 +245,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_session_serialize(
-            capture=capture,
+            capture_session_create=capture_session_create,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -264,7 +265,7 @@ class DefaultApi:
 
     def _create_capture_session_serialize(
         self,
-        capture,
+        capture_session_create,
         _request_auth,
         _content_type,
         _headers,
@@ -287,13 +288,11 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
-        if capture is not None:
-            
-            _query_params.append(('capture', capture))
-            
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if capture_session_create is not None:
+            _body_params = capture_session_create
 
 
         # set the HTTP header `Accept`
@@ -304,6 +303,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -330,7 +342,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_sessions(
         self,
-        captures: List[CaptureSessionCreate],
+        capture_session_create: List[CaptureSessionCreate],
         overwrite: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -348,8 +360,8 @@ class DefaultApi:
         """CreateCaptureSessions
 
 
-        :param captures: (required)
-        :type captures: List[CaptureSessionCreate]
+        :param capture_session_create: (required)
+        :type capture_session_create: List[CaptureSessionCreate]
         :param overwrite:
         :type overwrite: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -375,7 +387,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_sessions_serialize(
-            captures=captures,
+            capture_session_create=capture_session_create,
             overwrite=overwrite,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -401,7 +413,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_sessions_with_http_info(
         self,
-        captures: List[CaptureSessionCreate],
+        capture_session_create: List[CaptureSessionCreate],
         overwrite: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -419,8 +431,8 @@ class DefaultApi:
         """CreateCaptureSessions
 
 
-        :param captures: (required)
-        :type captures: List[CaptureSessionCreate]
+        :param capture_session_create: (required)
+        :type capture_session_create: List[CaptureSessionCreate]
         :param overwrite:
         :type overwrite: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -446,7 +458,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_sessions_serialize(
-            captures=captures,
+            capture_session_create=capture_session_create,
             overwrite=overwrite,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -472,7 +484,7 @@ class DefaultApi:
     @validate_call
     async def create_capture_sessions_without_preload_content(
         self,
-        captures: List[CaptureSessionCreate],
+        capture_session_create: List[CaptureSessionCreate],
         overwrite: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -490,8 +502,8 @@ class DefaultApi:
         """CreateCaptureSessions
 
 
-        :param captures: (required)
-        :type captures: List[CaptureSessionCreate]
+        :param capture_session_create: (required)
+        :type capture_session_create: List[CaptureSessionCreate]
         :param overwrite:
         :type overwrite: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -517,7 +529,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_capture_sessions_serialize(
-            captures=captures,
+            capture_session_create=capture_session_create,
             overwrite=overwrite,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -538,7 +550,7 @@ class DefaultApi:
 
     def _create_capture_sessions_serialize(
         self,
-        captures,
+        capture_session_create,
         overwrite,
         _request_auth,
         _content_type,
@@ -549,7 +561,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'captures': 'multi',
+            'CaptureSessionCreate': '',
         }
 
         _path_params: Dict[str, str] = {}
@@ -563,10 +575,6 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
-        if captures is not None:
-            
-            _query_params.append(('captures', captures))
-            
         if overwrite is not None:
             
             _query_params.append(('overwrite', overwrite))
@@ -574,6 +582,8 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if capture_session_create is not None:
+            _body_params = capture_session_create
 
 
         # set the HTTP header `Accept`
@@ -584,6 +594,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -1134,7 +1157,7 @@ class DefaultApi:
     @validate_call
     async def create_localization_map(
         self,
-        localization_map: LocalizationMapCreate,
+        localization_map_create: LocalizationMapCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1151,8 +1174,8 @@ class DefaultApi:
         """CreateLocalizationMap
 
 
-        :param localization_map: (required)
-        :type localization_map: LocalizationMapCreate
+        :param localization_map_create: (required)
+        :type localization_map_create: LocalizationMapCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1176,7 +1199,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_localization_map_serialize(
-            localization_map=localization_map,
+            localization_map_create=localization_map_create,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1201,7 +1224,7 @@ class DefaultApi:
     @validate_call
     async def create_localization_map_with_http_info(
         self,
-        localization_map: LocalizationMapCreate,
+        localization_map_create: LocalizationMapCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1218,8 +1241,8 @@ class DefaultApi:
         """CreateLocalizationMap
 
 
-        :param localization_map: (required)
-        :type localization_map: LocalizationMapCreate
+        :param localization_map_create: (required)
+        :type localization_map_create: LocalizationMapCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1243,7 +1266,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_localization_map_serialize(
-            localization_map=localization_map,
+            localization_map_create=localization_map_create,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1268,7 +1291,7 @@ class DefaultApi:
     @validate_call
     async def create_localization_map_without_preload_content(
         self,
-        localization_map: LocalizationMapCreate,
+        localization_map_create: LocalizationMapCreate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1285,8 +1308,8 @@ class DefaultApi:
         """CreateLocalizationMap
 
 
-        :param localization_map: (required)
-        :type localization_map: LocalizationMapCreate
+        :param localization_map_create: (required)
+        :type localization_map_create: LocalizationMapCreate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1310,7 +1333,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_localization_map_serialize(
-            localization_map=localization_map,
+            localization_map_create=localization_map_create,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1330,7 +1353,7 @@ class DefaultApi:
 
     def _create_localization_map_serialize(
         self,
-        localization_map,
+        localization_map_create,
         _request_auth,
         _content_type,
         _headers,
@@ -1353,13 +1376,11 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
-        if localization_map is not None:
-            
-            _query_params.append(('localization_map', localization_map))
-            
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if localization_map_create is not None:
+            _body_params = localization_map_create
 
 
         # set the HTTP header `Accept`
@@ -1370,6 +1391,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -1900,7 +1934,7 @@ class DefaultApi:
     @validate_call
     async def create_reconstruction(
         self,
-        reconstruction: ReconstructionCreateWithOptions,
+        reconstruction_create_with_options: ReconstructionCreateWithOptions,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1917,8 +1951,8 @@ class DefaultApi:
         """CreateReconstruction
 
 
-        :param reconstruction: (required)
-        :type reconstruction: ReconstructionCreateWithOptions
+        :param reconstruction_create_with_options: (required)
+        :type reconstruction_create_with_options: ReconstructionCreateWithOptions
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -1942,7 +1976,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_reconstruction_serialize(
-            reconstruction=reconstruction,
+            reconstruction_create_with_options=reconstruction_create_with_options,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -1967,7 +2001,7 @@ class DefaultApi:
     @validate_call
     async def create_reconstruction_with_http_info(
         self,
-        reconstruction: ReconstructionCreateWithOptions,
+        reconstruction_create_with_options: ReconstructionCreateWithOptions,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -1984,8 +2018,8 @@ class DefaultApi:
         """CreateReconstruction
 
 
-        :param reconstruction: (required)
-        :type reconstruction: ReconstructionCreateWithOptions
+        :param reconstruction_create_with_options: (required)
+        :type reconstruction_create_with_options: ReconstructionCreateWithOptions
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2009,7 +2043,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_reconstruction_serialize(
-            reconstruction=reconstruction,
+            reconstruction_create_with_options=reconstruction_create_with_options,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2034,7 +2068,7 @@ class DefaultApi:
     @validate_call
     async def create_reconstruction_without_preload_content(
         self,
-        reconstruction: ReconstructionCreateWithOptions,
+        reconstruction_create_with_options: ReconstructionCreateWithOptions,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -2051,8 +2085,8 @@ class DefaultApi:
         """CreateReconstruction
 
 
-        :param reconstruction: (required)
-        :type reconstruction: ReconstructionCreateWithOptions
+        :param reconstruction_create_with_options: (required)
+        :type reconstruction_create_with_options: ReconstructionCreateWithOptions
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -2076,7 +2110,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._create_reconstruction_serialize(
-            reconstruction=reconstruction,
+            reconstruction_create_with_options=reconstruction_create_with_options,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -2096,7 +2130,7 @@ class DefaultApi:
 
     def _create_reconstruction_serialize(
         self,
-        reconstruction,
+        reconstruction_create_with_options,
         _request_auth,
         _content_type,
         _headers,
@@ -2119,13 +2153,11 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
-        if reconstruction is not None:
-            
-            _query_params.append(('reconstruction', reconstruction))
-            
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if reconstruction_create_with_options is not None:
+            _body_params = reconstruction_create_with_options
 
 
         # set the HTTP header `Accept`
@@ -2136,6 +2168,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -6637,7 +6682,7 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> str:
+    ) -> ServiceStatus:
         """GetLocalizationSessionStatus
 
 
@@ -6674,7 +6719,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "ServiceStatus",
             '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
@@ -6704,7 +6749,7 @@ class DefaultApi:
         _content_type: Optional[StrictStr] = None,
         _headers: Optional[Dict[StrictStr, Any]] = None,
         _host_index: Annotated[StrictInt, Field(ge=0, le=0)] = 0,
-    ) -> ApiResponse[str]:
+    ) -> ApiResponse[ServiceStatus]:
         """GetLocalizationSessionStatus
 
 
@@ -6741,7 +6786,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "ServiceStatus",
             '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
@@ -6808,7 +6853,7 @@ class DefaultApi:
         )
 
         _response_types_map: Dict[str, Optional[str]] = {
-            '200': "str",
+            '200': "ServiceStatus",
             '400': "GetCaptureSessions400Response",
         }
         response_data = await self.api_client.call_api(
@@ -9596,7 +9641,7 @@ class DefaultApi:
         self,
         localization_session_id: UUID,
         axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
-        image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
+        file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9617,8 +9662,8 @@ class DefaultApi:
         :type localization_session_id: UUID
         :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
-        :param image: (required)
-        :type image: bytearray
+        :param file:
+        :type file: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9644,7 +9689,7 @@ class DefaultApi:
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
             axis_convention=axis_convention,
-            image=image,
+            file=file,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -9671,7 +9716,7 @@ class DefaultApi:
         self,
         localization_session_id: UUID,
         axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
-        image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
+        file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9692,8 +9737,8 @@ class DefaultApi:
         :type localization_session_id: UUID
         :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
-        :param image: (required)
-        :type image: bytearray
+        :param file:
+        :type file: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9719,7 +9764,7 @@ class DefaultApi:
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
             axis_convention=axis_convention,
-            image=image,
+            file=file,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -9746,7 +9791,7 @@ class DefaultApi:
         self,
         localization_session_id: UUID,
         axis_convention: Annotated[AxisConvention, Field(description="List of Ids to delete")],
-        image: Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]],
+        file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9767,8 +9812,8 @@ class DefaultApi:
         :type localization_session_id: UUID
         :param axis_convention: List of Ids to delete (required)
         :type axis_convention: AxisConvention
-        :param image: (required)
-        :type image: bytearray
+        :param file:
+        :type file: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9794,7 +9839,7 @@ class DefaultApi:
         _param = self._localize_image_serialize(
             localization_session_id=localization_session_id,
             axis_convention=axis_convention,
-            image=image,
+            file=file,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -9816,7 +9861,7 @@ class DefaultApi:
         self,
         localization_session_id,
         axis_convention,
-        image,
+        file,
         _request_auth,
         _content_type,
         _headers,
@@ -9845,12 +9890,10 @@ class DefaultApi:
             
             _query_params.append(('axis_convention', axis_convention.value))
             
-        if image is not None:
-            
-            _query_params.append(('image', image))
-            
         # process the header parameters
         # process the form parameters
+        if file is not None:
+            _files['file'] = file
         # process the body parameter
 
 
@@ -9862,6 +9905,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'multipart/form-data'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -9889,7 +9945,7 @@ class DefaultApi:
     async def set_localization_session_camera_intrinsics(
         self,
         localization_session_id: UUID,
-        camera: PinholeCameraConfig,
+        pinhole_camera_config: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9908,8 +9964,8 @@ class DefaultApi:
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param camera: (required)
-        :type camera: PinholeCameraConfig
+        :param pinhole_camera_config: (required)
+        :type pinhole_camera_config: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -9934,7 +9990,7 @@ class DefaultApi:
 
         _param = self._set_localization_session_camera_intrinsics_serialize(
             localization_session_id=localization_session_id,
-            camera=camera,
+            pinhole_camera_config=pinhole_camera_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -9960,7 +10016,7 @@ class DefaultApi:
     async def set_localization_session_camera_intrinsics_with_http_info(
         self,
         localization_session_id: UUID,
-        camera: PinholeCameraConfig,
+        pinhole_camera_config: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -9979,8 +10035,8 @@ class DefaultApi:
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param camera: (required)
-        :type camera: PinholeCameraConfig
+        :param pinhole_camera_config: (required)
+        :type pinhole_camera_config: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10005,7 +10061,7 @@ class DefaultApi:
 
         _param = self._set_localization_session_camera_intrinsics_serialize(
             localization_session_id=localization_session_id,
-            camera=camera,
+            pinhole_camera_config=pinhole_camera_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10031,7 +10087,7 @@ class DefaultApi:
     async def set_localization_session_camera_intrinsics_without_preload_content(
         self,
         localization_session_id: UUID,
-        camera: PinholeCameraConfig,
+        pinhole_camera_config: PinholeCameraConfig,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10050,8 +10106,8 @@ class DefaultApi:
 
         :param localization_session_id: (required)
         :type localization_session_id: UUID
-        :param camera: (required)
-        :type camera: PinholeCameraConfig
+        :param pinhole_camera_config: (required)
+        :type pinhole_camera_config: PinholeCameraConfig
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10076,7 +10132,7 @@ class DefaultApi:
 
         _param = self._set_localization_session_camera_intrinsics_serialize(
             localization_session_id=localization_session_id,
-            camera=camera,
+            pinhole_camera_config=pinhole_camera_config,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10097,7 +10153,7 @@ class DefaultApi:
     def _set_localization_session_camera_intrinsics_serialize(
         self,
         localization_session_id,
-        camera,
+        pinhole_camera_config,
         _request_auth,
         _content_type,
         _headers,
@@ -10122,13 +10178,11 @@ class DefaultApi:
         if localization_session_id is not None:
             _path_params['localization_session_id'] = localization_session_id
         # process the query parameters
-        if camera is not None:
-            
-            _query_params.append(('camera', camera))
-            
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if pinhole_camera_config is not None:
+            _body_params = pinhole_camera_config
 
 
         # set the HTTP header `Accept`
@@ -10139,6 +10193,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -10441,7 +10508,7 @@ class DefaultApi:
     async def update_capture_session(
         self,
         id: UUID,
-        capture: CaptureSessionUpdate,
+        capture_session_update: CaptureSessionUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10460,8 +10527,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param capture: (required)
-        :type capture: CaptureSessionUpdate
+        :param capture_session_update: (required)
+        :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10486,7 +10553,7 @@ class DefaultApi:
 
         _param = self._update_capture_session_serialize(
             id=id,
-            capture=capture,
+            capture_session_update=capture_session_update,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10512,7 +10579,7 @@ class DefaultApi:
     async def update_capture_session_with_http_info(
         self,
         id: UUID,
-        capture: CaptureSessionUpdate,
+        capture_session_update: CaptureSessionUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10531,8 +10598,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param capture: (required)
-        :type capture: CaptureSessionUpdate
+        :param capture_session_update: (required)
+        :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10557,7 +10624,7 @@ class DefaultApi:
 
         _param = self._update_capture_session_serialize(
             id=id,
-            capture=capture,
+            capture_session_update=capture_session_update,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10583,7 +10650,7 @@ class DefaultApi:
     async def update_capture_session_without_preload_content(
         self,
         id: UUID,
-        capture: CaptureSessionUpdate,
+        capture_session_update: CaptureSessionUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -10602,8 +10669,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param capture: (required)
-        :type capture: CaptureSessionUpdate
+        :param capture_session_update: (required)
+        :type capture_session_update: CaptureSessionUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -10628,7 +10695,7 @@ class DefaultApi:
 
         _param = self._update_capture_session_serialize(
             id=id,
-            capture=capture,
+            capture_session_update=capture_session_update,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -10649,7 +10716,7 @@ class DefaultApi:
     def _update_capture_session_serialize(
         self,
         id,
-        capture,
+        capture_session_update,
         _request_auth,
         _content_type,
         _headers,
@@ -10674,13 +10741,11 @@ class DefaultApi:
         if id is not None:
             _path_params['id'] = id
         # process the query parameters
-        if capture is not None:
-            
-            _query_params.append(('capture', capture))
-            
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if capture_session_update is not None:
+            _body_params = capture_session_update
 
 
         # set the HTTP header `Accept`
@@ -10691,6 +10756,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -10717,7 +10795,7 @@ class DefaultApi:
     @validate_call
     async def update_capture_sessions(
         self,
-        captures: List[CaptureSessionBatchUpdate],
+        capture_session_batch_update: List[CaptureSessionBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -10735,8 +10813,8 @@ class DefaultApi:
         """UpdateCaptureSessions
 
 
-        :param captures: (required)
-        :type captures: List[CaptureSessionBatchUpdate]
+        :param capture_session_batch_update: (required)
+        :type capture_session_batch_update: List[CaptureSessionBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -10762,7 +10840,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_capture_sessions_serialize(
-            captures=captures,
+            capture_session_batch_update=capture_session_batch_update,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -10788,7 +10866,7 @@ class DefaultApi:
     @validate_call
     async def update_capture_sessions_with_http_info(
         self,
-        captures: List[CaptureSessionBatchUpdate],
+        capture_session_batch_update: List[CaptureSessionBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -10806,8 +10884,8 @@ class DefaultApi:
         """UpdateCaptureSessions
 
 
-        :param captures: (required)
-        :type captures: List[CaptureSessionBatchUpdate]
+        :param capture_session_batch_update: (required)
+        :type capture_session_batch_update: List[CaptureSessionBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -10833,7 +10911,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_capture_sessions_serialize(
-            captures=captures,
+            capture_session_batch_update=capture_session_batch_update,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -10859,7 +10937,7 @@ class DefaultApi:
     @validate_call
     async def update_capture_sessions_without_preload_content(
         self,
-        captures: List[CaptureSessionBatchUpdate],
+        capture_session_batch_update: List[CaptureSessionBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -10877,8 +10955,8 @@ class DefaultApi:
         """UpdateCaptureSessions
 
 
-        :param captures: (required)
-        :type captures: List[CaptureSessionBatchUpdate]
+        :param capture_session_batch_update: (required)
+        :type capture_session_batch_update: List[CaptureSessionBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -10904,7 +10982,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_capture_sessions_serialize(
-            captures=captures,
+            capture_session_batch_update=capture_session_batch_update,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -10925,7 +11003,7 @@ class DefaultApi:
 
     def _update_capture_sessions_serialize(
         self,
-        captures,
+        capture_session_batch_update,
         allow_missing,
         _request_auth,
         _content_type,
@@ -10936,7 +11014,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'captures': 'multi',
+            'CaptureSessionBatchUpdate': '',
         }
 
         _path_params: Dict[str, str] = {}
@@ -10950,10 +11028,6 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
-        if captures is not None:
-            
-            _query_params.append(('captures', captures))
-            
         if allow_missing is not None:
             
             _query_params.append(('allow_missing', allow_missing))
@@ -10961,6 +11035,8 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if capture_session_batch_update is not None:
+            _body_params = capture_session_batch_update
 
 
         # set the HTTP header `Accept`
@@ -10971,6 +11047,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -11558,7 +11647,7 @@ class DefaultApi:
     async def update_localization_map(
         self,
         id: UUID,
-        localization_map: LocalizationMapUpdate,
+        localization_map_update: LocalizationMapUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -11577,8 +11666,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param localization_map: (required)
-        :type localization_map: LocalizationMapUpdate
+        :param localization_map_update: (required)
+        :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -11603,7 +11692,7 @@ class DefaultApi:
 
         _param = self._update_localization_map_serialize(
             id=id,
-            localization_map=localization_map,
+            localization_map_update=localization_map_update,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -11629,7 +11718,7 @@ class DefaultApi:
     async def update_localization_map_with_http_info(
         self,
         id: UUID,
-        localization_map: LocalizationMapUpdate,
+        localization_map_update: LocalizationMapUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -11648,8 +11737,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param localization_map: (required)
-        :type localization_map: LocalizationMapUpdate
+        :param localization_map_update: (required)
+        :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -11674,7 +11763,7 @@ class DefaultApi:
 
         _param = self._update_localization_map_serialize(
             id=id,
-            localization_map=localization_map,
+            localization_map_update=localization_map_update,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -11700,7 +11789,7 @@ class DefaultApi:
     async def update_localization_map_without_preload_content(
         self,
         id: UUID,
-        localization_map: LocalizationMapUpdate,
+        localization_map_update: LocalizationMapUpdate,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -11719,8 +11808,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param localization_map: (required)
-        :type localization_map: LocalizationMapUpdate
+        :param localization_map_update: (required)
+        :type localization_map_update: LocalizationMapUpdate
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -11745,7 +11834,7 @@ class DefaultApi:
 
         _param = self._update_localization_map_serialize(
             id=id,
-            localization_map=localization_map,
+            localization_map_update=localization_map_update,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -11766,7 +11855,7 @@ class DefaultApi:
     def _update_localization_map_serialize(
         self,
         id,
-        localization_map,
+        localization_map_update,
         _request_auth,
         _content_type,
         _headers,
@@ -11791,13 +11880,11 @@ class DefaultApi:
         if id is not None:
             _path_params['id'] = id
         # process the query parameters
-        if localization_map is not None:
-            
-            _query_params.append(('localization_map', localization_map))
-            
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if localization_map_update is not None:
+            _body_params = localization_map_update
 
 
         # set the HTTP header `Accept`
@@ -11808,6 +11895,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -11834,7 +11934,7 @@ class DefaultApi:
     @validate_call
     async def update_localization_maps(
         self,
-        localization_maps: List[LocalizationMapBatchUpdate],
+        localization_map_batch_update: List[LocalizationMapBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11852,8 +11952,8 @@ class DefaultApi:
         """UpdateLocalizationMaps
 
 
-        :param localization_maps: (required)
-        :type localization_maps: List[LocalizationMapBatchUpdate]
+        :param localization_map_batch_update: (required)
+        :type localization_map_batch_update: List[LocalizationMapBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11879,7 +11979,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_localization_maps_serialize(
-            localization_maps=localization_maps,
+            localization_map_batch_update=localization_map_batch_update,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11905,7 +12005,7 @@ class DefaultApi:
     @validate_call
     async def update_localization_maps_with_http_info(
         self,
-        localization_maps: List[LocalizationMapBatchUpdate],
+        localization_map_batch_update: List[LocalizationMapBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11923,8 +12023,8 @@ class DefaultApi:
         """UpdateLocalizationMaps
 
 
-        :param localization_maps: (required)
-        :type localization_maps: List[LocalizationMapBatchUpdate]
+        :param localization_map_batch_update: (required)
+        :type localization_map_batch_update: List[LocalizationMapBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -11950,7 +12050,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_localization_maps_serialize(
-            localization_maps=localization_maps,
+            localization_map_batch_update=localization_map_batch_update,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -11976,7 +12076,7 @@ class DefaultApi:
     @validate_call
     async def update_localization_maps_without_preload_content(
         self,
-        localization_maps: List[LocalizationMapBatchUpdate],
+        localization_map_batch_update: List[LocalizationMapBatchUpdate],
         allow_missing: Optional[StrictBool] = None,
         _request_timeout: Union[
             None,
@@ -11994,8 +12094,8 @@ class DefaultApi:
         """UpdateLocalizationMaps
 
 
-        :param localization_maps: (required)
-        :type localization_maps: List[LocalizationMapBatchUpdate]
+        :param localization_map_batch_update: (required)
+        :type localization_map_batch_update: List[LocalizationMapBatchUpdate]
         :param allow_missing:
         :type allow_missing: bool
         :param _request_timeout: timeout setting for this request. If one
@@ -12021,7 +12121,7 @@ class DefaultApi:
         """ # noqa: E501
 
         _param = self._update_localization_maps_serialize(
-            localization_maps=localization_maps,
+            localization_map_batch_update=localization_map_batch_update,
             allow_missing=allow_missing,
             _request_auth=_request_auth,
             _content_type=_content_type,
@@ -12042,7 +12142,7 @@ class DefaultApi:
 
     def _update_localization_maps_serialize(
         self,
-        localization_maps,
+        localization_map_batch_update,
         allow_missing,
         _request_auth,
         _content_type,
@@ -12053,7 +12153,7 @@ class DefaultApi:
         _host = None
 
         _collection_formats: Dict[str, str] = {
-            'localization_maps': 'multi',
+            'LocalizationMapBatchUpdate': '',
         }
 
         _path_params: Dict[str, str] = {}
@@ -12067,10 +12167,6 @@ class DefaultApi:
 
         # process the path parameters
         # process the query parameters
-        if localization_maps is not None:
-            
-            _query_params.append(('localization_maps', localization_maps))
-            
         if allow_missing is not None:
             
             _query_params.append(('allow_missing', allow_missing))
@@ -12078,6 +12174,8 @@ class DefaultApi:
         # process the header parameters
         # process the form parameters
         # process the body parameter
+        if localization_map_batch_update is not None:
+            _body_params = localization_map_batch_update
 
 
         # set the HTTP header `Accept`
@@ -12088,6 +12186,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'application/json'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [
@@ -12395,7 +12506,7 @@ class DefaultApi:
     async def upload_capture_session_tar(
         self,
         id: UUID,
-        tar: Any,
+        file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -12414,8 +12525,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param tar: (required)
-        :type tar: object
+        :param file:
+        :type file: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -12440,7 +12551,7 @@ class DefaultApi:
 
         _param = self._upload_capture_session_tar_serialize(
             id=id,
-            tar=tar,
+            file=file,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -12466,7 +12577,7 @@ class DefaultApi:
     async def upload_capture_session_tar_with_http_info(
         self,
         id: UUID,
-        tar: Any,
+        file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -12485,8 +12596,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param tar: (required)
-        :type tar: object
+        :param file:
+        :type file: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -12511,7 +12622,7 @@ class DefaultApi:
 
         _param = self._upload_capture_session_tar_serialize(
             id=id,
-            tar=tar,
+            file=file,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -12537,7 +12648,7 @@ class DefaultApi:
     async def upload_capture_session_tar_without_preload_content(
         self,
         id: UUID,
-        tar: Any,
+        file: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None,
         _request_timeout: Union[
             None,
             Annotated[StrictFloat, Field(gt=0)],
@@ -12556,8 +12667,8 @@ class DefaultApi:
 
         :param id: (required)
         :type id: UUID
-        :param tar: (required)
-        :type tar: object
+        :param file:
+        :type file: bytearray
         :param _request_timeout: timeout setting for this request. If one
                                  number provided, it will be total request
                                  timeout. It can also be a pair (tuple) of
@@ -12582,7 +12693,7 @@ class DefaultApi:
 
         _param = self._upload_capture_session_tar_serialize(
             id=id,
-            tar=tar,
+            file=file,
             _request_auth=_request_auth,
             _content_type=_content_type,
             _headers=_headers,
@@ -12603,7 +12714,7 @@ class DefaultApi:
     def _upload_capture_session_tar_serialize(
         self,
         id,
-        tar,
+        file,
         _request_auth,
         _content_type,
         _headers,
@@ -12628,12 +12739,10 @@ class DefaultApi:
         if id is not None:
             _path_params['id'] = id
         # process the query parameters
-        if tar is not None:
-            
-            _query_params.append(('tar', tar))
-            
         # process the header parameters
         # process the form parameters
+        if file is not None:
+            _files['file'] = file
         # process the body parameter
 
 
@@ -12645,6 +12754,19 @@ class DefaultApi:
                 ]
             )
 
+        # set the HTTP header `Content-Type`
+        if _content_type:
+            _header_params['Content-Type'] = _content_type
+        else:
+            _default_content_type = (
+                self.api_client.select_header_content_type(
+                    [
+                        'multipart/form-data'
+                    ]
+                )
+            )
+            if _default_content_type is not None:
+                _header_params['Content-Type'] = _default_content_type
 
         # authentication setting
         _auth_settings: List[str] = [

@@ -1,4 +1,5 @@
 import re
+from enum import StrEnum
 from http.client import HTTPConnection
 
 from common.run_command import run_command
@@ -34,29 +35,54 @@ def destroy_service(container_id: str):
     # container.remove(force=True)
 
 
-def get_service_status(container_id: str, session_port: int) -> str:
+class ServiceStatus(StrEnum):
+    UNKNOWN = "unknown"
+    CREATED = "created"
+    RESTARTING = "restarting"
+    RUNNING = "running"
+    REMOVING = "removing"
+    PAUSED = "paused"
+    EXITED = "exited"
+    DEAD = "dead"
+    READY = "ready"
+
+
+def get_service_status(container_id: str, session_port: int) -> ServiceStatus:
     container = from_env().containers.get(container_id)
     container.reload()
     assert container.name is not None
 
     status: str | None = container.attrs.get("State", {}).get("Status")
 
-    if status is None:
-        return "unknown"
-    if status != "running":
-        return status
+    match status:
+        case None:
+            return ServiceStatus.UNKNOWN
+        case "created":
+            return ServiceStatus.CREATED
+        case "restarting":
+            return ServiceStatus.RESTARTING
+        case "removing":
+            return ServiceStatus.REMOVING
+        case "paused":
+            return ServiceStatus.PAUSED
+        case "exited":
+            return ServiceStatus.EXITED
+        case "dead":
+            return ServiceStatus.DEAD
+        case "running":
+            try:
+                conn = HTTPConnection(container.name, session_port, timeout=2.0)
+                conn.request("GET", "/health")
+                health_status = conn.getresponse().status
+                conn.close()
+                if health_status < 500:
+                    return ServiceStatus.READY
+            except Exception:
+                pass
+            return ServiceStatus.RUNNING
 
-    try:
-        conn = HTTPConnection(container.name, session_port, timeout=2.0)
-        conn.request("GET", "/health")
-        health_status = conn.getresponse().status
-        conn.close()
-        if health_status < 500:
-            return "ready"
-    except Exception:
-        pass
-
-    return "running"
+        case _:
+            return ServiceStatus.UNKNOWN
 
 
 def _parse_container_id(stdout: str):

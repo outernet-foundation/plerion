@@ -53,22 +53,20 @@ class ReconstructionCreateWithOptions(BaseModel):
 
 
 @post("")
-async def create_reconstruction(
-    session: AsyncSession, reconstruction: ReconstructionCreateWithOptions
-) -> ReconstructionRead:
+async def create_reconstruction(session: AsyncSession, data: ReconstructionCreateWithOptions) -> ReconstructionRead:
     # If we were provided an ID, ensure it doesn't already exist
-    if reconstruction.create.id is not None:
-        result = await session.execute(select(Reconstruction).where(Reconstruction.id == reconstruction.create.id))
+    if data.create.id is not None:
+        result = await session.execute(select(Reconstruction).where(Reconstruction.id == data.create.id))
         existing_row = result.scalar_one_or_none()
 
         if existing_row is not None:
-            raise HTTPException(409, f"Reconstruction with id {reconstruction.create.id} already exists")
+            raise HTTPException(409, f"Reconstruction with id {data.create.id} already exists")
 
-    capture_session = await session.get(CaptureSession, reconstruction.create.capture_session_id)
+    capture_session = await session.get(CaptureSession, data.create.capture_session_id)
     if not capture_session:
-        raise HTTPException(400, f"Capture session with id {reconstruction.create.capture_session_id} not found")
+        raise HTTPException(400, f"Capture session with id {data.create.capture_session_id} not found")
 
-    row = reconstruction_from_dto(reconstruction.create)
+    row = reconstruction_from_dto(data.create)
 
     session.add(row)
 
@@ -78,7 +76,7 @@ async def create_reconstruction(
     manifest = ReconstructionManifest(
         capture_id=str(row.capture_session_id),
         status="pending",
-        options=reconstruction.options or ReconstructionOptions(),
+        options=data.options or ReconstructionOptions(),
         metrics=ReconstructionMetrics(),
     )
 

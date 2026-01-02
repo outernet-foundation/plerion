@@ -17,9 +17,10 @@ from datamodels.public_dtos import (
     capture_session_to_dto,
 )
 from datamodels.public_tables import CaptureSession, Reconstruction
-from fastapi.datastructures import UploadFile
 from litestar import Router, delete, get, patch, post, put
+from litestar.datastructures import UploadFile
 from litestar.di import Provide
+from litestar.enums import RequestEncodingType
 from litestar.exceptions import HTTPException, NotFoundException
 from litestar.params import Body, Parameter
 from litestar.response import Stream
@@ -33,8 +34,8 @@ BUCKET = "dev-captures"
 
 
 @post("")
-async def create_capture_session(session: AsyncSession, capture: CaptureSessionCreate) -> CaptureSessionRead:
-    row = await _create_capture(capture, False, session)
+async def create_capture_session(session: AsyncSession, data: CaptureSessionCreate) -> CaptureSessionRead:
+    row = await _create_capture(session, data, False)
 
     session.add(row)
 
@@ -45,11 +46,11 @@ async def create_capture_session(session: AsyncSession, capture: CaptureSessionC
 
 @post("/bulk")
 async def create_capture_sessions(
-    session: AsyncSession, captures: Annotated[list[CaptureSessionCreate], Body()], overwrite: bool = False
+    session: AsyncSession, data: list[CaptureSessionCreate], overwrite: bool = False
 ) -> list[CaptureSessionRead]:
     rows: list[CaptureSession] = []
-    for capture in captures:
-        row = await _create_capture(capture, overwrite, session)
+    for capture in data:
+        row = await _create_capture(session, capture, overwrite)
         rows.append(row)
 
     session.add_all(rows)
@@ -112,13 +113,13 @@ async def delete_capture_session(session: AsyncSession, id: UUID) -> None:
 
 
 @patch("/{id:uuid}")
-async def update_capture_session(session: AsyncSession, id: UUID, capture: CaptureSessionUpdate) -> CaptureSessionRead:
+async def update_capture_session(session: AsyncSession, id: UUID, data: CaptureSessionUpdate) -> CaptureSessionRead:
     row = await session.get(CaptureSession, id)
 
     if not row:
         raise NotFoundException(f"Capture session with id {id} not found")
 
-    capture_session_apply_dto(row, capture)
+    capture_session_apply_dto(row, data)
 
     await session.flush()
     await session.refresh(row)
@@ -127,10 +128,10 @@ async def update_capture_session(session: AsyncSession, id: UUID, capture: Captu
 
 @patch("")
 async def update_capture_sessions(
-    session: AsyncSession, captures: list[CaptureSessionBatchUpdate], allow_missing: bool = False
+    session: AsyncSession, data: list[CaptureSessionBatchUpdate], allow_missing: bool = False
 ) -> list[CaptureSessionRead]:
     rows: list[CaptureSession] = []
-    for capture in captures:
+    for capture in data:
         row = await session.get(CaptureSession, capture.id)
 
         if not row:
@@ -148,14 +149,17 @@ async def update_capture_sessions(
 
 
 @put("/{id:uuid}/tar")
-async def upload_capture_session_tar(session: AsyncSession, id: UUID, tar: UploadFile) -> None:
+async def upload_capture_session_tar(
+    session: AsyncSession, id: UUID, data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)]
+) -> None:
     # Validate capture session exists
     row = await session.get(CaptureSession, id)
     if row is None:
         raise NotFoundException(f"Capture session {id} not found")
 
-    # Validate tar file
-    with tarfile.open(fileobj=BytesIO(tar.file.read()), mode="r:*") as tar_file:
+    #  Validate manifest inside tar
+    file_bytes = await data.read()
+    with tarfile.open(fileobj=BytesIO(file_bytes), mode="r:*") as tar_file:
         capture_session_manifest = tar_file.extractfile("manifest.json")
         if capture_session_manifest is None:
             raise NotFoundException("Capture session tar file is missing manifest.json")
@@ -164,12 +168,9 @@ async def upload_capture_session_tar(session: AsyncSession, id: UUID, tar: Uploa
         except Exception as exception:
             raise NotFoundException(f"Capture session manifest.json is invalid: {exception}") from exception
 
-    # Reset file pointer to beginning
-    tar.file.seek(0)
-
     # Upload tar file to storage
     try:
-        get_storage().upload_fileobj(BUCKET, f"{id}.tar", tar.file, tar.content_type or "application/x-tar")
+        get_storage().upload_fileobj(BUCKET, f"{id}.tar", BytesIO(file_bytes), data.content_type or "application/x-tar")
     except Exception as exception:
         raise HTTPException(502, f"Upload failed: {exception}") from exception
 
@@ -203,7 +204,7 @@ async def get_capture_session_rig_config(session: AsyncSession, id: UUID) -> Cap
     return rig_config
 
 
-async def _create_capture(capture: CaptureSessionCreate, overwrite: bool, session: AsyncSession) -> CaptureSession:
+async def _create_capture(session: AsyncSession, capture: CaptureSessionCreate, overwrite: bool) -> CaptureSession:
     if capture.id is not None:
         result = await session.execute(select(CaptureSession).where(CaptureSession.id == capture.id))
         existing_row = result.scalar_one_or_none()

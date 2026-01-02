@@ -27,18 +27,15 @@ settings = get_settings()
 
 
 @post("")
-async def create_localization_map(
-    session: AsyncSession, localization_map: LocalizationMapCreate
-) -> LocalizationMapRead:
-    reconstruction_status = await fetch_reconstruction_status(localization_map.reconstruction_id, session)
+async def create_localization_map(session: AsyncSession, data: LocalizationMapCreate) -> LocalizationMapRead:
+    reconstruction_status = await fetch_reconstruction_status(data.reconstruction_id, session)
 
     if reconstruction_status != "succeeded":
         raise HTTPException(
-            status_code=400,
-            detail=f"Reconstruction with id {localization_map.reconstruction_id} is not in 'succeeded' state",
+            status_code=400, detail=f"Reconstruction with id {data.reconstruction_id} is not in 'succeeded' state"
         )
 
-    row = localization_map_from_dto(localization_map)
+    row = localization_map_from_dto(data)
 
     session.add(row)
 
@@ -117,15 +114,13 @@ async def get_localization_map(session: AsyncSession, id: UUID) -> LocalizationM
 
 
 @patch("/{id:uuid}")
-async def update_localization_map(
-    session: AsyncSession, id: UUID, localization_map: LocalizationMapUpdate
-) -> LocalizationMapRead:
+async def update_localization_map(session: AsyncSession, id: UUID, data: LocalizationMapUpdate) -> LocalizationMapRead:
     row = await session.get(LocalizationMap, id)
 
     if not row:
         raise NotFoundException(f"LocalizationMap with id {id} not found")
 
-    localization_map_apply_dto(row, localization_map)
+    localization_map_apply_dto(row, data)
 
     await session.flush()
     await session.refresh(row)
@@ -134,10 +129,10 @@ async def update_localization_map(
 
 @patch("")
 async def update_localization_maps(
-    session: AsyncSession, localization_maps: list[LocalizationMapBatchUpdate], allow_missing: bool = False
+    session: AsyncSession, data: list[LocalizationMapBatchUpdate], allow_missing: bool = False
 ) -> list[LocalizationMapRead]:
     rows: list[LocalizationMap] = []
-    for localization_map in localization_maps:
+    for localization_map in data:
         row = await session.get(LocalizationMap, localization_map.id)
         if not row:
             if not allow_missing:

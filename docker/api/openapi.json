@@ -102,19 +102,16 @@
         ],
         "summary": "CreateCaptureSession",
         "operationId": "create_capture_session",
-        "parameters": [
-          {
-            "name": "capture",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/CaptureSessionCreate"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
-          }
-        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureSessionCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": "Document created, URL follows",
@@ -179,20 +176,6 @@
         "operationId": "update_capture_sessions",
         "parameters": [
           {
-            "name": "captures",
-            "in": "query",
-            "schema": {
-              "items": {
-                "$ref": "#/components/schemas/CaptureSessionBatchUpdate"
-              },
-              "type": "array"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
-          },
-          {
             "name": "allow_missing",
             "in": "query",
             "schema": {
@@ -205,6 +188,19 @@
             "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/CaptureSessionBatchUpdate"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Request fulfilled, document follows",
@@ -274,20 +270,6 @@
         "operationId": "create_capture_sessions",
         "parameters": [
           {
-            "name": "captures",
-            "in": "query",
-            "schema": {
-              "items": {
-                "$ref": "#/components/schemas/CaptureSessionCreate"
-              },
-              "type": "array"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
-          },
-          {
             "name": "overwrite",
             "in": "query",
             "schema": {
@@ -300,6 +282,19 @@
             "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/CaptureSessionCreate"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": "Document created, URL follows",
@@ -518,19 +513,18 @@
             },
             "required": true,
             "deprecated": false
-          },
-          {
-            "name": "capture",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/CaptureSessionUpdate"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CaptureSessionUpdate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Request fulfilled, document follows",
@@ -757,17 +751,24 @@
             },
             "required": true,
             "deprecated": false
-          },
-          {
-            "name": "tar",
-            "in": "query",
-            "schema": {},
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Request fulfilled, document follows",
@@ -1015,19 +1016,16 @@
         ],
         "summary": "CreateReconstruction",
         "operationId": "create_reconstruction",
-        "parameters": [
-          {
-            "name": "reconstruction",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/ReconstructionCreateWithOptions"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
-          }
-        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReconstructionCreateWithOptions"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": "Document created, URL follows",
@@ -1758,19 +1756,16 @@
         ],
         "summary": "CreateLocalizationMap",
         "operationId": "create_localization_map",
-        "parameters": [
-          {
-            "name": "localization_map",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/LocalizationMapCreate"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
-          }
-        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalizationMapCreate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": "Document created, URL follows",
@@ -1909,20 +1904,6 @@
         "operationId": "update_localization_maps",
         "parameters": [
           {
-            "name": "localization_maps",
-            "in": "query",
-            "schema": {
-              "items": {
-                "$ref": "#/components/schemas/LocalizationMapBatchUpdate"
-              },
-              "type": "array"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
-          },
-          {
             "name": "allow_missing",
             "in": "query",
             "schema": {
@@ -1935,6 +1916,19 @@
             "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "$ref": "#/components/schemas/LocalizationMapBatchUpdate"
+                },
+                "type": "array"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Request fulfilled, document follows",
@@ -2153,19 +2147,18 @@
             },
             "required": true,
             "deprecated": false
-          },
-          {
-            "name": "localization_map",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/LocalizationMapUpdate"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LocalizationMapUpdate"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Request fulfilled, document follows",
@@ -2332,19 +2325,18 @@
             },
             "required": true,
             "deprecated": false
-          },
-          {
-            "name": "camera",
-            "in": "query",
-            "schema": {
-              "$ref": "#/components/schemas/PinholeCameraConfig"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PinholeCameraConfig"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "Request fulfilled, document follows",
@@ -2421,7 +2413,7 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/ServiceStatus"
                 }
               }
             }
@@ -2751,20 +2743,24 @@
             "deprecated": false,
             "allowEmptyValue": false,
             "allowReserved": false
-          },
-          {
-            "name": "image",
-            "in": "query",
-            "schema": {
-              "type": "string",
-              "format": "binary"
-            },
-            "required": true,
-            "deprecated": false,
-            "allowEmptyValue": false,
-            "allowReserved": false
           }
         ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                },
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "201": {
             "description": "Document created, URL follows",
@@ -5365,6 +5361,21 @@
           "id"
         ],
         "title": "RigConfig"
+      },
+      "ServiceStatus": {
+        "type": "string",
+        "enum": [
+          "unknown",
+          "created",
+          "restarting",
+          "running",
+          "removing",
+          "paused",
+          "exited",
+          "dead",
+          "ready"
+        ],
+        "title": "ServiceStatus"
       },
       "Transform": {
         "properties": {

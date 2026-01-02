@@ -10,8 +10,6 @@ using PlerionApiClient.Model;
 using Unity.Mathematics;
 using UnityEngine;
 
-// using Camera = PlerionApiClient.Model.Camera;
-
 namespace Plerion.Core
 {
     public static class VisualPositioningSystem
@@ -104,10 +102,10 @@ namespace Plerion.Core
                 {
                     var status = await api.GetLocalizationSessionStatusAsync(session.Id);
 
-                    if (status == "\"failed\"" || status == "\"exited\"")
+                    if (status == ServiceStatus.Dead || status == ServiceStatus.Exited)
                         throw new Exception("Session failed to start.");
 
-                    if (status == "\"ready\"")
+                    if (status == ServiceStatus.Ready)
                         break;
 
                     await UniTask.WaitForSeconds(1);

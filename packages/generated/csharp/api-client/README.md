@@ -98,12 +98,12 @@ namespace Example
             HttpClient httpClient = new HttpClient();
             HttpClientHandler httpClientHandler = new HttpClientHandler();
             var apiInstance = new DefaultApi(httpClient, config, httpClientHandler);
-            var capture = new CaptureSessionCreate(); // CaptureSessionCreate | 
+            var captureSessionCreate = new CaptureSessionCreate(); // CaptureSessionCreate | 
 
             try
             {
                 // CreateCaptureSession
-                CaptureSessionRead result = apiInstance.CreateCaptureSession(capture);
+                CaptureSessionRead result = apiInstance.CreateCaptureSession(captureSessionCreate);
                 Debug.WriteLine(result);
             }
             catch (ApiException e)
@@ -216,6 +216,7 @@ Class | Method | HTTP request | Description
  - [Model.ReconstructionRead](docs/ReconstructionRead.md)
  - [Model.RigCameraConfig](docs/RigCameraConfig.md)
  - [Model.RigConfig](docs/RigConfig.md)
+ - [Model.ServiceStatus](docs/ServiceStatus.md)
  - [Model.Transform](docs/Transform.md)
 
 

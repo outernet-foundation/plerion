@@ -67,11 +67,11 @@ configuration = plerion_api_client.Configuration(
 async with plerion_api_client.ApiClient(configuration) as api_client:
     # Create an instance of the API class
     api_instance = plerion_api_client.DefaultApi(api_client)
-    capture = plerion_api_client.CaptureSessionCreate() # CaptureSessionCreate | 
+    capture_session_create = plerion_api_client.CaptureSessionCreate() # CaptureSessionCreate | 
 
     try:
         # CreateCaptureSession
-        api_response = await api_instance.create_capture_session(capture)
+        api_response = await api_instance.create_capture_session(capture_session_create)
         print("The response of DefaultApi->create_capture_session:\n")
         pprint(api_response)
     except ApiException as e:
@@ -175,6 +175,7 @@ Class | Method | HTTP request | Description
  - [ReconstructionRead](docs/ReconstructionRead.md)
  - [RigCameraConfig](docs/RigCameraConfig.md)
  - [RigConfig](docs/RigConfig.md)
+ - [ServiceStatus](docs/ServiceStatus.md)
  - [Transform](docs/Transform.md)
 
 
