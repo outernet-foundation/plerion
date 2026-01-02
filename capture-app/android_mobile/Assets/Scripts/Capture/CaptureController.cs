@@ -618,7 +618,20 @@ namespace PlerionClient.Client
                 .CreateReconstructionAsync(
                     new ReconstructionCreateWithOptions(new ReconstructionCreate(captureId))
                     {
-                        Options = reconstructionOptions,
+                        // Options = reconstructionOptions,
+                        Options = new ReconstructionOptions()
+                        {
+                            NeighborsCount = 12,
+                            MaxKeypointsPerImage = 2500,
+                            RansacMaxError = 2.0,
+                            RansacMinInlierRatio = 0.15,
+                            TriangulationMinimumAngle = 3.0,
+                            TriangulationCompleteMaxReprojectionError = 2.0,
+                            TriangulationMergeMaxReprojectionError = 4.0,
+                            MapperFilterMaxReprojectionError = 2.0,
+                            UsePriorPosition = true,
+                            RigVerification = true,
+                        },
                     }
                 )
                 .AsUniTask();
