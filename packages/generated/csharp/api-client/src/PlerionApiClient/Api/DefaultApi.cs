@@ -695,9 +695,10 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <returns>List&lt;MapLocalization&gt;</returns>
-        List<MapLocalization> LocalizeImage(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default);
+        List<MapLocalization> LocalizeImage(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file);
 
         /// <summary>
         /// LocalizeImage
@@ -708,29 +709,10 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <returns>ApiResponse of List&lt;MapLocalization&gt;</returns>
-        ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default);
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <returns></returns>
-        void SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig);
-
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <returns>ApiResponse of Object(void)</returns>
-        ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig);
+        ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file);
         /// <summary>
         /// UnloadMap
         /// </summary>
@@ -1771,10 +1753,11 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;MapLocalization&gt;</returns>
-        System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// LocalizeImage
@@ -1785,35 +1768,11 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;MapLocalization&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default, System.Threading.CancellationToken cancellationToken = default);
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of void</returns>
-        System.Threading.Tasks.Task SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig, System.Threading.CancellationToken cancellationToken = default);
-
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics
-        /// </summary>
-        /// <remarks>
-        /// 
-        /// </remarks>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse</returns>
-        System.Threading.Tasks.Task<ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// UnloadMap
         /// </summary>
@@ -2293,6 +2252,9 @@ namespace PlerionApiClient.Api
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
+           
+            // Patch
+
             localVarRequestOptions.Data = captureSessionCreate;
 
 
@@ -2353,6 +2315,9 @@ namespace PlerionApiClient.Api
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
+
+            // Patch
+            
             localVarRequestOptions.Data = captureSessionCreate;
 
 
@@ -2416,6 +2381,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "overwrite", overwrite));
             }
+           
+            // Patch
+
             localVarRequestOptions.Data = captureSessionCreate;
 
 
@@ -2482,6 +2450,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "overwrite", overwrite));
             }
+
+            // Patch
+            
             localVarRequestOptions.Data = captureSessionCreate;
 
 
@@ -2539,6 +2510,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "group", group));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -2599,6 +2573,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "group", group));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -2654,6 +2631,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "layer", layer));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -2714,6 +2694,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "layer", layer));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -2768,6 +2751,9 @@ namespace PlerionApiClient.Api
 
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+           
+            // Patch
 
             localVarRequestOptions.Data = localizationMapCreate;
 
@@ -2829,6 +2815,9 @@ namespace PlerionApiClient.Api
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
+
+            // Patch
+            
             localVarRequestOptions.Data = localizationMapCreate;
 
 
@@ -2878,6 +2867,9 @@ namespace PlerionApiClient.Api
 
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+           
+            // Patch
 
 
 
@@ -2931,6 +2923,9 @@ namespace PlerionApiClient.Api
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
+
+            // Patch
+            
 
 
             // make the HTTP request
@@ -2987,6 +2982,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "node", node));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3047,6 +3045,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "node", node));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3101,6 +3102,9 @@ namespace PlerionApiClient.Api
 
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+           
+            // Patch
 
             localVarRequestOptions.Data = reconstructionCreateWithOptions;
 
@@ -3162,6 +3166,9 @@ namespace PlerionApiClient.Api
             var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
+
+            // Patch
+            
             localVarRequestOptions.Data = reconstructionCreateWithOptions;
 
 
@@ -3214,6 +3221,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3269,6 +3279,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3323,6 +3336,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3382,6 +3398,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3436,6 +3455,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3495,6 +3517,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3545,6 +3570,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3600,6 +3628,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3654,6 +3685,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3713,6 +3747,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3763,6 +3800,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3818,6 +3858,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3872,6 +3915,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -3931,6 +3977,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -3981,6 +4030,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4036,6 +4088,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4087,6 +4142,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4143,6 +4201,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4194,6 +4255,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4250,6 +4314,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4301,6 +4368,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4357,6 +4427,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4408,6 +4481,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4464,6 +4540,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4518,6 +4597,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4577,6 +4659,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4631,6 +4716,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4690,6 +4778,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4744,6 +4835,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4803,6 +4897,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -4854,6 +4951,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -4909,6 +5009,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+
+            // Patch
+            
 
 
             // make the HTTP request
@@ -4970,6 +5073,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "reconstruction_ids", reconstructionIds));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5035,6 +5141,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "reconstruction_ids", reconstructionIds));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5087,6 +5196,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5144,6 +5256,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5198,6 +5313,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.PathParameters.Add("map_id", PlerionApiClient.Client.ClientUtils.ParameterToString(mapId)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5257,6 +5375,9 @@ namespace PlerionApiClient.Api
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.PathParameters.Add("map_id", PlerionApiClient.Client.ClientUtils.ParameterToString(mapId)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5311,6 +5432,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5370,6 +5494,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "ids", ids));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5421,6 +5548,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5477,6 +5607,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5532,6 +5665,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5592,6 +5728,9 @@ namespace PlerionApiClient.Api
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5643,6 +5782,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5699,6 +5841,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5750,6 +5895,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5806,6 +5954,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5861,6 +6012,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -5921,6 +6075,9 @@ namespace PlerionApiClient.Api
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -5972,6 +6129,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -6027,6 +6187,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+
+            // Patch
+            
 
 
             // make the HTTP request
@@ -6094,6 +6257,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_name", captureSessionName));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -6165,6 +6331,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "capture_session_name", captureSessionName));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -6222,6 +6391,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "map_ids", mapIds));
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -6284,6 +6456,9 @@ namespace PlerionApiClient.Api
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("multi", "map_ids", mapIds));
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -6304,11 +6479,12 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <returns>List&lt;MapLocalization&gt;</returns>
-        public List<MapLocalization> LocalizeImage(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default)
+        public List<MapLocalization> LocalizeImage(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file)
         {
-            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, axisConvention, file);
+            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = LocalizeImageWithHttpInfo(localizationSessionId, axisConvention, cameraConfig, file);
             return localVarResponse.Data;
         }
 
@@ -6318,10 +6494,19 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <returns>ApiResponse of List&lt;MapLocalization&gt;</returns>
-        public PlerionApiClient.Client.ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default)
+        public PlerionApiClient.Client.ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file)
         {
+            // verify the required parameter 'cameraConfig' is set
+            if (cameraConfig == null)
+                throw new PlerionApiClient.Client.ApiException(400, "Missing required parameter 'cameraConfig' when calling DefaultApi->LocalizeImage");
+
+            // verify the required parameter 'file' is set
+            if (file == null)
+                throw new PlerionApiClient.Client.ApiException(400, "Missing required parameter 'file' when calling DefaultApi->LocalizeImage");
+
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
 
             string[] _contentTypes = new string[] {
@@ -6341,10 +6526,19 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
-            if (file != null)
-            {
-                localVarRequestOptions.FileParameters.Add("file", file);
-            }
+           
+            // Patch
+                        // COMPLEX TYPE: Serialize to JSON and add as a "File" with application/json header
+                        if (cameraConfig != null)
+                        {
+                            var _json_cameraConfig = Newtonsoft.Json.JsonConvert.SerializeObject(cameraConfig, this.ApiClient.SerializerSettings);
+                            var _stream_cameraConfig = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(_json_cameraConfig));
+                            
+                            // Add as a file parameter with null filename and application/json content type
+                            localVarRequestOptions.FileParameters.Add("camera_config", new PlerionApiClient.Client.FileParameter(null, "application/json", _stream_cameraConfig));
+                        }
+            localVarRequestOptions.FileParameters.Add("file", file);
+
 
 
             // make the HTTP request
@@ -6365,12 +6559,13 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;MapLocalization&gt;</returns>
-        public async System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, axisConvention, file, cancellationToken).ConfigureAwait(false);
+            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = await LocalizeImageWithHttpInfoAsync(localizationSessionId, axisConvention, cameraConfig, file, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -6380,11 +6575,20 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="localizationSessionId"></param>
         /// <param name="axisConvention">List of Ids to delete</param>
-        /// <param name="file"> (optional)</param>
+        /// <param name="cameraConfig"></param>
+        /// <param name="file"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;MapLocalization&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, AxisConvention axisConvention, FileParameter? file = default, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(Guid localizationSessionId, AxisConvention axisConvention, PinholeCameraConfig cameraConfig, FileParameter file, System.Threading.CancellationToken cancellationToken = default)
         {
+            // verify the required parameter 'cameraConfig' is set
+            if (cameraConfig == null)
+                throw new PlerionApiClient.Client.ApiException(400, "Missing required parameter 'cameraConfig' when calling DefaultApi->LocalizeImage");
+
+            // verify the required parameter 'file' is set
+            if (file == null)
+                throw new PlerionApiClient.Client.ApiException(400, "Missing required parameter 'file' when calling DefaultApi->LocalizeImage");
+
 
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
 
@@ -6406,10 +6610,19 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "axis_convention", axisConvention));
-            if (file != null)
-            {
-                localVarRequestOptions.FileParameters.Add("file", file);
-            }
+
+            // Patch
+                        // COMPLEX TYPE: Serialize to JSON and add as a "File" with application/json header
+                        if (cameraConfig != null)
+                        {
+                            var _json_cameraConfig = Newtonsoft.Json.JsonConvert.SerializeObject(cameraConfig, this.ApiClient.SerializerSettings);
+                            var _stream_cameraConfig = new System.IO.MemoryStream(System.Text.Encoding.UTF8.GetBytes(_json_cameraConfig));
+                            
+                            // Add as a file parameter with null filename and application/json content type
+                            localVarRequestOptions.FileParameters.Add("camera_config", new PlerionApiClient.Client.FileParameter(null, "application/json", _stream_cameraConfig));
+                        }
+            localVarRequestOptions.FileParameters.Add("file", file);
+            
 
 
             // make the HTTP request
@@ -6419,127 +6632,6 @@ namespace PlerionApiClient.Api
             if (this.ExceptionFactory != null)
             {
                 Exception _exception = this.ExceptionFactory("LocalizeImage", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <returns></returns>
-        public void SetLocalizationSessionCameraIntrinsics(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig)
-        {
-            SetLocalizationSessionCameraIntrinsicsWithHttpInfo(localizationSessionId, pinholeCameraConfig);
-        }
-
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <returns>ApiResponse of Object(void)</returns>
-        public PlerionApiClient.Client.ApiResponse<Object> SetLocalizationSessionCameraIntrinsicsWithHttpInfo(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig)
-        {
-            // verify the required parameter 'pinholeCameraConfig' is set
-            if (pinholeCameraConfig == null)
-                throw new PlerionApiClient.Client.ApiException(400, "Missing required parameter 'pinholeCameraConfig' when calling DefaultApi->SetLocalizationSessionCameraIntrinsics");
-
-            PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-                "application/json"
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-            var localVarContentType = PlerionApiClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
-            localVarRequestOptions.Data = pinholeCameraConfig;
-
-
-            // make the HTTP request
-            var localVarResponse = this.Client.Put<Object>("/localization_sessions/{localization_session_id}/camera", localVarRequestOptions, this.Configuration);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("SetLocalizationSessionCameraIntrinsics", localVarResponse);
-                if (_exception != null) throw _exception;
-            }
-
-            return localVarResponse;
-        }
-
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of void</returns>
-        public async System.Threading.Tasks.Task SetLocalizationSessionCameraIntrinsicsAsync(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig, System.Threading.CancellationToken cancellationToken = default)
-        {
-            await SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(localizationSessionId, pinholeCameraConfig, cancellationToken).ConfigureAwait(false);
-        }
-
-        /// <summary>
-        /// SetLocalizationSessionCameraIntrinsics 
-        /// </summary>
-        /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
-        /// <param name="localizationSessionId"></param>
-        /// <param name="pinholeCameraConfig"></param>
-        /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<Object>> SetLocalizationSessionCameraIntrinsicsWithHttpInfoAsync(Guid localizationSessionId, PinholeCameraConfig pinholeCameraConfig, System.Threading.CancellationToken cancellationToken = default)
-        {
-            // verify the required parameter 'pinholeCameraConfig' is set
-            if (pinholeCameraConfig == null)
-                throw new PlerionApiClient.Client.ApiException(400, "Missing required parameter 'pinholeCameraConfig' when calling DefaultApi->SetLocalizationSessionCameraIntrinsics");
-
-
-            PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
-
-            string[] _contentTypes = new string[] {
-                "application/json"
-            };
-
-            // to determine the Accept header
-            string[] _accepts = new string[] {
-                "application/json"
-            };
-
-
-            var localVarContentType = PlerionApiClient.Client.ClientUtils.SelectHeaderContentType(_contentTypes);
-            if (localVarContentType != null) localVarRequestOptions.HeaderParameters.Add("Content-Type", localVarContentType);
-
-            var localVarAccept = PlerionApiClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
-            if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
-
-            localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
-            localVarRequestOptions.Data = pinholeCameraConfig;
-
-
-            // make the HTTP request
-
-            var localVarResponse = await this.AsynchronousClient.PutAsync<Object>("/localization_sessions/{localization_session_id}/camera", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
-
-            if (this.ExceptionFactory != null)
-            {
-                Exception _exception = this.ExceptionFactory("SetLocalizationSessionCameraIntrinsics", localVarResponse);
                 if (_exception != null) throw _exception;
             }
 
@@ -6585,6 +6677,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.PathParameters.Add("map_id", PlerionApiClient.Client.ClientUtils.ParameterToString(mapId)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -6642,6 +6737,9 @@ namespace PlerionApiClient.Api
 
             localVarRequestOptions.PathParameters.Add("localization_session_id", PlerionApiClient.Client.ClientUtils.ParameterToString(localizationSessionId)); // path parameter
             localVarRequestOptions.PathParameters.Add("map_id", PlerionApiClient.Client.ClientUtils.ParameterToString(mapId)); // path parameter
+
+            // Patch
+            
 
 
             // make the HTTP request
@@ -6701,6 +6799,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
             localVarRequestOptions.Data = captureSessionUpdate;
 
 
@@ -6764,6 +6865,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+
+            // Patch
+            
             localVarRequestOptions.Data = captureSessionUpdate;
 
 
@@ -6827,6 +6931,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
+           
+            // Patch
+
             localVarRequestOptions.Data = captureSessionBatchUpdate;
 
 
@@ -6893,6 +7000,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
+
+            // Patch
+            
             localVarRequestOptions.Data = captureSessionBatchUpdate;
 
 
@@ -6956,6 +7066,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -7022,6 +7135,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -7083,6 +7199,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -7149,6 +7268,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -7207,6 +7329,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
             localVarRequestOptions.Data = localizationMapUpdate;
 
 
@@ -7270,6 +7395,9 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+
+            // Patch
+            
             localVarRequestOptions.Data = localizationMapUpdate;
 
 
@@ -7333,6 +7461,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
+           
+            // Patch
+
             localVarRequestOptions.Data = localizationMapBatchUpdate;
 
 
@@ -7399,6 +7530,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
+
+            // Patch
+            
             localVarRequestOptions.Data = localizationMapBatchUpdate;
 
 
@@ -7462,6 +7596,9 @@ namespace PlerionApiClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -7528,6 +7665,9 @@ namespace PlerionApiClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionApiClient.Client.ClientUtils.ParameterToMultiMap("", "allow_missing", allowMissing));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -7581,10 +7721,13 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
             if (file != null)
             {
                 localVarRequestOptions.FileParameters.Add("file", file);
             }
+
 
 
             // make the HTTP request
@@ -7642,10 +7785,13 @@ namespace PlerionApiClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionApiClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+
+            // Patch
             if (file != null)
             {
                 localVarRequestOptions.FileParameters.Add("file", file);
             }
+            
 
 
             // make the HTTP request

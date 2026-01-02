@@ -303,6 +303,7 @@ namespace PlerionZedClient.Client
                 multipartContent.Add(new StringContent(formParameter.Value), formParameter.Key);
             }
 
+            // patch
             if (options.FileParameters != null && options.FileParameters.Count > 0)
             {
                 foreach (var fileParam in options.FileParameters)
@@ -311,7 +312,17 @@ namespace PlerionZedClient.Client
                     {
                         var content = new StreamContent(file.Content);
                         content.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
-                        multipartContent.Add(content, fileParam.Key, file.Name);
+                        
+                        if (string.IsNullOrEmpty(file.Name))
+                        {
+                            // Add as a normal form part (but with our custom Content-Type)
+                            multipartContent.Add(content, fileParam.Key);
+                        }
+                        else
+                        {
+                            // Add as a file upload (with filename)
+                            multipartContent.Add(content, fileParam.Key, file.Name);
+                        }
                     }
                 }
             }

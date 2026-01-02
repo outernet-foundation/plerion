@@ -2308,85 +2308,6 @@
         "deprecated": false
       }
     },
-    "/localization_sessions/{localization_session_id}/camera": {
-      "put": {
-        "tags": [
-          "Localization Sessions"
-        ],
-        "summary": "SetLocalizationSessionCameraIntrinsics",
-        "operationId": "set_localization_session_camera_intrinsics",
-        "parameters": [
-          {
-            "name": "localization_session_id",
-            "in": "path",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true,
-            "deprecated": false
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/PinholeCameraConfig"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Request fulfilled, document follows",
-            "headers": {}
-          },
-          "400": {
-            "description": "Bad request syntax or unsupported method",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "status_code": {
-                      "type": "integer"
-                    },
-                    "detail": {
-                      "type": "string"
-                    },
-                    "extra": {
-                      "additionalProperties": {},
-                      "anyOf": [
-                        {
-                          "type": "object"
-                        },
-                        {
-                          "type": "array",
-                          "items": {}
-                        }
-                      ],
-                      "nullable": true
-                    }
-                  },
-                  "type": "object",
-                  "required": [
-                    "detail",
-                    "status_code"
-                  ],
-                  "description": "Validation Exception",
-                  "example": {
-                    "status_code": 400,
-                    "detail": "Bad Request",
-                    "extra": {}
-                  }
-                }
-              }
-            }
-          }
-        },
-        "deprecated": false
-      }
-    },
     "/localization_sessions/{localization_session_id}/status": {
       "get": {
         "tags": [
@@ -2749,13 +2670,7 @@
           "content": {
             "multipart/form-data": {
               "schema": {
-                "properties": {
-                  "file": {
-                    "type": "string",
-                    "format": "binary"
-                  }
-                },
-                "type": "object"
+                "$ref": "#/components/schemas/LocalizationRequest"
               }
             }
           },
@@ -4504,6 +4419,23 @@
           "reprojection_error_median"
         ],
         "title": "LocalizationMetrics"
+      },
+      "LocalizationRequest": {
+        "properties": {
+          "camera_config": {
+            "$ref": "#/components/schemas/PinholeCameraConfig"
+          },
+          "file": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "type": "object",
+        "required": [
+          "camera_config",
+          "file"
+        ],
+        "title": "LocalizationRequest"
       },
       "LocalizationSessionRead": {
         "properties": {

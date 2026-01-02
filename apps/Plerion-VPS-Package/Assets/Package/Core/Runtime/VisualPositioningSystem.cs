@@ -227,62 +227,66 @@ namespace Plerion.Core
             if (CameraProvider == null)
                 throw new Exception("Camera provider must be set before calling Start.");
 
-            var cameraConfig = await CameraProvider.Start(
+            await CameraProvider.Start(
                 intervalSeconds: 0,
-                cameraPoseProvider: () =>
-                {
-                    var cameraTransform = UnityEngine.Camera.main.transform;
-                    return (cameraTransform.position, cameraTransform.rotation);
-                },
-                onFrameReceived: async (
-                    image,
-                    cameraTranslationUnityWorldFromCamera,
-                    cameraRotationUnityWorldFromCamera
-                ) =>
-                {
-                    if (image == null)
-                        return;
-
-                    using var memoryStream = new MemoryStream(image);
-                    var localizationResults = await api.LocalizeImageAsync(
-                        localizationSessionId,
-                        AxisConvention.UNITY,
-                        new FileParameter(memoryStream)
-                    );
-
-                    if (localizationResults.Count == 0)
-                    {
-                        LogDebug("Localization failed");
-                        return;
-                    }
-
-                    var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
-                    MostRecentMetrics = localizationResult.Metrics;
-
-                    // Updating transforms should be done on the main thread
-                    await UniTask.SwitchToMainThread();
-
-                    unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
-                        localizationResult.CameraFromMapTransform.Translation.ToDouble3(),
-                        localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
-                        localizationResult.MapTransform.Translation.ToDouble3(),
-                        localizationResult.MapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
-                        cameraTranslationUnityWorldFromCamera,
-                        // TODO: Adjust unity rotation to account for phone orientation (portrait vs landscape)
-                        math.mul(
-                            ((quaternion)cameraRotationUnityWorldFromCamera).ToDouble3x3(),
-                            quaternion.AxisAngle(new float3(0f, 0f, 1f), math.radians(0f)).ToDouble3x3()
-                        )
-                    );
-                    ecefFromUnityTransform = math.inverse(unityFromEcefTransform);
-
-                    OnEcefToUnityWorldTransformUpdated?.Invoke();
-                }
+                cameraPoseProvider: GetCameraPose,
+                onFrameReceived: OnFrameReceived
             );
 
-            await api.SetLocalizationSessionCameraIntrinsicsAsync(localizationSessionId, cameraConfig);
-
             _localizingState = SystemState.Running;
+        }
+
+        public static async UniTask OnFrameReceived(
+            byte[] image,
+            PinholeCameraConfig cameraConfig,
+            Vector3 cameraTranslationUnityWorldFromCamera,
+            Quaternion cameraRotationUnityWorldFromCamera
+        )
+        {
+            if (image == null)
+                return;
+
+            using var memoryStream = new MemoryStream(image);
+            var localizationResults = await api.LocalizeImageAsync(
+                localizationSessionId,
+                AxisConvention.UNITY,
+                cameraConfig,
+                new FileParameter(memoryStream)
+            );
+
+            if (localizationResults.Count == 0)
+            {
+                LogDebug("Localization failed");
+                return;
+            }
+
+            var localizationResult = localizationResults.FirstOrDefault(); //for now, just use the first one
+            MostRecentMetrics = localizationResult.Metrics;
+
+            // Updating transforms should be done on the main thread
+            await UniTask.SwitchToMainThread();
+
+            unityFromEcefTransform = LocationUtilities.ComputeUnityFromEcefTransform(
+                localizationResult.CameraFromMapTransform.Translation.ToDouble3(),
+                localizationResult.CameraFromMapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
+                localizationResult.MapTransform.Translation.ToDouble3(),
+                localizationResult.MapTransform.Rotation.ToMathematicsQuaternion().ToDouble3x3(),
+                cameraTranslationUnityWorldFromCamera,
+                // TODO: Adjust unity rotation to account for phone orientation (portrait vs landscape)
+                math.mul(
+                    ((quaternion)cameraRotationUnityWorldFromCamera).ToDouble3x3(),
+                    quaternion.AxisAngle(new float3(0f, 0f, 1f), math.radians(0f)).ToDouble3x3()
+                )
+            );
+            ecefFromUnityTransform = math.inverse(unityFromEcefTransform);
+
+            OnEcefToUnityWorldTransformUpdated?.Invoke();
+        }
+
+        public static (Vector3 position, Quaternion rotation)? GetCameraPose()
+        {
+            var cameraTransform = UnityEngine.Camera.main.transform;
+            return (cameraTransform.position, cameraTransform.rotation);
         }
 
         public static async UniTask StopLocalizing()

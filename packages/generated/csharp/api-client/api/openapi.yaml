@@ -980,38 +980,6 @@ paths:
       summary: DeleteLocalizationSession
       tags:
       - Default
-  /localization_sessions/{localization_session_id}/camera:
-    put:
-      deprecated: false
-      operationId: set_localization_session_camera_intrinsics
-      parameters:
-      - deprecated: false
-        explode: false
-        in: path
-        name: localization_session_id
-        required: true
-        schema:
-          format: uuid
-          type: string
-        style: simple
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/PinholeCameraConfig"
-        required: true
-      responses:
-        "200":
-          description: "Request fulfilled, document follows"
-        "400":
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/get_capture_sessions_400_response"
-          description: Bad request syntax or unsupported method
-      summary: SetLocalizationSessionCameraIntrinsics
-      tags:
-      - Default
   /localization_sessions/{localization_session_id}/status:
     get:
       deprecated: false
@@ -1186,7 +1154,7 @@ paths:
         content:
           multipart/form-data:
             schema:
-              $ref: "#/components/schemas/upload_capture_session_tar_request"
+              $ref: "#/components/schemas/LocalizationRequest"
         required: true
       responses:
         "201":
@@ -2366,6 +2334,18 @@ components:
       - inlier_ratio
       - reprojection_error_median
       title: LocalizationMetrics
+      type: object
+    LocalizationRequest:
+      properties:
+        camera_config:
+          $ref: "#/components/schemas/PinholeCameraConfig"
+        file:
+          format: binary
+          type: string
+      required:
+      - camera_config
+      - file
+      title: LocalizationRequest
       type: object
     LocalizationSessionRead:
       example:

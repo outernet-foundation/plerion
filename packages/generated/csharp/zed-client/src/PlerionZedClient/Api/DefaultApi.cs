@@ -483,6 +483,9 @@ namespace PlerionZedClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionZedClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -539,6 +542,9 @@ namespace PlerionZedClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionZedClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -591,6 +597,9 @@ namespace PlerionZedClient.Api
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
             localVarRequestOptions.PathParameters.Add("id", PlerionZedClient.Client.ClientUtils.ParameterToString(id)); // path parameter
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -648,6 +657,9 @@ namespace PlerionZedClient.Api
 
             localVarRequestOptions.PathParameters.Add("id", PlerionZedClient.Client.ClientUtils.ParameterToString(id)); // path parameter
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -695,6 +707,9 @@ namespace PlerionZedClient.Api
 
             var localVarAccept = PlerionZedClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+           
+            // Patch
 
 
 
@@ -748,6 +763,9 @@ namespace PlerionZedClient.Api
             var localVarAccept = PlerionZedClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
+
+            // Patch
+            
 
 
             // make the HTTP request
@@ -803,6 +821,9 @@ namespace PlerionZedClient.Api
             {
                 localVarRequestOptions.QueryParameters.Add(PlerionZedClient.Client.ClientUtils.ParameterToMultiMap("", "capture_interval", captureInterval));
             }
+           
+            // Patch
+
 
 
             // make the HTTP request
@@ -862,6 +883,9 @@ namespace PlerionZedClient.Api
                 localVarRequestOptions.QueryParameters.Add(PlerionZedClient.Client.ClientUtils.ParameterToMultiMap("", "capture_interval", captureInterval));
             }
 
+            // Patch
+            
+
 
             // make the HTTP request
 
@@ -909,6 +933,9 @@ namespace PlerionZedClient.Api
 
             var localVarAccept = PlerionZedClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
+
+           
+            // Patch
 
 
 
@@ -962,6 +989,9 @@ namespace PlerionZedClient.Api
             var localVarAccept = PlerionZedClient.Client.ClientUtils.SelectHeaderAccept(_accepts);
             if (localVarAccept != null) localVarRequestOptions.HeaderParameters.Add("Accept", localVarAccept);
 
+
+            // Patch
+            
 
 
             // make the HTTP request

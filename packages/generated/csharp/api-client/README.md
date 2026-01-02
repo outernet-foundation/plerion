@@ -162,7 +162,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**GetReconstructions**](docs/DefaultApi.md#getreconstructions) | **GET** /reconstructions | GetReconstructions
 *DefaultApi* | [**LoadLocalizationMaps**](docs/DefaultApi.md#loadlocalizationmaps) | **POST** /localization_sessions/{localization_session_id}/maps | LoadLocalizationMaps
 *DefaultApi* | [**LocalizeImage**](docs/DefaultApi.md#localizeimage) | **POST** /localization_sessions/{localization_session_id}/localization | LocalizeImage
-*DefaultApi* | [**SetLocalizationSessionCameraIntrinsics**](docs/DefaultApi.md#setlocalizationsessioncameraintrinsics) | **PUT** /localization_sessions/{localization_session_id}/camera | SetLocalizationSessionCameraIntrinsics
 *DefaultApi* | [**UnloadMap**](docs/DefaultApi.md#unloadmap) | **DELETE** /localization_sessions/{localization_session_id}/maps/{map_id} | UnloadMap
 *DefaultApi* | [**UpdateCaptureSession**](docs/DefaultApi.md#updatecapturesession) | **PATCH** /capture_sessions/{id} | UpdateCaptureSession
 *DefaultApi* | [**UpdateCaptureSessions**](docs/DefaultApi.md#updatecapturesessions) | **PATCH** /capture_sessions | UpdateCaptureSessions

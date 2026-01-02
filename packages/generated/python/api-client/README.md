@@ -122,7 +122,6 @@ Class | Method | HTTP request | Description
 *DefaultApi* | [**get_reconstructions**](docs/DefaultApi.md#get_reconstructions) | **GET** /reconstructions | GetReconstructions
 *DefaultApi* | [**load_localization_maps**](docs/DefaultApi.md#load_localization_maps) | **POST** /localization_sessions/{localization_session_id}/maps | LoadLocalizationMaps
 *DefaultApi* | [**localize_image**](docs/DefaultApi.md#localize_image) | **POST** /localization_sessions/{localization_session_id}/localization | LocalizeImage
-*DefaultApi* | [**set_localization_session_camera_intrinsics**](docs/DefaultApi.md#set_localization_session_camera_intrinsics) | **PUT** /localization_sessions/{localization_session_id}/camera | SetLocalizationSessionCameraIntrinsics
 *DefaultApi* | [**unload_map**](docs/DefaultApi.md#unload_map) | **DELETE** /localization_sessions/{localization_session_id}/maps/{map_id} | UnloadMap
 *DefaultApi* | [**update_capture_session**](docs/DefaultApi.md#update_capture_session) | **PATCH** /capture_sessions/{id} | UpdateCaptureSession
 *DefaultApi* | [**update_capture_sessions**](docs/DefaultApi.md#update_capture_sessions) | **PATCH** /capture_sessions | UpdateCaptureSessions

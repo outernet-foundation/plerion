@@ -1,4 +1,5 @@
-from typing import Annotated
+import json
+from typing import Annotated, Any
 from uuid import UUID, uuid4
 
 from common.docker_compose_client import create_service, destroy_service, get_service_status
@@ -9,7 +10,7 @@ from core.transform import Float3, Float4, Transform
 from datamodels.public_dtos import LocalizationSessionRead, localization_session_to_dto
 from datamodels.public_tables import LocalizationMap, LocalizationSession
 from fastapi.exceptions import HTTPException
-from litestar import Router, delete, get, post, put
+from litestar import Router, delete, get, post
 from litestar.datastructures import UploadFile
 from litestar.di import Provide
 from litestar.enums import RequestEncodingType
@@ -18,15 +19,14 @@ from litestar.params import Body, Parameter
 from plerion_localizer_client import ApiClient, Configuration
 from plerion_localizer_client.api.default_api import DefaultApi
 from plerion_localizer_client.models.axis_convention import AxisConvention as LocalizerAxisConvention
-
-# from plerion_localizer_client.models.camera import Camera as LocalizeCamera
 from plerion_localizer_client.models.load_state_response import LoadStateResponse
 from plerion_localizer_client.models.pinhole_camera_config import PinholeCameraConfig as LocalizerPinholeCameraConfig
-from pydantic import BaseModel
+from pydantic import BaseModel, BeforeValidator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..database import get_session
+from ..multipart_json_binary_operation import MultipartJsonBinaryOperation
 from ..settings import get_settings
 from .localization_maps import fetch_localization_maps
 
@@ -64,18 +64,18 @@ async def delete_localization_session(session: AsyncSession, localization_sessio
         raise NotFoundException(f"Localization session with id {localization_session_id} not found")
 
 
-@put("/{localization_session_id:uuid}/camera")
-async def set_localization_session_camera_intrinsics(
-    session: AsyncSession, localization_session_id: UUID, data: PinholeCameraConfig
-) -> None:
-    url = await _session_base_url(session, localization_session_id)
-    async with ApiClient(Configuration(host=url)) as api_client:
-        try:
-            await DefaultApi(api_client).set_camera_intrinsics(
-                LocalizerPinholeCameraConfig.model_validate(data.model_dump())
-            )
-        except Exception as e:
-            raise HTTPException(502, f"session backend unreachable: {e}") from e
+# @put("/{localization_session_id:uuid}/camera")
+# async def set_localization_session_camera_intrinsics(
+#     session: AsyncSession, localization_session_id: UUID, data: PinholeCameraConfig
+# ) -> None:
+#     url = await _session_base_url(session, localization_session_id)
+#     async with ApiClient(Configuration(host=url)) as api_client:
+#         try:
+#             await DefaultApi(api_client).set_camera_intrinsics(
+#                 LocalizerPinholeCameraConfig.model_validate(data.model_dump())
+#             )
+#         except Exception as e:
+#             raise HTTPException(502, f"session backend unreachable: {e}") from e
 
 
 @get("/{localization_session_id:uuid}/status")
@@ -143,18 +143,43 @@ class MapLocalization(BaseModel):
     metrics: LocalizationMetrics
 
 
-@post("/{localization_session_id:uuid}/localization")
+def deserialize_json(v: Any) -> Any:
+    print("Tyler")
+    if isinstance(v, str):
+        try:
+            return json.loads(v)
+        except (ValueError, TypeError):
+            # If parsing fails, return original to let Pydantic raise the validation error
+            return v
+    return v
+
+
+class LocalizationRequest(BaseModel):
+    model_config = {"arbitrary_types_allowed": True}
+
+    camera_config: Annotated[PinholeCameraConfig, BeforeValidator(deserialize_json)]
+    file: UploadFile
+
+
+@post("/{localization_session_id:uuid}/localization", operation_class=MultipartJsonBinaryOperation)
 async def localize_image(
     session: AsyncSession,
     localization_session_id: UUID,
     axis_convention: AxisConvention,
-    data: Annotated[UploadFile, Body(media_type=RequestEncodingType.MULTI_PART)],
+    data: Annotated[LocalizationRequest, Body(media_type=RequestEncodingType.MULTI_PART)],
 ) -> list[MapLocalization]:
+    camera_config = data.camera_config
+    file = data.file
+
     url = await _session_base_url(session, localization_session_id)
     async with ApiClient(Configuration(host=url)) as api_client:
         try:
+            await DefaultApi(api_client).set_camera_intrinsics(
+                LocalizerPinholeCameraConfig.model_validate(camera_config.model_dump())
+            )
+
             localizations = await DefaultApi(api_client).localize_image(
-                LocalizerAxisConvention(axis_convention.value), await data.read()
+                LocalizerAxisConvention(axis_convention.value), await file.read()
             )
             reconstruction_id_to_map = {
                 map.reconstruction_id: map
@@ -205,7 +230,6 @@ router = Router(
     route_handlers=[
         create_localization_session,
         delete_localization_session,
-        set_localization_session_camera_intrinsics,
         get_localization_session_status,
         load_localization_maps,
         unload_map,

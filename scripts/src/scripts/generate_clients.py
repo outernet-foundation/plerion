@@ -23,7 +23,7 @@ def cli(
     with Path(config).open("r", encoding="utf-8") as file:
         config_json: dict[str, list[str]] = json.load(file)
 
-    _generate_templates()
+    # _generate_templates()
 
     for project_name, clients in config_json.items():
         if project is not None and project.name != project_name:
