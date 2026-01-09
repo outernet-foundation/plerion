@@ -80,9 +80,9 @@ def _generate_templates():
         cwd=REPO_ROOT,
     )
 
-    # git apply directory is always relative to the repo root
+    # 'git apply' directory is always relative to the repo root
     for patch_file in (TEMPLATE_PATCHES_PATH / "csharp").iterdir():
-        run_command(f"git apply {str(patch_file)}", log=True)
+        run_command(f"git apply --ignore-space-change --ignore-whitespace {str(patch_file)}", log=True)
 
 
 def _generate_client(openapi_spec: str, project: str, client: str):

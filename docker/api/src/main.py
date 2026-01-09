@@ -10,6 +10,7 @@ from .auth import AuthMiddleware
 from .routers.capture_sessions import router as capture_sessions_router
 from .routers.groups import router as groups_router
 from .routers.layers import router as layers_router
+from .routers.leases import router as leases_router
 from .routers.localization import router as localization_router
 from .routers.localization_maps import router as localization_maps_router
 from .routers.nodes import router as nodes_router
@@ -77,6 +78,7 @@ else:
 app = create_litestar_app(
     [
         capture_sessions_router,
+        leases_router,
         reconstructions_router,
         localization_maps_router,
         localization_router,

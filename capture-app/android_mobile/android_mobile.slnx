@@ -54,13 +54,13 @@
   <Project Path="Unity.Rider.Editor.csproj" />
   <Project Path="Unity.XR.ARFoundation.VisualScripting.csproj" />
   <Project Path="Unity.VisualScripting.State.csproj" />
+  <Project Path="Nessle.csproj" />
   <Project Path="Unity.XR.ARSubsystems.Editor.csproj" />
   <Project Path="Unity.XR.Management.Editor.csproj" />
   <Project Path="UnityEditor.UI.csproj" />
   <Project Path="glTFast.Newtonsoft.csproj" />
   <Project Path="R3.Unity.csproj" />
   <Project Path="PlerionZedClient.csproj" />
-  <Project Path="Nessle.csproj" />
   <Project Path="Unity.XR.CoreUtils.Editor.csproj" />
   <Project Path="NuGetForUnity.csproj" />
   <Project Path="Stateful.Editor.csproj" />
