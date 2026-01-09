@@ -28,14 +28,11 @@ namespace PlerionClient.Client
 {
     public class CaptureController : MonoBehaviour
     {
-        public static IControl UI => _instance.ui;
-        private static CaptureController _instance;
-
-        public Canvas canvas;
         private float captureIntervalSeconds = 0.2f;
 
         private DefaultApi capturesApi;
         private IControl ui;
+        private ListObservable<IControl> uiChildren;
         private TaskHandle currentCaptureTask = TaskHandle.Complete;
 
         private string localCaptureNamePath;
@@ -45,14 +42,6 @@ namespace PlerionClient.Client
 
         void Awake()
         {
-            if (_instance != null && _instance != this)
-            {
-                Destroy(gameObject);
-                throw new Exception($"Only one instance of {nameof(CaptureController)} allowed in the scene at a time. Destroying duplicate instance.");
-            }
-
-            _instance = this;
-
             localCaptureNamePath = $"{Application.persistentDataPath}/LocalCaptureNames.json";
 
             capturesApi = new DefaultApi(
@@ -68,8 +57,43 @@ namespace PlerionClient.Client
                 }
             );
 
+            uiChildren = new ListObservable<IControl>();
+            ui = UIBuilder.Canvas(new()
+            {
+                children = uiChildren,
+                element = new()
+                {
+                    bindings = Props.List(
+                        App.state.loggedIn.AsObservable()
+                            .SelectDynamic(loggedIn =>
+                            {
+                                IControl screen = default;
 
-            ui = ConstructUI(canvas);
+                                if (loggedIn)
+                                {
+                                    screen = MainAppUI(new MainAppUIProps()
+                                    {
+                                        mode = App.state.mode.AsObservable(),
+                                        onModeChanged = x => App.state.mode.ExecuteSetOrDelay(x)
+                                    });
+                                }
+                                else
+                                {
+                                    screen = LoginUI();
+                                }
+
+                                return screen;
+                            })
+                            .Subscribe(x =>
+                            {
+                                if (x.previousValue != null)
+                                    x.previousValue.Dispose();
+
+                                uiChildren.Insert(0, x.currentValue);
+                            })
+                    )
+                }
+            });
 
             App.RegisterObserver(HandleCaptureStatusChanged, App.state.loggedIn, App.state.captureStatus);
             App.RegisterObserver(HandleCapturesChanged, App.state.captures);
@@ -90,7 +114,7 @@ namespace PlerionClient.Client
 
                         if (x.currentValue == CaptureUploadStatus.UploadRequested)
                         {
-                            ui.children.Add(
+                            uiChildren.Add(
                                 ReconstructionOptionsDialog(new ReconstructionOptionsDialogProps()
                                 {
                                     capture = capture,
@@ -114,7 +138,7 @@ namespace PlerionClient.Client
                         }
                         else if (x.currentValue == CaptureUploadStatus.ReconstructRequested)
                         {
-                            ui.children.Add(
+                            uiChildren.Add(
                                 ReconstructionOptionsDialog(new ReconstructionOptionsDialogProps()
                                 {
                                     capture = capture,
@@ -162,9 +186,6 @@ namespace PlerionClient.Client
 
         void OnDestroy()
         {
-            if (_instance == this)
-                _instance = null;
-
             ui?.Dispose();
             currentCaptureTask?.Cancel();
             captureStatusStream?.Dispose();
@@ -331,6 +352,19 @@ namespace PlerionClient.Client
                     reconstructionManifest: null
                 ));
             }
+
+            var id = Guid.NewGuid();
+            var reconstructionID = Guid.NewGuid();
+
+            captureData.Add(id, (
+                name: "Dummy",
+                capture: new CaptureSessionRead(id, DateTime.Now, DateTime.Now, DeviceType.ARFoundation, "Dummy"),
+                deviceType: DeviceType.ARFoundation,
+                reconstruction: new ReconstructionRead(id, reconstructionID, DateTime.Now, DateTime.Now, OrchestrationStatus.Succeeded),
+                localizationMap: new LocalizationMapRead(reconstructionID, Guid.NewGuid(), 0, 0, 0, 0, 0, DateTime.Now, 0, 1, 0, DateTime.Now, true),
+                hasLocalFiles: false,
+                reconstructionManifest: new ReconstructionManifest(id.ToString(), ReconstructionManifest.StatusEnum.Succeeded, new ReconstructionOptions(), new ReconstructionMetrics())
+            ));
 
             await UniTask.SwitchToMainThread();
 
@@ -513,33 +547,6 @@ namespace PlerionClient.Client
             progress?.Report(CaptureUploadStatus.Uploaded);
 
             await UpdateCaptureList();
-        }
-
-        private IControl ConstructUI(Canvas canvas)
-        {
-            return new Control(canvas.gameObject).SingleChild(
-                App.state.loggedIn.AsObservable()
-                    .SelectDynamic(loggedIn =>
-                    {
-                        IControl screen = default;
-
-                        if (loggedIn)
-                        {
-                            screen = MainAppUI(new MainAppUIProps()
-                            {
-                                mode = App.state.mode.AsObservable(),
-                                onModeChanged = x => App.state.mode.ExecuteSetOrDelay(x)
-                            });
-                        }
-                        else
-                        {
-                            screen = LoginUI();
-                        }
-
-                        screen?.FillParent();
-                        return screen;
-                    })
-            );
         }
 
         private async UniTask CreateReconstruction(Guid captureId, ReconstructionOptions reconstructionOptions)
