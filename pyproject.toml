@@ -2,12 +2,16 @@
 name = "plerion_workspace"
 version = "0.0.1"
 requires-python = ">=3.13"
+dependencies = [
+    "cryptography>=46.0.3",
+]
 
 [tool.uv.workspace]
 members = [
     "capture-app/zed",
     "docker/database-manager",
     "docker/api",
+    "docker/auth-initializer",
     "docker/localizer",
     "docker/orchestrator",
     "docker/reconstructor",

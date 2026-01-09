@@ -5,6 +5,8 @@ volumes:
   minio_data:
   postgres_data:
   cloudbeaver_data:
+  auth_data:
+  keycloak_import:
   keycloak_data:
 
 services:
@@ -136,12 +138,24 @@ services:
       --auth-user-password ${DATABASE_AUTH_USER_PASSWORD}
       --orchestration-user-password ${DATABASE_ORCHESTRATION_USER_PASSWORD}
 
+  auth-initializer:
+    build:
+      dockerfile: docker/auth-initializer/Dockerfile
+    restart: "no"
+    volumes:
+      - auth_data:/auth_data
+      - keycloak_import:/keycloak_import
+      - ./docker/keycloak/realm-export:/templates:ro
+
   keycloak:
     image: quay.io/keycloak/keycloak:26.3.5
     command:
       - start-dev
       - --import-realm
       - --health-enabled=true
+    depends_on:
+      auth-initializer:
+        condition: service_completed_successfully
     environment:
       PUBLIC_URL: ${PUBLIC_URL}
       KEYCLOAK_ACCESS_TOKEN_LIFESPAN: ${KEYCLOAK_ACCESS_TOKEN_LIFESPAN}
@@ -153,7 +167,7 @@ services:
       KC_HOSTNAME_STRICT_HTTPS: true
       KC_HOSTNAME_DEBUG: true
     volumes:
-      - ./docker/keycloak/realm-export:/opt/keycloak/data/import:ro
+      - keycloak_import:/opt/keycloak/data/import:ro
       - keycloak_data:/opt/keycloak/data
 
   gateway:
@@ -254,6 +268,7 @@ services:
 
   reconstructor-cuda:
     profiles: ["cuda"]
+
     build:
       dockerfile: docker/reconstructor/Dockerfile
       args: { TORCH_DEVICE: "cuda" }
@@ -262,6 +277,11 @@ services:
       cache_to:
         - type=local,dest=${HOME}/.buildx-cache/reconstructor-${TORCH_DEVICE},mode=max
     image: plerion-reconstructor-cuda
+    depends_on:
+      auth-initializer:
+        condition: service_completed_successfully
+    volumes:
+      - auth_data:/run/secrets:ro
     gpus: all
     expose:
       - "5678" # debug port
@@ -271,6 +291,7 @@ services:
       MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
       CAPTURES_BUCKET: dev-captures
+      WORKER_PRIVATE_KEY_PATH: /run/secrets/worker-private-key.pem
 
   reconstructor-rocm:
     profiles: ["rocm"]
