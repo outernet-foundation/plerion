@@ -23,14 +23,14 @@
       "dependencies": {
         "com.fofx.observething": "1.0.0"
       },
-      "hash": "9659c1f128789f4c05a0d3930e4cfb0f5755e2c8"
+      "hash": "c45941735a0708643bfb1b246a052bc17b4f2b53"
     },
     "com.fofx.observething": {
       "version": "https://github.com/outernet-foundation/ObserveThing.git?path=Assets/Package/Core",
       "depth": 0,
       "source": "git",
       "dependencies": {},
-      "hash": "3eab7bdffcc8302ec6bebefd38f5cf7edd0370c9"
+      "hash": "7838359e5caf359987fabca6e7281483f1e059f6"
     },
     "com.fofx.observething.statefulextensions": {
       "version": "https://github.com/outernet-foundation/ObserveThing.git?path=Assets/Package/StatefulExtensions",
