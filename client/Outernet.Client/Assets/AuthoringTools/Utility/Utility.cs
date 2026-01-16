@@ -14,7 +14,7 @@ using UnityEngine.InputSystem;
 using System.Collections.Generic;
 using Cysharp.Threading.Tasks;
 using PlerionApiClient.Model;
-using Plerion.VPS;
+using Plerion.Core;
 
 using Vector3 = UnityEngine.Vector3;
 using Quaternion = UnityEngine.Quaternion;

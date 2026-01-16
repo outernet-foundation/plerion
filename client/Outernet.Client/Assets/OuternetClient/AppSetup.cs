@@ -5,7 +5,7 @@ using FofX.Serialization;
 using Unity.Mathematics;
 using SimpleJSON;
 using Outernet.Client.AuthoringTools;
-using Plerion.VPS;
+using Plerion.Core;
 
 #if AUTHORING_TOOLS_ENABLED || MAP_REGISTRATION_TOOLS_ENABLED
 using UnityEngine.InputSystem.UI;

@@ -13,9 +13,8 @@ using Cysharp.Threading.Tasks;
 using FofX;
 using FofX.Stateful;
 
-using Plerion.VPS;
+using Plerion.Core;
 using TMPro;
-using UnityEditor.VersionControl;
 
 namespace Outernet.Client.AuthoringTools
 {
@@ -752,7 +751,7 @@ namespace Outernet.Client.AuthoringTools
                 scanName,
                 newMapTransform.position,
                 newMapTransform.rotation,
-                Lighting.Day,
+                null,
                 reconstruction.Id
             ));
         }

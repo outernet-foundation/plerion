@@ -1,3 +1,7 @@
+using Cysharp.Threading.Tasks;
+using Plerion.Core;
+using UnityEngine;
+
 namespace Outernet.Client.AuthoringTools
 {
     public static class Tasks
@@ -10,12 +14,7 @@ namespace Outernet.Client.AuthoringTools
 
             await UniTask.WhenAll(
                 Auth.Login(),
-                VisualPositioningSystem.Initialize(
-                    apiUrl,
-                    $"{apiUrl}/auth/realms/plerion-dev/protocol/openid-connect/token",
-                    username,
-                    password
-                )
+                VisualPositioningSystem.Login(username, password)
             );
 
             await UniTask.SwitchToMainThread();

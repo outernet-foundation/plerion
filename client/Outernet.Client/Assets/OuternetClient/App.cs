@@ -15,8 +15,8 @@ using ObservableCollections;
 using Cysharp.Threading.Tasks;
 
 using PlerionApiClient.Api;
-using Plerion.VPS;
-using Plerion.VPS.ARFoundation;
+using Plerion.Core;
+using Plerion.Core.ARFoundation;
 using PlerionApiClient.Model;
 #if UNITY_LUMIN
 using Plerion.VPS.MagicLeap;

@@ -16,7 +16,7 @@ using CesiumForUnity;
 using PlerionApiClient.Model;
 using PlerionApiClient.Api;
 using PlerionApiClient.Client;
-using Plerion.VPS;
+using Plerion.Core;
 using System.Threading.Tasks;
 
 namespace Outernet.Client.AuthoringTools
