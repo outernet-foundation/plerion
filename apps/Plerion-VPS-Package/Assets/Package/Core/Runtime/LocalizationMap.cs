@@ -29,7 +29,29 @@ namespace Plerion.Core
         private LocalizationMapRead _metadata;
         private CancellationTokenSource _loadCancellationTokenSource;
         private ParticleSystem _particleSystem;
+        private ParticleSystemRenderer _particleSystemRenderer;
         private Vector3[] _framePositions = null;
+
+        private bool _isVisible = true;
+
+        public void SetVisible(bool visible)
+        {
+            _isVisible = visible;
+            _particleSystemRenderer.enabled = visible;
+        }
+
+        private void Awake()
+        {
+            _particleSystem = GetComponent<ParticleSystem>();
+            _particleSystemRenderer = GetComponent<ParticleSystemRenderer>();
+        }
+
+        protected virtual void OnDestroy()
+        {
+            _loadCancellationTokenSource.Cancel();
+            _loadCancellationTokenSource.Dispose();
+            _loadCancellationTokenSource = null;
+        }
 
         public void Initialize(Guid mapId)
         {
@@ -42,62 +64,7 @@ namespace Plerion.Core
             Load(mapId, _loadCancellationTokenSource.Token).Forget();
         }
 
-        public void SetColor(Color color)
-        {
-            var m = _particleSystem.main;
-            m.startColor = color;
-        }
-
-        private void Awake()
-        {
-            _particleSystem = GetComponent<ParticleSystem>();
-        }
-
-        protected virtual void OnDestroy()
-        {
-            _loadCancellationTokenSource.Cancel();
-            _loadCancellationTokenSource.Dispose();
-            _loadCancellationTokenSource = null;
-        }
-
-        private void Update()
-        {
-            if (_framePositions == null)
-                return;
-
-            for (int i = 0; i < _framePositions.Length - 1; i++)
-            {
-                var from = transform.TransformPoint(_framePositions[i]);
-                var to = transform.TransformPoint(_framePositions[i + 1]);
-
-                if (from == to)
-                    return;
-
-                var properties = new MaterialPropertyBlock();
-                properties.SetColor("_Color", DefaultColor);
-
-                Graphics.DrawMesh(
-                    mesh: VisualPositioningSystem.Prefabs.CylinderMesh,
-                    matrix: Matrix4x4.TRS(
-                        from,
-                        Quaternion.LookRotation(to - from),
-                        new Vector3(DefaultThickness, DefaultThickness, Vector3.Magnitude(from - to))
-                    ),
-                    material: VisualPositioningSystem.Prefabs.GizmoMaterial,
-                    layer: 0,
-                    camera: null,
-                    submeshIndex: 0,
-                    properties: properties,
-                    castShadows: UnityEngine.Rendering.ShadowCastingMode.Off,
-                    receiveShadows: false,
-                    probeAnchor: null,
-                    lightProbeUsage: UnityEngine.Rendering.LightProbeUsage.Off,
-                    lightProbeProxyVolume: null
-                );
-            }
-        }
-
-        private async UniTask Load(Guid mapId, CancellationToken cancellationToken)
+        public async UniTask Load(Guid mapId, CancellationToken cancellationToken)
         {
             _metadata = await VisualPositioningSystem.Api.GetLocalizationMapAsync(mapId, cancellationToken).AsUniTask();
 
@@ -146,6 +113,49 @@ namespace Plerion.Core
                 particles[i].remainingLifetime = float.MaxValue;
             }
             _particleSystem.SetParticles(particles, particles.Length);
+        }
+
+        public void SetColor(Color color)
+        {
+            var m = _particleSystem.main;
+            m.startColor = color;
+        }
+
+        private void Update()
+        {
+            if (_framePositions == null || !_isVisible)
+                return;
+
+            for (int i = 0; i < _framePositions.Length - 1; i++)
+            {
+                var from = transform.TransformPoint(_framePositions[i]);
+                var to = transform.TransformPoint(_framePositions[i + 1]);
+
+                if (from == to)
+                    return;
+
+                var properties = new MaterialPropertyBlock();
+                properties.SetColor("_Color", DefaultColor);
+
+                Graphics.DrawMesh(
+                    mesh: VisualPositioningSystem.Prefabs.CylinderMesh,
+                    matrix: Matrix4x4.TRS(
+                        from,
+                        Quaternion.LookRotation(to - from),
+                        new Vector3(DefaultThickness, DefaultThickness, Vector3.Magnitude(from - to))
+                    ),
+                    material: VisualPositioningSystem.Prefabs.GizmoMaterial,
+                    layer: 0,
+                    camera: null,
+                    submeshIndex: 0,
+                    properties: properties,
+                    castShadows: UnityEngine.Rendering.ShadowCastingMode.Off,
+                    receiveShadows: false,
+                    probeAnchor: null,
+                    lightProbeUsage: UnityEngine.Rendering.LightProbeUsage.Off,
+                    lightProbeProxyVolume: null
+                );
+            }
         }
 
         private static async UniTask<byte[]> FetchPayloadAsync(

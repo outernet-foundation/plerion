@@ -37,7 +37,6 @@ members = [
     "datamodels",
     "dirtorch",
     "neural-networks",
-    "orchestrator",
     "plerion-api",
     "plerion-api-client",
     "plerion-infra",
@@ -1560,33 +1559,6 @@ wheels = [
 numpy = [
     { name = "numpy" },
     { name = "numpy-typing-compat" },
-]
-
-[[package]]
-name = "orchestrator"
-version = "0.1.0"
-source = { virtual = "docker/orchestrator" }
-dependencies = [
-    { name = "common" },
-    { name = "core" },
-    { name = "datamodels" },
-    { name = "debugpy" },
-    { name = "psycopg", extra = ["binary"] },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "sqlalchemy" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "common", editable = "packages/python/common" },
-    { name = "core", editable = "packages/python/core" },
-    { name = "datamodels", editable = "packages/generated/python/datamodels" },
-    { name = "debugpy", specifier = ">=1.8.17" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2.10" },
-    { name = "pydantic", specifier = ">=2.12.5" },
-    { name = "pydantic-settings", specifier = ">=2.11.0" },
-    { name = "sqlalchemy", specifier = ">=2.0.45" },
 ]
 
 [[package]]

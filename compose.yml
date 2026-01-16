@@ -234,6 +234,10 @@ services:
           "-c",
           "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
         ]
+      interval: 5s
+      start_period: 5s
+      timeout: 5s
+      retries: 3
     ports:
       - "5679:5678" # debug port
     volumes:

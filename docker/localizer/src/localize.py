@@ -27,6 +27,10 @@ superpoint: Any = None
 lightglue: Any = None
 
 
+class LocalizationError(ValueError):
+    pass
+
+
 def load_models(max_keypoints: int):
     if environ.get("CODEGEN"):
         return
@@ -95,7 +99,7 @@ def localize_image_against_reconstruction(
 
     # Verify we have enough correspondences
     if not query_keypoint_indices:
-        raise ValueError("No matching keypoints found")
+        raise LocalizationError("No matching keypoints found")
 
     # Create COLMAP camera model
     width, height, *params = transform_intrinsics(camera)
@@ -117,7 +121,7 @@ def localize_image_against_reconstruction(
 
     # Check if pose estimation was successful
     if pnp_result is None:
-        raise ValueError("Pose estimation failed")
+        raise LocalizationError("Pose estimation failed")
 
     # Change basis if needed
     cam_from_world = cast(Rigid3d, pnp_result["cam_from_world"])

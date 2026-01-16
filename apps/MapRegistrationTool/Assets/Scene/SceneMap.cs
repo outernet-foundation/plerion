@@ -75,7 +75,7 @@ namespace Outernet.MapRegistrationTool
                     if (x == Guid.Empty)
                         return;
 
-                    _localizationMapVisualizer.Load(App.API, x, CancellationToken.None).Forget();
+                    _localizationMapVisualizer.Load(x, CancellationToken.None).Forget();
                 })
             );
         }

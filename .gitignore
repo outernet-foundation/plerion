@@ -1,11 +1,10 @@
 __pycache__/
 **/.venv/
 **/*.egg-info
-# Ignore Piccolo auto-generated dev migrations
-**/migrations/*_auto-dev.py
-.vscode/temp
 .vs
 *.sln
+*.slnx
 .env
 **/bin/
 **/obj/
+.ruff_cache/

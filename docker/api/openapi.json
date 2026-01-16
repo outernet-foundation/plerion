@@ -1510,20 +1510,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "string",
-                  "enum": [
-                    "queued",
-                    "pending",
-                    "downloading",
-                    "extracting_features",
-                    "matching_features",
-                    "reconstructing",
-                    "training_opq_matrix",
-                    "training_product_quantizer",
-                    "uploading",
-                    "succeeded",
-                    "failed"
-                  ]
+                  "$ref": "#/components/schemas/OrchestrationStatus"
                 }
               }
             }

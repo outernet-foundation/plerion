@@ -46,30 +46,34 @@ namespace PlerionClient.Client
                 new Configuration() { BasePath = App.state.plerionApiUrl.value, Timeout = TimeSpan.FromSeconds(600) }
             );
 
-            ui = OrderedCanvas(new()
-            {
-                children = Props.List(
-                    App.state.loggedIn.AsObservable()
-                        .CreateDynamic(loggedIn =>
-                        {
-                            IControl screen = default;
-                            if (loggedIn)
+            ui = OrderedCanvas(
+                new()
+                {
+                    children = Props.List(
+                        App.state.loggedIn.AsObservable()
+                            .CreateDynamic(loggedIn =>
                             {
-                                screen = MainAppUI(new MainAppUIProps()
+                                IControl screen = default;
+                                if (loggedIn)
                                 {
-                                    mode = App.state.mode.AsObservable(),
-                                    onModeChanged = x => App.state.mode.ExecuteSetOrDelay(x)
-                                });
-                            }
-                            else
-                            {
-                                screen = LoginUI();
-                            }
+                                    screen = MainAppUI(
+                                        new MainAppUIProps()
+                                        {
+                                            mode = App.state.mode.AsObservable(),
+                                            onModeChanged = x => App.state.mode.ExecuteSetOrDelay(x),
+                                        }
+                                    );
+                                }
+                                else
+                                {
+                                    screen = LoginUI();
+                                }
 
-                            return screen;
-                        })
-                )
-            });
+                                return screen;
+                            })
+                    ),
+                }
+            );
 
             App.RegisterObserver(HandleCaptureStatusChanged, App.state.loggedIn, App.state.captureStatus);
             App.RegisterObserver(HandleCapturesChanged, App.state.captures);
@@ -269,7 +273,7 @@ namespace PlerionClient.Client
             switch (deviceType)
             {
                 case DeviceType.ARFoundation:
-                    await LocalCaptureController.StopCapture();
+                    CaptureManager.StopCapture();
                     break;
                 case DeviceType.Zed:
                     await ZedCaptureController.StopCapture(cancellationToken);
@@ -284,7 +288,7 @@ namespace PlerionClient.Client
             switch (deviceType)
             {
                 case DeviceType.ARFoundation:
-                    await LocalCaptureController.StartCapture(captureIntervalSeconds, cancellationToken);
+                    CaptureManager.StartCapture(captureIntervalSeconds);
                     break;
                 case DeviceType.Zed:
                     await ZedCaptureController.StartCapture(captureIntervalSeconds, cancellationToken);
@@ -339,7 +343,7 @@ namespace PlerionClient.Client
                 // Handle the exception if ZedCaptureController.GetCaptures() fails
             }
 
-            List<Guid> arFoundationCaptures = LocalCaptureController.GetCaptures().ToList();
+            List<Guid> arFoundationCaptures = CaptureManager.GetCaptures().ToList();
 
             var captureData = remoteCaptureList.ToDictionary(
                 x => x.Id,
@@ -526,7 +530,7 @@ namespace PlerionClient.Client
             {
                 try
                 {
-                    captureData = await LocalCaptureController.GetCapture(id);
+                    captureData = await CaptureManager.GetCaptureTar(id);
                 }
                 catch (Exception e)
                 {
@@ -603,16 +607,16 @@ namespace PlerionClient.Client
             {
                 var status = await capturesApi.GetReconstructionStatusAsync(reconstructionId, cancellationToken);
 
-                if (status == "\"succeeded\"")
+                if (status == OrchestrationStatus.Succeeded)
                     break;
 
-                if (status == "\"failed\"" || status == "\"exited\"")
+                if (status == OrchestrationStatus.Failed || status == OrchestrationStatus.Cancelled)
                 {
                     progress?.Report(CaptureUploadStatus.Failed);
                     throw new Exception("Capture reconstruction failed.");
                 }
 
-                await UniTask.WaitForSeconds(10, cancellationToken: cancellationToken);
+                await UniTask.WaitForSeconds(3, cancellationToken: cancellationToken);
             }
 
             progress?.Report(CaptureUploadStatus.Uploaded);

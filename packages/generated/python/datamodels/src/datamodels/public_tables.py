@@ -24,12 +24,12 @@ def enum_values(x: list[enum.Enum]) -> list[str]:
     return [str(e.value) for e in x]
 
 
-class DeviceType(str, enum.Enum):
+class DeviceType(enum.Enum):
     ARFOUNDATION = "ARFoundation"
     ZED = "Zed"
 
 
-class OrchestrationStatus(str, enum.Enum):
+class OrchestrationStatus(enum.Enum):
     QUEUED = "queued"
     PENDING = "pending"
     RUNNING = "running"

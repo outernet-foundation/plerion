@@ -16,9 +16,11 @@ from core.camera_config import PinholeCameraConfig
 from litestar import post
 from litestar.datastructures import UploadFile
 from litestar.enums import RequestEncodingType
+from litestar.exceptions import HTTPException
 from litestar.openapi.config import OpenAPIConfig
 from litestar.openapi.spec import Server
 from litestar.params import Body
+from litestar.status_codes import HTTP_422_UNPROCESSABLE_ENTITY
 
 from .map import Map, load_map
 from .schemas import LoadState, Localization
@@ -73,7 +75,7 @@ async def localize_image(
         raise
 
     # Import here to avoid importing torch during codegen
-    from .localize import localize_image_against_reconstruction
+    from .localize import LocalizationError, localize_image_against_reconstruction
 
     reconstruction_ids = data.reconstruction_ids
     camera = data.camera_config
@@ -81,20 +83,28 @@ async def localize_image(
     image = await data.image.read()
 
     localizations: list[Localization] = []
+    errors: list[str] = []
+
     for id in reconstruction_ids:
         if id not in _maps:
             _maps[id] = load_map(id, s3_client, settings.reconstructions_bucket, RECONSTRUCTIONS_DIR)
 
-        result = localize_image_against_reconstruction(
-            map=_maps[id],
-            camera=camera,
-            axis_convention=axis_convention,
-            image_buffer=image,
-            retrieval_top_k=RETRIEVAL_TOP_K,
-            ransac_threshold=RANSAC_THRESHOLD,
-        )
+        try:
+            result = localize_image_against_reconstruction(
+                map=_maps[id],
+                camera=camera,
+                axis_convention=axis_convention,
+                image_buffer=image,
+                retrieval_top_k=RETRIEVAL_TOP_K,
+                ransac_threshold=RANSAC_THRESHOLD,
+            )
 
-        localizations.append(Localization(id=id, transform=result[0], metrics=result[1]))
+            localizations.append(Localization(id=id, transform=result[0], metrics=result[1]))
+        except LocalizationError as e:
+            errors.append(f"Reconstruction {id}: {str(e)}")
+
+    if not localizations:
+        raise HTTPException(HTTP_422_UNPROCESSABLE_ENTITY, detail="; ".join(errors))
 
     return localizations
 

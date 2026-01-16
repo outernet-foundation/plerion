@@ -1,7 +1,13 @@
+using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using FofX.Stateful;
 using Nessle;
+using Plerion.Core;
+using R3;
 using UnityEngine;
+#if !UNITY_EDITOR
+using Plerion.Core.ARFoundation;
+#endif
 
 namespace PlerionClient.Client
 {
@@ -14,7 +20,15 @@ namespace PlerionClient.Client
 
         private void Awake()
         {
-            UniTaskScheduler.UnobservedTaskException += Debug.LogException;
+            UniTaskScheduler.UnobservedTaskException += (exception) =>
+                Log.Error(LogGroup.UncaughtException, $"Unobserved task exception: {exception}");
+
+            TaskScheduler.UnobservedTaskException += (sender, args) =>
+                Log.Error(LogGroup.UncaughtException, $"Unobserved task exception: {args.Exception}");
+
+            ObservableSystem.RegisterUnhandledExceptionHandler(exception =>
+                Log.Error(LogGroup.UncaughtException, $"R3 unhandled exception: {exception}")
+            );
 
             sceneReferences.Initialize();
 
@@ -33,10 +47,17 @@ namespace PlerionClient.Client
             if (env.loginAutomatically)
                 App.ExecuteAction(new LogInAction(env.username, env.password));
 
-            LocalCaptureController.Initialize();
-            ZedCaptureController.Initialize();
-
             Instantiate(localizationManager);
+
+#if UNITY_EDITOR
+            var cameraProvider = new NoOpCameraProvider();
+#else
+            var cameraProvider = new CameraProvider(SceneReferences.ARCameraManager, SceneReferences.ARAnchorManager);
+            CaptureManager.Initialize(cameraProvider);
+#endif
+
+            localizationManager.Initialize(cameraProvider);
+            ZedCaptureController.Initialize();
 
             gameObject.AddComponent<AuthManager>();
             gameObject.AddComponent<CaptureController>();

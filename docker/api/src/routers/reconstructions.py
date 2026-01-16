@@ -11,7 +11,7 @@ from core.axis_convention import (
     change_basis_unity_from_opencv_points,
     change_basis_unity_from_opencv_poses,
 )
-from core.reconstruction_manifest import ReconstructionManifest, ReconstructionStatus
+from core.reconstruction_manifest import ReconstructionManifest
 from core.reconstruction_metrics import ReconstructionMetrics
 from core.reconstruction_options import ReconstructionOptions
 from datamodels.public_dtos import (
@@ -20,7 +20,7 @@ from datamodels.public_dtos import (
     reconstruction_from_dto,
     reconstruction_to_dto,
 )
-from datamodels.public_tables import CaptureSession, LocalizationMap, Reconstruction
+from datamodels.public_tables import CaptureSession, LocalizationMap, OrchestrationStatus, Reconstruction
 from litestar import Router, delete, get, post
 from litestar.di import Provide
 from litestar.exceptions import HTTPException
@@ -201,14 +201,18 @@ async def get_reconstruction_localization_map(session: AsyncSession, id: UUID) -
     return localization_map
 
 
-async def fetch_reconstruction_status(id: UUID, session: AsyncSession) -> ReconstructionStatus:
-    manifest = await fetch_reconstruction_manifest(session, id)
-    return manifest.status
+async def fetch_reconstruction_status(session: AsyncSession, id: UUID) -> OrchestrationStatus:
+    row = await session.get(Reconstruction, id)
+
+    if not row:
+        raise HTTPException(HTTP_404_NOT_FOUND, f"Reconstruction with id {id} not found")
+
+    return row.orchestration_status
 
 
 @get("/{id:uuid}/status")
-async def get_reconstruction_status(session: AsyncSession, id: UUID) -> ReconstructionStatus:
-    return await fetch_reconstruction_status(id, session)
+async def get_reconstruction_status(session: AsyncSession, id: UUID) -> OrchestrationStatus:
+    return await fetch_reconstruction_status(session, id)
 
 
 @get("/{id:uuid}/points", media_type="application/octet-stream")

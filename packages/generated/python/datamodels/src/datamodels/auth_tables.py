@@ -10,7 +10,7 @@ def enum_values(x: list[enum.Enum]) -> list[str]:
     return [str(e.value) for e in x]
 
 
-class MembershipRole(str, enum.Enum):
+class MembershipRole(enum.Enum):
     OWNER = "owner"
     ADMIN = "admin"
     MEMBER = "member"

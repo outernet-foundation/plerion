@@ -582,8 +582,8 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>string</returns>
-        string GetReconstructionStatus(Guid id);
+        /// <returns>OrchestrationStatus</returns>
+        OrchestrationStatus GetReconstructionStatus(Guid id);
 
         /// <summary>
         /// GetReconstructionStatus
@@ -593,8 +593,8 @@ namespace PlerionApiClient.Api
         /// </remarks>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>ApiResponse of string</returns>
-        ApiResponse<string> GetReconstructionStatusWithHttpInfo(Guid id);
+        /// <returns>ApiResponse of OrchestrationStatus</returns>
+        ApiResponse<OrchestrationStatus> GetReconstructionStatusWithHttpInfo(Guid id);
         /// <summary>
         /// GetReconstructions
         /// </summary>
@@ -1535,8 +1535,8 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of string</returns>
-        System.Threading.Tasks.Task<string> GetReconstructionStatusAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of OrchestrationStatus</returns>
+        System.Threading.Tasks.Task<OrchestrationStatus> GetReconstructionStatusAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// GetReconstructionStatus
@@ -1547,8 +1547,8 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (string)</returns>
-        System.Threading.Tasks.Task<ApiResponse<string>> GetReconstructionStatusWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
+        /// <returns>Task of ApiResponse (OrchestrationStatus)</returns>
+        System.Threading.Tasks.Task<ApiResponse<OrchestrationStatus>> GetReconstructionStatusWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// GetReconstructions
         /// </summary>
@@ -5420,10 +5420,10 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>string</returns>
-        public string GetReconstructionStatus(Guid id)
+        /// <returns>OrchestrationStatus</returns>
+        public OrchestrationStatus GetReconstructionStatus(Guid id)
         {
-            PlerionApiClient.Client.ApiResponse<string> localVarResponse = GetReconstructionStatusWithHttpInfo(id);
+            PlerionApiClient.Client.ApiResponse<OrchestrationStatus> localVarResponse = GetReconstructionStatusWithHttpInfo(id);
             return localVarResponse.Data;
         }
 
@@ -5432,8 +5432,8 @@ namespace PlerionApiClient.Api
         /// </summary>
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
-        /// <returns>ApiResponse of string</returns>
-        public PlerionApiClient.Client.ApiResponse<string> GetReconstructionStatusWithHttpInfo(Guid id)
+        /// <returns>ApiResponse of OrchestrationStatus</returns>
+        public PlerionApiClient.Client.ApiResponse<OrchestrationStatus> GetReconstructionStatusWithHttpInfo(Guid id)
         {
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
 
@@ -5455,7 +5455,7 @@ namespace PlerionApiClient.Api
 
 
             // make the HTTP request
-            var localVarResponse = this.Client.Get<string>("/reconstructions/{id}/status", localVarRequestOptions, this.Configuration);
+            var localVarResponse = this.Client.Get<OrchestrationStatus>("/reconstructions/{id}/status", localVarRequestOptions, this.Configuration);
 
             if (this.ExceptionFactory != null)
             {
@@ -5472,10 +5472,10 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of string</returns>
-        public async System.Threading.Tasks.Task<string> GetReconstructionStatusAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of OrchestrationStatus</returns>
+        public async System.Threading.Tasks.Task<OrchestrationStatus> GetReconstructionStatusAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionApiClient.Client.ApiResponse<string> localVarResponse = await GetReconstructionStatusWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
+            PlerionApiClient.Client.ApiResponse<OrchestrationStatus> localVarResponse = await GetReconstructionStatusWithHttpInfoAsync(id, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -5485,8 +5485,8 @@ namespace PlerionApiClient.Api
         /// <exception cref="PlerionApiClient.Client.ApiException">Thrown when fails to make API call</exception>
         /// <param name="id"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
-        /// <returns>Task of ApiResponse (string)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<string>> GetReconstructionStatusWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
+        /// <returns>Task of ApiResponse (OrchestrationStatus)</returns>
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<OrchestrationStatus>> GetReconstructionStatusWithHttpInfoAsync(Guid id, System.Threading.CancellationToken cancellationToken = default)
         {
 
             PlerionApiClient.Client.RequestOptions localVarRequestOptions = new PlerionApiClient.Client.RequestOptions();
@@ -5511,7 +5511,7 @@ namespace PlerionApiClient.Api
 
             // make the HTTP request
 
-            var localVarResponse = await this.AsynchronousClient.GetAsync<string>("/reconstructions/{id}/status", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
+            var localVarResponse = await this.AsynchronousClient.GetAsync<OrchestrationStatus>("/reconstructions/{id}/status", localVarRequestOptions, this.Configuration, cancellationToken).ConfigureAwait(false);
 
             if (this.ExceptionFactory != null)
             {
