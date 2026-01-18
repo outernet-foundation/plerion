@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import json
 from concurrent.futures import ThreadPoolExecutor
 from os import environ
 from pathlib import Path
 from threading import Lock
-from typing import Annotated, Any
+from typing import Annotated
 from uuid import UUID
 
 from common.boto_clients import create_s3_client
@@ -49,14 +48,6 @@ if not environ.get("CODEGEN"):
     load_models(settings.max_keypoints_per_image)
 
 
-def deserialize_json(v: Any) -> Any:
-    try:
-        return json.loads(v)
-    except (ValueError, TypeError):
-        # If parsing fails, return original to let Pydantic raise the validation error
-        return v
-
-
 class LocalizationRequest(MultipartRequestModel):
     reconstruction_ids: list[UUID]
     camera_config: PinholeCameraConfig
@@ -76,21 +67,18 @@ async def localize_image(
     # Import here to avoid importing torch during codegen
     from .localize import LocalizationError, localize_image_against_reconstruction
 
-    reconstruction_ids = data.reconstruction_ids
-    camera = data.camera_config
-    axis_convention = data.axis_convention
     image = await data.image.read()
 
     localizations: list[Localization] = []
     errors: list[str] = []
 
-    for id in reconstruction_ids:
+    for id in data.reconstruction_ids:
         if id not in _maps:
             _maps[id] = load_map(id, s3_client, settings.reconstructions_bucket, RECONSTRUCTIONS_DIR)
 
         try:
             result = localize_image_against_reconstruction(
-                _maps[id], camera, axis_convention, image, data.retrieval_top_k, data.ransac_threshold
+                _maps[id], data.camera_config, data.axis_convention, image, data.retrieval_top_k, data.ransac_threshold
             )
 
             localizations.append(Localization(id=id, transform=result[0], metrics=result[1]))

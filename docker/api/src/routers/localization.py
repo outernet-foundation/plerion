@@ -12,7 +12,7 @@ from litestar.datastructures import UploadFile
 from litestar.di import Provide
 from litestar.enums import RequestEncodingType
 from litestar.params import Body
-from litestar.status_codes import HTTP_502_BAD_GATEWAY
+from litestar.status_codes import HTTP_422_UNPROCESSABLE_ENTITY, HTTP_502_BAD_GATEWAY
 from plerion_localizer_client import ApiClient, ApiException, Configuration
 from plerion_localizer_client.api.default_api import DefaultApi
 from plerion_localizer_client.models.axis_convention import AxisConvention as LocalizerAxisConvention
@@ -86,8 +86,8 @@ async def localize_image(
 
         except ApiException as e:
             status = cast(int | None, e.status)
-            if status is not None and 400 <= status < 500:
-                raise HTTPException(status, cast(str | None, e.reason) or "Localization session client error") from e
+            if status == 422:
+                raise HTTPException(HTTP_422_UNPROCESSABLE_ENTITY) from e
             raise HTTPException(HTTP_502_BAD_GATEWAY, "Localization session backend error") from e
 
 
