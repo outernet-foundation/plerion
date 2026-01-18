@@ -206,7 +206,6 @@ namespace PlerionClient.Client
                 return new ReconstructionOptions()
                 {
                     NeighborsCount = 12,
-                    MaxKeypointsPerImage = 2500,
                     RansacMaxError = 2.0,
                     RansacMinInlierRatio = 0.15,
                     TriangulationMinimumAngle = 3.0,

@@ -27,9 +27,6 @@ from .schemas import LoadState, Localization
 from .settings import get_settings
 
 RECONSTRUCTIONS_DIR = Path("/tmp/reconstructions")
-MAX_KEYPOINTS = 2500
-RETRIEVAL_TOP_K = 12  # how many similar database images to keep
-RANSAC_THRESHOLD = 12.0  # reprojection error in pixels
 
 
 _executor = ThreadPoolExecutor(max_workers=2)
@@ -49,7 +46,7 @@ s3_client = create_s3_client(
 if not environ.get("CODEGEN"):
     from .localize import load_models
 
-    load_models(2500)
+    load_models(settings.max_keypoints_per_image)
 
 
 def deserialize_json(v: Any) -> Any:
@@ -64,6 +61,8 @@ class LocalizationRequest(MultipartRequestModel):
     reconstruction_ids: list[UUID]
     camera_config: PinholeCameraConfig
     axis_convention: AxisConvention
+    retrieval_top_k: int
+    ransac_threshold: float
     image: UploadFile
 
 
@@ -91,12 +90,7 @@ async def localize_image(
 
         try:
             result = localize_image_against_reconstruction(
-                map=_maps[id],
-                camera=camera,
-                axis_convention=axis_convention,
-                image_buffer=image,
-                retrieval_top_k=RETRIEVAL_TOP_K,
-                ransac_threshold=RANSAC_THRESHOLD,
+                _maps[id], camera, axis_convention, image, data.retrieval_top_k, data.ransac_threshold
             )
 
             localizations.append(Localization(id=id, transform=result[0], metrics=result[1]))

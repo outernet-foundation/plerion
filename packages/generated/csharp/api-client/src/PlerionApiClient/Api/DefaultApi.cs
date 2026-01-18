@@ -624,9 +624,11 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <returns>List&lt;MapLocalization&gt;</returns>
-        List<MapLocalization> LocalizeImage(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image);
+        List<MapLocalization> LocalizeImage(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image);
 
         /// <summary>
         /// LocalizeImage
@@ -638,9 +640,11 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <returns>ApiResponse of List&lt;MapLocalization&gt;</returns>
-        ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image);
+        ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image);
         /// <summary>
         /// RequestLease
         /// </summary>
@@ -1586,10 +1590,12 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;MapLocalization&gt;</returns>
-        System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
 
         /// <summary>
         /// LocalizeImage
@@ -1601,10 +1607,12 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;MapLocalization&gt;)</returns>
-        System.Threading.Tasks.Task<ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
+        System.Threading.Tasks.Task<ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image, System.Threading.CancellationToken cancellationToken = default);
         /// <summary>
         /// RequestLease
         /// </summary>
@@ -5666,11 +5674,13 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <returns>List&lt;MapLocalization&gt;</returns>
-        public List<MapLocalization> LocalizeImage(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image)
+        public List<MapLocalization> LocalizeImage(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image)
         {
-            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = LocalizeImageWithHttpInfo(mapIds, cameraConfig, axisConvention, image);
+            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = LocalizeImageWithHttpInfo(mapIds, cameraConfig, axisConvention, retrievalTopK, ransacThreshold, image);
             return localVarResponse.Data;
         }
 
@@ -5681,9 +5691,11 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <returns>ApiResponse of List&lt;MapLocalization&gt;</returns>
-        public PlerionApiClient.Client.ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image)
+        public PlerionApiClient.Client.ApiResponse<List<MapLocalization>> LocalizeImageWithHttpInfo(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image)
         {
             // verify the required parameter 'mapIds' is set
             if (mapIds == null)
@@ -5734,6 +5746,10 @@ namespace PlerionApiClient.Api
             }
             // Primitive types (int, string, bool) go as standard form fields
             localVarRequestOptions.FormParameters.Add("axis_convention", PlerionApiClient.Client.ClientUtils.ParameterToString(axisConvention));
+            // Primitive types (int, string, bool) go as standard form fields
+            localVarRequestOptions.FormParameters.Add("retrieval_top_k", PlerionApiClient.Client.ClientUtils.ParameterToString(retrievalTopK));
+            // Primitive types (int, string, bool) go as standard form fields
+            localVarRequestOptions.FormParameters.Add("ransac_threshold", PlerionApiClient.Client.ClientUtils.ParameterToString(ransacThreshold));
             localVarRequestOptions.FileParameters.Add("image", image);
 
 
@@ -5756,12 +5772,14 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of List&lt;MapLocalization&gt;</returns>
-        public async System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<List<MapLocalization>> LocalizeImageAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
-            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = await LocalizeImageWithHttpInfoAsync(mapIds, cameraConfig, axisConvention, image, cancellationToken).ConfigureAwait(false);
+            PlerionApiClient.Client.ApiResponse<List<MapLocalization>> localVarResponse = await LocalizeImageWithHttpInfoAsync(mapIds, cameraConfig, axisConvention, retrievalTopK, ransacThreshold, image, cancellationToken).ConfigureAwait(false);
             return localVarResponse.Data;
         }
 
@@ -5772,10 +5790,12 @@ namespace PlerionApiClient.Api
         /// <param name="mapIds"></param>
         /// <param name="cameraConfig"></param>
         /// <param name="axisConvention"></param>
+        /// <param name="retrievalTopK"></param>
+        /// <param name="ransacThreshold"></param>
         /// <param name="image"></param>
         /// <param name="cancellationToken">Cancellation Token to cancel the request.</param>
         /// <returns>Task of ApiResponse (List&lt;MapLocalization&gt;)</returns>
-        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
+        public async System.Threading.Tasks.Task<PlerionApiClient.Client.ApiResponse<List<MapLocalization>>> LocalizeImageWithHttpInfoAsync(List<Guid> mapIds, PinholeCameraConfig cameraConfig, AxisConvention axisConvention, int retrievalTopK, double ransacThreshold, FileParameter image, System.Threading.CancellationToken cancellationToken = default)
         {
             // verify the required parameter 'mapIds' is set
             if (mapIds == null)
@@ -5828,6 +5848,10 @@ namespace PlerionApiClient.Api
             }
             // Primitive types (int, string, bool) go as standard form fields
             localVarRequestOptions.FormParameters.Add("axis_convention", PlerionApiClient.Client.ClientUtils.ParameterToString(axisConvention));
+            // Primitive types (int, string, bool) go as standard form fields
+            localVarRequestOptions.FormParameters.Add("retrieval_top_k", PlerionApiClient.Client.ClientUtils.ParameterToString(retrievalTopK));
+            // Primitive types (int, string, bool) go as standard form fields
+            localVarRequestOptions.FormParameters.Add("ransac_threshold", PlerionApiClient.Client.ClientUtils.ParameterToString(ransacThreshold));
             localVarRequestOptions.FileParameters.Add("image", image);
 
 

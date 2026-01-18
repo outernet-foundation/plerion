@@ -299,6 +299,7 @@ services:
       MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
       CAPTURES_BUCKET: dev-captures
+      MAX_KEYPOINTS_PER_IMAGE: ${MAX_KEYPOINTS_PER_IMAGE}
 
   reconstructor-rocm:
     profiles: ["rocm"]
@@ -335,6 +336,7 @@ services:
       MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
       CAPTURES_BUCKET: dev-captures
+      MAX_KEYPOINTS_PER_IMAGE: ${MAX_KEYPOINTS_PER_IMAGE}
 
   localizer-cuda:
     profiles: ["cuda"]
@@ -359,6 +361,7 @@ services:
       MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
       MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
+      MAX_KEYPOINTS_PER_IMAGE: ${MAX_KEYPOINTS_PER_IMAGE}
 
   localizer-rocm:
     profiles: ["rocm"]
@@ -388,3 +391,4 @@ services:
       MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY}"
       MINIO_SECRET_KEY: "${MINIO_SECRET_KEY}"
       RECONSTRUCTIONS_BUCKET: dev-reconstructions
+      MAX_KEYPOINTS_PER_IMAGE: ${MAX_KEYPOINTS_PER_IMAGE}

@@ -181,6 +181,8 @@ namespace Plerion.Core
                 mapIds,
                 cameraConfig,
                 AxisConvention.UNITY,
+                12,
+                12.0,
                 new FileParameter(memoryStream),
                 cancellationToken
             );
